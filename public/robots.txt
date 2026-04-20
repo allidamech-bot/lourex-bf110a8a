@@ -1,0 +1,52 @@
+User-agent: Googlebot
+Allow: /
+Allow: /catalog
+Allow: /track
+Allow: /about
+Allow: /why-lourex
+Allow: /privacy
+Allow: /terms
+Disallow: /orders
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /factory-signup
+Disallow: /factory-dashboard
+Disallow: /messages
+
+User-agent: Bingbot
+Allow: /
+Allow: /catalog
+Allow: /track
+Allow: /about
+Allow: /why-lourex
+Allow: /privacy
+Allow: /terms
+Disallow: /orders
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+Allow: /catalog
+Allow: /track
+Allow: /about
+Allow: /why-lourex
+Allow: /privacy
+Allow: /terms
+Disallow: /orders
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /factory-signup
+Disallow: /factory-dashboard
+Disallow: /messages
+
+Sitemap: https://lourex.lovable.app/sitemap.xml
