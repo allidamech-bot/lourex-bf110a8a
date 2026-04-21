@@ -1,9 +1,8 @@
-import { useI18n, Lang } from "@/lib/i18n";
+import { type Lang, useI18n } from "@/lib/i18n";
 
 const langs: { code: Lang; label: string }[] = [
-  { code: "en", label: "EN" },
   { code: "ar", label: "AR" },
-  { code: "tr", label: "TR" },
+  { code: "en", label: "EN" },
 ];
 
 const LanguageSwitcher = () => {

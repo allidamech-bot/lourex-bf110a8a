@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useI18n } from "@/lib/i18n";
 
 interface SharedAccountPanelProps {
   title?: string;
@@ -42,13 +43,19 @@ const initialProfile: ProfileState = {
 const AvatarUploadSection = ({ avatarUrl, onUploaded }: { avatarUrl: string; onUploaded: (url: string) => void }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { t } = useI18n();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setUploading(false); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setUploading(false);
+      return;
+    }
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
@@ -59,14 +66,14 @@ const AvatarUploadSection = ({ avatarUrl, onUploaded }: { avatarUrl: string; onU
     }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     onUploaded(urlData.publicUrl);
-    toast.success("Avatar uploaded!");
+    toast.success(t("account.avatarUploaded"));
     setUploading(false);
   };
 
   return (
     <div className="mb-4 flex items-center gap-4">
       <div
-        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary cursor-pointer hover:border-primary/50 transition-colors"
+        className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary transition-colors hover:border-primary/50"
         onClick={() => fileRef.current?.click()}
       >
         {avatarUrl ? (
@@ -78,10 +85,10 @@ const AvatarUploadSection = ({ avatarUrl, onUploaded }: { avatarUrl: string; onU
       <div className="flex-1 space-y-1">
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
         <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading} className="gap-2">
-          <Upload className="w-3.5 h-3.5" />
-          {uploading ? "Uploading..." : "Upload Photo"}
+          <Upload className="h-3.5 w-3.5" />
+          {uploading ? t("account.uploading") : t("account.uploadPhoto")}
         </Button>
-        <p className="text-[10px] text-muted-foreground">JPG, PNG. Max 5MB</p>
+        <p className="text-[10px] text-muted-foreground">{t("account.photoHint")}</p>
       </div>
     </div>
   );
@@ -92,6 +99,7 @@ export const SharedAccountPanel = ({
   companyTitle = "Company Profile",
   deleteRedirectTo = "/",
 }: SharedAccountPanelProps) => {
+  const { t } = useI18n();
   const [profile, setProfile] = useState<ProfileState>(initialProfile);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -101,7 +109,9 @@ export const SharedAccountPanel = ({
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
@@ -131,14 +141,16 @@ export const SharedAccountPanel = ({
       setLoading(false);
     };
 
-    load();
+    void load();
   }, []);
 
   const canDelete = useMemo(() => deleteConfirm === "DELETE", [deleteConfirm]);
 
   const handleSave = async () => {
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       setSaving(false);
       return;
@@ -156,13 +168,13 @@ export const SharedAccountPanel = ({
       });
 
     if (error) toast.error(error.message);
-    else toast.success("تم تحديث معلومات الحساب بنجاح");
+    else toast.success(t("account.updated"));
     setSaving(false);
   };
 
   const handleDeleteAccount = async () => {
     if (!canDelete) {
-      toast.error("اكتب DELETE للتأكيد");
+      toast.error(t("account.deleteConfirm"));
       return;
     }
 
@@ -170,13 +182,13 @@ export const SharedAccountPanel = ({
     const { error } = await supabase.functions.invoke("delete-account", { body: {} });
 
     if (error) {
-      toast.error(error.message || "تعذر حذف الحساب");
+      toast.error(error.message || t("account.deleteError"));
       setDeleting(false);
       return;
     }
 
     await supabase.auth.signOut();
-    toast.success("تم حذف الحساب بنجاح");
+    toast.success(t("account.deleteSuccess"));
     window.location.href = deleteRedirectTo;
   };
 
@@ -189,7 +201,7 @@ export const SharedAccountPanel = ({
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="max-w-3xl space-y-6">
       <BentoCard>
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -197,31 +209,28 @@ export const SharedAccountPanel = ({
           </div>
           <div>
             <h3 className="font-serif text-lg font-semibold">{title}</h3>
-            <p className="text-xs text-muted-foreground">البيانات الشخصية والهوية</p>
+            <p className="text-xs text-muted-foreground">{t("account.personalSubtitle")}</p>
           </div>
         </div>
 
-        <AvatarUploadSection
-          avatarUrl={profile.avatar_url}
-          onUploaded={(url) => setProfile({ ...profile, avatar_url: url })}
-        />
+        <AvatarUploadSection avatarUrl={profile.avatar_url} onUploaded={(url) => setProfile({ ...profile, avatar_url: url })} />
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs text-muted-foreground">Full Name</label>
+              <label className="mb-1.5 block text-xs text-muted-foreground">{t("account.fullName")}</label>
               <Input value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} className="border-border bg-secondary" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs text-muted-foreground">Email</label>
+              <label className="mb-1.5 block text-xs text-muted-foreground">{t("common.email")}</label>
               <Input value={email} disabled className="border-border bg-secondary/50 opacity-60" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs text-muted-foreground">Phone</label>
+              <label className="mb-1.5 block text-xs text-muted-foreground">{t("common.phone")}</label>
               <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="border-border bg-secondary" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs text-muted-foreground">Country</label>
+              <label className="mb-1.5 block text-xs text-muted-foreground">{t("common.country")}</label>
               <Input value={profile.country} onChange={(e) => setProfile({ ...profile, country: e.target.value })} className="border-border bg-secondary" />
             </div>
           </div>
@@ -235,23 +244,23 @@ export const SharedAccountPanel = ({
           </div>
           <div>
             <h3 className="font-serif text-lg font-semibold">{companyTitle}</h3>
-            <p className="text-xs text-muted-foreground">بيانات المنشأة أو الشركة</p>
+            <p className="text-xs text-muted-foreground">{t("account.companySubtitle")}</p>
           </div>
         </div>
         <div>
-          <label className="mb-1.5 block text-xs text-muted-foreground">Company Name</label>
+          <label className="mb-1.5 block text-xs text-muted-foreground">{t("account.companyName")}</label>
           <Input
             value={profile.company_name}
             onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
             className="border-border bg-secondary"
-            placeholder="Enter your company name"
+            placeholder={t("account.companyPlaceholder")}
           />
         </div>
       </BentoCard>
 
       <Button variant="gold" onClick={handleSave} disabled={saving} className="gap-2">
         <Save className="h-4 w-4" />
-        {saving ? "Saving..." : "Save Changes"}
+        {saving ? t("common.saving") : t("account.saveChanges")}
       </Button>
 
       <BentoCard className="border-destructive/30">
@@ -260,38 +269,36 @@ export const SharedAccountPanel = ({
             <Trash2 className="h-5 w-5 text-destructive" />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-semibold text-destructive">Danger Zone</h3>
-            <p className="text-xs text-muted-foreground">إجراء نهائي لا يمكن التراجع عنه</p>
+            <h3 className="font-serif text-lg font-semibold text-destructive">{t("account.deleteTitle")}</h3>
+            <p className="text-xs text-muted-foreground">{t("account.deleteSubtitle")}</p>
           </div>
         </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="gap-2">
-              <Trash2 className="h-4 w-4" /> Delete Account
+              <Trash2 className="h-4 w-4" /> {t("account.deleteButton")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="border-border bg-card">
             <AlertDialogHeader>
-              <AlertDialogTitle className="font-serif">Delete Account Permanently?</AlertDialogTitle>
-              <AlertDialogDescription>
-                سيتم حذف بياناتك وحسابك نهائياً. اكتب <strong>DELETE</strong> للتأكيد.
-              </AlertDialogDescription>
+              <AlertDialogTitle className="font-serif">{t("account.deleteModalTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("account.deleteModalDescription")}</AlertDialogDescription>
             </AlertDialogHeader>
             <Input
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder="Type DELETE"
+              placeholder={t("account.deletePlaceholder")}
               className="border-border bg-secondary"
             />
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="border-border">{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteAccount}
                 disabled={!canDelete || deleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleting ? "Deleting..." : "Delete Forever"}
+                {deleting ? t("account.deleting") : t("account.deleteForever")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

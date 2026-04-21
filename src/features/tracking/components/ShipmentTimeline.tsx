@@ -1,5 +1,6 @@
 import { CheckCircle2, CircleDot } from "lucide-react";
 import { shipmentStages } from "@/lib/shipmentStages";
+import { useI18n } from "@/lib/i18n";
 import type { ShipmentStageCode } from "@/types/lourex";
 
 interface ShipmentTimelineProps {
@@ -7,6 +8,7 @@ interface ShipmentTimelineProps {
 }
 
 export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
+  const { lang } = useI18n();
   const currentIndex = shipmentStages.findIndex((stage) => stage.code === currentStage);
 
   return (
@@ -14,6 +16,7 @@ export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
       {shipmentStages.map((stage, index) => {
         const completed = index < currentIndex;
         const active = index === currentIndex;
+        const owner = lang === "ar" ? stage.owner : stage.ownerEn;
 
         return (
           <div key={stage.code} className="flex items-start gap-4">
@@ -36,9 +39,16 @@ export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
 
             <div className="rounded-2xl border border-border/50 bg-card px-4 py-3">
               <p className={`font-medium ${active ? "text-primary" : "text-foreground"}`}>
-                {stage.order}. {stage.label}
+                {stage.order}. {lang === "ar" ? stage.label : stage.labelEn}
               </p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">{stage.description}</p>
+              {owner ? (
+                <p className="mt-1 text-xs font-medium text-primary/80">
+                  {lang === "ar" ? "المسؤول:" : "Owner:"} {owner}
+                </p>
+              ) : null}
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {lang === "ar" ? stage.description : stage.descriptionEn}
+              </p>
             </div>
           </div>
         );

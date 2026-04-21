@@ -1,0 +1,372 @@
+import { useEffect, useMemo, useState } from "react";
+import { FilePenLine, Receipt, Route, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import BentoCard from "@/components/BentoCard";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { createFinancialEntry, loadDeals, loadFinancialEntries } from "@/lib/operationsDomain";
+import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
+
+export default function AccountingPage() {
+  const { locale, t } = useI18n();
+  const [searchParams] = useSearchParams();
+  const focusDeal = searchParams.get("deal");
+  const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("SAR");
+  const [entryDate, setEntryDate] = useState(new Date().toISOString().slice(0, 10));
+  const [method, setMethod] = useState("");
+  const [counterparty, setCounterparty] = useState("");
+  const [category, setCategory] = useState("");
+  const [referenceLabel, setReferenceLabel] = useState("");
+  const [note, setNote] = useState("");
+
+  const refresh = async () => {
+    setLoading(true);
+    const [entriesData, dealsData] = await Promise.all([loadFinancialEntries(), loadDeals()]);
+    setEntries(entriesData);
+    setDeals(dealsData);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  const focusedDeal = deals.find((row) => row.dealNumber === focusDeal) || null;
+  const visibleEntries = entries.filter((row) => (!focusDeal ? true : row.dealNumber === focusDeal));
+  const dealEntries = visibleEntries.filter((row) => row.scope === "deal" || row.scope === "customer");
+  const globalEntries = !focusDeal ? entries.filter((row) => row.scope === "global") : [];
+
+  const totals = useMemo(() => {
+    const income = visibleEntries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + entry.amount, 0);
+    const expense = visibleEntries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + entry.amount, 0);
+    return {
+      income,
+      expense,
+      net: income - expense,
+      count: visibleEntries.length,
+    };
+  }, [visibleEntries]);
+
+  const dealFinancialSignal = useMemo(() => {
+    if (!focusedDeal) return null;
+    const referenceValue = focusedDeal.totalValue || 0;
+    const variance = totals.net - referenceValue;
+    return {
+      referenceValue,
+      variance,
+      direction: variance >= 0 ? "positive" : "negative",
+    };
+  }, [focusedDeal, totals.net]);
+
+  const handleCreateEntry = async () => {
+    const parsedAmount = Number(amount);
+    if (!parsedAmount || !note.trim() || !method.trim() || !counterparty.trim() || !category.trim()) {
+      toast.error(t("accounting.validation"));
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const dealId = focusedDeal?.id;
+      await createFinancialEntry({
+        dealId,
+        customerId: focusedDeal?.customerId || undefined,
+        type,
+        scope: dealId ? "deal_linked" : "global",
+        amount: parsedAmount,
+        currency,
+        note,
+        method,
+        counterparty,
+        category,
+        entryDate,
+        referenceLabel,
+      });
+
+      toast.success(t("accounting.toasts.created"));
+      setAmount("");
+      setCurrency("SAR");
+      setEntryDate(new Date().toISOString().slice(0, 10));
+      setMethod("");
+      setCounterparty("");
+      setCategory("");
+      setReferenceLabel("");
+      setNote("");
+      setType("expense");
+      await refresh();
+    } catch (error: any) {
+      toast.error(error.message || t("accounting.toasts.createError"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid gap-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="h-44 w-full rounded-[2rem]" />
+        ))}
+      </div>
+    );
+  }
+
+  if (entries.length === 0 && deals.length === 0) {
+    return (
+      <EmptyState
+        icon={Receipt}
+        title={t("accounting.emptyTitle")}
+        description={t("accounting.emptyDescription")}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <BentoCard>
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Wallet className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-serif text-2xl font-semibold">{t("accounting.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("accounting.description")}</p>
+            </div>
+          </div>
+        </BentoCard>
+
+        <BentoCard>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("accounting.focusedContext")}</p>
+          <p className="mt-3 font-serif text-3xl font-bold">{focusDeal || t("accounting.global")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {focusDeal ? t("accounting.dealContext") : t("accounting.globalContext")}
+          </p>
+        </BentoCard>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.96fr_1.04fr]">
+        <div className="space-y-4">
+          <BentoCard className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Receipt className="h-5 w-5 text-primary" />
+              <h2 className="font-serif text-2xl font-semibold">{t("accounting.financialSignals")}</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: t("accounting.labels.totalIncome"), value: totals.income },
+                { label: t("accounting.labels.totalExpense"), value: totals.expense },
+                { label: t("accounting.labels.net"), value: totals.net, className: totals.net >= 0 ? "text-emerald-400" : "text-rose-400" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className={`mt-2 text-2xl font-bold ${item.className || ""}`}>{item.value.toLocaleString()} {currency}</p>
+                </div>
+              ))}
+            </div>
+            {focusedDeal ? (
+              <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-primary/80">{t("accounting.dealSignal")}</p>
+                    <p className="mt-2 font-serif text-2xl font-semibold">{focusedDeal.dealNumber}</p>
+                  </div>
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                      (dealFinancialSignal?.variance || 0) >= 0 ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"
+                    }`}
+                  >
+                    {(dealFinancialSignal?.variance || 0) >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-[1.15rem] bg-background/65 p-4">
+                    <p className="text-xs text-muted-foreground">{t("accounting.referenceValue")}</p>
+                    <p className="mt-1 font-medium">{focusedDeal.totalValue.toLocaleString()} {focusedDeal.currency}</p>
+                  </div>
+                  <div className="rounded-[1.15rem] bg-background/65 p-4">
+                    <p className="text-xs text-muted-foreground">{t("accounting.accountingReference")}</p>
+                    <p className="mt-1 font-medium">{focusedDeal.accountingReference || t("common.notSpecified")}</p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                  {totals.net >= 0 ? t("accounting.positiveSignal") : t("accounting.negativeSignal")}
+                  {dealFinancialSignal ? ` ${dealFinancialSignal.variance.toLocaleString()} ${focusedDeal.currency}.` : ""}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
+                {t("accounting.globalHint")}
+              </div>
+            )}
+          </BentoCard>
+
+          <BentoCard className="space-y-4">
+            <div className="flex items-center gap-3">
+              <FilePenLine className="h-5 w-5 text-primary" />
+              <h2 className="font-serif text-2xl font-semibold">{t("accounting.createTitle")}</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label>{t("common.type")}</Label>
+                <select
+                  value={type}
+                  onChange={(event) => setType(event.target.value as "income" | "expense")}
+                  className="mt-2 flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="expense">{t("accounting.typeExpense")}</option>
+                  <option value="income">{t("accounting.typeIncome")}</option>
+                </select>
+              </div>
+              <div>
+                <Label>{t("common.amount")}</Label>
+                <Input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="12500" />
+              </div>
+              <div>
+                <Label>{t("common.currency")}</Label>
+                <Input value={currency} onChange={(event) => setCurrency(event.target.value)} />
+              </div>
+              <div>
+                <Label>{t("common.date")}</Label>
+                <Input type="date" value={entryDate} onChange={(event) => setEntryDate(event.target.value)} />
+              </div>
+              <div>
+                <Label>{t("accounting.paymentMethod")}</Label>
+                <Input value={method} onChange={(event) => setMethod(event.target.value)} placeholder="Bank transfer / cash / card" />
+              </div>
+              <div>
+                <Label>{t("accounting.counterparty")}</Label>
+                <Input value={counterparty} onChange={(event) => setCounterparty(event.target.value)} placeholder="Customer / supplier / partner" />
+              </div>
+              <div>
+                <Label>{t("common.category")}</Label>
+                <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Shipping / customs / customer payment" />
+              </div>
+              <div>
+                <Label>{t("accounting.extraReference")}</Label>
+                <Input value={referenceLabel} onChange={(event) => setReferenceLabel(event.target.value)} placeholder="Invoice / receipt / transfer ref" />
+              </div>
+            </div>
+            <div>
+              <Label>{t("accounting.descriptionLabel")}</Label>
+              <Textarea rows={5} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("accounting.descriptionPlaceholder")} />
+            </div>
+            <Button variant="gold" onClick={handleCreateEntry} disabled={submitting}>
+              {submitting ? t("accounting.creating") : t("accounting.createLocked")}
+            </Button>
+            <div className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4 text-sm leading-7 text-muted-foreground">
+              {t("accounting.createHint")}
+            </div>
+          </BentoCard>
+
+          {focusDeal ? (
+            <BentoCard className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Route className="h-5 w-5 text-primary" />
+                <h2 className="font-serif text-2xl font-semibold">{t("accounting.backToDeal")}</h2>
+              </div>
+              <Link
+                to={`/dashboard/deals?deal=${focusDeal}`}
+                className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+              >
+                <Route className="h-4 w-4" />
+                {t("accounting.openDeal")}
+              </Link>
+            </BentoCard>
+          ) : null}
+        </div>
+
+        <BentoCard className="p-0">
+          <div className="border-b border-border/60 px-6 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-serif text-2xl font-semibold">{t("accounting.entriesTitle")}</h2>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                {t("accounting.count", { count: totals.count })}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-0">
+            {[...dealEntries, ...globalEntries].length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={Receipt}
+                  title={t("accounting.emptyListTitle")}
+                  description={t("accounting.emptyListDescription")}
+                />
+              </div>
+            ) : (
+              [...dealEntries, ...globalEntries].map((row) => (
+                <div key={row.id} className="border-b border-border/40 px-6 py-5 last:border-b-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{row.entryNumber}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {row.scope === "deal"
+                          ? `${t("accounting.scopeDeal")}: ${row.dealNumber || t("common.notSpecified")}`
+                          : row.scope === "customer"
+                            ? `${t("accounting.scopeCustomer")}: ${row.customerName || t("common.notSpecified")}`
+                            : t("accounting.scopeGlobal")}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                      {row.locked ? t("accounting.locked") : t("accounting.openState")}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-4">
+                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                      <p className="text-xs text-muted-foreground">{t("accounting.labels.type")}</p>
+                      <p className="mt-1 font-medium">{row.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense")}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                      <p className="text-xs text-muted-foreground">{t("accounting.labels.amount")}</p>
+                      <p className="mt-1 font-medium">{`${row.amount.toLocaleString()} ${row.currency}`}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                      <p className="text-xs text-muted-foreground">{t("accounting.labels.methodCounterparty")}</p>
+                      <p className="mt-1 font-medium">{row.method || "—"} • {row.counterparty || "—"}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                      <p className="text-xs text-muted-foreground">{t("accounting.labels.date")}</p>
+                      <p className="mt-1 font-medium">{new Date(row.entryDate).toLocaleDateString(locale)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span>{t("accounting.labels.category")}: {row.category || t("accounting.uncategorized")}</span>
+                    <span>•</span>
+                    <span>{t("accounting.labels.reference")}: {row.referenceLabel || t("accounting.noReference")}</span>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {row.dealNumber ? (
+                      <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-sm font-medium text-primary hover:underline">
+                        {t("accounting.openDeal")}
+                      </Link>
+                    ) : null}
+                    <Link
+                      to={`/dashboard/edit-requests?deal=${row.dealNumber || focusDeal || ""}&entry=${row.id}`}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      {t("accounting.requestEdit")}
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </BentoCard>
+      </div>
+    </div>
+  );
+}

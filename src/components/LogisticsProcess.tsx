@@ -1,72 +1,128 @@
 import { motion } from "framer-motion";
-import { Search, ClipboardCheck, Factory, Camera, Ship, FileCheck, Truck, CheckCircle } from "lucide-react";
+import {
+  ClipboardPlus,
+  FileSearch,
+  Handshake,
+  PackageCheck,
+  PlaneTakeoff,
+  Scale,
+  Truck,
+  WalletCards,
+} from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const LogisticsProcess = () => {
   const { lang } = useI18n();
 
   const steps = [
-    { icon: Search, en: { title: "Sourcing", desc: "Find verified factories for your product category" }, ar: { title: "البحث عن المصدر", desc: "ابحث عن مصانع موثقة لفئة منتجك" } },
-    { icon: ClipboardCheck, en: { title: "RFQ & Quotation", desc: "Request quotes, compare offers, negotiate terms" }, ar: { title: "طلب عرض الأسعار", desc: "اطلب عروض أسعار، قارن، تفاوض" } },
-    { icon: Factory, en: { title: "Production", desc: "Factory begins production with 30% deposit secured" }, ar: { title: "الإنتاج", desc: "المصنع يبدأ الإنتاج بعد تأمين 30% مقدم" } },
-    { icon: Camera, en: { title: "Pre-Shipment Inspection", desc: "Photo & video verification before shipping" }, ar: { title: "فحص ما قبل الشحن", desc: "تحقق بالصور والفيديو قبل الشحن" } },
-    { icon: Ship, en: { title: "Shipping", desc: "Cargo dispatched via sea or air freight" }, ar: { title: "الشحن", desc: "إرسال البضائع بحراً أو جواً" } },
-    { icon: FileCheck, en: { title: "Customs Clearance", desc: "Documentation and compliance handled" }, ar: { title: "التخليص الجمركي", desc: "إدارة المستندات والامتثال" } },
-    { icon: Truck, en: { title: "Last-Mile Delivery", desc: "Cargo delivered to your warehouse" }, ar: { title: "التوصيل النهائي", desc: "توصيل البضائع إلى مستودعك" } },
-    { icon: CheckCircle, en: { title: "Settlement", desc: "70% balance released after delivery confirmation" }, ar: { title: "التسوية", desc: "تحرير 70% رصيد بعد تأكيد الاستلام" } },
+    {
+      icon: ClipboardPlus,
+      title: lang === "ar" ? "استلام طلب الشراء" : "Purchase request intake",
+      desc:
+        lang === "ar"
+          ? "العميل يرفع الطلب مع الصور والتفاصيل والمواصفات القابلة للتنفيذ."
+          : "The customer submits the request with images, operational details, and sourcing specifications.",
+    },
+    {
+      icon: FileSearch,
+      title: lang === "ar" ? "مراجعة داخلية" : "Internal review",
+      desc:
+        lang === "ar"
+          ? "فريق Lourex يراجع اكتمال الطلب ويجهزه للتحويل إلى عملية تشغيلية."
+          : "The Lourex team reviews completeness and prepares the request for operational conversion.",
+    },
+    {
+      icon: Handshake,
+      title: lang === "ar" ? "تحويل إلى صفقة" : "Convert into deal",
+      desc:
+        lang === "ar"
+          ? "يتم إنشاء Deal / Operation مع تحديد الأطراف ومسؤوليات التنفيذ."
+          : "A deal/operation is created with the responsible parties and execution ownership clearly assigned.",
+    },
+    {
+      icon: PackageCheck,
+      title: lang === "ar" ? "تنفيذ من بلد المنشأ" : "Origin-side execution",
+      desc:
+        lang === "ar"
+          ? "وكيل تركيا يدير التوريد والتجهيز والتحضير والخروج من بلد المنشأ."
+          : "The Turkish partner manages sourcing, preparation, packing, and departure from origin.",
+    },
+    {
+      icon: PlaneTakeoff,
+      title: lang === "ar" ? "شحن وتتبع مرحلي" : "Shipment and staged tracking",
+      desc:
+        lang === "ar"
+          ? "الشحنة تمر عبر 11 مرحلة واضحة قابلة للعرض على العميل والفريق."
+          : "The shipment moves through 11 formal stages visible to both internal teams and the customer.",
+    },
+    {
+      icon: Scale,
+      title: lang === "ar" ? "وصول وتخليص بالوجهة" : "Destination execution",
+      desc:
+        lang === "ar"
+          ? "وكيل السعودية يدير الاستلام المحلي والتخليص والتنسيق النهائي."
+          : "The Saudi partner manages arrival, customs, local handling, and final coordination.",
+    },
+    {
+      icon: WalletCards,
+      title: lang === "ar" ? "قيد مالي مقفل" : "Locked financial control",
+      desc:
+        lang === "ar"
+          ? "المعاملات تسجل كقيود عامة أو مرتبطة بالصفقة ثم تغلق بعد الإنشاء."
+          : "Entries are created as global or deal-linked records, then locked immediately after creation.",
+    },
+    {
+      icon: Truck,
+      title: lang === "ar" ? "تسليم وتقارير" : "Delivery and reporting",
+      desc:
+        lang === "ar"
+          ? "العملية تنتهي بتسليم واضح وسجل تدقيقي وتقارير عامة وتقارير حسب العميل أو الصفقة."
+          : "The flow ends with delivery, audit visibility, and reporting at platform, customer, and deal level.",
+    },
   ];
 
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-serif text-3xl md:text-5xl font-bold mb-4">
-            {lang === "ar" ? "كيف يعمل التوريد والشحن" : "How Sourcing & Shipping Works"}
+    <section className="relative overflow-hidden bg-background py-28">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.10),transparent_32%)]" />
+      <div className="container relative mx-auto px-4 md:px-8">
+        <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-16 text-center">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
+            {lang === "ar" ? "التدفق التشغيلي" : "Operations Flow"}
+          </p>
+          <h2 className="font-serif text-3xl font-bold md:text-5xl">
+            {lang === "ar" ? "تدفق Lourex من الطلب حتى التسليم" : "The Lourex flow from request to delivery"}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-muted-foreground">
             {lang === "ar"
-              ? "عملية شفافة من المصنع إلى مستودعك — كل خطوة مؤمنة ومتتبعة"
-              : "A transparent process from factory to your warehouse — every step secured and tracked"}
+              ? "هذا ليس مسار شراء مباشر من متجر، بل سير تشغيل منظم يجمع العميل وفريق العمليات ووكلاء البلدين ضمن خطوات واضحة قابلة للمتابعة والتدقيق."
+              : "This is not a store checkout flow. It is a structured operational journey connecting the customer, Lourex team, and both partners through accountable steps."}
           </p>
         </motion.div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute start-6 md:start-8 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
-
-            <div className="space-y-6">
-              {steps.map((step, i) => {
-                const loc = step[lang as "en" | "ar"] || step.en;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: lang === "ar" ? 30 : -30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-start gap-5 relative"
-                  >
-                    <div className="relative z-10 shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-card border border-primary/20 flex items-center justify-center">
-                      <step.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-                      <span className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                        {i + 1}
-                      </span>
-                    </div>
-                    <div className="pt-2 md:pt-3">
-                      <h3 className="font-serif text-base md:text-lg font-bold mb-1">{loc.title}</h3>
-                      <p className="text-sm text-muted-foreground">{loc.desc}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.06 }}
+              className="group rounded-[2rem] border border-primary/10 bg-[linear-gradient(180deg,hsla(var(--card)/0.96),hsla(var(--card)/0.88))] p-6 shadow-[0_24px_55px_-36px_rgba(0,0,0,0.26)] dark:shadow-[0_24px_55px_-36px_rgba(0,0,0,0.68)]"
+            >
+              <div className="flex items-start gap-4">
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <step.icon className="h-6 w-6" />
+                  <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    {index + 1}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-serif text-2xl font-semibold transition-colors group-hover:text-primary">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{step.desc}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

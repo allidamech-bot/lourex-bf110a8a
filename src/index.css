@@ -141,6 +141,12 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
+  html[dir="ltr"] body {
+    direction: ltr;
+    text-align: left;
+    font-family: 'Open Sans', sans-serif;
+  }
+
   html[dir="rtl"] body {
     direction: rtl;
     text-align: right;
@@ -198,7 +204,7 @@
   }
 
   .bg-gradient-hero {
-    background: radial-gradient(ellipse at top, hsl(213 60% 12%) 0%, hsl(213 75% 8%) 70%);
+    background: radial-gradient(ellipse at top, hsl(var(--surface-overlay)) 0%, hsl(var(--background)) 70%);
   }
 
   .border-gold {
@@ -210,10 +216,10 @@
   }
 
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-primary/20;
+    @apply bg-card/85 backdrop-blur-xl border border-primary/20 shadow-[0_20px_45px_-30px_rgba(0,0,0,0.28)];
   }
 
   .luxury-card {
-    @apply bg-card border border-primary/20 rounded-2xl shadow-sm;
+    @apply bg-card border border-primary/20 rounded-2xl shadow-[0_20px_45px_-32px_rgba(0,0,0,0.22)];
   }
 }

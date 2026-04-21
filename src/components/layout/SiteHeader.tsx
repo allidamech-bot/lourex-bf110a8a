@@ -1,137 +1,134 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Menu, Shield, UserCircle2, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
-import { toast } from "sonner";
-
-const publicLinks = [
-  { to: "/", label: "الرئيسية" },
-  { to: "/request", label: "طلب شراء" },
-  { to: "/track", label: "تتبع الشحنة" },
-  { to: "/about", label: "عن Lourex" },
-  { to: "/contact", label: "تواصل معنا" },
-];
+import NotificationBell from "@/components/NotificationBell";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { getDefaultRouteForRole, isInternalRole, roleLabels } from "@/features/auth/rbac";
+import { useI18n } from "@/lib/i18n";
 
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { lang } = useI18n();
+  const { user, profile, signOut } = useAuthSession();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const syncUser = async () => {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+  const publicLinks = useMemo(
+    () => [
+      { to: "/", label: lang === "ar" ? "الرئيسية" : "Home" },
+      { to: "/request", label: lang === "ar" ? "طلب شراء" : "Purchase Request" },
+      { to: "/track", label: lang === "ar" ? "تتبع الشحنة" : "Track Shipment" },
+      { to: "/about", label: lang === "ar" ? "عن Lourex" : "About Lourex" },
+      { to: "/contact", label: lang === "ar" ? "تواصل معنا" : "Contact" },
+    ],
+    [lang],
+  );
 
-      setUser(currentUser);
-
-      if (!currentUser) {
-        setIsAdmin(false);
-        return;
-      }
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", currentUser.id);
-
-      setIsAdmin(Boolean(roles?.some((item) => item.role === "admin")));
-    };
-
-    syncUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      syncUser();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const workspaceLink = profile ? getDefaultRouteForRole(profile.role) : "/auth";
+  const workspaceLabel = profile
+    ? isInternalRole(profile.role)
+      ? lang === "ar"
+        ? "غرفة التشغيل"
+        : "Operations Room"
+      : lang === "ar"
+        ? "بوابة العميل"
+        : "Customer Portal"
+    : lang === "ar"
+      ? "دخول"
+      : "Sign in";
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("تم تسجيل الخروج");
+    await signOut();
+    toast.success(lang === "ar" ? "تم تسجيل الخروج" : "Signed out successfully");
     navigate("/");
   };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-            <span className="font-serif text-lg font-bold">L</span>
-          </div>
-          <div>
-            <p className="font-serif text-xl font-bold tracking-wide">LOUREX</p>
-            <p className="text-xs text-muted-foreground">Operations Platform</p>
+      <div className="container mx-auto flex h-20 items-center justify-between gap-4 px-4 md:px-8">
+        <Link to="/" className="flex shrink-0 items-center gap-3">
+          <img src="/logo.png" alt="Lourex" className="h-11 w-11 rounded-2xl object-contain" />
+          <div className="flex items-center">
+            <p className="font-serif text-xl font-bold tracking-wide text-foreground">LOUREX</p>
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
           {publicLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                `rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                 }`
               }
             >
               {link.label}
             </NavLink>
           ))}
-          {user ? (
+          {user && profile ? (
             <NavLink
-              to="/dashboard"
+              to={workspaceLink}
               className={({ isActive }) =>
-                `rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                `rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                 }`
               }
             >
-              لوحة التحكم
+              {workspaceLabel}
             </NavLink>
           ) : null}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden shrink-0 items-center gap-3 lg:flex">
           <ThemeToggle />
           <LanguageSwitcher />
-          {isAdmin ? (
+          {user ? <NotificationBell userId={user.id} /> : null}
+
+          {profile?.role === "owner" ? (
             <Button variant="outline" asChild>
               <Link to="/admin">
                 <Shield className="me-2 h-4 w-4" />
-                الإدارة
+                {lang === "ar" ? "الإدارة" : "Admin"}
               </Link>
             </Button>
           ) : null}
-          {user ? (
+
+          {user && profile ? (
             <>
+              <div className="rounded-full border border-border/60 bg-card px-4 py-2 text-xs text-muted-foreground">
+                {lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en}
+              </div>
+
               <Button variant="outline" asChild>
-                <Link to="/dashboard">
+                <Link to={workspaceLink}>
                   <UserCircle2 className="me-2 h-4 w-4" />
-                  لوحة التحكم
+                  {workspaceLabel}
                 </Link>
               </Button>
+
               <Button variant="ghost" onClick={handleLogout}>
                 <LogOut className="me-2 h-4 w-4" />
-                خروج
+                {lang === "ar" ? "خروج" : "Sign out"}
               </Button>
             </>
           ) : (
             <Button variant="gold" asChild>
-              <Link to="/auth">دخول</Link>
+              <Link to="/auth">{lang === "ar" ? "دخول" : "Sign in"}</Link>
             </Button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          {user ? <NotificationBell userId={user.id} /> : null}
           <ThemeToggle />
           <LanguageSwitcher />
           <button className="rounded-lg p-2 text-foreground" onClick={() => setIsOpen((value) => !value)}>
@@ -153,29 +150,35 @@ export const SiteHeader = () => {
                 {link.label}
               </NavLink>
             ))}
-            {user ? (
+
+            {user && profile ? (
               <>
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  {lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en}
+                </div>
+
                 <NavLink
-                  to="/dashboard"
+                  to={workspaceLink}
                   onClick={() => setIsOpen(false)}
                   className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  لوحة التحكم
+                  {workspaceLabel}
                 </NavLink>
+
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    handleLogout();
+                    void handleLogout();
                   }}
                   className="rounded-lg px-3 py-2 text-start text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  تسجيل الخروج
+                  {lang === "ar" ? "تسجيل الخروج" : "Sign out"}
                 </button>
               </>
             ) : (
               <Button variant="gold" asChild className="mt-2">
                 <Link to="/auth" onClick={() => setIsOpen(false)}>
-                  دخول
+                  {lang === "ar" ? "دخول" : "Sign in"}
                 </Link>
               </Button>
             )}

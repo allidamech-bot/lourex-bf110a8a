@@ -1,93 +1,95 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, Lock, Globe } from "lucide-react";
+import { FileLock2, Globe, ShieldCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const TrustSection = () => {
   const { lang } = useI18n();
 
-  const title = lang === "ar" ? "موثوق من الشركات حول العالم" : lang === "tr" ? "Dünya Genelinde İşletmeler Tarafından Güveniliyor" : "Trusted by Businesses Worldwide";
+  const trustMetrics = [
+    { value: "11", label: lang === "ar" ? "مرحلة لوجستية رسمية" : "official logistics stages" },
+    { value: "2", label: lang === "ar" ? "وكلاء تنفيذ أساسيون" : "core execution partners" },
+    { value: "1", label: lang === "ar" ? "سجل تشغيلي موحد" : "unified operations record" },
+  ];
 
-  const badges = [
+  const trustPillars = [
     {
       icon: ShieldCheck,
-      en: { label: "Verified", desc: "All suppliers are KYC-verified" },
-      ar: { label: "موثّق", desc: "جميع الموردين موثّقون بالهوية" },
-      tr: { label: "Doğrulanmış", desc: "Tüm tedarikçiler KYC doğrulamalı" },
+      title: lang === "ar" ? "تحكم تشغيلي واضح" : "Clear operational control",
+      description:
+        lang === "ar"
+          ? "الطلب لا يضيع بين الرسائل والملاحظات، بل يتحول إلى صفقة لها سياق تنفيذ وتتبع ومسؤوليات محددة."
+          : "Requests do not disappear into scattered messages. They become deal records with execution context, tracking, and accountable ownership.",
     },
     {
-      icon: Lock,
-      en: { label: "Secure", desc: "Escrow-protected transactions" },
-      ar: { label: "آمن", desc: "معاملات محمية بنظام الضمان" },
-      tr: { label: "Güvenli", desc: "Emanet korumalı işlemler" },
+      icon: FileLock2,
+      title: lang === "ar" ? "انضباط مالي مقفل" : "Locked financial discipline",
+      description:
+        lang === "ar"
+          ? "القيود تقفل بعد الإنشاء، وأي تعديل يمر عبر طلب رسمي قابل للمراجعة والتوثيق."
+          : "Entries lock after creation, and any correction goes through a formal request that can be reviewed and audited.",
     },
     {
       icon: Globe,
-      en: { label: "Global", desc: "Operating in 35+ countries" },
-      ar: { label: "عالمي", desc: "نعمل في أكثر من 35 دولة" },
-      tr: { label: "Küresel", desc: "35+ ülkede faaliyet" },
+      title: lang === "ar" ? "ثقة عميل قابلة للشرح" : "Customer trust that can be explained",
+      description:
+        lang === "ar"
+          ? "العميل يرى أين وصلت شحنته، والفريق يرى أين وصلت الصفقة، والإدارة ترى أثر كل قرار وتشغيل."
+          : "Customers see where the shipment stands, teams see where the deal stands, and supervisors see the impact of every action.",
     },
   ];
 
-  const stats = [
-    { value: "200+", en: "Active Merchants", ar: "تاجر نشط", tr: "Aktif Tüccar" },
-    { value: "50+", en: "Verified Suppliers", ar: "مورد موثّق", tr: "Doğrulanmış Tedarikçi" },
-    { value: "12K+", en: "Orders Processed", ar: "طلب تمت معالجته", tr: "İşlenen Sipariş" },
-    { value: "35+", en: "Countries Served", ar: "دولة يتم خدمتها", tr: "Hizmet Verilen Ülke" },
-  ];
-
   return (
-    <section className="py-24 bg-background">
+    <section className="bg-background py-28">
       <div className="container mx-auto px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]"
         >
-          <h2 className="font-serif text-3xl md:text-5xl font-bold">{title}</h2>
-        </motion.div>
+          <div className="rounded-[2.2rem] border border-primary/10 bg-[linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.9))] p-8 shadow-[0_24px_60px_-38px_rgba(0,0,0,0.22)] dark:shadow-[0_24px_60px_-38px_rgba(0,0,0,0.8)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
+              {lang === "ar" ? "لماذا يثق العملاء في Lourex" : "Why customers trust Lourex"}
+            </p>
+            <h2 className="mt-5 font-serif text-3xl font-bold md:text-5xl">
+              {lang === "ar" ? "الثقة هنا ناتجة عن النظام لا عن الوعود" : "Trust comes from the system, not from promises"}
+            </h2>
+            <p className="mt-5 text-base leading-8 text-muted-foreground">
+              {lang === "ar"
+                ? "Lourex تمنح العميل مسارًا يمكن فهمه، وتمنح فريق التشغيل أدوات يمكن الاعتماد عليها، وتمنح الإدارة رؤية قابلة للتدقيق."
+                : "Lourex gives customers a flow they can understand, operators tools they can rely on, and management an audit-ready view of the business."}
+            </p>
+            <div className="mt-10 grid grid-cols-3 gap-4">
+              {trustMetrics.map((item) => (
+                <div key={item.label} className="rounded-[1.4rem] border border-border/60 bg-secondary/20 p-4 text-center">
+                  <div className="font-serif text-4xl font-bold text-gradient-gold">{item.value}</div>
+                  <div className="mt-2 text-xs leading-6 text-muted-foreground">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {/* Animated stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-          {stats.map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="text-center"
-            >
-              <div className="font-serif text-4xl md:text-5xl font-bold text-gradient-gold mb-2">{s.value}</div>
-              <div className="text-sm text-muted-foreground">{s[lang as "en" | "ar" | "tr"] || s.en}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Trust badges */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {badges.map((b, i) => {
-            const loc = b[lang as "en" | "ar" | "tr"] || b.en;
-            return (
+          <div className="grid gap-6">
+            {trustPillars.map((item, index) => (
               <motion.div
-                key={i}
+                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-4 p-6 rounded-2xl border border-primary/20 bg-primary/5"
+                transition={{ delay: index * 0.08 }}
+                className="flex gap-5 rounded-[2rem] border border-primary/10 bg-primary/5 p-6"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
-                  <b.icon className="w-7 h-7 text-primary" />
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <item.icon className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="font-serif font-bold text-lg">{loc.label}</div>
-                  <div className="text-sm text-muted-foreground">{loc.desc}</div>
+                  <h3 className="font-serif text-2xl font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.description}</p>
                 </div>
               </motion.div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );

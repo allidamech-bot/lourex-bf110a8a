@@ -1,0 +1,490 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRightLeft,
+  CheckCircle2,
+  ClipboardList,
+  Eye,
+  FileImage,
+  Filter,
+  Loader2,
+  MessageSquareWarning,
+  Search,
+  ShieldCheck,
+  StickyNote,
+} from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import BentoCard from "@/components/BentoCard";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  convertRequestToDeal,
+  loadPurchaseRequests,
+  requestStatusMeta,
+  updatePurchaseRequestInternalNotes,
+  updatePurchaseRequestStatus,
+} from "@/lib/operationsDomain";
+import type { PurchaseRequestStatus } from "@/types/lourex";
+import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
+
+export default function PurchaseRequestsPage() {
+  const { locale, t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
+  const [loading, setLoading] = useState(true);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
+  const [internalNotesDraft, setInternalNotesDraft] = useState("");
+
+  const statusActions: Array<{ value: PurchaseRequestStatus; label: string }> = [
+    { value: "under_review", label: t("requests.actions.under_review") },
+    { value: "awaiting_clarification", label: t("requests.actions.awaiting_clarification") },
+    { value: "ready_for_conversion", label: t("requests.actions.ready_for_conversion") },
+  ];
+
+  const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
+    { key: "all", label: t("requests.filters.all") },
+    { key: "intake_submitted", label: t("requests.filters.intake_submitted") },
+    { key: "under_review", label: t("requests.filters.under_review") },
+    { key: "awaiting_clarification", label: t("requests.filters.awaiting_clarification") },
+    { key: "ready_for_conversion", label: t("requests.filters.ready_for_conversion") },
+    { key: "converted_to_deal", label: t("requests.filters.converted_to_deal") },
+  ];
+
+  const selectedRequestId = searchParams.get("request");
+
+  const refresh = async (preserveSelection = true) => {
+    setLoading(true);
+    const data = await loadPurchaseRequests();
+    setRows(data);
+    setLoading(false);
+
+    if (!preserveSelection && data[0]) {
+      setSearchParams({ request: data[0].id });
+    }
+  };
+
+  useEffect(() => {
+    void refresh(false);
+  }, []);
+
+  const filteredRows = useMemo(() => {
+    const normalized = search.trim().toLowerCase();
+
+    return rows.filter((row) => {
+      const matchesFilter = activeFilter === "all" ? true : row.status === activeFilter;
+      const matchesSearch =
+        !normalized ||
+        row.requestNumber.toLowerCase().includes(normalized) ||
+        row.productName.toLowerCase().includes(normalized) ||
+        row.customer.fullName.toLowerCase().includes(normalized) ||
+        row.customer.email.toLowerCase().includes(normalized);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [rows, search, activeFilter]);
+
+  const selectedRow = filteredRows.find((row) => row.id === selectedRequestId) || filteredRows[0] || null;
+
+  useEffect(() => {
+    setInternalNotesDraft(selectedRow?.internalNotes || "");
+  }, [selectedRow?.id]);
+
+  const requestMetrics = useMemo(
+    () => ({
+      total: rows.length,
+      review: rows.filter((row) => row.status === "under_review").length,
+      ready: rows.filter((row) => row.status === "ready_for_conversion").length,
+      converted: rows.filter((row) => row.status === "converted_to_deal").length,
+    }),
+    [rows],
+  );
+
+  const handleStatusUpdate = async (requestId: string, status: PurchaseRequestStatus) => {
+    setUpdatingStatusId(requestId);
+
+    try {
+      const { error } = await updatePurchaseRequestStatus(requestId, status, internalNotesDraft);
+      if (error) throw error;
+      toast.success(t("requests.toasts.statusUpdated"));
+      await refresh();
+      setSearchParams({ request: requestId });
+    } catch (error: any) {
+      toast.error(error.message || t("requests.toasts.statusError"));
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedRow) return;
+
+    setSavingNotesId(selectedRow.id);
+
+    try {
+      const { error } = await updatePurchaseRequestInternalNotes(selectedRow.id, internalNotesDraft);
+      if (error) throw error;
+      toast.success(t("requests.toasts.notesSaved"));
+      await refresh();
+      setSearchParams({ request: selectedRow.id });
+    } catch (error: any) {
+      toast.error(error.message || t("requests.toasts.notesError"));
+    } finally {
+      setSavingNotesId(null);
+    }
+  };
+
+  const handleConvert = async () => {
+    if (!selectedRow) return;
+
+    if (selectedRow.convertedDealNumber) {
+      navigate(`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`);
+      return;
+    }
+
+    setConvertingId(selectedRow.id);
+
+    try {
+      const converted = await convertRequestToDeal(selectedRow, {
+        operationalNotes: internalNotesDraft,
+      });
+      toast.success(
+        t("requests.toasts.converted", {
+          request: selectedRow.requestNumber,
+          deal: converted.dealNumber,
+        }),
+      );
+      await refresh();
+      navigate(`/dashboard/deals?deal=${converted.dealNumber}`);
+    } catch (error: any) {
+      toast.error(error.message || t("requests.toasts.convertError"));
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-44 w-full rounded-[2rem]" />
+        ))}
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={ClipboardList}
+        title={t("requests.emptyTitle")}
+        description={t("requests.emptyDescription")}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <BentoCard className="space-y-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("requests.inboxEyebrow")}</p>
+            <h2 className="mt-2 font-serif text-2xl font-semibold">{t("requests.inboxTitle")}</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("requests.inboxDescription")}</p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { label: t("requests.total"), value: requestMetrics.total },
+              { label: t("requests.review"), value: requestMetrics.review },
+              { label: t("requests.ready"), value: requestMetrics.ready },
+              { label: t("requests.converted"), value: requestMetrics.converted },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4 text-center">
+                <p className="text-2xl font-bold">{item.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="relative">
+              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("requests.searchPlaceholder")}
+                className="ps-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {requestFilters.map((filter) => (
+                <Button
+                  key={filter.key}
+                  variant={activeFilter === filter.key ? "gold" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveFilter(filter.key)}
+                >
+                  <Filter className="me-2 h-4 w-4" />
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {filteredRows.map((row) => {
+              const statusMeta = requestStatusMeta[row.status];
+              return (
+                <button
+                  key={row.id}
+                  onClick={() => setSearchParams({ request: row.id })}
+                  className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+                    selectedRow?.id === row.id
+                      ? "border-primary/30 bg-primary/10"
+                      : "border-border/60 bg-secondary/15 hover:border-primary/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{row.requestNumber}</p>
+                      <p className="mt-2 font-medium">{row.productName || t("requests.genericRequest")}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{row.customer.fullName}</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                      {t(`statuses.${row.status}`)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span>{t("requests.attachmentsCount", { count: row.attachments.length })}</span>
+                    <span>•</span>
+                    <span>{new Date(row.createdAt).toLocaleDateString(locale)}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </BentoCard>
+
+        {selectedRow ? (
+          <BentoCard className="p-0">
+            <div className="border-b border-border/50 p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{selectedRow.requestNumber}</p>
+                  <h2 className="mt-2 font-serif text-3xl font-semibold">{selectedRow.productName || t("requests.genericRequest")}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {selectedRow.customer.fullName} • {selectedRow.customer.email}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {selectedRow.convertedDealNumber ? (
+                    <Button variant="outline" asChild>
+                      <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
+                        <Eye className="me-2 h-4 w-4" />
+                        {t("requests.openDeal")}
+                      </Link>
+                    </Button>
+                  ) : null}
+                  <Button variant="gold" disabled={convertingId === selectedRow.id} onClick={handleConvert}>
+                    {convertingId === selectedRow.id ? (
+                      <>
+                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                        {t("requests.converting")}
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRightLeft className="me-2 h-4 w-4" />
+                        {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${requestStatusMeta[selectedRow.status].tone}`}>
+                  {t(`statuses.${selectedRow.status}`)}
+                </span>
+                {selectedRow.convertedDealNumber ? (
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    {t("requests.linkedDeal", { deal: selectedRow.convertedDealNumber })}
+                  </span>
+                ) : null}
+                {selectedRow.isLegacyFallback ? (
+                  <span className="rounded-full bg-secondary/25 px-3 py-1 text-xs font-medium text-muted-foreground">
+                    {t("requests.legacy")}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-0 xl:grid-cols-[1.02fr_0.98fr]">
+              <div className="border-b border-border/50 p-6 xl:border-b-0 xl:border-e">
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-sm leading-7 text-muted-foreground">
+                      {selectedRow.productDescription || t("requests.noDescription")}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {[
+                      { label: t("requests.labels.customer"), value: selectedRow.customer.fullName },
+                      { label: t("requests.labels.email"), value: selectedRow.customer.email },
+                      { label: t("requests.labels.phone"), value: selectedRow.customer.phone || t("requests.noPhone") },
+                      {
+                        label: t("requests.labels.location"),
+                        value: `${selectedRow.customer.country || "—"} / ${selectedRow.customer.city || "—"}`,
+                      },
+                      { label: t("requests.labels.quantity"), value: String(selectedRow.quantity || "—") },
+                      { label: t("requests.labels.shipping"), value: selectedRow.preferredShippingMethod || "—" },
+                      { label: t("requests.labels.size"), value: selectedRow.sizeDimensions || "—" },
+                      { label: t("requests.labels.material"), value: selectedRow.material || "—" },
+                      { label: t("requests.labels.color"), value: selectedRow.color || "—" },
+                      { label: t("requests.labels.reference"), value: selectedRow.referenceLink || t("requests.noReference") },
+                    ].map((item) => (
+                      <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 px-4 py-3">
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
+                        <p className="mt-1 text-sm font-medium">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <p className="font-medium">{t("requests.labels.technicalSpecs")}</p>
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                      {selectedRow.technicalSpecs || t("requests.noSpecs")}
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <FileImage className="h-4 w-4 text-primary" />
+                      <p className="font-medium">{t("requests.labels.attachments")}</p>
+                    </div>
+                    {selectedRow.attachments.length === 0 ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{t("requests.noAttachments")}</p>
+                    ) : (
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {selectedRow.attachments.map((attachment) => (
+                          <a
+                            key={attachment.id}
+                            href={attachment.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                          >
+                            <p className="font-medium">{attachment.fileName}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{attachment.category}</p>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="space-y-5">
+                  <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                    {t("requests.reviewPanel")}
+                  </div>
+
+                  <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <StickyNote className="h-4 w-4 text-primary" />
+                      <p className="font-medium">{t("requests.labels.internalNotes")}</p>
+                    </div>
+                    <Textarea
+                      rows={8}
+                      value={internalNotesDraft}
+                      onChange={(event) => setInternalNotesDraft(event.target.value)}
+                      className="mt-4"
+                      placeholder={t("requests.notesPlaceholder")}
+                    />
+                    <Button
+                      className="mt-4"
+                      variant="outline"
+                      onClick={handleSaveNotes}
+                      disabled={savingNotesId === selectedRow.id}
+                    >
+                      {savingNotesId === selectedRow.id ? (
+                        <>
+                          <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                          {t("requests.savingNotes")}
+                        </>
+                      ) : (
+                        t("requests.saveNotes")
+                      )}
+                    </Button>
+                  </div>
+
+                  {!selectedRow.convertedDealNumber ? (
+                    <div className="grid gap-3">
+                      {statusActions.map((action) => (
+                        <Button
+                          key={action.value}
+                          variant={selectedRow.status === action.value ? "gold" : "outline"}
+                          disabled={
+                            updatingStatusId === selectedRow.id ||
+                            selectedRow.status === action.value ||
+                            Boolean(selectedRow.isLegacyFallback)
+                          }
+                          onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
+                        >
+                          {updatingStatusId === selectedRow.id && selectedRow.status !== action.value ? (
+                            <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                          ) : action.value === "ready_for_conversion" ? (
+                            <CheckCircle2 className="me-2 h-4 w-4" />
+                          ) : (
+                            <MessageSquareWarning className="me-2 h-4 w-4" />
+                          )}
+                          {action.label}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[1.25rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
+                      {t("requests.convertedHint")}
+                    </div>
+                  )}
+
+                  <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <p className="font-medium">{t("requests.labels.reviewHistory")}</p>
+                    </div>
+                    <p className="mt-2 text-muted-foreground">
+                      {t("requests.receivedAt", { value: new Date(selectedRow.createdAt).toLocaleString(locale) })}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {selectedRow.reviewedAt
+                        ? t("requests.reviewedAt", { value: new Date(selectedRow.reviewedAt).toLocaleString(locale) })
+                        : t("requests.noReviewYet")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </BentoCard>
+        ) : (
+          <EmptyState
+            icon={ClipboardList}
+            title={t("requests.emptyFilteredTitle")}
+            description={t("requests.emptyFilteredDescription")}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,9 +1,95 @@
 import type { ReactNode } from "react";
-import { ConsentGate } from "@/components/ConsentGate";
-import VerificationGate from "@/components/VerificationGate";
+import { Navigate, useLocation } from "react-router-dom";
+import { AuthStateScreen } from "@/components/auth/AuthStateScreen";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { useI18n } from "@/lib/i18n";
+import {
+  canAccessRole,
+  getDefaultRouteForRole,
+  isInternalRole,
+  roleLabels,
+  type LourexRole,
+} from "@/features/auth/rbac";
 
-export const ProtectedRoute = ({ children }: { children: ReactNode }) => (
-  <ConsentGate>
-    <VerificationGate>{children}</VerificationGate>
-  </ConsentGate>
+type ProtectedRouteProps = {
+  children: ReactNode;
+  allowedRoles?: LourexRole[];
+  requireInternal?: boolean;
+};
+
+const LoadingState = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <span className="text-sm font-medium tracking-wide text-muted-foreground">LOUREX</span>
+    </div>
+  </div>
 );
+
+export const ProtectedRoute = ({
+  children,
+  allowedRoles,
+  requireInternal = false,
+}: ProtectedRouteProps) => {
+  const location = useLocation();
+  const { user, profile, loading, signOut } = useAuthSession();
+  const { lang, t } = useI18n();
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+  }
+
+  if (!profile) {
+    return (
+      <AuthStateScreen
+        variant="missing"
+        title={t("auth.missingTitle")}
+        description={t("auth.missingDescription")}
+        primaryAction={{ label: t("auth.backToAuth"), to: "/auth" }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
+
+  if (profile.status !== "active") {
+    return (
+      <AuthStateScreen
+        variant="inactive"
+        title={t("auth.inactiveTitle")}
+        description={t("auth.inactiveDescription")}
+        primaryAction={{ label: t("auth.backHome"), to: "/" }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
+
+  if (requireInternal && !isInternalRole(profile.role)) {
+    return (
+      <AuthStateScreen
+        variant="forbidden"
+        title={t("auth.internalOnlyTitle")}
+        description={t("auth.internalOnlyDescription")}
+        primaryAction={{ label: t("auth.customerPortal"), to: getDefaultRouteForRole(profile.role) }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
+
+  if (!canAccessRole(profile.role, allowedRoles)) {
+    return (
+      <AuthStateScreen
+        variant="forbidden"
+        title={t("auth.forbiddenTitle")}
+        description={t("auth.forbiddenDescription", { role: roleLabels[profile.role][lang] })}
+        primaryAction={{ label: t("auth.myArea"), to: getDefaultRouteForRole(profile.role) }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
+
+  return <>{children}</>;
+};

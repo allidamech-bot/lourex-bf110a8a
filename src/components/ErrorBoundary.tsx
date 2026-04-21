@@ -31,17 +31,18 @@ class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-8">
-          <div className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+        <div className="flex min-h-[420px] items-center justify-center p-8">
+          <div className="max-w-lg rounded-[2rem] border border-border/60 bg-card/95 p-8 text-center shadow-[0_24px_60px_-38px_rgba(0,0,0,0.55)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
               <AlertTriangle className="w-8 h-8 text-destructive" />
             </div>
-            <h3 className="font-serif text-xl font-bold mb-2">Something went wrong</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              An unexpected error occurred. Please try again.
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">LOUREX Runtime Guard</p>
+            <h3 className="mb-2 mt-3 font-serif text-2xl font-bold">حدث خطأ غير متوقع داخل المنصة</h3>
+            <p className="mb-6 text-sm leading-7 text-muted-foreground">
+              أوقفنا هذه الواجهة حتى لا تستمر العملية بشكل غير واضح. يمكنك إعادة المحاولة الآن، وإذا تكرر الخطأ فراجع آخر إجراء تم تنفيذه.
             </p>
             <Button variant="outline" onClick={this.handleReset} className="gap-2">
-              <RefreshCw className="w-4 h-4" /> Try Again
+              <RefreshCw className="w-4 h-4" /> إعادة المحاولة
             </Button>
           </div>
         </div>

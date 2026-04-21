@@ -21,7 +21,7 @@ const BentoCard = ({ children, className, delay = 0, span = "1" }: BentoCardProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: "easeOut" }}
       className={cn(
-        "rounded-2xl border border-primary/20 bg-card p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300",
+        "relative overflow-hidden rounded-[1.75rem] border border-primary/15 bg-[linear-gradient(180deg,hsla(var(--card)/0.94),hsla(var(--card)/0.84))] p-5 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.6)] backdrop-blur-sm hover:border-primary/30 hover:shadow-[0_26px_55px_-30px_rgba(0,0,0,0.72)] transition-all duration-300 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent before:content-['']",
         spanClasses[span],
         className
       )}

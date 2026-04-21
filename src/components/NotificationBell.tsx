@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 
 interface Notification {
   id: string;
@@ -18,111 +19,199 @@ const NotificationBell = ({ userId }: { userId: string }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { locale, t } = useI18n();
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.is_read).length,
+    [notifications],
+  );
 
   useEffect(() => {
-    if (!userId) return;
+    let isMounted = true;
 
-    const load = async () => {
-      const { data } = await supabase
+    const cleanupExistingNotificationChannels = async () => {
+      const channels = supabase.getChannels();
+      const notificationChannels = channels.filter((channel) =>
+        channel.topic.includes("user-notifications:"),
+      );
+
+      await Promise.all(notificationChannels.map((channel) => supabase.removeChannel(channel)));
+    };
+
+    const setup = async () => {
+      if (!userId) {
+        setNotifications([]);
+        if (channelRef.current) {
+          await supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+        return;
+      }
+
+      await cleanupExistingNotificationChannels();
+
+      const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(20);
-      setNotifications((data as Notification[]) || []);
-    };
-    load();
 
-    // Realtime subscription
-    const channel = supabase
-      .channel("user-notifications")
-      .on(
+      if (!isMounted) return;
+
+      if (error) {
+        console.error("Failed to load notifications:", error);
+        setNotifications([]);
+      } else {
+        setNotifications((data as Notification[]) || []);
+      }
+
+      const channel = supabase.channel(`user-notifications:${userId}:${Date.now()}`);
+
+      channel.on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev].slice(0, 20));
-        }
-      )
-      .subscribe();
+          if (!isMounted) return;
 
-    return () => { supabase.removeChannel(channel); };
+          const incoming = payload.new as Notification;
+
+          setNotifications((prev) => {
+            const exists = prev.some((item) => item.id === incoming.id);
+            if (exists) return prev;
+            return [incoming, ...prev].slice(0, 20);
+          });
+        },
+      );
+
+      channel.subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("Notification channel error");
+        }
+      });
+
+      channelRef.current = channel;
+    };
+
+    void setup();
+
+    return () => {
+      isMounted = false;
+
+      if (channelRef.current) {
+        void supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [userId]);
 
   const markAllRead = async () => {
-    const unread = notifications.filter((n) => !n.is_read);
-    if (unread.length === 0) return;
-    await supabase
+    const unread = notifications.filter((notification) => !notification.is_read);
+    if (!userId || unread.length === 0) return;
+
+    const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", userId)
       .eq("is_read", false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
+    if (error) {
+      console.error("Failed to mark all notifications as read:", error);
+      return;
+    }
+
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, is_read: true })),
+    );
   };
 
-  const handleClick = (n: Notification) => {
-    if (!n.is_read) {
-      supabase.from("notifications").update({ is_read: true }).eq("id", n.id).then();
-      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+  const handleClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notification.id);
+
+      if (!error) {
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.id === notification.id ? { ...item, is_read: true } : item,
+          ),
+        );
+      }
     }
-    if (n.link) navigate(n.link);
+
+    if (notification.link) {
+      navigate(notification.link);
+    }
+
     setOpen(false);
   };
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+        onClick={() => setOpen((prev) => !prev)}
+        className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+        aria-label={t("notifications.title")}
       >
-        <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -end-0.5 w-4.5 h-4.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 ? (
+          <span className="absolute -top-0.5 -end-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
-        )}
+        ) : null}
       </button>
 
-      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+      {open ? <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} /> : null}
 
       <AnimatePresence>
-        {open && (
+        {open ? (
           <motion.div
             initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute end-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl bg-card border border-border shadow-xl z-50"
+            className="absolute end-0 top-full z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-              <h4 className="text-sm font-semibold">Notifications</h4>
-              {unreadCount > 0 && (
+            <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+              <h4 className="text-sm font-semibold">{t("notifications.title")}</h4>
+              {unreadCount > 0 ? (
                 <button onClick={markAllRead} className="text-xs text-primary hover:underline">
-                  Mark all read
+                  {t("notifications.markAllRead")}
                 </button>
-              )}
+              ) : null}
             </div>
 
             {notifications.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                No notifications yet
+                {t("notifications.empty")}
               </div>
             ) : (
-              notifications.map((n) => (
+              notifications.map((notification) => (
                 <button
-                  key={n.id}
-                  onClick={() => handleClick(n)}
-                  className={`w-full text-start px-4 py-3 border-b border-border/30 hover:bg-secondary/30 transition-colors ${
-                    !n.is_read ? "bg-primary/5" : ""
+                  key={notification.id}
+                  onClick={() => void handleClick(notification)}
+                  className={`w-full border-b border-border/30 px-4 py-3 text-start transition-colors hover:bg-secondary/30 ${
+                    !notification.is_read ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    {!n.is_read && <div className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{n.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-1">
-                        {new Date(n.created_at).toLocaleString()}
+                    {!notification.is_read ? (
+                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{notification.title}</p>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {notification.message}
+                      </p>
+                      <p className="mt-1 text-[10px] text-muted-foreground/60">
+                        {new Date(notification.created_at).toLocaleString(locale)}
                       </p>
                     </div>
                   </div>
@@ -130,7 +219,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               ))
             )}
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
