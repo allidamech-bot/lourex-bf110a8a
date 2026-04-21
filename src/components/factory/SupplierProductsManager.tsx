@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ImagePlus, Loader2, Package, Pencil, Plus, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,37 +12,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, Pencil, Trash2, ImagePlus, X, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  description: string | null;
-  price_per_unit: number | null;
-  moq: string | null;
-  lead_time: string | null;
-  image_url: string | null;
-  is_active: boolean;
-  status: string;
-  factory_id: string;
-  seller_id: string | null;
-}
+import {
+  deleteSellerProduct,
+  saveSellerProduct,
+  uploadSellerProductImage,
+  type SellerProduct,
+} from "@/domain/seller/service";
 
 interface Props {
   factoryId: string;
   userId: string;
-  products: Product[];
-  onChanged: () => void;
+  products: SellerProduct[];
+  onChanged: (savedProduct?: SellerProduct, deletedProductId?: string) => void;
 }
-
-const CATEGORIES = [
-  "Textiles & Fabrics", "Food & Beverages", "Electronics", "Steel & Metals",
-  "Plastics & Packaging", "Chemicals", "Industrial Equipment", "Building Materials",
-  "Auto Parts", "Health & Beauty", "General Trading", "Other",
-];
 
 interface FormState {
   name: string;
@@ -48,21 +32,39 @@ interface FormState {
   description: string;
   price: string;
   moq: string;
-  lead_time: string;
-  is_active: boolean;
+  leadTime: string;
+  isActive: boolean;
 }
 
+const CATEGORIES = [
+  "Textiles & Fabrics",
+  "Food & Beverages",
+  "Electronics",
+  "Steel & Metals",
+  "Plastics & Packaging",
+  "Chemicals",
+  "Industrial Equipment",
+  "Building Materials",
+  "Auto Parts",
+  "Health & Beauty",
+  "General Trading",
+  "Other",
+];
+
 const emptyForm: FormState = {
-  name: "", category: "", description: "", price: "", moq: "", lead_time: "", is_active: true,
+  name: "",
+  category: "",
+  description: "",
+  price: "",
+  moq: "",
+  leadTime: "",
+  isActive: true,
 };
 
 export const SupplierProductsManager = ({ factoryId, userId, products, onChanged }: Props) => {
-  const { lang } = useI18n();
-  const isAr = lang === "ar";
-  const tt = (en: string, ar: string) => (isAr ? ar : en);
-
+  const { t } = useI18n();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
+  const [editing, setEditing] = useState<SellerProduct | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -70,9 +72,23 @@ export const SupplierProductsManager = ({ factoryId, userId, products, onChanged
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!dialogOpen) {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+
       setEditing(null);
       setForm(emptyForm);
       setImageFile(null);
@@ -88,100 +104,122 @@ export const SupplierProductsManager = ({ factoryId, userId, products, onChanged
     setDialogOpen(true);
   };
 
-  const openEdit = (p: Product) => {
-    setEditing(p);
+  const openEdit = (product: SellerProduct) => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    setEditing(product);
     setForm({
-      name: p.name,
-      category: p.category || "",
-      description: p.description || "",
-      price: p.price_per_unit?.toString() || "",
-      moq: p.moq || "",
-      lead_time: p.lead_time || "",
-      is_active: p.is_active,
+      name: product.name,
+      category: product.category,
+      description: product.description,
+      price: product.pricePerUnit?.toString() || "",
+      moq: product.moq,
+      leadTime: product.leadTime,
+      isActive: product.isActive,
     });
     setImageFile(null);
-    setImagePreview(p.image_url || null);
+    setImagePreview(product.imageUrl);
     setDialogOpen(true);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(tt("Image must be under 5MB", "يجب أن تكون الصورة أقل من 5 ميجابايت"));
+  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
       return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5 MB.");
+      return;
+    }
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = previewUrl;
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview(previewUrl);
+    event.target.value = "";
   };
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.category) {
-      toast.error(tt("Name and category are required", "الاسم والفئة مطلوبان"));
+      toast.error(t("seller.requiredFields"));
       return;
     }
+
     setSaving(true);
+
     try {
-      let imageUrl = editing?.image_url || "";
+      let imageUrl = editing?.imageUrl ?? null;
 
       if (imageFile) {
-        const path = `${userId}/${Date.now()}_${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-        const { error: upErr } = await supabase.storage
-          .from("product-images")
-          .upload(path, imageFile, { upsert: false });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-        imageUrl = data.publicUrl;
+        const uploadResult = await uploadSellerProductImage(userId, imageFile);
+        if (uploadResult.error || !uploadResult.data) {
+          throw new Error(uploadResult.error?.message || t("seller.saveFailed"));
+        }
+
+        imageUrl = uploadResult.data;
       }
 
-      const payload = {
-        name: form.name.trim(),
+      const saveResult = await saveSellerProduct({
+        id: editing?.id,
+        userId,
+        factoryId,
+        name: form.name,
         category: form.category,
-        description: form.description.trim(),
-        price_per_unit: form.price ? parseFloat(form.price) : null,
-        moq: form.moq.trim() || null,
-        lead_time: form.lead_time.trim() || null,
-        image_url: imageUrl || null,
-        is_active: form.is_active,
-      };
+        description: form.description,
+        moq: form.moq,
+        pricePerUnit: form.price ? Number(form.price) : null,
+        currency: editing?.currency || "USD",
+        stockCapacity: editing?.stockCapacity || "",
+        leadTime: form.leadTime,
+        shippingOrigin: editing?.shippingOrigin || "",
+        dimensions: editing?.dimensions || "",
+        weightPerUnit: editing?.weightPerUnit ?? null,
+        unitsPerCarton: editing?.unitsPerCarton ?? null,
+        imageUrl,
+      });
 
-      if (editing) {
-        const { error } = await supabase
-          .from("products")
-          .update(payload)
-          .eq("id", editing.id);
-        if (error) throw error;
-        toast.success(tt("Product updated", "تم تحديث المنتج"));
-      } else {
-        const { error } = await supabase.from("products").insert({
-          ...payload,
-          factory_id: factoryId,
-          seller_id: userId,
-        });
-        if (error) throw error;
-        toast.success(tt("Product added", "تمت إضافة المنتج"));
+      if (saveResult.error || !saveResult.data) {
+        throw new Error(saveResult.error?.message || t("seller.saveFailed"));
       }
 
+      toast.success(editing ? t("seller.updated") : t("seller.added"));
       setDialogOpen(false);
-      onChanged();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save product");
+      onChanged(saveResult.data);
+    } catch (error: unknown) {
+      const message = error instanceof Error && error.message ? error.message : t("seller.saveFailed");
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (!deleteId) {
+      return;
+    }
+
     setDeleting(true);
+
     try {
-      const { error } = await supabase.from("products").delete().eq("id", deleteId);
-      if (error) throw error;
-      toast.success(tt("Product deleted", "تم حذف المنتج"));
+      const result = await deleteSellerProduct(deleteId);
+      if (result.error || !result.data) {
+        throw new Error(result.error?.message || t("seller.saveFailed"));
+      }
+
+      toast.success(t("seller.deleted"));
       setDeleteId(null);
-      onChanged();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete");
+      onChanged(undefined, result.data);
+    } catch (error: unknown) {
+      const message = error instanceof Error && error.message ? error.message : t("seller.saveFailed");
+      toast.error(message);
     } finally {
       setDeleting(false);
     }
@@ -189,71 +227,70 @@ export const SupplierProductsManager = ({ factoryId, userId, products, onChanged
 
   return (
     <section className="mb-12">
-      <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
           <Package className="h-5 w-5 text-primary" />
-          {tt("My Products", "منتجاتي")} ({products.length})
+          {t("seller.title")} ({products.length})
         </h2>
         <Button variant="gold" size="sm" onClick={openCreate}>
-          <Plus className="me-1 h-4 w-4" /> {tt("Add Product", "إضافة منتج")}
+          <Plus className="me-1 h-4 w-4" /> {t("seller.addProduct")}
         </Button>
       </div>
 
       {products.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Package className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground mb-4">
-            {tt("You haven't added any products yet.", "لم تقم بإضافة أي منتجات بعد.")}
-          </p>
+          <Package className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+          <p className="mb-4 text-muted-foreground">{t("seller.noProducts")}</p>
           <Button variant="gold-outline" size="sm" onClick={openCreate}>
-            <Plus className="me-1 h-4 w-4" /> {tt("Add Your First Product", "أضف منتجك الأول")}
+            <Plus className="me-1 h-4 w-4" /> {t("seller.addFirstProduct")}
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
-            {products.map((p) => (
+            {products.map((product) => (
               <motion.div
-                key={p.id}
+                key={product.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card rounded-xl overflow-hidden flex flex-col"
+                className="glass-card flex flex-col overflow-hidden rounded-xl"
               >
                 <div className="relative h-40 bg-secondary/40">
-                  {p.image_url ? (
-                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-10 h-10 text-muted-foreground/40" />
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Package className="h-10 w-10 text-muted-foreground/40" />
                     </div>
                   )}
-                  <div className="absolute top-2 right-2">
-                    <Badge variant={p.is_active ? "default" : "secondary"} className={p.is_active ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : ""}>
-                      {p.is_active ? tt("Active", "نشط") : tt("Draft", "مسودة")}
+                  <div className="absolute right-2 top-2">
+                    <Badge
+                      variant={product.isActive ? "default" : "secondary"}
+                      className={product.isActive ? "border-emerald-500/30 bg-emerald-500/20 text-emerald-400" : ""}
+                    >
+                      {product.isActive ? t("seller.active") : t("seller.draft")}
                     </Badge>
                   </div>
                 </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="font-serif font-semibold mb-1 line-clamp-1">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{p.category || "—"}</p>
-                  <div className="flex items-center justify-between text-sm mb-3">
+                <div className="flex flex-1 flex-col p-4">
+                  <h3 className="mb-1 line-clamp-1 font-serif font-semibold">{product.name}</h3>
+                  <p className="mb-2 text-xs text-muted-foreground">{product.category || "—"}</p>
+                  <div className="mb-3 flex items-center justify-between text-sm">
                     <span className="font-semibold text-primary">
-                      {p.price_per_unit ? `$${p.price_per_unit}` : "—"}
+                      {product.pricePerUnit ? `${product.currency} ${product.pricePerUnit}` : "—"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      MOQ: {p.moq || "—"}
-                    </span>
+                    <span className="text-xs text-muted-foreground">MOQ: {product.moq || "—"}</span>
                   </div>
                   <div className="mt-auto flex gap-2">
-                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => openEdit(p)}>
-                      <Pencil className="me-1 h-3.5 w-3.5" /> {tt("Edit", "تعديل")}
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => openEdit(product)}>
+                      <Pencil className="me-1 h-3.5 w-3.5" /> {t("seller.edit")}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteId(p.id)}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeleteId(product.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -265,124 +302,129 @@ export const SupplierProductsManager = ({ factoryId, userId, products, onChanged
         </div>
       )}
 
-      {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-serif">
-              {editing ? tt("Edit Product", "تعديل المنتج") : tt("Add New Product", "إضافة منتج جديد")}
+              {editing ? t("seller.editProduct") : t("seller.addNewProduct")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label>{tt("Product Image", "صورة المنتج")}</Label>
+              <Label>{t("seller.productImage")}</Label>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
               {imagePreview ? (
-                <div className="relative mt-2 rounded-lg overflow-hidden border border-border">
-                  <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover" />
+                <div className="relative mt-2 overflow-hidden rounded-lg border border-border">
+                  <img src={imagePreview} alt="Preview" className="h-40 w-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => { setImageFile(null); setImagePreview(null); }}
-                    className="absolute top-2 right-2 bg-background/80 rounded-full p-1.5 hover:bg-background"
+                    onClick={() => {
+                      if (previewUrlRef.current) {
+                        URL.revokeObjectURL(previewUrlRef.current);
+                        previewUrlRef.current = null;
+                      }
+
+                      setImageFile(null);
+                      setImagePreview(null);
+                    }}
+                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 hover:bg-background"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="mt-2 w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 transition-colors"
+                  className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50"
                 >
-                  <ImagePlus className="w-6 h-6" />
-                  <span className="text-sm">{tt("Select Image", "اختر صورة")}</span>
+                  <ImagePlus className="h-6 w-6" />
+                  <span className="text-sm">{t("seller.selectImage")}</span>
                 </button>
               )}
             </div>
 
             <div>
-              <Label>{tt("Product Name *", "اسم المنتج *")}</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Premium Cotton Fabric" />
+              <Label>{t("seller.productName")}</Label>
+              <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Premium Cotton Fabric" />
             </div>
 
             <div>
-              <Label>{tt("Category *", "الفئة *")}</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue placeholder={tt("Select category", "اختر الفئة")} /></SelectTrigger>
+              <Label>{t("seller.category")}</Label>
+              <Select value={form.category} onValueChange={(value) => setForm({ ...form, category: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("seller.selectCategory")} />
+                </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CATEGORIES.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label>{tt("Description", "الوصف")}</Label>
-              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+              <Label>{t("seller.description")}</Label>
+              <Textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={3} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{tt("Price (USD)", "السعر (USD)")}</Label>
-                <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" />
+                <Label>{t("seller.pricePerUnit")} (USD)</Label>
+                <Input type="number" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} placeholder="0.00" />
               </div>
               <div>
-                <Label>{tt("MOQ", "الحد الأدنى للطلب")}</Label>
-                <Input value={form.moq} onChange={(e) => setForm({ ...form, moq: e.target.value })} placeholder="e.g. 100 units" />
+                <Label>{t("seller.moq")}</Label>
+                <Input value={form.moq} onChange={(event) => setForm({ ...form, moq: event.target.value })} placeholder="e.g. 100 units" />
               </div>
             </div>
 
             <div>
-              <Label>{tt("Lead Time", "وقت التسليم")}</Label>
-              <Input value={form.lead_time} onChange={(e) => setForm({ ...form, lead_time: e.target.value })} placeholder="e.g. 15-20 days" />
+              <Label>{t("seller.leadTime")}</Label>
+              <Input value={form.leadTime} onChange={(event) => setForm({ ...form, leadTime: event.target.value })} placeholder="e.g. 15-20 days" />
             </div>
 
             <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 px-4 py-3">
               <div>
-                <Label className="cursor-pointer">{tt("Status: Active", "الحالة: نشط")}</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {form.is_active
-                    ? tt("Visible to buyers", "مرئي للمشترين")
-                    : tt("Saved as draft", "محفوظ كمسودة")}
+                <Label className="cursor-pointer">{t("seller.active")}</Label>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {form.isActive ? t("seller.visibleToBuyers") : t("seller.savedAsDraft")}
                 </p>
               </div>
-              <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+              <Switch checked={form.isActive} onCheckedChange={(checked) => setForm({ ...form, isActive: checked })} />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="ghost" onClick={() => setDialogOpen(false)} disabled={saving}>
-              {tt("Cancel", "إلغاء")}
+              {t("seller.cancel")}
             </Button>
-            <Button variant="gold" onClick={handleSubmit} disabled={saving}>
-              {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              {editing ? tt("Save Changes", "حفظ التغييرات") : tt("Add Product", "إضافة المنتج")}
+            <Button variant="gold" onClick={() => void handleSubmit()} disabled={saving}>
+              {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
+              {editing ? t("seller.updateProduct") : t("seller.addProduct")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+      <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{tt("Delete Product?", "حذف المنتج؟")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {tt(
-                "This action cannot be undone. The product will be permanently removed from your catalog.",
-                "لا يمكن التراجع عن هذا الإجراء. سيتم حذف المنتج نهائيًا من الكتالوج الخاص بك."
-              )}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("seller.delete")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("seller.deleteConfirmation")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>{tt("Cancel", "إلغاء")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("seller.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={() => void handleDelete()}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              {tt("Delete", "حذف")}
+              {deleting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
+              {t("seller.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

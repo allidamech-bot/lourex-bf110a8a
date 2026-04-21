@@ -30,14 +30,6 @@ export const OWNER_ONLY_ROLES: LourexRole[] = ["owner"];
 export const ACCOUNTING_ROLES: LourexRole[] = ["owner", "operations_employee"];
 export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
 
-export const roleLabels: Record<LourexRole, { en: string; ar: string }> = {
-  owner: { en: "Owner / General Manager", ar: "المالك / المدير العام" },
-  turkish_partner: { en: "Turkish Partner", ar: "الشريك التركي" },
-  saudi_partner: { en: "Saudi Partner", ar: "الشريك السعودي" },
-  operations_employee: { en: "Operations Employee", ar: "موظف العمليات" },
-  customer: { en: "Customer", ar: "العميل" },
-};
-
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
   requests: ["owner", "operations_employee"] as LourexRole[],

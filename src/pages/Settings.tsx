@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import { useI18n } from "@/lib/i18n";
+import { useEffect, useState, type ReactNode } from "react";
+import type { User as SupaUser } from "@supabase/supabase-js";
+import { Bell, Globe, Lock, LogOut, Settings as SettingsIcon, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Lock, Globe, Bell, LogOut, User } from "lucide-react";
-import type { User as SupaUser } from "@supabase/supabase-js";
 
 const Settings = () => {
   const { lang, setLang } = useI18n();
@@ -20,35 +20,63 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { navigate("/auth"); return; }
-      setUser(user);
+    void supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+      if (!currentUser) {
+        navigate("/auth");
+        return;
+      }
+
+      setUser(currentUser);
       setLoading(false);
     });
   }, [navigate]);
 
+  const copy = {
+    title: lang === "ar" ? "الإعدادات" : "Settings",
+    account: lang === "ar" ? "الحساب" : "Account",
+    email: lang === "ar" ? "البريد الإلكتروني" : "Email",
+    editProfile: lang === "ar" ? "تعديل الملف الشخصي" : "Edit profile",
+    password: lang === "ar" ? "كلمة المرور" : "Password",
+    newPassword: lang === "ar" ? "كلمة المرور الجديدة" : "New password",
+    confirmPassword: lang === "ar" ? "تأكيد كلمة المرور" : "Confirm password",
+    updatePassword: lang === "ar" ? "تحديث كلمة المرور" : "Update password",
+    passwordTooShort: lang === "ar" ? "كلمة المرور قصيرة جداً" : "Password is too short",
+    passwordsDontMatch: lang === "ar" ? "كلمتا المرور غير متطابقتين" : "Passwords do not match",
+    passwordUpdated: lang === "ar" ? "تم تحديث كلمة المرور" : "Password updated",
+    language: lang === "ar" ? "اللغة" : "Language",
+    notifications: lang === "ar" ? "الإشعارات" : "Notifications",
+    emailNotifications: lang === "ar" ? "إشعارات البريد الإلكتروني" : "Email notifications",
+    pushNotifications: lang === "ar" ? "الإشعارات الفورية" : "Push notifications",
+    signOut: lang === "ar" ? "تسجيل الخروج" : "Sign out",
+  };
+
   const changePassword = async () => {
     if (newPassword.length < 6) {
-      toast.error(lang === "ar" ? "كلمة المرور قصيرة جداً" : "Password too short");
+      toast.error(copy.passwordTooShort);
       return;
     }
+
     if (newPassword !== confirmPassword) {
-      toast.error(lang === "ar" ? "كلمات المرور غير متطابقة" : "Passwords don't match");
+      toast.error(copy.passwordsDontMatch);
       return;
     }
+
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(lang === "ar" ? "تم تغيير كلمة المرور" : "Password updated");
-      setNewPassword("");
-      setConfirmPassword("");
+
+    if (error) {
+      toast.error(error.message);
+      return;
     }
+
+    toast.success(copy.passwordUpdated);
+    setNewPassword("");
+    setConfirmPassword("");
   };
 
   const handleLogout = async () => {
@@ -56,17 +84,31 @@ const Settings = () => {
     navigate("/");
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
-  const Section = ({ icon: Icon, title, children }: { icon: typeof User; title: string; children: React.ReactNode }) => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-xl p-5 space-y-4">
-      <h2 className="font-semibold flex items-center gap-2">
-        <Icon className="w-4 h-4 text-primary" /> {title}
+  const Section = ({
+    icon: Icon,
+    title,
+    children,
+  }: {
+    icon: typeof User;
+    title: string;
+    children: ReactNode;
+  }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4 rounded-xl border border-border bg-card p-5"
+    >
+      <h2 className="flex items-center gap-2 font-semibold">
+        <Icon className="h-4 w-4 text-primary" />
+        {title}
       </h2>
       {children}
     </motion.div>
@@ -75,68 +117,81 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 pb-16 container mx-auto px-4 max-w-2xl space-y-6">
+      <main className="container mx-auto max-w-2xl space-y-6 px-4 pb-16 pt-24">
         <h1 className="text-3xl font-bold">
-          <SettingsIcon className="w-7 h-7 inline mr-2 text-primary" />
-          {lang === "ar" ? "الإعدادات" : "Settings"}
+          <SettingsIcon className="me-2 inline h-7 w-7 text-primary" />
+          {copy.title}
         </h1>
 
-        {/* Account */}
-        <Section icon={User} title={lang === "ar" ? "الحساب" : "Account"}>
+        <Section icon={User} title={copy.account}>
           <div>
-            <Label className="text-muted-foreground text-xs">{lang === "ar" ? "البريد" : "Email"}</Label>
+            <Label className="text-xs text-muted-foreground">{copy.email}</Label>
             <p className="font-medium">{user?.email}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
-            {lang === "ar" ? "تعديل الملف الشخصي" : "Edit Profile"}
+            {copy.editProfile}
           </Button>
         </Section>
 
-        {/* Password */}
-        <Section icon={Lock} title={lang === "ar" ? "كلمة المرور" : "Password"}>
+        <Section icon={Lock} title={copy.password}>
           <div className="space-y-3">
             <div>
-              <Label>{lang === "ar" ? "كلمة المرور الجديدة" : "New Password"}</Label>
-              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+              <Label>{copy.newPassword}</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
             </div>
             <div>
-              <Label>{lang === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"}</Label>
-              <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+              <Label>{copy.confirmPassword}</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
             </div>
             <Button onClick={changePassword} disabled={saving} size="sm">
-              {lang === "ar" ? "تحديث" : "Update Password"}
+              {copy.updatePassword}
             </Button>
           </div>
         </Section>
 
-        {/* Language */}
-        <Section icon={Globe} title={lang === "ar" ? "اللغة" : "Language"}>
+        <Section icon={Globe} title={copy.language}>
           <div className="flex gap-2">
-            {(["en", "ar", "tr"] as const).map(l => (
-              <button key={l} onClick={() => setLang(l)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${lang === l ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                {l === "en" ? "English" : l === "ar" ? "العربية" : "Türkçe"}
+            {[
+              { code: "en" as const, label: "English" },
+              { code: "ar" as const, label: "العربية" },
+            ].map((languageOption) => (
+              <button
+                key={languageOption.code}
+                onClick={() => setLang(languageOption.code)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                  lang === languageOption.code
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {languageOption.label}
               </button>
             ))}
           </div>
         </Section>
 
-        {/* Notifications */}
-        <Section icon={Bell} title={lang === "ar" ? "الإشعارات" : "Notifications"}>
+        <Section icon={Bell} title={copy.notifications}>
           <div className="flex items-center justify-between">
-            <span className="text-sm">{lang === "ar" ? "إشعارات البريد" : "Email Notifications"}</span>
-            <Switch checked={emailNotifs} onCheckedChange={setEmailNotifs} />
+            <span className="text-sm">{copy.emailNotifications}</span>
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm">{lang === "ar" ? "الإشعارات الفورية" : "Push Notifications"}</span>
-            <Switch checked={pushNotifs} onCheckedChange={setPushNotifs} />
+            <span className="text-sm">{copy.pushNotifications}</span>
+            <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
           </div>
         </Section>
 
-        {/* Logout */}
         <Button variant="destructive" className="w-full" onClick={handleLogout}>
-          <LogOut className="w-4 h-4 mr-2" />
-          {lang === "ar" ? "تسجيل الخروج" : "Sign Out"}
+          <LogOut className="me-2 h-4 w-4" />
+          {copy.signOut}
         </Button>
       </main>
     </div>

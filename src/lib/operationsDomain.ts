@@ -1,5 +1,6 @@
 import { parsePurchaseRequestMessage } from "@/features/purchase-requests/lib";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import type {
@@ -15,15 +16,216 @@ import type {
   TrackingUpdateRecord,
 } from "@/types/lourex";
 
-const db = supabase as any;
+type DomainError = {
+  code?: string;
+  message?: string;
+};
+
+type DomainListResult<T> = Promise<{
+  data: T[] | null;
+  error: DomainError | null;
+  count?: number | null;
+}>;
+
+type DomainSingleResult<T> = Promise<{
+  data: T | null;
+  error: DomainError | null;
+}>;
+
+interface DomainSelectBuilder<T> extends PromiseLike<{ data: T[] | null; error: DomainError | null }> {
+  eq(column: string, value: unknown): DomainSelectBuilder<T>;
+  limit(count: number): DomainSelectBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): DomainSelectBuilder<T>;
+  single(): DomainSingleResult<T>;
+  maybeSingle(): DomainSingleResult<T>;
+}
+
+interface DomainMutationBuilder<T> {
+  then: PromiseLike<{ data: T[] | null; error: DomainError | null }>["then"];
+  catch<TResult = never>(
+    onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null,
+  ): PromiseLike<{ data: T[] | null; error: DomainError | null } | TResult>;
+  finally?(onfinally?: (() => void) | null): PromiseLike<{ data: T[] | null; error: DomainError | null }>;
+  [Symbol.toStringTag]?: string;
+  select(query?: string): {
+    single(): DomainSingleResult<T>;
+  };
+  eq(column: string, value: unknown): DomainMutationBuilder<T>;
+}
+
+interface DomainTableBuilder<T> {
+  select(query?: string): DomainSelectBuilder<T>;
+  insert(values: unknown): DomainMutationBuilder<T>;
+  update(values: unknown): DomainMutationBuilder<T>;
+}
+
+interface LooseDomainClient {
+  from<T extends Record<string, unknown>>(table: string): DomainTableBuilder<T>;
+  rpc<TResult>(fn: string, args: Record<string, unknown>): {
+    maybeSingle(): DomainSingleResult<TResult>;
+  };
+}
+
+type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
+type DealRow = Database["public"]["Tables"]["deals"]["Row"] & {
+  customer_id?: string | null;
+  source_request_id?: string | null;
+  operation_title?: string | null;
+  operational_status?: DealOperationalStatus | null;
+  shipment_id?: string | null;
+  accounting_reference?: string | null;
+  assigned_turkish_partner_id?: string | null;
+  assigned_saudi_partner_id?: string | null;
+};
+type InquiryRow = Database["public"]["Tables"]["inquiries"]["Row"];
+
+type JsonObject = Record<string, Json | undefined>;
+
+type ProfileRow = {
+  id: string;
+  full_name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  partner_type?: string | null;
+  status?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+};
+
+type PurchaseRequestRow = {
+  id: string;
+  request_number: string;
+  status: PurchaseRequestStatus;
+  customer_id?: string | null;
+  full_name: string;
+  phone?: string | null;
+  email: string;
+  country?: string | null;
+  city?: string | null;
+  product_name?: string | null;
+  product_description?: string | null;
+  quantity?: number | null;
+  size_dimensions?: string | null;
+  color?: string | null;
+  material?: string | null;
+  technical_specs?: string | null;
+  reference_link?: string | null;
+  preferred_shipping_method?: string | null;
+  delivery_notes?: string | null;
+  image_urls?: string[] | null;
+  created_at?: string;
+  submitted_at?: string;
+  source_inquiry_id?: string | null;
+  converted_deal_id?: string | null;
+  converted_deal_number?: string | null;
+  internal_notes?: string | null;
+  last_reviewed_at?: string | null;
+};
+
+type AttachmentRow = {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  category?: string | null;
+  file_name?: string | null;
+  file_url: string;
+  bucket_name?: string | null;
+  storage_path?: string | null;
+  visibility?: AttachmentRecord["visibility"] | null;
+  created_at: string;
+};
+
+type TrackingUpdateRow = {
+  id: string;
+  shipment_id: string;
+  deal_id?: string | null;
+  stage_code: ShipmentStageCode;
+  previous_stage_code?: ShipmentStageCode | null;
+  note?: string | null;
+  customer_note?: string | null;
+  visibility?: TrackingUpdateRecord["visibility"] | null;
+  updated_by?: string | null;
+  updated_by_role?: string | null;
+  occurred_at?: string | null;
+  created_at: string;
+};
+
+type ShipmentRow = Database["public"]["Tables"]["shipments"]["Row"] & {
+  deal_id?: string | null;
+  current_stage_code?: ShipmentStageCode | null;
+  customer_visible_note?: string | null;
+};
+
+type CustomerRow = {
+  id: string;
+  full_name: string;
+  phone?: string | null;
+  email: string;
+  country?: string | null;
+  city?: string | null;
+};
+
+type FinancialEntryRow = {
+  id: string;
+  entry_number: string;
+  relation_type?: FinancialEntry["relationType"] | null;
+  deal_id?: string | null;
+  customer_id?: string | null;
+  type: FinancialEntry["type"];
+  amount?: number | null;
+  currency?: string | null;
+  locked?: boolean | null;
+  created_by?: string | null;
+  created_at: string;
+  entry_date?: string | null;
+  method?: string | null;
+  counterparty?: string | null;
+  category?: string | null;
+  reference_label?: string | null;
+  note?: string | null;
+};
+
+type FinancialEditRequestRow = {
+  id: string;
+  financial_entry_id?: string | null;
+  deal_id?: string | null;
+  customer_id?: string | null;
+  requested_by_name: string;
+  requested_by_email?: string | null;
+  reason: string;
+  status: FinancialEditRequest["status"];
+  created_at: string;
+  reviewed_at?: string | null;
+  reviewer_id?: string | null;
+  review_note?: string | null;
+  old_value?: JsonObject | null;
+  proposed_value?: JsonObject | null;
+  created_by?: string | null;
+};
+
+type AuditConversionRow = Pick<AuditLogRow, "record_id" | "new_values">;
+
+type LegacyTrackingLookupRow = {
+  tracking_id: string;
+  destination: string;
+  status: string;
+  updated_at: string;
+};
+
+const db = supabase as unknown as LooseDomainClient;
 
 let lourexDomainAvailable: boolean | null = null;
 
-const isMissingSchemaError = (error: any) => {
-  const message = String(error?.message || "").toLowerCase();
+const isMissingSchemaError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const domainError = error as DomainError;
+  const message = String(domainError.message || "").toLowerCase();
   return (
-    error?.code === "42P01" ||
-    error?.code === "42703" ||
+    domainError.code === "42P01" ||
+    domainError.code === "42703" ||
     message.includes("does not exist") ||
     message.includes("could not find the table") ||
     message.includes("relation") ||
@@ -39,18 +241,20 @@ const getLourexDomainAvailability = async () => {
   return lourexDomainAvailable;
 };
 
-const safeStructuredSelect = async <T = any>(table: string, query?: string) => {
+const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
   const available = await getLourexDomainAvailability();
   if (!available) return [] as T[];
 
-  const builder = query ? db.from(table).select(query) : db.from(table).select("*");
+  const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder;
   if (error && isMissingSchemaError(error)) return [] as T[];
   if (error) throw error;
-  return (data as T[]) || [];
+  return data || [];
 };
 
-const safeStructuredMutation = async <T = any>(runner: () => Promise<{ data?: T; error?: any }>) => {
+const safeStructuredMutation = async <T>(
+  runner: () => PromiseLike<{ data?: T | null; error?: DomainError | null }>,
+) => {
   const available = await getLourexDomainAvailability();
   if (!available) return { data: null as T | null, error: null };
 
@@ -61,6 +265,17 @@ const safeStructuredMutation = async <T = any>(runner: () => Promise<{ data?: T;
 
   return result;
 };
+
+const asJsonObject = (value: Json | JsonObject | null | undefined): JsonObject | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  return value as JsonObject;
+};
+
+const toJsonObject = (value?: Record<string, unknown>): JsonObject | null =>
+  value ? (value as unknown as JsonObject) : null;
 
 const requestNumberFromLegacyMessage = (message?: string | null, id?: string) =>
   message?.split("\n").find((line) => line.startsWith("Request Number:"))?.split(":")[1]?.trim() || `PR-${id?.slice(0, 8) || "LEGACY"}`;
@@ -196,8 +411,8 @@ const getCurrentUserContext = async () => {
 
   if (!user) return { user: null, profile: null };
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: profile } = await db
+    .from<ProfileRow>("profiles")
     .select("id, full_name, email, role, partner_type, status")
     .eq("id", user.id)
     .maybeSingle();
@@ -219,16 +434,20 @@ const writeAuditLog = async (entry: {
     table_name: entry.tableName,
     record_id: entry.recordId,
     changed_by: user?.id || null,
-    old_values: entry.oldValues || null,
+    old_values: toJsonObject(entry.oldValues),
     new_values: {
       actor_label: profile?.full_name || user?.email || "System",
       actor_role: profile?.role || null,
       ...entry.newValues,
-    },
+    } as Json,
   });
 };
 
 const INTERNAL_NOTIFICATION_ROLES = ["owner", "operations_employee", "turkish_partner", "saudi_partner"] as const;
+type InternalNotificationRole = (typeof INTERNAL_NOTIFICATION_ROLES)[number];
+
+const isInternalNotificationRole = (value: string | null | undefined): value is InternalNotificationRole =>
+  typeof value === "string" && INTERNAL_NOTIFICATION_ROLES.includes(value as InternalNotificationRole);
 
 const createNotifications = async (
   notifications: Array<{
@@ -265,13 +484,13 @@ const createNotifications = async (
 };
 
 const getInternalNotificationRecipients = async (extraUserIds: Array<string | null | undefined> = []) => {
-  const profiles = await safeStructuredSelect<any>(
+  const profiles = await safeStructuredSelect<ProfileRow>(
     "profiles",
     "id, role, status",
   );
 
   const internalUsers = (profiles || []).filter(
-    (profile) => INTERNAL_NOTIFICATION_ROLES.includes(profile.role) && profile.status === "active",
+    (profile) => isInternalNotificationRole(profile.role) && profile.status === "active",
   );
 
   return Array.from(
@@ -279,9 +498,9 @@ const getInternalNotificationRecipients = async (extraUserIds: Array<string | nu
   );
 };
 
-const mapAttachment = (row: any): AttachmentRecord => ({
+const mapAttachment = (row: AttachmentRow): AttachmentRecord => ({
   id: row.id,
-  entityType: row.entity_type,
+  entityType: row.entity_type === "deal" ? "deal" : "purchase_request",
   entityId: row.entity_id,
   category: row.category || "reference",
   fileName: row.file_name || buildAttachmentLabel(row.file_url || "", "attachment"),
@@ -292,7 +511,7 @@ const mapAttachment = (row: any): AttachmentRecord => ({
   createdAt: row.created_at,
 });
 
-const mapTrackingUpdate = (row: any): TrackingUpdateRecord => ({
+const mapTrackingUpdate = (row: TrackingUpdateRow): TrackingUpdateRecord => ({
   id: row.id,
   shipmentId: row.shipment_id,
   dealId: row.deal_id || undefined,
@@ -349,9 +568,9 @@ export const createPurchaseRequestRecord = async (input: {
   deliveryNotes: string;
   imageUrls: string[];
 }) => {
-  const inserted = await safeStructuredMutation<any>(() =>
+  const inserted = await safeStructuredMutation<PurchaseRequestRow>(() =>
     db
-      .from("purchase_requests")
+      .from<PurchaseRequestRow>("purchase_requests")
       .insert({
         request_number: input.requestNumber,
         status: "intake_submitted",
@@ -397,7 +616,7 @@ export const createPurchaseRequestRecord = async (input: {
 };
 
 const mapExplicitRequest = (
-  row: any,
+  row: PurchaseRequestRow,
   attachmentsMap: Map<string, AttachmentRecord[]>,
 ): OperationalPurchaseRequest => ({
   id: row.id,
@@ -435,8 +654,8 @@ const mapExplicitRequest = (
 
 export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest[]> => {
   const [explicitRows, attachmentRows, { data: legacyRows }, { data: conversions }] = await Promise.all([
-    safeStructuredSelect<any>("purchase_requests"),
-    safeStructuredSelect<any>("attachments"),
+    safeStructuredSelect<PurchaseRequestRow>("purchase_requests"),
+    safeStructuredSelect<AttachmentRow>("attachments"),
     supabase
       .from("inquiries")
       .select("id, name, email, phone, company, message, created_at")
@@ -452,10 +671,11 @@ export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest
   const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
 
   const conversionMap = new Map<string, { dealId?: string; dealNumber?: string }>();
-  ((conversions as any[]) || []).forEach((row) => {
+  ((conversions || []) as AuditConversionRow[]).forEach((row) => {
+    const newValues = asJsonObject(row.new_values);
     conversionMap.set(row.record_id, {
-      dealId: row.new_values?.deal_id,
-      dealNumber: row.new_values?.deal_number,
+      dealId: typeof newValues?.deal_id === "string" ? newValues.deal_id : undefined,
+      dealNumber: typeof newValues?.deal_number === "string" ? newValues.deal_number : undefined,
     });
   });
 
@@ -473,7 +693,7 @@ export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest
 
   const explicitLegacyIds = new Set(explicit.map((row) => row.sourceInquiryId).filter(Boolean));
 
-  const legacy = ((legacyRows as any[]) || [])
+  const legacy = ((legacyRows || []) as InquiryRow[])
     .filter((row) => !explicitLegacyIds.has(row.id))
     .map((row) => {
       const payload = parsePurchaseRequestMessage(row.message);
@@ -534,7 +754,7 @@ export const updatePurchaseRequestStatus = async (
   internalNotes?: string,
 ) => {
   const { user } = await getCurrentUserContext();
-  const currentRows = await safeStructuredSelect<any>("purchase_requests");
+  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
   const current = currentRows.find((row) => row.id === requestId);
 
   const result = await safeStructuredMutation(() =>
@@ -570,7 +790,7 @@ export const updatePurchaseRequestStatus = async (
 };
 
 export const updatePurchaseRequestInternalNotes = async (requestId: string, internalNotes: string) => {
-  const currentRows = await safeStructuredSelect<any>("purchase_requests");
+  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
   const current = currentRows.find((row) => row.id === requestId);
 
   const result = await safeStructuredMutation(() =>
@@ -709,7 +929,7 @@ export const convertRequestToDeal = async (
 
   if (request.isLegacyFallback) {
     const insertedRequest = await db
-      .from("purchase_requests")
+      .from<PurchaseRequestRow>("purchase_requests")
       .insert({
         request_number: request.requestNumber,
         source_inquiry_id: request.sourceInquiryId || request.id,
@@ -744,7 +964,7 @@ export const convertRequestToDeal = async (
   const accountingReference = `ACC-${dealNumber}`;
 
   const insertedDeal = await db
-    .from("deals")
+    .from<DealRow>("deals")
     .insert({
       deal_number: dealNumber,
       client_id: user.id,
@@ -769,7 +989,7 @@ export const convertRequestToDeal = async (
   if (insertedDeal.error) throw insertedDeal.error;
 
   const insertedShipment = await db
-    .from("shipments")
+    .from<ShipmentRow>("shipments")
     .insert({
       tracking_id: trackingNumber,
       client_name: request.customer.fullName,
@@ -787,10 +1007,13 @@ export const convertRequestToDeal = async (
 
   if (insertedShipment.error) throw insertedShipment.error;
 
-  await db.from("deals").update({ shipment_id: insertedShipment.data.id }).eq("id", insertedDeal.data.id);
+  await db
+    .from<DealRow>("deals")
+    .update({ shipment_id: insertedShipment.data.id })
+    .eq("id", insertedDeal.data.id);
 
   await db
-    .from("purchase_requests")
+    .from<PurchaseRequestRow>("purchase_requests")
     .update({
       status: "converted_to_deal",
       customer_id: customer.id,
@@ -799,7 +1022,7 @@ export const convertRequestToDeal = async (
     .eq("id", requestId);
 
   if (request.attachments.length > 0) {
-    await db.from("attachments").insert(
+    await db.from<AttachmentRow>("attachments").insert(
       request.attachments.map((attachment) => ({
         entity_type: "deal",
         entity_id: insertedDeal.data.id,
@@ -814,7 +1037,7 @@ export const convertRequestToDeal = async (
     );
   }
 
-  await db.from("tracking_updates").insert({
+  await db.from<TrackingUpdateRow>("tracking_updates").insert({
     shipment_id: insertedShipment.data.id,
     deal_id: insertedDeal.data.id,
     stage_code: "deal_accepted",
@@ -875,40 +1098,44 @@ export const convertRequestToDeal = async (
   );
 
   return {
-    dealId: insertedDeal.data.id as string,
+    dealId: insertedDeal.data.id,
     dealNumber,
     trackingId: trackingNumber,
   };
 };
 
 export const loadTrackingUpdates = async (): Promise<TrackingUpdateRecord[]> => {
-  const rows = await safeStructuredSelect<any>("tracking_updates");
+  const rows = await safeStructuredSelect<TrackingUpdateRow>("tracking_updates");
   return (rows || []).map(mapTrackingUpdate).sort((a, b) => +new Date(a.occurredAt) - +new Date(b.occurredAt));
 };
 
 export const loadDeals = async (): Promise<OperationalDeal[]> => {
   const [{ data: deals }, requests, customers, shipments, attachmentRows, trackingRows, entryRows, profileRows] =
     await Promise.all([
-      supabase.from("deals").select("*").order("created_at", { ascending: false }),
-      safeStructuredSelect<any>("purchase_requests", "id, request_number, converted_deal_id"),
-      safeStructuredSelect<any>("lourex_customers"),
-      safeStructuredSelect<any>("shipments"),
-      safeStructuredSelect<any>("attachments"),
-      safeStructuredSelect<any>("tracking_updates"),
-      safeStructuredSelect<any>("financial_entries"),
-      safeStructuredSelect<any>("profiles", "id, full_name"),
+      db.from<DealRow>("deals").select("*").order("created_at", { ascending: false }),
+      safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_id"),
+      safeStructuredSelect<CustomerRow>("lourex_customers"),
+      safeStructuredSelect<ShipmentRow>("shipments"),
+      safeStructuredSelect<AttachmentRow>("attachments"),
+      safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
+      safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+      safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
     ]);
 
-  const requestMap = new Map<string, any>((requests || []).map((row) => [row.id, row]));
-  const customerMap = new Map<string, any>((customers || []).map((row) => [row.id, row]));
-  const shipmentMap = new Map<string, any>((shipments || []).map((row) => [row.id, row]));
-  const shipmentByDealId = new Map<string, any>((shipments || []).map((row) => [row.deal_id, row]));
+  const requestMap = new Map<string, PurchaseRequestRow>((requests || []).map((row) => [row.id, row]));
+  const customerMap = new Map<string, CustomerRow>((customers || []).map((row) => [row.id, row]));
+  const shipmentMap = new Map<string, ShipmentRow>((shipments || []).map((row) => [row.id, row]));
+  const shipmentByDealId = new Map<string, ShipmentRow>(
+    (shipments || [])
+      .filter((row): row is ShipmentRow & { deal_id: string } => typeof row.deal_id === "string")
+      .map((row) => [row.deal_id, row]),
+  );
   const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
   const trackingUpdates = (trackingRows || []).map(mapTrackingUpdate);
   const trackingMap = getTrackingMap(trackingUpdates);
-  const profileMap = new Map<string, any>((profileRows || []).map((row) => [row.id, row]));
+  const profileMap = new Map<string, ProfileRow>((profileRows || []).map((row) => [row.id, row]));
 
-  return ((deals as any[]) || []).map((row) => {
+  return (deals || []).map((row) => {
     const customer = row.customer_id ? customerMap.get(row.customer_id) : null;
     const sourceRequest = row.source_request_id ? requestMap.get(row.source_request_id) : null;
     const shipment = row.shipment_id ? shipmentMap.get(row.shipment_id) : shipmentByDealId.get(row.id);
@@ -1015,7 +1242,7 @@ export const updateDealOperation = async (
   }
 
   const result = await safeStructuredMutation(() =>
-    db.from("deals").update(payload).eq("id", dealId).select("*").single(),
+    db.from<DealRow>("deals").update(payload).eq("id", dealId).select("*").single(),
   );
 
   if (!result.error) {
@@ -1051,7 +1278,7 @@ export const uploadDealAttachment = async (input: {
 }) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!INTERNAL_NOTIFICATION_ROLES.includes(profile.role as (typeof INTERNAL_NOTIFICATION_ROLES)[number])) {
+  if (!isInternalNotificationRole(profile.role)) {
     throw new Error("صلاحياتك الحالية لا تسمح بإضافة مرفقات الصفقة.");
   }
 
@@ -1061,7 +1288,7 @@ export const uploadDealAttachment = async (input: {
 
   const { data: publicUrl } = supabase.storage.from("product-images").getPublicUrl(filePath);
   const inserted = await db
-    .from("attachments")
+    .from<AttachmentRow>("attachments")
     .insert({
       entity_type: "deal",
       entity_id: input.dealId,
@@ -1096,9 +1323,9 @@ export const uploadDealAttachment = async (input: {
 
 export const loadShipments = async (): Promise<OperationalShipment[]> => {
   const [shipments, deals, trackingRows] = await Promise.all([
-    safeStructuredSelect<any>("shipments"),
+    safeStructuredSelect<ShipmentRow>("shipments"),
     loadDeals(),
-    safeStructuredSelect<any>("tracking_updates"),
+    safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
   ]);
 
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
@@ -1129,12 +1356,12 @@ export const createTrackingUpdate = async (input: {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
 
-  const shipments = await safeStructuredSelect<any>("shipments");
+  const shipments = await safeStructuredSelect<ShipmentRow>("shipments");
   const shipment = shipments.find((row) => row.id === input.shipmentId);
   if (!shipment) throw new Error("تعذر العثور على الشحنة المطلوبة.");
 
   const inserted = await db
-    .from("tracking_updates")
+    .from<TrackingUpdateRow>("tracking_updates")
     .insert({
       shipment_id: input.shipmentId,
       deal_id: input.dealId || shipment.deal_id || null,
@@ -1191,9 +1418,9 @@ export const createTrackingUpdate = async (input: {
 
 export const loadFinancialEntries = async (): Promise<FinancialEntry[]> => {
   const [entries, deals, customers] = await Promise.all([
-    safeStructuredSelect<any>("financial_entries"),
+    safeStructuredSelect<FinancialEntryRow>("financial_entries"),
     loadDeals(),
-    safeStructuredSelect<any>("lourex_customers"),
+    safeStructuredSelect<CustomerRow>("lourex_customers"),
   ]);
 
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
@@ -1259,7 +1486,7 @@ export const createFinancialEntry = async (input: {
     input.scope === "deal_linked" ? "deal_linked" : input.scope === "customer_linked" ? "customer_linked" : "general";
 
   const inserted = await db
-    .from("financial_entries")
+    .from<FinancialEntryRow>("financial_entries")
     .insert({
       entry_number: entryNumber,
       deal_id: input.dealId || null,
@@ -1304,11 +1531,11 @@ export const createFinancialEntry = async (input: {
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
   const [rows, entries, deals, customers, profiles] = await Promise.all([
-    safeStructuredSelect<any>("financial_edit_requests"),
+    safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
     loadFinancialEntries(),
     loadDeals(),
-    safeStructuredSelect<any>("lourex_customers"),
-    safeStructuredSelect<any>("profiles", "id, full_name"),
+    safeStructuredSelect<CustomerRow>("lourex_customers"),
+    safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
   ]);
 
   const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
@@ -1354,7 +1581,7 @@ export const createFinancialEditRequest = async (input: {
   if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
   const inserted = await db
-    .from("financial_edit_requests")
+    .from<FinancialEditRequestRow>("financial_edit_requests")
     .insert({
       financial_entry_id: input.financialEntryId,
       deal_id: input.dealId || null,
@@ -1408,11 +1635,11 @@ export const updateFinancialEditRequestStatus = async (
   if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
   if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
-  const currentRows = await safeStructuredSelect<any>("financial_edit_requests");
+  const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
   const current = currentRows.find((row) => row.id === id);
 
   const updated = await db
-    .from("financial_edit_requests")
+    .from<FinancialEditRequestRow>("financial_edit_requests")
     .update({
       status,
       reviewer_id: user.id,
@@ -1459,7 +1686,7 @@ export const updateFinancialEditRequestStatus = async (
 
 export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => {
   const [customers, requests, deals, entries, audits] = await Promise.all([
-    safeStructuredSelect<any>("lourex_customers"),
+    safeStructuredSelect<CustomerRow>("lourex_customers"),
     loadPurchaseRequests(),
     loadDeals(),
     loadFinancialEntries(),
@@ -1476,8 +1703,8 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
     const customerEntries = entries.filter(
       (entry) => entry.customerId === customer.id || entry.customerName === customer.full_name,
     );
-    const customerAuditCount = ((audits.data as any[]) || []).filter((row) => {
-      const json = row.new_values || {};
+    const customerAuditCount = ((audits.data || []) as AuditLogRow[]).filter((row) => {
+      const json = asJsonObject(row.new_values) || {};
       return json.customer_id === customer.id || json.customer_name === customer.full_name;
     }).length;
 
@@ -1502,7 +1729,7 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
 };
 
 export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
-  const rows = await safeStructuredSelect<any>(
+  const rows = await safeStructuredSelect<ProfileRow>(
     "profiles",
     "id, email, full_name, role, partner_type, status, created_at, updated_at",
   );
@@ -1536,7 +1763,7 @@ export const updateOperationalUserProfile = async (
   if (input.status) payload.status = input.status;
 
   const result = await safeStructuredMutation(() =>
-    db.from("profiles").update(payload).eq("id", userId).select("*").single(),
+    db.from<ProfileRow>("profiles").update(payload).eq("id", userId).select("*").single(),
   );
 
   if (!result.error) {
@@ -1569,7 +1796,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
   const domainAvailable = await getLourexDomainAvailability();
 
   if (!domainAvailable) {
-    const { data } = await supabase.rpc("lookup_shipment_by_tracking" as any, {
+    const { data } = await db.rpc<LegacyTrackingLookupRow>("lookup_shipment_by_tracking", {
       p_tracking_id: normalized,
     }).maybeSingle();
 
@@ -1591,7 +1818,11 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
     };
   }
 
-  const shipmentQuery = await db.from("shipments").select("*").eq("tracking_id", normalized).maybeSingle();
+  const shipmentQuery = await db
+    .from<ShipmentRow>("shipments")
+    .select("*")
+    .eq("tracking_id", normalized)
+    .maybeSingle();
   if (shipmentQuery.error) throw shipmentQuery.error;
   if (!shipmentQuery.data) return null;
 
@@ -1599,7 +1830,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
   const [deals, requests, trackingRows] = await Promise.all([
     loadDeals(),
     loadPurchaseRequests(),
-    safeStructuredSelect<any>("tracking_updates"),
+    safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
   ]);
 
   const deal = deals.find((row) => row.id === shipment.deal_id) || null;
@@ -1633,12 +1864,12 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 export const getDomainActivationStatus = async () => {
   const available = await getLourexDomainAvailability();
   const [requests, customers, entries, editRequests, attachments, trackingUpdates] = await Promise.all([
-    safeStructuredSelect<any>("purchase_requests"),
-    safeStructuredSelect<any>("lourex_customers"),
-    safeStructuredSelect<any>("financial_entries"),
-    safeStructuredSelect<any>("financial_edit_requests"),
-    safeStructuredSelect<any>("attachments"),
-    safeStructuredSelect<any>("tracking_updates"),
+    safeStructuredSelect<PurchaseRequestRow>("purchase_requests"),
+    safeStructuredSelect<CustomerRow>("lourex_customers"),
+    safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+    safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
+    safeStructuredSelect<AttachmentRow>("attachments"),
+    safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
   ]);
 
   return {

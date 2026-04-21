@@ -7,42 +7,36 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { getDefaultRouteForRole, isInternalRole, roleLabels } from "@/features/auth/rbac";
+import { getDefaultRouteForRole, isInternalRole } from "@/features/auth/rbac";
 import { useI18n } from "@/lib/i18n";
 
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { lang } = useI18n();
+  const { t } = useI18n();
   const { user, profile, signOut } = useAuthSession();
   const navigate = useNavigate();
 
   const publicLinks = useMemo(
     () => [
-      { to: "/", label: lang === "ar" ? "الرئيسية" : "Home" },
-      { to: "/request", label: lang === "ar" ? "طلب شراء" : "Purchase Request" },
-      { to: "/track", label: lang === "ar" ? "تتبع الشحنة" : "Track Shipment" },
-      { to: "/about", label: lang === "ar" ? "عن Lourex" : "About Lourex" },
-      { to: "/contact", label: lang === "ar" ? "تواصل معنا" : "Contact" },
+      { to: "/", label: t("nav.home") },
+      { to: "/request", label: t("nav.purchaseRequest") },
+      { to: "/track", label: t("nav.trackShipment") },
+      { to: "/about", label: t("nav.about") },
+      { to: "/contact", label: t("nav.contact") },
     ],
-    [lang],
+    [t],
   );
 
   const workspaceLink = profile ? getDefaultRouteForRole(profile.role) : "/auth";
   const workspaceLabel = profile
     ? isInternalRole(profile.role)
-      ? lang === "ar"
-        ? "غرفة التشغيل"
-        : "Operations Room"
-      : lang === "ar"
-        ? "بوابة العميل"
-        : "Customer Portal"
-    : lang === "ar"
-      ? "دخول"
-      : "Sign in";
+      ? t("nav.operationsRoom")
+      : t("nav.customerPortal")
+    : t("nav.signIn");
 
   const handleLogout = async () => {
     await signOut();
-    toast.success(lang === "ar" ? "تم تسجيل الخروج" : "Signed out successfully");
+    toast.success(t("nav.signOut"));
     navigate("/");
   };
 
@@ -88,50 +82,45 @@ export const SiteHeader = () => {
           ) : null}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-3 lg:flex">
+        <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+          {user ? <NotificationBell userId={user.id} /> : null}
           <ThemeToggle />
           <LanguageSwitcher />
-          {user ? <NotificationBell userId={user.id} /> : null}
 
           {profile?.role === "owner" ? (
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="hidden lg:inline-flex">
               <Link to="/admin">
                 <Shield className="me-2 h-4 w-4" />
-                {lang === "ar" ? "الإدارة" : "Admin"}
+                {t("nav.admin")}
               </Link>
             </Button>
           ) : null}
 
           {user && profile ? (
             <>
-              <div className="rounded-full border border-border/60 bg-card px-4 py-2 text-xs text-muted-foreground">
-                {lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en}
+              <div className="hidden rounded-full border border-border/60 bg-card px-4 py-2 text-xs text-muted-foreground lg:block">
+                {t(`roles.${profile.role}`)}
               </div>
 
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="hidden lg:inline-flex">
                 <Link to={workspaceLink}>
                   <UserCircle2 className="me-2 h-4 w-4" />
                   {workspaceLabel}
                 </Link>
               </Button>
 
-              <Button variant="ghost" onClick={handleLogout}>
+              <Button variant="ghost" onClick={handleLogout} className="hidden lg:inline-flex">
                 <LogOut className="me-2 h-4 w-4" />
-                {lang === "ar" ? "خروج" : "Sign out"}
+                {t("nav.signOut")}
               </Button>
             </>
           ) : (
-            <Button variant="gold" asChild>
-              <Link to="/auth">{lang === "ar" ? "دخول" : "Sign in"}</Link>
+            <Button variant="gold" asChild className="hidden lg:inline-flex">
+              <Link to="/auth">{t("nav.signIn")}</Link>
             </Button>
           )}
-        </div>
 
-        <div className="flex shrink-0 items-center gap-2 lg:hidden">
-          {user ? <NotificationBell userId={user.id} /> : null}
-          <ThemeToggle />
-          <LanguageSwitcher />
-          <button className="rounded-lg p-2 text-foreground" onClick={() => setIsOpen((value) => !value)}>
+          <button className="rounded-lg p-2 text-foreground lg:hidden" onClick={() => setIsOpen((value) => !value)}>
             {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -154,8 +143,18 @@ export const SiteHeader = () => {
             {user && profile ? (
               <>
                 <div className="px-3 py-2 text-xs text-muted-foreground">
-                  {lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en}
+                  {t(`roles.${profile.role}`)}
                 </div>
+
+                {profile.role === "owner" ? (
+                  <NavLink
+                    to="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    {t("nav.admin")}
+                  </NavLink>
+                ) : null}
 
                 <NavLink
                   to={workspaceLink}
@@ -172,13 +171,13 @@ export const SiteHeader = () => {
                   }}
                   className="rounded-lg px-3 py-2 text-start text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  {lang === "ar" ? "تسجيل الخروج" : "Sign out"}
+                  {t("nav.signOut")}
                 </button>
               </>
             ) : (
               <Button variant="gold" asChild className="mt-2">
                 <Link to="/auth" onClick={() => setIsOpen(false)}>
-                  {lang === "ar" ? "دخول" : "Sign in"}
+                  {t("nav.signIn")}
                 </Link>
               </Button>
             )}

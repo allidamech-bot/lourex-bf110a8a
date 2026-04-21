@@ -7,7 +7,6 @@ import {
   canAccessRole,
   getDefaultRouteForRole,
   isInternalRole,
-  roleLabels,
   type LourexRole,
 } from "@/features/auth/rbac";
 
@@ -33,7 +32,7 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const location = useLocation();
   const { user, profile, loading, signOut } = useAuthSession();
-  const { lang, t } = useI18n();
+  const { t } = useI18n();
 
   if (loading) {
     return <LoadingState />;
@@ -84,7 +83,7 @@ export const ProtectedRoute = ({
       <AuthStateScreen
         variant="forbidden"
         title={t("auth.forbiddenTitle")}
-        description={t("auth.forbiddenDescription", { role: roleLabels[profile.role][lang] })}
+        description={t("auth.forbiddenDescription", { role: t(`roles.${profile.role}`) })}
         primaryAction={{ label: t("auth.myArea"), to: getDefaultRouteForRole(profile.role) }}
         secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
       />

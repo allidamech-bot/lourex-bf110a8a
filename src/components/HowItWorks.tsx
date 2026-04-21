@@ -1,84 +1,92 @@
 import { motion } from "framer-motion";
-import { UserPlus, ShieldCheck, Users, Handshake, Truck } from "lucide-react";
+import { Handshake, ShieldCheck, Truck, UserPlus, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+
+type StepContent = {
+  title: string;
+  desc: string;
+};
+
+type Step = {
+  icon: typeof UserPlus;
+  en: StepContent;
+  ar: StepContent;
+};
+
+const steps: Step[] = [
+  {
+    icon: UserPlus,
+    en: { title: "Create your account", desc: "Set up your business profile in a few guided steps." },
+    ar: { title: "أنشئ حسابك", desc: "ابدأ ملف أعمالك عبر خطوات واضحة وسريعة." },
+  },
+  {
+    icon: ShieldCheck,
+    en: { title: "Complete verification", desc: "Our team reviews accounts to keep the network trusted and secure." },
+    ar: { title: "أكمل التحقق", desc: "يراجع فريقنا الحسابات للحفاظ على شبكة موثوقة وآمنة." },
+  },
+  {
+    icon: Users,
+    en: { title: "Connect with partners", desc: "Match with verified suppliers and start qualified conversations." },
+    ar: { title: "تواصل مع الشركاء", desc: "اعثر على موردين موثقين وابدأ تواصلاً فعّالاً معهم." },
+  },
+  {
+    icon: Handshake,
+    en: { title: "Review and confirm", desc: "Align on pricing, specifications, and terms with operational clarity." },
+    ar: { title: "راجع وأكد", desc: "اتفق على الأسعار والمواصفات والشروط ضمن مسار تشغيلي واضح." },
+  },
+  {
+    icon: Truck,
+    en: { title: "Track delivery", desc: "Follow shipment progress from sourcing through final handoff." },
+    ar: { title: "تابع الشحنة", desc: "راقب تقدم الشحنة من التوريد وحتى التسليم النهائي." },
+  },
+];
 
 const HowItWorks = () => {
   const { lang } = useI18n();
-
-  const steps = [
-    {
-      icon: UserPlus,
-      en: { title: "Sign Up", desc: "Create your business account in minutes" },
-      ar: { title: "سجّل حسابك", desc: "أنشئ حساب عملك بسهولة" },
-      tr: { title: "Kayıt Olun", desc: "İş hesabınızı dakikalar içinde oluşturun" },
-    },
-    {
-      icon: ShieldCheck,
-      en: { title: "Get Verified", desc: "We verify all users for maximum trust" },
-      ar: { title: "احصل على التوثيق", desc: "نوثّق جميع المستخدمين لأقصى درجات الثقة" },
-      tr: { title: "Doğrulanın", desc: "Maksimum güven için tüm kullanıcıları doğrularız" },
-    },
-    {
-      icon: Users,
-      en: { title: "Connect", desc: "Find and connect with suppliers directly" },
-      ar: { title: "تواصل", desc: "ابحث وتواصل مع الموردين مباشرة" },
-      tr: { title: "Bağlanın", desc: "Tedarikçilerle doğrudan bağlantı kurun" },
-    },
-    {
-      icon: Handshake,
-      en: { title: "Negotiate & Order", desc: "Secure deals within the platform" },
-      ar: { title: "تفاوض واطلب", desc: "أتمم الصفقات داخل المنصة" },
-      tr: { title: "Pazarlık & Sipariş", desc: "Platform içinde güvenli anlaşmalar yapın" },
-    },
-    {
-      icon: Truck,
-      en: { title: "Track Shipment", desc: "Follow your shipment step by step" },
-      ar: { title: "تتبّع الشحنة", desc: "تابع شحنتك خطوة بخطوة" },
-      tr: { title: "Gönderi Takibi", desc: "Gönderinizi adım adım takip edin" },
-    },
-  ];
-
-  const title = lang === "ar" ? "كيف يعمل LOUREX" : lang === "tr" ? "LOUREX Nasıl Çalışır" : "How LOUREX Works";
+  const titleParts =
+    lang === "ar"
+      ? { before: "كيف تعمل ", brand: "LOUREX", after: "" }
+      : { before: "How ", brand: "LOUREX", after: " works" };
 
   return (
-    <section id="how-it-works" className="py-24 bg-background">
+    <section id="how-it-works" className="bg-background py-24">
       <div className="container mx-auto px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-16 text-center"
         >
-          <h2 className="font-serif text-3xl md:text-5xl font-bold mb-4">
-            {title.split("LOUREX")[0]}
-            <span className="text-gradient-gold">LOUREX</span>
-            {title.split("LOUREX")[1] || ""}
+          <h2 className="font-serif text-3xl font-bold md:text-5xl">
+            {titleParts.before}
+            <span className="text-gradient-gold">{titleParts.brand}</span>
+            {titleParts.after}
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative">
-          {/* Connecting line (desktop) */}
-          <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="relative grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="absolute left-[10%] right-[10%] top-12 hidden h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent md:block" />
 
-          {steps.map((step, i) => {
-            const loc = step[lang as "en" | "ar" | "tr"] || step.en;
+          {steps.map((step, index) => {
+            const content = step[lang];
+
             return (
               <motion.div
-                key={i}
+                key={content.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center relative"
+                transition={{ delay: index * 0.1 }}
+                className="relative flex flex-col items-center text-center"
               >
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 relative z-10">
-                  <step.icon className="w-7 h-7 text-primary" />
-                  <span className="absolute -top-2 -end-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                    {i + 1}
+                <div className="relative z-10 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                  <step.icon className="h-7 w-7 text-primary" />
+                  <span className="absolute -end-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {index + 1}
                   </span>
                 </div>
-                <h3 className="font-serif text-lg font-bold mb-2">{loc.title}</h3>
-                <p className="text-sm text-muted-foreground">{loc.desc}</p>
+                <h3 className="mb-2 font-serif text-lg font-bold">{content.title}</h3>
+                <p className="text-sm text-muted-foreground">{content.desc}</p>
               </motion.div>
             );
           })}

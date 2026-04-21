@@ -12,91 +12,70 @@ import {
 import { NavLink, Outlet } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { dashboardRoutePermissions, roleLabels } from "@/features/auth/rbac";
+import { dashboardRoutePermissions } from "@/features/auth/rbac";
 import { useI18n } from "@/lib/i18n";
 
 export const DashboardLayout = () => {
   const { profile } = useAuthSession();
-  const { lang } = useI18n();
+  const { t } = useI18n();
 
   const dashboardLinks = [
     {
       to: "/dashboard",
-      label: lang === "ar" ? "نظرة عامة" : "Overview",
+      label: t("dashboardNav.overview"),
       icon: LayoutDashboard,
       end: true,
       roles: dashboardRoutePermissions.overview,
     },
     {
       to: "/dashboard/requests",
-      label: lang === "ar" ? "طلبات الشراء" : "Purchase Requests",
+      label: t("dashboardNav.requests"),
       icon: ClipboardList,
       roles: dashboardRoutePermissions.requests,
     },
     {
       to: "/dashboard/customers",
-      label: lang === "ar" ? "العملاء" : "Customers",
+      label: t("dashboardNav.customers"),
       icon: Users,
       roles: dashboardRoutePermissions.customers,
     },
     {
       to: "/dashboard/deals",
-      label: lang === "ar" ? "الصفقات" : "Deals",
+      label: t("dashboardNav.deals"),
       icon: PackageSearch,
       roles: dashboardRoutePermissions.deals,
     },
     {
       to: "/dashboard/tracking",
-      label: lang === "ar" ? "التتبع" : "Tracking",
+      label: t("dashboardNav.tracking"),
       icon: Files,
       roles: dashboardRoutePermissions.tracking,
     },
     {
       to: "/dashboard/accounting",
-      label: lang === "ar" ? "المحاسبة" : "Accounting",
+      label: t("dashboardNav.accounting"),
       icon: Receipt,
       roles: dashboardRoutePermissions.accounting,
     },
     {
       to: "/dashboard/edit-requests",
-      label: lang === "ar" ? "طلبات التعديل" : "Edit Requests",
+      label: t("dashboardNav.editRequests"),
       icon: FilePenLine,
       roles: dashboardRoutePermissions.editRequests,
     },
     {
       to: "/dashboard/audit",
-      label: lang === "ar" ? "سجل التدقيق" : "Audit Log",
+      label: t("dashboardNav.audit"),
       icon: ShieldCheck,
       roles: dashboardRoutePermissions.audit,
     },
     {
       to: "/dashboard/reports",
-      label: lang === "ar" ? "التقارير" : "Reports",
+      label: t("dashboardNav.reports"),
       icon: BarChart3,
       roles: dashboardRoutePermissions.reports,
     },
   ];
-
-  const roleDescriptions = {
-    owner:
-      lang === "ar"
-        ? "صلاحية كاملة لإدارة دورة Lourex التشغيلية والمالية والتدقيقية ومراقبة الأداء العام."
-        : "Full control over Lourex operations, finance, audit visibility, and overall platform performance.",
-    operations_employee:
-      lang === "ar"
-        ? "وصول تشغيلي منضبط لمراجعة الطلبات، إدارة الصفقات، متابعة الشحن، والتحكم المحاسبي المسموح."
-        : "Controlled operational access for request review, deal execution, shipment follow-up, and approved accounting actions.",
-    turkish_partner:
-      lang === "ar"
-        ? "واجهة تنفيذ طرف المنشأ لمتابعة الصفقات ومسار الشحنة من الجانب التركي داخل غرفة التشغيل."
-        : "Origin-side execution workspace for following deals and shipment progress from the Turkish side.",
-    saudi_partner:
-      lang === "ar"
-        ? "واجهة تنفيذ طرف الوجهة لمتابعة الصفقات ومسار الشحنة من الجانب السعودي داخل غرفة التشغيل."
-        : "Destination-side execution workspace for following deals and shipment progress from the Saudi side.",
-    customer:
-      lang === "ar" ? "هذا المسار غير مخصص لحسابات العملاء." : "This workspace is not intended for customer accounts.",
-  } as const;
 
   const visibleLinks = dashboardLinks.filter((link) => profile && link.roles.includes(profile.role));
 
@@ -106,12 +85,14 @@ export const DashboardLayout = () => {
       <div className="container mx-auto grid gap-6 px-4 py-8 md:px-8 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm">
           <div className="mb-5 rounded-2xl bg-secondary/70 p-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">LOUREX OS</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+              {t("workspace.operatingSystem")}
+            </p>
             <h2 className="mt-2 font-serif text-xl font-bold">
-              {profile ? (lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en) : lang === "ar" ? "غرفة التشغيل" : "Operations Room"}
+              {profile ? t(`roles.${profile.role}`) : t("workspace.operationsRoom")}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {profile ? roleDescriptions[profile.role] : ""}
+              {profile ? t(`workspace.roleDescriptions.${profile.role}`) : ""}
             </p>
           </div>
           <nav className="space-y-1">
@@ -140,19 +121,17 @@ export const DashboardLayout = () => {
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-primary/80">
-                  {lang === "ar" ? "غرفة العمليات" : "Operations Room"}
+                  {t("workspace.operationsRoom")}
                 </p>
                 <h1 className="mt-2 font-serif text-2xl font-semibold">
-                  {lang === "ar" ? "بيئة تشغيل Lourex" : "Lourex operating environment"}
+                  {t("workspace.environmentTitle")}
                 </h1>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  {lang === "ar"
-                    ? "هنا تتم إدارة الطلبات والصفقات والتتبع والمحاسبة والتدقيق ضمن صلاحيات مرتبطة مباشرة بدور المستخدم داخل النظام."
-                    : "This is where Lourex requests, deals, tracking, accounting, and audit activity are managed according to the current user's role."}
+                  {t("workspace.environmentDescription")}
                 </p>
               </div>
               <div className="rounded-full bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
-                {profile ? (lang === "ar" ? roleLabels[profile.role].ar : roleLabels[profile.role].en) : "Lourex Access"}
+                {profile ? t(`roles.${profile.role}`) : t("workspace.accessLabel")}
               </div>
             </div>
           </div>

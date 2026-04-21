@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { AlertCircle, CheckCircle2, ImagePlus, Loader2, ShieldCheck, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { createPurchaseRequestRecord } from "@/lib/operationsDomain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  createRequest,
+  uploadPurchaseRequestImages,
+} from "@/domain/operations/service";
+import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
+import { submitPurchaseRequestInquiry } from "@/domain/public/inquiries";
 import { useI18n } from "@/lib/i18n";
 
 type PurchaseRequestFormState = {
@@ -52,7 +56,7 @@ const SectionCard = ({
 }: {
   title: string;
   description: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => (
   <section className="rounded-[1.8rem] border border-border/60 bg-card/90 p-6 shadow-[0_18px_42px_-32px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_42px_-32px_rgba(0,0,0,0.45)]">
     <h3 className="font-serif text-2xl font-semibold">{title}</h3>
@@ -61,44 +65,75 @@ const SectionCard = ({
   </section>
 );
 
-const FieldHint = ({ text }: { text: string }) => <p className="mt-2 text-xs leading-6 text-muted-foreground">{text}</p>;
+const FieldHint = ({ text }: { text: string }) => (
+  <p className="mt-2 text-xs leading-6 text-muted-foreground">{text}</p>
+);
+
+const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
+  id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+  file,
+  previewUrl: URL.createObjectURL(file),
+  name: file.name,
+  sizeLabel: `${Math.round(file.size / 1024)} KB`,
+});
 
 export const PurchaseRequestForm = () => {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   const [form, setForm] = useState<PurchaseRequestFormState>(initialState);
-  const [files, setFiles] = useState<File[]>([]);
+  const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [submittedRequest, setSubmittedRequest] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    return () => {
-      files.forEach((file) => URL.revokeObjectURL(file.name));
-    };
-  }, [files]);
-
-  const previews = useMemo(
-    () => files.map((file) => ({ name: file.name, url: URL.createObjectURL(file), size: `${Math.round(file.size / 1024)} KB` })),
-    [files],
+  const successSteps = useMemo(
+    () => [
+      t("requests.intake.successSteps.one"),
+      t("requests.intake.successSteps.two"),
+      t("requests.intake.successSteps.three"),
+    ],
+    [t],
   );
 
   const updateField = (field: keyof PurchaseRequestFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(event.target.files || []).filter((file) => file.type.startsWith("image/"));
-    if (selected.length === 0) {
-      setErrorMessage(lang === "ar" ? "يجب رفع صور بصيغة صالحة." : "Please upload valid image files.");
-      return;
-    }
-    setErrorMessage("");
-    setFiles((current) => [...current, ...selected].slice(0, 5));
+  const clearUploads = (items: PurchaseRequestImageUpload[]) => {
+    items.forEach((item) => URL.revokeObjectURL(item.previewUrl));
   };
 
-  const removeFile = (name: string) => {
-    setFiles((current) => current.filter((file) => file.name !== name));
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    const imageFiles = selectedFiles.filter((file) => file.type.startsWith("image/"));
+
+    if (imageFiles.length === 0) {
+      setErrorMessage(t("requests.intake.errors.invalidImages"));
+      event.target.value = "";
+      return;
+    }
+
+    setErrorMessage("");
+    setUploads((current) => {
+      const next = [...current];
+      const remainingSlots = Math.max(0, 5 - current.length);
+      imageFiles.slice(0, remainingSlots).forEach((file) => {
+        next.push(createUploadPreview(file));
+      });
+      return next;
+    });
+    event.target.value = "";
+  };
+
+  const removeUpload = (id: string) => {
+    setUploads((current) => {
+      const target = current.find((upload) => upload.id === id);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+
+      return current.filter((upload) => upload.id !== id);
+    });
   };
 
   const buildPayload = (requestNumber: string, imageUrls: string[]) =>
@@ -138,20 +173,12 @@ export const PurchaseRequestForm = () => {
 
     const missing = requiredFields.some((field) => !form[field].trim());
     if (missing) {
-      setErrorMessage(
-        lang === "ar"
-          ? "يرجى استكمال جميع الحقول الأساسية قبل إرسال الطلب."
-          : "Please complete all required fields before submitting the request.",
-      );
+      setErrorMessage(t("requests.intake.errors.missingFields"));
       return;
     }
 
-    if (files.length === 0) {
-      setErrorMessage(
-        lang === "ar"
-          ? "رفع صورة منتج واحدة على الأقل مطلوب لبدء عملية Lourex بشكل صحيح."
-          : "At least one product image is required to start the Lourex intake process.",
-      );
+    if (uploads.length === 0) {
+      setErrorMessage(t("requests.intake.errors.missingImages"));
       return;
     }
 
@@ -160,29 +187,25 @@ export const PurchaseRequestForm = () => {
 
     try {
       const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-      const uploadedUrls: string[] = [];
-
-      for (const file of files) {
-        const filePath = `purchase-requests/${requestNumber}/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file);
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
-        uploadedUrls.push(data.publicUrl);
+      const uploadResult = await uploadPurchaseRequestImages(requestNumber, uploads);
+      if (uploadResult.error || !uploadResult.data) {
+        throw new Error(uploadResult.error?.message || t("requests.intake.errors.submitFailed"));
       }
 
-      const { error } = await supabase.from("inquiries").insert({
+      const inquiryResult = await submitPurchaseRequestInquiry({
         name: form.fullName,
         email: form.email,
         phone: form.phone,
         company: `${form.country} - ${form.city}`,
-        inquiry_type: "purchase_request",
-        message: buildPayload(requestNumber, uploadedUrls),
+        message: buildPayload(requestNumber, uploadResult.data),
         factory_name: form.preferredShippingMethod,
       });
 
-      if (error) throw error;
+      if (inquiryResult.error) {
+        throw new Error(inquiryResult.error.message);
+      }
 
-      const { error: structuredError } = await createPurchaseRequestRecord({
+      const structuredResult = await createRequest({
         requestNumber,
         fullName: form.fullName,
         phone: form.phone,
@@ -199,19 +222,24 @@ export const PurchaseRequestForm = () => {
         referenceLink: form.referenceLink,
         preferredShippingMethod: form.preferredShippingMethod,
         deliveryNotes: form.deliveryNotes,
-        imageUrls: uploadedUrls,
+        imageUrls: uploadResult.data,
       });
 
-      if (structuredError) throw structuredError;
+      if (structuredResult.error) {
+        throw new Error(structuredResult.error.message);
+      }
 
       setSubmittedRequest(requestNumber);
       setForm(initialState);
-      setFiles([]);
-      toast.success(lang === "ar" ? "تم استلام الطلب بنجاح." : "Purchase request received successfully.");
-    } catch (error: any) {
+      clearUploads(uploads);
+      setUploads([]);
+      toast.success(t("requests.intake.errors.success"));
+    } catch (error: unknown) {
       const message =
-        error.message ||
-        (lang === "ar" ? "تعذر إرسال الطلب حاليًا." : "The request could not be submitted right now.");
+        error instanceof Error && error.message
+          ? error.message
+          : t("requests.intake.errors.submitFailed");
+
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -227,37 +255,22 @@ export const PurchaseRequestForm = () => {
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <h3 className="mt-6 font-serif text-3xl font-semibold">
-            {lang === "ar" ? "تم استلام طلب الشراء" : "Purchase request received"}
+            {t("requests.intake.successTitle")}
           </h3>
           <p className="mt-4 text-base leading-8 text-muted-foreground">
-            {lang === "ar" ? "رقم الطلب المرجعي هو" : "Your reference number is"}{" "}
-            <span className="font-semibold text-foreground">{submittedRequest}</span>.
-            {" "}
-            {lang === "ar"
-              ? "سيقوم فريق Lourex بمراجعته وتحويله إلى خطوة تشغيلية مناسبة عند اكتمال التقييم."
-              : "The Lourex team will review it and move it into the appropriate operational step once the assessment is complete."}
+            {t("requests.intake.successReference")}{" "}
+            <span className="font-semibold text-foreground">{submittedRequest}</span>.{" "}
+            {t("requests.intake.successDescription")}
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {(
-              lang === "ar"
-                ? [
-                    "مراجعة داخلية للبيانات والصور",
-                    "تقييم قابلية التنفيذ والتحويل إلى صفقة",
-                    "التواصل معك عند الحاجة إلى استكمال أو بدء التنفيذ",
-                  ]
-                : [
-                    "Internal review of the request data and images",
-                    "Execution assessment and deal conversion decision",
-                    "Follow-up with you if clarification or execution kickoff is needed",
-                  ]
-            ).map((item) => (
+            {successSteps.map((item) => (
               <div key={item} className="rounded-[1.4rem] border border-border/60 bg-secondary/25 p-4 text-sm leading-7 text-muted-foreground">
                 {item}
               </div>
             ))}
           </div>
           <Button variant="gold" className="mt-8" onClick={() => setSubmittedRequest(null)}>
-            {lang === "ar" ? "إرسال طلب جديد" : "Submit another request"}
+            {t("requests.intake.submitAnother")}
           </Button>
         </div>
       </div>
@@ -274,67 +287,59 @@ export const PurchaseRequestForm = () => {
       ) : null}
 
       <SectionCard
-        title={lang === "ar" ? "بيانات المنتج" : "Product details"}
-        description={
-          lang === "ar"
-            ? "كلما كانت تفاصيل المنتج أدق، كانت المراجعة والتنفيذ أسرع وأكثر احترافية."
-            : "The more precise your product information is, the faster and more professional the review and sourcing process becomes."
-        }
+        title={t("requests.intake.productTitle")}
+        description={t("requests.intake.productDescription")}
       >
         <div className="md:col-span-2">
-          <Label>{lang === "ar" ? "اسم المنتج" : "Product name"}</Label>
+          <Label>{t("requests.intake.productName")}</Label>
           <Input value={form.productName} onChange={(event) => updateField("productName", event.target.value)} />
-          <FieldHint text={lang === "ar" ? "استخدم اسمًا واضحًا يفهمه فريق التوريد والتنفيذ مباشرة." : "Use a clear commercial name that the sourcing team can understand immediately."} />
+          <FieldHint text={t("requests.intake.productNameHint")} />
         </div>
 
         <div className="md:col-span-2">
-          <Label>{lang === "ar" ? "وصف المنتج" : "Product description"}</Label>
+          <Label>{t("requests.intake.productDescriptionLabel")}</Label>
           <Textarea rows={4} value={form.productDescription} onChange={(event) => updateField("productDescription", event.target.value)} />
-          <FieldHint text={lang === "ar" ? "اشرح الاستخدام أو النوع أو الفئة التجارية بدل الوصف القصير فقط." : "Describe the use case, type, or commercial category instead of a short label only."} />
+          <FieldHint text={t("requests.intake.productDescriptionHint")} />
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "الكمية" : "Quantity"}</Label>
-          <Input value={form.quantity} onChange={(event) => updateField("quantity", event.target.value)} placeholder={lang === "ar" ? "مثال: 250" : "Example: 250"} />
+          <Label>{t("requests.intake.quantity")}</Label>
+          <Input value={form.quantity} onChange={(event) => updateField("quantity", event.target.value)} placeholder={t("requests.intake.quantityPlaceholder")} />
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "المقاس / الأبعاد" : "Size / dimensions"}</Label>
-          <Input value={form.sizeDimensions} onChange={(event) => updateField("sizeDimensions", event.target.value)} placeholder={lang === "ar" ? "مثال: 120×80×45 سم" : "Example: 120×80×45 cm"} />
+          <Label>{t("requests.intake.dimensions")}</Label>
+          <Input value={form.sizeDimensions} onChange={(event) => updateField("sizeDimensions", event.target.value)} placeholder={t("requests.intake.dimensionsPlaceholder")} />
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "اللون" : "Color"}</Label>
+          <Label>{t("requests.intake.color")}</Label>
           <Input value={form.color} onChange={(event) => updateField("color", event.target.value)} />
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "الخامة" : "Material"}</Label>
+          <Label>{t("requests.intake.material")}</Label>
           <Input value={form.material} onChange={(event) => updateField("material", event.target.value)} />
         </div>
 
         <div className="md:col-span-2">
-          <Label>{lang === "ar" ? "المواصفات الفنية" : "Technical specifications"}</Label>
+          <Label>{t("requests.intake.technicalSpecs")}</Label>
           <Textarea rows={4} value={form.technicalSpecs} onChange={(event) => updateField("technicalSpecs", event.target.value)} />
-          <FieldHint text={lang === "ar" ? "اذكر المقاسات الفنية، المعايير، الملحقات، الجهد الكهربائي، أو أي متطلبات تنفيذية." : "Include technical dimensions, standards, accessories, voltage, or any execution-critical requirements."} />
+          <FieldHint text={t("requests.intake.technicalSpecsHint")} />
         </div>
 
         <div className="md:col-span-2">
-          <Label>{lang === "ar" ? "رابط مرجعي إن وجد" : "Reference link if available"}</Label>
+          <Label>{t("requests.intake.referenceLink")}</Label>
           <Input value={form.referenceLink} onChange={(event) => updateField("referenceLink", event.target.value)} placeholder="https://..." />
         </div>
       </SectionCard>
 
       <SectionCard
-        title={lang === "ar" ? "الصور والشحن" : "Images and shipping"}
-        description={
-          lang === "ar"
-            ? "هذه العناصر تساعد على تقييم واقعي للطلب ومسار الشحن الأنسب."
-            : "These items help Lourex evaluate the request realistically and choose the right shipment path."
-        }
+        title={t("requests.intake.shippingTitle")}
+        description={t("requests.intake.shippingDescription")}
       >
         <div className="md:col-span-2">
-          <Label>{lang === "ar" ? "صور المنتج المطلوبة" : "Required product images"}</Label>
+          <Label>{t("requests.intake.images")}</Label>
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
           <button
             type="button"
@@ -344,73 +349,65 @@ export const PurchaseRequestForm = () => {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Upload className="h-6 w-6" />
             </div>
-            <span className="text-sm font-medium">
-              {lang === "ar" ? "اسحب الصور هنا أو اضغط للاختيار" : "Drop images here or click to select"}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {lang === "ar" ? "مطلوب صورة واحدة على الأقل، والحد الأقصى 5 صور." : "At least one image is required, with a maximum of 5 files."}
-            </span>
+            <span className="text-sm font-medium">{t("requests.intake.imagesCta")}</span>
+            <span className="text-xs text-muted-foreground">{t("requests.intake.imagesHint")}</span>
           </button>
-          {previews.length > 0 ? (
+          {uploads.length > 0 ? (
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
-              {previews.map((preview) => (
-                <div key={preview.name} className="relative overflow-hidden rounded-[1.4rem] border border-border bg-card">
-                  <img src={preview.url} alt={preview.name} className="h-28 w-full object-cover" />
+              {uploads.map((upload) => (
+                <div key={upload.id} className="relative overflow-hidden rounded-[1.4rem] border border-border bg-card">
+                  <img src={upload.previewUrl} alt={upload.name} className="h-28 w-full object-cover" />
                   <div className="p-3">
-                    <p className="truncate text-xs font-medium">{preview.name}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{preview.size}</p>
+                    <p className="truncate text-xs font-medium">{upload.name}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{upload.sizeLabel}</p>
                   </div>
-                  <button type="button" onClick={() => removeFile(preview.name)} className="absolute end-2 top-2 rounded-full bg-background/90 p-1">
+                  <button type="button" onClick={() => removeUpload(upload.id)} className="absolute end-2 top-2 rounded-full bg-background/90 p-1">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <FieldHint text={lang === "ar" ? "يفضل رفع صور متعددة من زوايا مختلفة أو صور لمرجع مشابه." : "It is better to upload multiple angles or a close reference sample if available."} />
+            <FieldHint text={t("requests.intake.imagesExtraHint")} />
           )}
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "طريقة الشحن المفضلة" : "Preferred shipping method"}</Label>
+          <Label>{t("requests.intake.preferredShippingMethod")}</Label>
           <Input
-            placeholder={lang === "ar" ? "جوي / بحري / بري" : "Air / Sea / Land"}
+            placeholder={t("requests.intake.preferredShippingPlaceholder")}
             value={form.preferredShippingMethod}
             onChange={(event) => updateField("preferredShippingMethod", event.target.value)}
           />
         </div>
 
         <div>
-          <Label>{lang === "ar" ? "ملاحظات التسليم" : "Delivery notes"}</Label>
-          <Input value={form.deliveryNotes} onChange={(event) => updateField("deliveryNotes", event.target.value)} placeholder={lang === "ar" ? "أوقات التسليم، قيود الموقع، أو ملاحظات خاصة" : "Delivery timing, site restrictions, or special notes"} />
+          <Label>{t("requests.intake.deliveryNotes")}</Label>
+          <Input value={form.deliveryNotes} onChange={(event) => updateField("deliveryNotes", event.target.value)} placeholder={t("requests.intake.deliveryNotesPlaceholder")} />
         </div>
       </SectionCard>
 
       <SectionCard
-        title={lang === "ar" ? "بيانات التواصل" : "Contact details"}
-        description={
-          lang === "ar"
-            ? "ستُستخدم هذه البيانات للمتابعة معك أثناء المراجعة والتحويل إلى صفقة تشغيلية."
-            : "These details are used to follow up with you during review and deal conversion."
-        }
+        title={t("requests.intake.contactTitle")}
+        description={t("requests.intake.contactDescription")}
       >
         <div>
-          <Label>{lang === "ar" ? "الاسم الكامل" : "Full name"}</Label>
+          <Label>{t("requests.intake.fullName")}</Label>
           <Input value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} />
         </div>
         <div>
-          <Label>{lang === "ar" ? "رقم الهاتف" : "Phone number"}</Label>
+          <Label>{t("requests.intake.phoneNumber")}</Label>
           <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
         </div>
         <div>
-          <Label>{lang === "ar" ? "البريد الإلكتروني" : "Email"}</Label>
+          <Label>{t("requests.intake.emailAddress")}</Label>
           <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
         </div>
         <div>
-          <Label>{lang === "ar" ? "الدولة / المدينة" : "Country / city"}</Label>
+          <Label>{t("requests.intake.countryCity")}</Label>
           <div className="grid grid-cols-2 gap-3">
-            <Input placeholder={lang === "ar" ? "الدولة" : "Country"} value={form.country} onChange={(event) => updateField("country", event.target.value)} />
-            <Input placeholder={lang === "ar" ? "المدينة" : "City"} value={form.city} onChange={(event) => updateField("city", event.target.value)} />
+            <Input placeholder={t("requests.intake.countryPlaceholder")} value={form.country} onChange={(event) => updateField("country", event.target.value)} />
+            <Input placeholder={t("requests.intake.cityPlaceholder")} value={form.city} onChange={(event) => updateField("city", event.target.value)} />
           </div>
         </div>
       </SectionCard>
@@ -422,24 +419,22 @@ export const PurchaseRequestForm = () => {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">{lang === "ar" ? "تجربة إدخال موثوقة وعملية" : "Professional, trust-first intake flow"}</p>
+              <p className="font-medium">{t("requests.intake.summaryTitle")}</p>
               <p className="mt-1 text-sm leading-7 text-muted-foreground">
-                {lang === "ar"
-                  ? "سيراجع فريق Lourex الطلب ثم يحوله إلى صفقة تشغيلية عند جاهزيته، مع الحفاظ على أثر واضح داخل المنصة."
-                  : "The Lourex team will review this request and convert it into an operational deal when it is ready, while keeping a clear platform record."}
+                {t("requests.intake.summaryDescription")}
               </p>
             </div>
           </div>
-          <Button variant="gold" size="lg" onClick={handleSubmit} disabled={submitting}>
+          <Button variant="gold" size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                {lang === "ar" ? "جاري الإرسال..." : "Submitting..."}
+                {t("requests.intake.submitting")}
               </>
             ) : (
               <>
                 <ImagePlus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "إرسال طلب الشراء" : "Submit purchase request"}
+                {t("requests.intake.submit")}
               </>
             )}
           </Button>

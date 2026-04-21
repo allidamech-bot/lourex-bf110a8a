@@ -1,147 +1,266 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bell } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchUserNotifications,
+  markAllUserNotificationsRead,
+  markNotificationRead,
+  mergeNotification,
+  removeNotificationFromList,
+  type NotificationRecord,
+} from "@/domain/notifications/service";
 import { useI18n } from "@/lib/i18n";
 
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  link: string;
-  created_at: string;
-}
+const POLL_INTERVAL_MS = 60_000;
+const REALTIME_TIMEOUT_MS = 8_000;
 
 const NotificationBell = ({ userId }: { userId: string }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const { locale, t } = useI18n();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const pollRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const fallbackActiveRef = useRef(false);
+  const loggedRealtimeIssueRef = useRef(false);
+  const realtimeReadyRef = useRef(false);
 
   const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.is_read).length,
+    () => notifications.filter((notification) => !notification.isRead).length,
     [notifications],
   );
 
+  const logDevIssue = useCallback((message: string, details?: unknown) => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    if (details) {
+      console.warn(message, details);
+      return;
+    }
+
+    console.warn(message);
+  }, []);
+
+  const clearSubscriptionTimeout = useCallback(() => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current !== null) {
+      window.clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const removeCurrentChannel = useCallback(async () => {
+    if (!channelRef.current) {
+      return;
+    }
+
+    const activeChannel = channelRef.current;
+    channelRef.current = null;
+    await supabase.removeChannel(activeChannel);
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) {
+      setNotifications([]);
+      return;
+    }
+
+    const result = await fetchUserNotifications(userId);
+    if (result.error || !result.data) {
+      logDevIssue("Failed to load notifications.", result.error);
+      return;
+    }
+
+    setNotifications(result.data);
+  }, [logDevIssue, userId]);
+
+  const startPolling = useCallback(() => {
+    if (pollRef.current !== null) {
+      return;
+    }
+
+    void fetchNotifications();
+    pollRef.current = window.setInterval(() => {
+      void fetchNotifications();
+    }, POLL_INTERVAL_MS);
+  }, [fetchNotifications]);
+
+  const enableFallback = useCallback(
+    (reason: string, details?: unknown) => {
+      if (!fallbackActiveRef.current) {
+        fallbackActiveRef.current = true;
+        startPolling();
+      }
+
+      if (!loggedRealtimeIssueRef.current) {
+        loggedRealtimeIssueRef.current = true;
+        logDevIssue(
+          `Notification realtime unavailable, falling back to polling (${reason}).`,
+          details,
+        );
+      }
+    },
+    [logDevIssue, startPolling],
+  );
+
   useEffect(() => {
-    let isMounted = true;
+    let isActive = true;
 
-    const cleanupExistingNotificationChannels = async () => {
-      const channels = supabase.getChannels();
-      const notificationChannels = channels.filter((channel) =>
-        channel.topic.includes("user-notifications:"),
-      );
-
-      await Promise.all(notificationChannels.map((channel) => supabase.removeChannel(channel)));
+    const cleanup = async () => {
+      clearSubscriptionTimeout();
+      stopPolling();
+      realtimeReadyRef.current = false;
+      await removeCurrentChannel();
     };
 
     const setup = async () => {
       if (!userId) {
+        await cleanup();
         setNotifications([]);
-        if (channelRef.current) {
-          await supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
         return;
       }
 
-      await cleanupExistingNotificationChannels();
+      loggedRealtimeIssueRef.current = false;
+      fallbackActiveRef.current = false;
+      realtimeReadyRef.current = false;
+      await fetchNotifications();
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (!isMounted) return;
-
-      if (error) {
-        console.error("Failed to load notifications:", error);
-        setNotifications([]);
-      } else {
-        setNotifications((data as Notification[]) || []);
+      if (!isActive) {
+        return;
       }
 
-      const channel = supabase.channel(`user-notifications:${userId}:${Date.now()}`);
+      await removeCurrentChannel();
 
-      channel.on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (!isMounted) return;
+      if (!isActive) {
+        return;
+      }
 
-          const incoming = payload.new as Notification;
+      const channel = supabase.channel(`user-notifications:${userId}`);
+      channelRef.current = channel;
 
-          setNotifications((prev) => {
-            const exists = prev.some((item) => item.id === incoming.id);
-            if (exists) return prev;
-            return [incoming, ...prev].slice(0, 20);
-          });
-        },
-      );
+      channel
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            setNotifications((current) => mergeNotification(current, payload.new));
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            setNotifications((current) => mergeNotification(current, payload.new));
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            setNotifications((current) => removeNotificationFromList(current, payload.old));
+          },
+        );
 
-      channel.subscribe((status) => {
-        if (status === "CHANNEL_ERROR") {
-          console.error("Notification channel error");
+      channel.subscribe((status, error) => {
+        if (!isActive || channelRef.current !== channel) {
+          return;
+        }
+
+        if (status === "SUBSCRIBED") {
+          clearSubscriptionTimeout();
+          stopPolling();
+          fallbackActiveRef.current = false;
+          realtimeReadyRef.current = true;
+          return;
+        }
+
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          enableFallback(status, error);
+          return;
+        }
+
+        if (status === "CLOSED" && !realtimeReadyRef.current) {
+          enableFallback(status, error);
         }
       });
 
-      channelRef.current = channel;
+      timeoutRef.current = window.setTimeout(() => {
+        if (!isActive || fallbackActiveRef.current || realtimeReadyRef.current) {
+          return;
+        }
+
+        enableFallback("timeout");
+      }, REALTIME_TIMEOUT_MS);
     };
 
     void setup();
 
     return () => {
-      isMounted = false;
-
-      if (channelRef.current) {
-        void supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      isActive = false;
+      void cleanup();
     };
-  }, [userId]);
+  }, [
+    clearSubscriptionTimeout,
+    enableFallback,
+    fetchNotifications,
+    removeCurrentChannel,
+    stopPolling,
+    userId,
+  ]);
 
   const markAllRead = async () => {
-    const unread = notifications.filter((notification) => !notification.is_read);
-    if (!userId || unread.length === 0) return;
+    const unread = notifications.filter((notification) => !notification.isRead);
 
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", userId)
-      .eq("is_read", false);
-
-    if (error) {
-      console.error("Failed to mark all notifications as read:", error);
+    if (!userId || unread.length === 0) {
       return;
     }
 
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, is_read: true })),
+    const result = await markAllUserNotificationsRead(userId);
+    if (result.error) {
+      logDevIssue("Failed to mark all notifications as read.", result.error);
+      return;
+    }
+
+    setNotifications((current) =>
+      current.map((notification) => ({ ...notification, isRead: true })),
     );
   };
 
-  const handleClick = async (notification: Notification) => {
-    if (!notification.is_read) {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", notification.id);
-
-      if (!error) {
-        setNotifications((prev) =>
-          prev.map((item) =>
-            item.id === notification.id ? { ...item, is_read: true } : item,
+  const handleClick = async (notification: NotificationRecord) => {
+    if (!notification.isRead) {
+      const result = await markNotificationRead(notification.id);
+      if (result.error) {
+        logDevIssue("Failed to mark a notification as read.", result.error);
+      } else {
+        setNotifications((current) =>
+          current.map((item) =>
+            item.id === notification.id ? { ...item, isRead: true } : item,
           ),
         );
       }
@@ -160,10 +279,11 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         onClick={() => setOpen((prev) => !prev)}
         className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
         aria-label={t("notifications.title")}
+        aria-expanded={open}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 ? (
-          <span className="absolute -top-0.5 -end-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          <span className="absolute -end-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
@@ -182,7 +302,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
             <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
               <h4 className="text-sm font-semibold">{t("notifications.title")}</h4>
               {unreadCount > 0 ? (
-                <button onClick={markAllRead} className="text-xs text-primary hover:underline">
+                <button onClick={() => void markAllRead()} className="text-xs text-primary hover:underline">
                   {t("notifications.markAllRead")}
                 </button>
               ) : null}
@@ -198,11 +318,11 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                   key={notification.id}
                   onClick={() => void handleClick(notification)}
                   className={`w-full border-b border-border/30 px-4 py-3 text-start transition-colors hover:bg-secondary/30 ${
-                    !notification.is_read ? "bg-primary/5" : ""
+                    !notification.isRead ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    {!notification.is_read ? (
+                    {!notification.isRead ? (
                       <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                     ) : null}
                     <div className="min-w-0 flex-1">
@@ -211,7 +331,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                         {notification.message}
                       </p>
                       <p className="mt-1 text-[10px] text-muted-foreground/60">
-                        {new Date(notification.created_at).toLocaleString(locale)}
+                        {new Date(notification.createdAt).toLocaleString(locale)}
                       </p>
                     </div>
                   </div>

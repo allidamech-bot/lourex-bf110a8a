@@ -5,56 +5,59 @@ import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  loadCustomerDashboards,
-  loadDeals,
-  loadFinancialEntries,
-  loadPurchaseRequests,
-} from "@/lib/operationsDomain";
-import { supabase } from "@/integrations/supabase/client";
+  fetchAuditPreviewRows,
+  fetchCustomers,
+  fetchDeals,
+  fetchFinancialEntries,
+  fetchRequests,
+} from "@/domain/operations/service";
+import type { AuditPreviewRow } from "@/domain/operations/types";
 import { shipmentStages } from "@/lib/shipmentStages";
+import { useI18n } from "@/lib/i18n";
 
-interface AuditPreviewRow {
-  id: string;
-  action: string;
-  created_at: string;
-  new_values?: Record<string, any> | null;
-}
+const EMPTY_VALUE = "-";
+const AUDIT_SUMMARY_KEY = "summary";
+const AUDIT_EMAIL_KEY = "requested_by_email";
+const AUDIT_CUSTOMER_ID_KEY = "customer_id";
+const AUDIT_CUSTOMER_NAME_KEY = "customer_name";
+
+const formatAuditAction = (action: string) => action.replace(/\./g, " ");
 
 export default function CustomersPage() {
-  const [rows, setRows] = useState<Awaited<ReturnType<typeof loadCustomerDashboards>>>([]);
-  const [requests, setRequests] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
-  const [deals, setDeals] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
-  const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
+  const { locale, t } = useI18n();
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof fetchCustomers>>>([]);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
+  const [entries, setEntries] = useState<Awaited<ReturnType<typeof fetchFinancialEntries>>>([]);
   const [auditRows, setAuditRows] = useState<AuditPreviewRow[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
 
-      const [customersData, requestsData, dealsData, entriesData, auditData] = await Promise.all([
-        loadCustomerDashboards(),
-        loadPurchaseRequests(),
-        loadDeals(),
-        loadFinancialEntries(),
-        supabase
-          .from("audit_logs")
-          .select("id, action, created_at, new_values")
-          .order("created_at", { ascending: false })
-          .limit(120),
-      ]);
+      try {
+        const [customersData, requestsData, dealsData, entriesData, auditData] = await Promise.all([
+          fetchCustomers(),
+          fetchRequests(),
+          fetchDeals(),
+          fetchFinancialEntries(),
+          fetchAuditPreviewRows(),
+        ]);
 
-      setRows(customersData);
-      setRequests(requestsData);
-      setDeals(dealsData);
-      setEntries(entriesData);
-      setAuditRows((auditData.data as AuditPreviewRow[]) || []);
-      setSelectedCustomerId((current) => current || customersData[0]?.id || "");
-      setLoading(false);
+        setRows(customersData);
+        setRequests(requestsData);
+        setDeals(dealsData);
+        setEntries(entriesData);
+        setAuditRows(auditData);
+        setSelectedCustomerId((current) => current || customersData[0]?.id || "");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    load();
+    void load();
   }, []);
 
   const selectedCustomer =
@@ -93,11 +96,11 @@ export default function CustomersPage() {
     if (!selectedCustomer) return [];
 
     return auditRows.filter((row) => {
-      const values = row.new_values || {};
+      const values = row.newValues;
       return (
-        values.customer_id === selectedCustomer.id ||
-        values.customer_name === selectedCustomer.fullName ||
-        values.requested_by_email === selectedCustomer.email
+        values?.[AUDIT_CUSTOMER_ID_KEY] === selectedCustomer.id ||
+        values?.[AUDIT_CUSTOMER_NAME_KEY] === selectedCustomer.fullName ||
+        values?.[AUDIT_EMAIL_KEY] === selectedCustomer.email
       );
     });
   }, [auditRows, selectedCustomer]);
@@ -133,8 +136,8 @@ export default function CustomersPage() {
     return (
       <EmptyState
         icon={Users}
-        title="لا توجد قاعدة عملاء تشغيلية بعد"
-        description="عند بدء تحويل الطلبات إلى صفقات سيظهر هنا ملف العميل التشغيلي الذي يجمع الطلبات والصفقات والحركة المالية والأثر التدقيقي."
+        title={t("customers.emptyTitle")}
+        description={t("customers.emptyDescription")}
       />
     );
   }
@@ -144,13 +147,10 @@ export default function CustomersPage() {
       <div className="space-y-4">
         <BentoCard className="space-y-3">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Customer Directory
+            {t("customers.directory")}
           </p>
-          <h2 className="font-serif text-2xl font-semibold">سياق العملاء التشغيلي</h2>
-          <p className="text-sm leading-7 text-muted-foreground">
-            كل عميل هنا يمثل علاقة تشغيلية كاملة: طلبات، صفقات، شحنات، محاسبة، وتاريخ
-            نشاط مرتبط بالصفقات.
-          </p>
+          <h2 className="font-serif text-2xl font-semibold">{t("customers.title")}</h2>
+          <p className="text-sm leading-7 text-muted-foreground">{t("customers.description")}</p>
         </BentoCard>
 
         <div className="space-y-3">
@@ -170,18 +170,18 @@ export default function CustomersPage() {
                   <div>
                     <p className="font-serif text-xl font-semibold">{customer.fullName}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {customer.country || "—"} / {customer.city || "—"}
+                      {customer.country || EMPTY_VALUE} / {customer.city || EMPTY_VALUE}
                     </p>
                   </div>
                   <span className="rounded-full bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
-                    {customer.dealsCount} صفقات
+                    {t("customers.metrics.deals", { count: customer.dealsCount })}
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                   {[
-                    { label: "طلبات", value: customer.requestsCount },
-                    { label: "قيود", value: customer.financialEntriesCount },
-                    { label: "تدقيق", value: customer.auditCount },
+                    { label: t("customers.metrics.requests"), value: customer.requestsCount },
+                    { label: t("customers.metrics.entries"), value: customer.financialEntriesCount },
+                    { label: t("customers.metrics.audit"), value: customer.auditCount },
                   ].map((item) => (
                     <div
                       key={`${customer.id}-${item.label}-${index}`}
@@ -204,12 +204,11 @@ export default function CustomersPage() {
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Customer Relationship
+                  {t("customers.relationship")}
                 </p>
                 <h2 className="font-serif text-3xl font-semibold">{selectedCustomer.fullName}</h2>
                 <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
-                  هذا الملف يجمع صورة العميل داخل Lourex: ما الذي طلبه، ما الذي تحول إلى
-                  صفقة، ما أثره المالي، وما النشاط التشغيلي المرتبط به.
+                  {t("customers.relationshipDescription")}
                 </p>
               </div>
 
@@ -217,16 +216,16 @@ export default function CustomersPage() {
                 <div className="rounded-[1.2rem] border border-border/60 bg-secondary/10 px-4 py-4">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Phone className="h-4 w-4" />
-                    <span className="text-xs">الهاتف</span>
+                    <span className="text-xs">{t("customers.phone")}</span>
                   </div>
-                  <p className="mt-2 font-medium">{selectedCustomer.phone || "غير متوفر"}</p>
+                  <p className="mt-2 font-medium">{selectedCustomer.phone || t("common.notAvailable")}</p>
                 </div>
                 <div className="rounded-[1.2rem] border border-border/60 bg-secondary/10 px-4 py-4">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    <span className="text-xs">البريد</span>
+                    <span className="text-xs">{t("customers.email")}</span>
                   </div>
-                  <p className="mt-2 font-medium">{selectedCustomer.email || "غير متوفر"}</p>
+                  <p className="mt-2 font-medium">{selectedCustomer.email || t("common.notAvailable")}</p>
                 </div>
               </div>
             </div>
@@ -234,12 +233,15 @@ export default function CustomersPage() {
 
           <div className="grid gap-4 md:grid-cols-4">
             {[
-              { label: "طلبات فعالة", value: selectedRequests.length },
-              { label: "صفقات مرتبطة", value: selectedDeals.length },
-              { label: "إجمالي الدخل", value: `${totals.income.toLocaleString()} SAR` },
+              { label: t("customers.metrics.activeRequests"), value: selectedRequests.length },
+              { label: t("customers.metrics.linkedDeals"), value: selectedDeals.length },
               {
-                label: "الصافي",
-                value: `${totals.net.toLocaleString()} SAR`,
+                label: t("customers.metrics.totalIncome"),
+                value: `${totals.income.toLocaleString(locale)} SAR`,
+              },
+              {
+                label: t("customers.metrics.net"),
+                value: `${totals.net.toLocaleString(locale)} SAR`,
                 highlight: totals.net >= 0 ? "text-emerald-400" : "text-rose-400",
               },
             ].map((item) => (
@@ -254,19 +256,20 @@ export default function CustomersPage() {
             <BentoCard className="space-y-4">
               <div className="flex items-center gap-3">
                 <Route className="h-5 w-5 text-primary" />
-                <h3 className="font-serif text-2xl font-semibold">الطلبات والصفقات</h3>
+                <h3 className="font-serif text-2xl font-semibold">
+                  {t("customers.requestsAndDeals")}
+                </h3>
               </div>
 
               <div className="space-y-3">
                 {selectedRequests.length === 0 ? (
                   <div className="rounded-[1.4rem] border border-dashed border-border/60 bg-secondary/10 px-5 py-6 text-sm leading-7 text-muted-foreground">
-                    لا توجد طلبات شراء مسجلة لهذا العميل بعد.
+                    {t("customers.noRequests")}
                   </div>
                 ) : (
                   selectedRequests.slice(0, 3).map((request) => {
-                    const linkedDeal = selectedDeals.find(
-                      (deal) => deal.sourceRequestId === request.id,
-                    );
+                    const linkedDeal = selectedDeals.find((deal) => deal.sourceRequestId === request.id);
+
                     return (
                       <div
                         key={request.id}
@@ -276,12 +279,13 @@ export default function CustomersPage() {
                           <div>
                             <p className="font-medium">{request.requestNumber}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              {request.productName || "طلب شراء"} • {request.statusLabel}
+                              {request.productName || t("customers.requestFallbackProduct")}
+                              {request.statusLabel ? ` | ${request.statusLabel}` : ""}
                             </p>
                           </div>
                           {linkedDeal ? (
                             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                              تحول إلى {linkedDeal.dealNumber}
+                              {t("customers.convertedTo", { deal: linkedDeal.dealNumber })}
                             </span>
                           ) : null}
                         </div>
@@ -290,14 +294,14 @@ export default function CustomersPage() {
                             to={`/dashboard/requests?request=${request.id}`}
                             className="font-medium text-primary hover:underline"
                           >
-                            فتح الطلب
+                            {t("customers.openRequest")}
                           </Link>
                           {linkedDeal ? (
                             <Link
                               to={`/dashboard/deals?deal=${linkedDeal.dealNumber}`}
                               className="font-medium text-primary hover:underline"
                             >
-                              فتح الصفقة
+                              {t("customers.openDeal")}
                             </Link>
                           ) : null}
                         </div>
@@ -310,7 +314,7 @@ export default function CustomersPage() {
               <div className="space-y-3">
                 {selectedDeals.length === 0 ? (
                   <div className="rounded-[1.4rem] border border-dashed border-border/60 bg-secondary/10 px-5 py-6 text-sm leading-7 text-muted-foreground">
-                    لم يتم إنشاء صفقات تشغيلية لهذا العميل حتى الآن.
+                    {t("customers.noDeals")}
                   </div>
                 ) : (
                   selectedDeals.slice(0, 3).map((deal) => {
@@ -323,23 +327,23 @@ export default function CustomersPage() {
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                           <div>
                             <p className="font-medium">{deal.dealNumber}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {deal.operationTitle}
-                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">{deal.operationTitle}</p>
                           </div>
                           <span className="rounded-full bg-secondary/30 px-3 py-1 text-xs text-muted-foreground">
-                            {currentStage?.label || "مرحلة غير محددة"}
+                            {currentStage?.label || t("customers.stageUndefined")}
                           </span>
                         </div>
                         <div className="mt-4 grid gap-3 md:grid-cols-2">
                           <div className="rounded-[1.1rem] bg-secondary/20 p-4">
-                            <p className="text-xs text-muted-foreground">التتبع</p>
-                            <p className="mt-1 font-medium">{deal.trackingId || "لم يخصص بعد"}</p>
+                            <p className="text-xs text-muted-foreground">{t("customers.tracking")}</p>
+                            <p className="mt-1 font-medium">{deal.trackingId || t("deals.noTracking")}</p>
                           </div>
                           <div className="rounded-[1.1rem] bg-secondary/20 p-4">
-                            <p className="text-xs text-muted-foreground">المرجع المحاسبي</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("customers.accountingReference")}
+                            </p>
                             <p className="mt-1 font-medium">
-                              {deal.accountingReference || "غير محدد"}
+                              {deal.accountingReference || t("common.notSpecified")}
                             </p>
                           </div>
                         </div>
@@ -348,21 +352,21 @@ export default function CustomersPage() {
                             to={`/dashboard/deals?deal=${deal.dealNumber}`}
                             className="font-medium text-primary hover:underline"
                           >
-                            مركز الصفقة
+                            {t("customers.dealCenter")}
                           </Link>
                           {deal.trackingId ? (
                             <Link
                               to={`/dashboard/tracking?deal=${deal.dealNumber}`}
                               className="font-medium text-primary hover:underline"
                             >
-                              التتبع التشغيلي
+                              {t("customers.operationalTracking")}
                             </Link>
                           ) : null}
                           <Link
                             to={`/dashboard/accounting?deal=${deal.dealNumber}`}
                             className="font-medium text-primary hover:underline"
                           >
-                            المحاسبة
+                            {t("customers.accounting")}
                           </Link>
                         </div>
                       </div>
@@ -376,21 +380,23 @@ export default function CustomersPage() {
               <BentoCard className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Wallet className="h-5 w-5 text-primary" />
-                  <h3 className="font-serif text-2xl font-semibold">السياق المالي</h3>
+                  <h3 className="font-serif text-2xl font-semibold">{t("customers.financeContext")}</h3>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-[1.2rem] bg-secondary/15 p-4">
-                    <p className="text-xs text-muted-foreground">إجمالي المصروف</p>
-                    <p className="mt-2 text-2xl font-bold">{totals.expense.toLocaleString()} SAR</p>
+                    <p className="text-xs text-muted-foreground">{t("customers.expense")}</p>
+                    <p className="mt-2 text-2xl font-bold">
+                      {totals.expense.toLocaleString(locale)} SAR
+                    </p>
                   </div>
                   <div className="rounded-[1.2rem] bg-secondary/15 p-4">
-                    <p className="text-xs text-muted-foreground">القيود المرتبطة</p>
+                    <p className="text-xs text-muted-foreground">{t("customers.linkedEntries")}</p>
                     <p className="mt-2 text-2xl font-bold">{selectedEntries.length}</p>
                   </div>
                 </div>
                 {selectedEntries.length === 0 ? (
                   <div className="rounded-[1.3rem] border border-dashed border-border/60 bg-secondary/10 px-5 py-6 text-sm leading-7 text-muted-foreground">
-                    لا توجد قيود مالية مرتبطة بهذا العميل حتى الآن.
+                    {t("customers.noEntries")}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -403,12 +409,15 @@ export default function CustomersPage() {
                           <div>
                             <p className="font-medium">{entry.entryNumber}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              {entry.type === "income" ? "دخل" : "مصروف"} •{" "}
-                              {entry.scope === "deal" ? "مرتبط بصفقة" : "قيد عام"}
+                              {entry.type === "income" ? t("customers.income") : t("customers.expense")}
+                              {" | "}
+                              {entry.scope === "deal"
+                                ? t("customers.dealLinkedEntry")
+                                : t("customers.generalEntry")}
                             </p>
                           </div>
                           <p className="font-semibold">
-                            {entry.amount.toLocaleString()} {entry.currency}
+                            {entry.amount.toLocaleString(locale)} {entry.currency}
                           </p>
                         </div>
                       </div>
@@ -420,11 +429,11 @@ export default function CustomersPage() {
               <BentoCard className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Activity className="h-5 w-5 text-primary" />
-                  <h3 className="font-serif text-2xl font-semibold">النشاط الأخير</h3>
+                  <h3 className="font-serif text-2xl font-semibold">{t("customers.activity")}</h3>
                 </div>
                 {selectedAudit.length === 0 ? (
                   <div className="rounded-[1.3rem] border border-dashed border-border/60 bg-secondary/10 px-5 py-6 text-sm leading-7 text-muted-foreground">
-                    لا توجد أحداث تدقيق مرتبطة بهذا العميل بعد.
+                    {t("customers.noAudit")}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -434,10 +443,12 @@ export default function CustomersPage() {
                         className="rounded-[1.2rem] border border-border/60 bg-secondary/10 px-4 py-4"
                       >
                         <p className="font-medium">
-                          {row.new_values?.summary || row.action.replaceAll(".", " ")}
+                          {typeof row.newValues?.[AUDIT_SUMMARY_KEY] === "string"
+                            ? row.newValues[AUDIT_SUMMARY_KEY]
+                            : formatAuditAction(row.action)}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {new Date(row.created_at).toLocaleString()}
+                          {new Date(row.createdAt).toLocaleString(locale)}
                         </p>
                       </div>
                     ))}
@@ -447,7 +458,7 @@ export default function CustomersPage() {
                   to="/dashboard/audit"
                   className="inline-flex text-sm font-medium text-primary hover:underline"
                 >
-                  عرض سجل التدقيق الكامل
+                  {t("customers.viewAudit")}
                 </Link>
               </BentoCard>
             </div>

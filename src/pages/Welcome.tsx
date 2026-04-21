@@ -1,78 +1,104 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Globe, User, Building2, Factory, ShoppingBag, ArrowRight, Crown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useI18n, Lang } from "@/lib/i18n";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Crown, Factory, Globe, ShoppingBag, User } from "lucide-react";
+import { useI18n, type Lang } from "@/lib/i18n";
 
 type Role = "owner" | "factory" | "client";
+
+type LocalizedCopy = Record<Lang, string>;
+
+type WelcomeRole = {
+  id: Role;
+  icon: typeof Crown;
+  label: LocalizedCopy;
+  desc: LocalizedCopy;
+  path: string;
+};
+
+const languageOptions: Array<{ code: Lang; label: string; native: string }> = [
+  { code: "en", label: "English", native: "English" },
+  { code: "ar", label: "العربية", native: "العربية" },
+];
+
+const roles: WelcomeRole[] = [
+  {
+    id: "owner",
+    icon: Crown,
+    label: { en: "Owner / General Manager", ar: "المالك / المدير العام" },
+    desc: {
+      en: "Access platform oversight, operations visibility, and reporting.",
+      ar: "الوصول إلى الإشراف العام على المنصة ومتابعة العمليات والتقارير.",
+    },
+    path: "/auth",
+  },
+  {
+    id: "factory",
+    icon: Factory,
+    label: { en: "Factory / Supplier", ar: "المصنع / المورد" },
+    desc: {
+      en: "Manage production coordination, requests, and operational follow-up.",
+      ar: "إدارة التنسيق الإنتاجي والطلبات والمتابعة التشغيلية.",
+    },
+    path: "/factory-signup",
+  },
+  {
+    id: "client",
+    icon: ShoppingBag,
+    label: { en: "Client / Importer", ar: "العميل / المستورد" },
+    desc: {
+      en: "Submit sourcing requests and track progress with confidence.",
+      ar: "أرسل طلبات التوريد وتابع سير العمل بثقة.",
+    },
+    path: "/auth",
+  },
+];
 
 const Welcome = () => {
   const [step, setStep] = useState<"language" | "role">("language");
   const { lang, setLang, dir } = useI18n();
   const navigate = useNavigate();
 
-  const languages: { code: Lang; label: string; native: string }[] = [
-    { code: "en", label: "English", native: "English" },
-    { code: "ar", label: "العربية", native: "Arabic" },
-    { code: "tr", label: "Türkçe", native: "Turkish" },
-  ];
+  const heroTagline =
+    lang === "ar"
+      ? "بوابتك المباشرة إلى المصانع التركية"
+      : "Your direct gateway to Turkish factories";
 
-  const roles: { id: Role; icon: typeof Crown; label: Record<Lang, string>; desc: Record<Lang, string>; path: string }[] = [
-    {
-      id: "owner",
-      icon: Crown,
-      label: { en: "Owner / Admin", ar: "مالك / مدير", tr: "Sahip / Yönetici" },
-      desc: { en: "Full platform control & analytics", ar: "تحكم كامل بالمنصة والتحليلات", tr: "Tam platform kontrolü ve analitik" },
-      path: "/auth",
-    },
-    {
-      id: "factory",
-      icon: Factory,
-      label: { en: "Factory / Supplier", ar: "مصنع / مورد", tr: "Fabrika / Tedarikçi" },
-      desc: { en: "Manage production, staff & orders", ar: "إدارة الإنتاج والموظفين والطلبات", tr: "Üretim, personel ve siparişleri yönetin" },
-      path: "/factory-signup",
-    },
-    {
-      id: "client",
-      icon: ShoppingBag,
-      label: { en: "Client / Importer", ar: "عميل / مستورد", tr: "Müşteri / İthalatçı" },
-      desc: { en: "Source products & track shipments", ar: "ابحث عن منتجات وتتبع الشحنات", tr: "Ürün tedarik edin ve gönderi takip edin" },
-      path: "/auth",
-    },
-  ];
+  const languageTitle = lang === "ar" ? "اختر اللغة" : "Select language";
+  const languageSubtitle =
+    lang === "ar" ? "اختر اللغة المناسبة للمتابعة" : "Choose your preferred language to continue";
+  const roleTitle = lang === "ar" ? "من أنت؟" : "Who are you?";
+  const roleSubtitle =
+    lang === "ar" ? "اختر دورك للمتابعة" : "Select your role to continue";
+  const changeLanguageLabel = lang === "ar" ? "تغيير اللغة" : "Change language";
+  const skipLabel = lang === "ar" ? "تخطي وتصفح الموقع" : "Skip and browse the site";
 
   const handleLanguageSelect = (code: Lang) => {
     setLang(code);
     setStep("role");
   };
 
-  const handleRoleSelect = (role: typeof roles[0]) => {
-    navigate(role.path);
-  };
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 overflow-hidden" dir={dir}>
-      {/* Ambient glow */}
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[150px] pointer-events-none" />
+    <div
+      className="flex min-h-screen items-center justify-center overflow-hidden bg-background px-4"
+      dir={dir}
+    >
+      <div className="pointer-events-none fixed left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[150px]" />
 
-      <div className="w-full max-w-lg relative z-10">
-        {/* Logo */}
+      <div className="relative z-10 w-full max-w-lg">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="mb-10 text-center"
         >
-          <h1 className="font-serif text-4xl md:text-5xl font-bold text-gradient-gold tracking-widest mb-3">
+          <h1 className="mb-3 font-serif text-4xl font-bold tracking-widest text-gradient-gold md:text-5xl">
             LOUREX
           </h1>
-          <p className="text-muted-foreground text-sm tracking-wide">
-            {lang === "ar" ? "بوابتك المباشرة إلى المصانع التركية" : lang === "tr" ? "Türk Fabrikalarına Doğrudan Kapınız" : "Your Direct Gateway to Turkish Factories"}
-          </p>
+          <p className="text-sm tracking-wide text-muted-foreground">{heroTagline}</p>
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {step === "language" && (
+          {step === "language" ? (
             <motion.div
               key="language"
               initial={{ opacity: 0, x: -30 }}
@@ -81,39 +107,40 @@ const Welcome = () => {
               transition={{ duration: 0.3 }}
             >
               <div className="glass-card rounded-2xl p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-primary" />
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Globe className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-serif text-lg font-bold">Select Language</h2>
-                    <p className="text-xs text-muted-foreground">اختر لغتك · Dilinizi seçin</p>
+                    <h2 className="font-serif text-lg font-bold">{languageTitle}</h2>
+                    <p className="text-xs text-muted-foreground">{languageSubtitle}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  {languages.map((l) => (
+                  {languageOptions.map((languageOption) => (
                     <motion.button
-                      key={l.code}
+                      key={languageOption.code}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => handleLanguageSelect(l.code)}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
-                        lang === l.code
+                      onClick={() => handleLanguageSelect(languageOption.code)}
+                      className={`flex w-full items-center justify-between rounded-xl border p-4 transition-all duration-200 ${
+                        lang === languageOption.code
                           ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border/50 bg-card hover:border-primary/30 text-foreground"
+                          : "border-border/50 bg-card text-foreground hover:border-primary/30"
                       }`}
                     >
-                      <span className="text-base font-semibold">{l.label}</span>
-                      <ArrowRight className="w-4 h-4 text-primary" />
+                      <div className="text-start">
+                        <span className="block text-base font-semibold">{languageOption.label}</span>
+                        <span className="text-xs text-muted-foreground">{languageOption.native}</span>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-primary" />
                     </motion.button>
                   ))}
                 </div>
               </div>
             </motion.div>
-          )}
-
-          {step === "role" && (
+          ) : (
             <motion.div
               key="role"
               initial={{ opacity: 0, x: 30 }}
@@ -122,17 +149,13 @@ const Welcome = () => {
               transition={{ duration: 0.3 }}
             >
               <div className="glass-card rounded-2xl p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-serif text-lg font-bold">
-                      {lang === "ar" ? "من أنت؟" : lang === "tr" ? "Siz kimsiniz?" : "Who are you?"}
-                    </h2>
-                    <p className="text-xs text-muted-foreground">
-                      {lang === "ar" ? "اختر دورك للمتابعة" : lang === "tr" ? "Devam etmek için rolünüzü seçin" : "Select your role to continue"}
-                    </p>
+                    <h2 className="font-serif text-lg font-bold">{roleTitle}</h2>
+                    <p className="text-xs text-muted-foreground">{roleSubtitle}</p>
                   </div>
                 </div>
 
@@ -142,44 +165,43 @@ const Welcome = () => {
                       key={role.id}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => handleRoleSelect(role)}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-primary/40 transition-all duration-200 group"
+                      onClick={() => navigate(role.path)}
+                      className="group flex w-full items-center gap-4 rounded-xl border border-border/50 bg-card p-4 transition-all duration-200 hover:border-primary/40"
                     >
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                        <role.icon className="w-6 h-6 text-primary" />
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+                        <role.icon className="h-6 w-6 text-primary" />
                       </div>
-                      <div className="text-start flex-1">
+                      <div className="flex-1 text-start">
                         <p className="font-semibold text-foreground">{role.label[lang]}</p>
                         <p className="text-xs text-muted-foreground">{role.desc[lang]}</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
                     </motion.button>
                   ))}
                 </div>
 
                 <button
                   onClick={() => setStep("language")}
-                  className="mt-4 text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center"
+                  className="mt-4 w-full text-center text-sm text-muted-foreground transition-colors hover:text-primary"
                 >
-                  {lang === "ar" ? "← تغيير اللغة" : lang === "tr" ? "← Dili Değiştir" : "← Change Language"}
+                  {changeLanguageLabel}
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Skip to homepage */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-center mt-6"
+          className="mt-6 text-center"
         >
           <button
             onClick={() => navigate("/")}
-            className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
           >
-            {lang === "ar" ? "تخطي وتصفح الموقع" : lang === "tr" ? "Atlayın ve siteye göz atın" : "Skip & browse the site"}
+            {skipLabel}
           </button>
         </motion.div>
       </div>

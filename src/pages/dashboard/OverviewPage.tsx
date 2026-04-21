@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, ClipboardList, FilePenLine, PackageSearch, Receipt, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { loadDeals, loadFinancialEditRequests, loadPurchaseRequests, loadShipments } from "@/lib/operationsDomain";
+import {
+  fetchAuditCount,
+  fetchDeals,
+  fetchFinancialEditRequests,
+  fetchRequests,
+  fetchShipments,
+} from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 
 interface OverviewMetrics {
@@ -15,36 +21,47 @@ interface OverviewMetrics {
   audits: number;
 }
 
-const loadingCards = Array.from({ length: 4 });
+interface MetricCard {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+}
+
+const loadingCards = Array.from({ length: 4 }, (_, index) => index);
 
 export default function OverviewPage() {
   const { locale, t } = useI18n();
   const [metrics, setMetrics] = useState<OverviewMetrics>({ requests: 0, deals: 0, shipments: 0, audits: 0 });
-  const [recentRequests, setRecentRequests] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
-  const [shipments, setShipments] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
-  const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof loadFinancialEditRequests>>>([]);
+  const [recentRequests, setRecentRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [shipments, setShipments] = useState<Awaited<ReturnType<typeof fetchShipments>>>([]);
+  const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof fetchFinancialEditRequests>>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain] = await Promise.all([
-        loadPurchaseRequests(),
-        loadDeals(),
-        loadShipments(),
-        supabase.from("audit_logs").select("id", { count: "exact", head: true }),
-        loadFinancialEditRequests(),
-      ]);
+      setLoading(true);
 
-      setMetrics({
-        requests: requestsDomain.length || 0,
-        deals: dealsDomain.length || 0,
-        shipments: shipmentsDomain.length || 0,
-        audits: auditCount.count || 0,
-      });
-      setRecentRequests(requestsDomain.slice(0, 4));
-      setShipments(shipmentsDomain);
-      setEditRequests(editsDomain);
-      setLoading(false);
+      try {
+        const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain] = await Promise.all([
+          fetchRequests(),
+          fetchDeals(),
+          fetchShipments(),
+          fetchAuditCount(),
+          fetchFinancialEditRequests(),
+        ]);
+
+        setMetrics({
+          requests: requestsDomain.length,
+          deals: dealsDomain.length,
+          shipments: shipmentsDomain.length,
+          audits: auditCount,
+        });
+        setRecentRequests(requestsDomain.slice(0, 4));
+        setShipments(shipmentsDomain);
+        setEditRequests(editsDomain);
+      } finally {
+        setLoading(false);
+      }
     };
 
     void load();
@@ -68,6 +85,12 @@ export default function OverviewPage() {
   );
 
   const pendingEditRequests = editRequests.filter((item) => item.status === "pending").length;
+  const metricCards: MetricCard[] = [
+    { label: t("overview.metrics.requests"), value: metrics.requests, icon: ClipboardList },
+    { label: t("overview.metrics.deals"), value: metrics.deals, icon: PackageSearch },
+    { label: t("overview.metrics.shipments"), value: metrics.shipments, icon: Truck },
+    { label: t("overview.metrics.audits"), value: metrics.audits, icon: BarChart3 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -92,16 +115,8 @@ export default function OverviewPage() {
       </BentoCard>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {(loading
-          ? loadingCards
-          : [
-              { label: t("overview.metrics.requests"), value: metrics.requests, icon: ClipboardList },
-              { label: t("overview.metrics.deals"), value: metrics.deals, icon: PackageSearch },
-              { label: t("overview.metrics.shipments"), value: metrics.shipments, icon: Truck },
-              { label: t("overview.metrics.audits"), value: metrics.audits, icon: BarChart3 },
-            ]
-        ).map((item: any, index) => (
-          <BentoCard key={index} delay={index * 0.05}>
+        {(loading ? loadingCards : metricCards).map((item, index) => (
+          <BentoCard key={loading ? item : item.label} delay={index * 0.05}>
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-12 w-12 rounded-2xl" />

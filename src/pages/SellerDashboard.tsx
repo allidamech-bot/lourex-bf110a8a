@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, BadgeCheck, Eye, EyeOff, ImagePlus, Package, Pencil, Plus, ShieldAlert, Trash2, X } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import { useI18n } from "@/lib/i18n";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Package, Plus, Pencil, Trash2, Eye, EyeOff, BadgeCheck,
-  Upload, ImagePlus, X, ShieldAlert, ArrowLeft
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,12 +12,32 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "@/domain/auth/session";
+import {
+  deleteSellerProduct,
+  fetchSellerDashboard,
+  saveSellerProduct,
+  toggleSellerProductActive,
+  uploadSellerProductImage,
+  type SellerDashboardData,
+  type SellerProduct,
+} from "@/domain/seller/service";
 
 const CATEGORIES = [
-  "Textiles & Fabrics", "Food & Beverages", "Electronics", "Steel & Metals",
-  "Plastics & Packaging", "Chemicals", "Industrial Equipment", "Building Materials",
-  "Auto Parts", "Health & Beauty", "Biscuits", "Confectionery", "General Trading", "Other",
+  "Textiles & Fabrics",
+  "Food & Beverages",
+  "Electronics",
+  "Steel & Metals",
+  "Plastics & Packaging",
+  "Chemicals",
+  "Industrial Equipment",
+  "Building Materials",
+  "Auto Parts",
+  "Health & Beauty",
+  "Biscuits",
+  "Confectionery",
+  "General Trading",
+  "Other",
 ];
 
 const CURRENCIES = ["USD", "SAR", "TRY", "EUR"];
@@ -29,215 +47,98 @@ interface ProductForm {
   category: string;
   description: string;
   moq: string;
-  price_per_unit: string;
+  pricePerUnit: string;
   currency: string;
-  stock_capacity: string;
-  lead_time: string;
-  shipping_origin: string;
+  stockCapacity: string;
+  leadTime: string;
+  shippingOrigin: string;
   dimensions: string;
-  weight_per_unit: string;
-  units_per_carton: string;
+  weightPerUnit: string;
+  unitsPerCarton: string;
 }
 
 const emptyForm: ProductForm = {
-  name: "", category: "", description: "", moq: "", price_per_unit: "",
-  currency: "USD", stock_capacity: "", lead_time: "", shipping_origin: "",
-  dimensions: "", weight_per_unit: "", units_per_carton: "",
+  name: "",
+  category: "",
+  description: "",
+  moq: "",
+  pricePerUnit: "",
+  currency: "USD",
+  stockCapacity: "",
+  leadTime: "",
+  shippingOrigin: "",
+  dimensions: "",
+  weightPerUnit: "",
+  unitsPerCarton: "",
+};
+
+const parseNullableNumber = (value: string) => {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const SellerDashboard = () => {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [factory, setFactory] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [dashboard, setDashboard] = useState<SellerDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState(false);
-
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
+
+  const loadDashboard = async (currentUser: User) => {
+    setLoading(true);
+    const result = await fetchSellerDashboard(currentUser.id);
+    if (result.error || !result.data) {
+      toast.error(result.error?.message || t("seller.saveFailed"));
+      setDashboard(null);
+    } else {
+      setDashboard(result.data);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/auth"); return; }
-      setUser(user);
-
-      const [{ data: prof }, { data: fac }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-        supabase.from("factories").select("*").eq("owner_user_id", user.id).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
-      ]);
-
-      setProfile(prof);
-      setFactory(fac);
-
-      const isAdmin = roles?.some(r => r.role === "admin");
-      const vs = prof?.verification_status;
-      setIsVerified(isAdmin || vs === "verified" || vs === "approved");
-
-      // Load products owned by this user via factory
-      if (fac) {
-        const { data: p } = await supabase
-          .from("products")
-          .select("*")
-          .eq("factory_id", fac.id)
-          .order("created_at", { ascending: false });
-        setProducts(p || []);
+      const userResult = await getCurrentUser();
+      if (userResult.error || !userResult.data) {
+        navigate("/auth");
+        return;
       }
 
-      setLoading(false);
+      setUser(userResult.data);
+      await loadDashboard(userResult.data);
     };
-    init();
-  }, [navigate]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmit = async () => {
-    if (!form.name.trim() || !form.category) {
-      toast.error(lang === "ar" ? "يرجى ملء الحقول المطلوبة" : "Please fill required fields (name, category)");
-      return;
-    }
-    if (!user) return;
-    setSaving(true);
-
-    try {
-      let imageUrl = "";
-      if (imageFile) {
-        const filePath = `${user.id}/${Date.now()}_${imageFile.name}`;
-        const { error: uploadErr } = await supabase.storage.from("product-images").upload(filePath, imageFile);
-        if (uploadErr) throw uploadErr;
-        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(filePath);
-        imageUrl = urlData.publicUrl;
-      }
-
-      const productData: Record<string, any> = {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        category: form.category,
-        price_per_unit: form.price_per_unit ? parseFloat(form.price_per_unit) : null,
-        currency: form.currency,
-        moq: form.moq || null,
-        stock_capacity: form.stock_capacity || null,
-        lead_time: form.lead_time || null,
-        shipping_origin: form.shipping_origin || null,
-        dimensions: form.dimensions || null,
-        weight_per_unit: form.weight_per_unit ? parseFloat(form.weight_per_unit) : null,
-        units_per_carton: form.units_per_carton ? parseInt(form.units_per_carton) : null,
-        seller_id: user.id,
-      };
-
-      if (imageUrl) productData.image_url = imageUrl;
-      if (factory) productData.factory_id = factory.id;
-
-      if (editingId) {
-        const { error } = await supabase.from("products").update({
-          name: productData.name as string,
-          description: productData.description as string,
-          category: productData.category as string,
-          price_per_unit: productData.price_per_unit as number | null,
-          currency: productData.currency as string,
-          moq: productData.moq as string | null,
-          dimensions: productData.dimensions as string | null,
-          weight_per_unit: productData.weight_per_unit as number | null,
-          units_per_carton: productData.units_per_carton as number | null,
-          ...(imageUrl ? { image_url: imageUrl } : {}),
-        }).eq("id", editingId);
-        if (error) throw error;
-        toast.success(lang === "ar" ? "تم تحديث المنتج" : "Product updated");
-      } else {
-        if (!factory?.id) {
-          toast.error(lang === "ar" ? "لا يوجد مصنع مرتبط بحسابك" : "No factory linked to your account. Please apply as a factory first.");
-          setSaving(false);
-          return;
-        }
-        const { error } = await supabase.from("products").insert({
-          name: productData.name as string,
-          description: (productData.description as string) || "",
-          category: productData.category as string,
-          price_per_unit: productData.price_per_unit as number | null,
-          currency: productData.currency as string,
-          moq: productData.moq as string | null,
-          dimensions: productData.dimensions as string | null,
-          weight_per_unit: productData.weight_per_unit as number | null,
-          units_per_carton: productData.units_per_carton as number | null,
-          image_url: imageUrl || null,
-          factory_id: factory.id,
-          seller_id: user.id,
-          is_active: true,
-        });
-        if (error) throw error;
-        toast.success(lang === "ar" ? "تمت إضافة المنتج" : "Product added successfully");
-      }
-
-      resetForm();
-      // Reload products
-      let reloadData: any[] = [];
-      if (factory) {
-        const { data } = await supabase.from("products").select("*").eq("factory_id", factory.id).order("created_at", { ascending: false });
-        reloadData = data || [];
-      }
-      setProducts(reloadData);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save product");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEdit = (product: any) => {
-    setEditingId(product.id);
-    setForm({
-      name: product.name || "",
-      category: product.category || "",
-      description: product.description || "",
-      moq: product.moq || "",
-      price_per_unit: product.price_per_unit?.toString() || "",
-      currency: product.currency || "USD",
-      stock_capacity: product.stock_capacity || "",
-      lead_time: product.lead_time || "",
-      shipping_origin: product.shipping_origin || "",
-      dimensions: product.dimensions || "",
-      weight_per_unit: product.weight_per_unit?.toString() || "",
-      units_per_carton: product.units_per_carton?.toString() || "",
-    });
-    if (product.image_url) setImagePreview(product.image_url);
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm(lang === "ar" ? "هل أنت متأكد من الحذف؟" : "Are you sure you want to delete this product?")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(lang === "ar" ? "تم الحذف" : "Product deleted");
-      setProducts(prev => prev.filter(p => p.id !== id));
-    }
-  };
-
-  const toggleActive = async (id: string, current: boolean) => {
-    const { error } = await supabase.from("products").update({ is_active: !current }).eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, is_active: !current } : p));
-      toast.success(!current ? "Product activated" : "Product deactivated");
-    }
-  };
+    void init();
+  }, [navigate, t]);
 
   const resetForm = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
     setForm(emptyForm);
     setEditingId(null);
     setShowForm(false);
@@ -245,9 +146,179 @@ const SellerDashboard = () => {
     setImagePreview(null);
   };
 
-  const filteredProducts = statusFilter === "all"
-    ? products
-    : products.filter(p => p.status === statusFilter);
+  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = previewUrl;
+    setImageFile(file);
+    setImagePreview(previewUrl);
+    event.target.value = "";
+  };
+
+  const upsertProduct = (product: SellerProduct) => {
+    setDashboard((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const index = current.products.findIndex((item) => item.id === product.id);
+      if (index === -1) {
+        return {
+          ...current,
+          products: [product, ...current.products],
+        };
+      }
+
+      const nextProducts = [...current.products];
+      nextProducts[index] = product;
+      return {
+        ...current,
+        products: nextProducts,
+      };
+    });
+  };
+
+  const removeProduct = (id: string) => {
+    setDashboard((current) =>
+      current
+        ? {
+            ...current,
+            products: current.products.filter((product) => product.id !== id),
+          }
+        : current,
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!form.name.trim() || !form.category) {
+      toast.error(t("seller.requiredFields"));
+      return;
+    }
+
+    if (!user) {
+      return;
+    }
+
+    if (!dashboard?.factory?.id) {
+      toast.error(t("seller.noFactory"));
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      let imageUrl = dashboard.products.find((product) => product.id === editingId)?.imageUrl ?? null;
+
+      if (imageFile) {
+        const uploadResult = await uploadSellerProductImage(user.id, imageFile);
+        if (uploadResult.error || !uploadResult.data) {
+          throw new Error(uploadResult.error?.message || t("seller.saveFailed"));
+        }
+
+        imageUrl = uploadResult.data;
+      }
+
+      const saveResult = await saveSellerProduct({
+        id: editingId ?? undefined,
+        userId: user.id,
+        factoryId: dashboard.factory.id,
+        name: form.name,
+        category: form.category,
+        description: form.description,
+        moq: form.moq,
+        pricePerUnit: parseNullableNumber(form.pricePerUnit),
+        currency: form.currency,
+        stockCapacity: form.stockCapacity,
+        leadTime: form.leadTime,
+        shippingOrigin: form.shippingOrigin,
+        dimensions: form.dimensions,
+        weightPerUnit: parseNullableNumber(form.weightPerUnit),
+        unitsPerCarton: parseNullableNumber(form.unitsPerCarton),
+        imageUrl,
+      });
+
+      if (saveResult.error || !saveResult.data) {
+        throw new Error(saveResult.error?.message || t("seller.saveFailed"));
+      }
+
+      upsertProduct(saveResult.data);
+      toast.success(editingId ? t("seller.updated") : t("seller.added"));
+      resetForm();
+    } catch (error: unknown) {
+      const message = error instanceof Error && error.message ? error.message : t("seller.saveFailed");
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (product: SellerProduct) => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    setEditingId(product.id);
+    setForm({
+      name: product.name,
+      category: product.category,
+      description: product.description,
+      moq: product.moq,
+      pricePerUnit: product.pricePerUnit?.toString() || "",
+      currency: product.currency || "USD",
+      stockCapacity: product.stockCapacity,
+      leadTime: product.leadTime,
+      shippingOrigin: product.shippingOrigin,
+      dimensions: product.dimensions,
+      weightPerUnit: product.weightPerUnit?.toString() || "",
+      unitsPerCarton: product.unitsPerCarton?.toString() || "",
+    });
+    setImageFile(null);
+    setImagePreview(product.imageUrl || null);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm(t("seller.deleteConfirmation"))) {
+      return;
+    }
+
+    const result = await deleteSellerProduct(id);
+    if (result.error || !result.data) {
+      toast.error(result.error?.message || t("seller.saveFailed"));
+      return;
+    }
+
+    removeProduct(result.data);
+    toast.success(t("seller.deleted"));
+  };
+
+  const handleToggleActive = async (id: string, current: boolean) => {
+    const result = await toggleSellerProductActive(id, current);
+    if (result.error || !result.data) {
+      toast.error(result.error?.message || t("seller.saveFailed"));
+      return;
+    }
+
+    upsertProduct(result.data);
+    toast.success(result.data.isActive ? t("seller.toggledOn") : t("seller.toggledOff"));
+  };
+
+  const products = dashboard?.products ?? [];
+  const isVerified = dashboard?.isVerified ?? false;
+
+  const filteredProducts =
+    statusFilter === "all"
+      ? products
+      : products.filter((product) => product.status === statusFilter);
 
   const statusColor: Record<string, string> = {
     draft: "bg-secondary text-muted-foreground",
@@ -258,8 +329,8 @@ const SellerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -269,18 +340,12 @@ const SellerDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center gap-4 px-4 pt-32 text-center">
-          <ShieldAlert className="w-16 h-16 text-muted-foreground" />
-          <h1 className="font-serif text-2xl font-bold">
-            {lang === "ar" ? "التحقق مطلوب" : "Verification Required"}
-          </h1>
-          <p className="text-muted-foreground max-w-md">
-            {lang === "ar"
-              ? "يجب التحقق من حسابك قبل إدارة المنتجات. يرجى رفع مستندات التحقق."
-              : "Your account must be verified before you can manage products. Please upload your verification documents."}
-          </p>
+          <ShieldAlert className="h-16 w-16 text-muted-foreground" />
+          <h1 className="font-serif text-2xl font-bold">{t("seller.verificationRequired")}</h1>
+          <p className="max-w-md text-muted-foreground">{t("seller.verificationDescription")}</p>
           <Button variant="gold" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-4 h-4 me-2" />
-            {lang === "ar" ? "لوحة التحكم" : "Go to Dashboard"}
+            <ArrowLeft className="me-2 h-4 w-4" />
+            {t("seller.goToDashboard")}
           </Button>
         </div>
       </div>
@@ -290,225 +355,210 @@ const SellerDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pb-16 pt-24">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="font-serif text-3xl font-bold">
-                {lang === "ar" ? "إدارة المنتجات" : "Product Management"}
-              </h1>
-              {isVerified && (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  <BadgeCheck className="w-3.5 h-3.5 me-1" />
-                  {lang === "ar" ? "مورّد موثق" : "Verified Seller"}
-                </Badge>
-              )}
+            <div className="mb-1 flex items-center gap-3">
+              <h1 className="font-serif text-3xl font-bold">{t("seller.title")}</h1>
+              <Badge className="border-emerald-500/30 bg-emerald-500/20 text-emerald-400">
+                <BadgeCheck className="me-1 h-3.5 w-3.5" />
+                {t("seller.verified")}
+              </Badge>
             </div>
-            <p className="text-muted-foreground">
-              {lang === "ar" ? "أضف وعدّل واحذف منتجاتك" : "Add, edit, and manage your product catalog"}
-            </p>
+            <p className="text-muted-foreground">{t("seller.subtitle")}</p>
           </motion.div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="flex gap-2">
-              {["all", "approved", "pending", "draft", "rejected"].map(s => (
+              {(["all", "approved", "pending", "draft", "rejected"] as const).map((status) => (
                 <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    statusFilter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    statusFilter === status ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
                   }`}
                 >
-                  {s === "all" ? (lang === "ar" ? "الكل" : "All") : s.charAt(0).toUpperCase() + s.slice(1)}
-                  {s === "all" && ` (${products.length})`}
+                  {status === "all" ? t("seller.filters.all") : t(`seller.filters.${status}`)}
+                  {status === "all" ? ` (${products.length})` : ""}
                 </button>
               ))}
             </div>
             <Button variant="gold" onClick={() => { resetForm(); setShowForm(true); }}>
-              <Plus className="w-4 h-4 me-1" />
-              {lang === "ar" ? "إضافة منتج" : "Add Product"}
+              <Plus className="me-1 h-4 w-4" />
+              {t("seller.addProduct")}
             </Button>
           </div>
 
-          {/* Add/Edit Form */}
           <AnimatePresence>
-            {showForm && (
+            {showForm ? (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden mb-8"
+                className="mb-8 overflow-hidden"
               >
-                <div className="bg-card border border-border/50 rounded-xl p-6 space-y-4">
+                <div className="space-y-4 rounded-xl border border-border/50 bg-card p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="font-serif text-lg font-semibold">
-                      {editingId
-                        ? (lang === "ar" ? "تعديل المنتج" : "Edit Product")
-                        : (lang === "ar" ? "إضافة منتج جديد" : "Add New Product")}
+                      {editingId ? t("seller.editProduct") : t("seller.addNewProduct")}
                     </h2>
                     <button onClick={resetForm} className="text-muted-foreground hover:text-foreground">
-                      <X className="w-5 h-5" />
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  {/* Image upload */}
                   <div>
-                    <Label>{lang === "ar" ? "صورة المنتج" : "Product Image"}</Label>
+                    <Label>{t("seller.productImage")}</Label>
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                     {imagePreview ? (
-                      <div className="relative mt-2 rounded-lg overflow-hidden border border-border">
-                        <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover" />
+                      <div className="relative mt-2 overflow-hidden rounded-lg border border-border">
+                        <img src={imagePreview} alt="Preview" className="h-40 w-full object-cover" />
                         <button
-                          onClick={() => { setImageFile(null); setImagePreview(null); }}
-                          className="absolute top-2 right-2 bg-background/80 rounded-full p-1"
+                          onClick={() => {
+                            if (previewUrlRef.current) {
+                              URL.revokeObjectURL(previewUrlRef.current);
+                              previewUrlRef.current = null;
+                            }
+
+                            setImageFile(null);
+                            setImagePreview(null);
+                          }}
+                          className="absolute right-2 top-2 rounded-full bg-background/80 p-1"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={() => fileRef.current?.click()}
-                        className="mt-2 w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 transition-colors"
+                        className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50"
                       >
-                        <ImagePlus className="w-6 h-6" />
-                        <span className="text-sm">{lang === "ar" ? "اختر صورة" : "Select Image"}</span>
+                        <ImagePlus className="h-6 w-6" />
+                        <span className="text-sm">{t("seller.selectImage")}</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <Label>{lang === "ar" ? "اسم المنتج *" : "Product Name *"}</Label>
-                      <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Premium Cotton Fabric" />
+                      <Label>{t("seller.productName")}</Label>
+                      <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Premium Cotton Fabric" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "الفئة *" : "Category *"}</Label>
-                      <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
-                        <SelectTrigger><SelectValue placeholder={lang === "ar" ? "اختر الفئة" : "Select category"} /></SelectTrigger>
+                      <Label>{t("seller.category")}</Label>
+                      <Select value={form.category} onValueChange={(value) => setForm({ ...form, category: value })}>
+                        <SelectTrigger><SelectValue placeholder={t("seller.selectCategory")} /></SelectTrigger>
                         <SelectContent>
-                          {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          {CATEGORIES.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="sm:col-span-2">
-                      <Label>{lang === "ar" ? "الوصف" : "Description"}</Label>
-                      <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} />
+                      <Label>{t("seller.description")}</Label>
+                      <Textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={3} />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "السعر" : "Price per Unit"}</Label>
-                      <Input type="number" value={form.price_per_unit} onChange={e => setForm({ ...form, price_per_unit: e.target.value })} placeholder="0.00" />
+                      <Label>{t("seller.pricePerUnit")}</Label>
+                      <Input type="number" value={form.pricePerUnit} onChange={(event) => setForm({ ...form, pricePerUnit: event.target.value })} placeholder="0.00" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "العملة" : "Currency"}</Label>
-                      <Select value={form.currency} onValueChange={v => setForm({ ...form, currency: v })}>
+                      <Label>{t("seller.currency")}</Label>
+                      <Select value={form.currency} onValueChange={(value) => setForm({ ...form, currency: value })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          {CURRENCIES.map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "الحد الأدنى للطلب" : "MOQ"}</Label>
-                      <Input value={form.moq} onChange={e => setForm({ ...form, moq: e.target.value })} placeholder="e.g. 100 units" />
+                      <Label>{t("seller.moq")}</Label>
+                      <Input value={form.moq} onChange={(event) => setForm({ ...form, moq: event.target.value })} placeholder="e.g. 100 units" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "السعة / المخزون" : "Stock / Capacity"}</Label>
-                      <Input value={form.stock_capacity} onChange={e => setForm({ ...form, stock_capacity: e.target.value })} placeholder="e.g. 10,000 units/month" />
+                      <Label>{t("seller.stockCapacity")}</Label>
+                      <Input value={form.stockCapacity} onChange={(event) => setForm({ ...form, stockCapacity: event.target.value })} placeholder="e.g. 10,000 units/month" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "وقت التسليم" : "Lead Time"}</Label>
-                      <Input value={form.lead_time} onChange={e => setForm({ ...form, lead_time: e.target.value })} placeholder="e.g. 7-14 days" />
+                      <Label>{t("seller.leadTime")}</Label>
+                      <Input value={form.leadTime} onChange={(event) => setForm({ ...form, leadTime: event.target.value })} placeholder="e.g. 7-14 days" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "بلد الشحن" : "Shipping Origin"}</Label>
-                      <Input value={form.shipping_origin} onChange={e => setForm({ ...form, shipping_origin: e.target.value })} placeholder="e.g. Istanbul, Turkey" />
+                      <Label>{t("seller.shippingOrigin")}</Label>
+                      <Input value={form.shippingOrigin} onChange={(event) => setForm({ ...form, shippingOrigin: event.target.value })} placeholder="e.g. Istanbul, Turkey" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "الوزن (كجم)" : "Weight per Unit (kg)"}</Label>
-                      <Input type="number" value={form.weight_per_unit} onChange={e => setForm({ ...form, weight_per_unit: e.target.value })} placeholder="0.00" />
+                      <Label>{t("seller.weightPerUnit")}</Label>
+                      <Input type="number" value={form.weightPerUnit} onChange={(event) => setForm({ ...form, weightPerUnit: event.target.value })} placeholder="0.00" />
                     </div>
                     <div>
-                      <Label>{lang === "ar" ? "الأبعاد" : "Dimensions"}</Label>
-                      <Input value={form.dimensions} onChange={e => setForm({ ...form, dimensions: e.target.value })} placeholder="e.g. 30x20x15 cm" />
+                      <Label>{t("seller.dimensions")}</Label>
+                      <Input value={form.dimensions} onChange={(event) => setForm({ ...form, dimensions: event.target.value })} placeholder="e.g. 30x20x15 cm" />
                     </div>
                   </div>
 
                   <div className="flex gap-3 pt-2">
-                    <Button variant="gold" onClick={handleSubmit} disabled={saving} className="flex-1">
-                      {saving
-                        ? (lang === "ar" ? "جارٍ الحفظ..." : "Saving...")
-                        : editingId
-                          ? (lang === "ar" ? "تحديث" : "Update Product")
-                          : (lang === "ar" ? "إضافة المنتج" : "Add Product")}
+                    <Button variant="gold" onClick={() => void handleSubmit()} disabled={saving} className="flex-1">
+                      {saving ? t("seller.saving") : editingId ? t("seller.updateProduct") : t("seller.addProduct")}
                     </Button>
                     <Button variant="outline" onClick={resetForm}>
-                      {lang === "ar" ? "إلغاء" : "Cancel"}
+                      {t("seller.cancel")}
                     </Button>
                   </div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
 
-          {/* Products list */}
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-20">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground">
-                {lang === "ar" ? "لا توجد منتجات بعد" : "No products yet. Add your first product to get started."}
-              </p>
+            <div className="py-20 text-center">
+              <Package className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
+              <p className="text-muted-foreground">{t("seller.noProducts")}</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product, i) => (
+              {filteredProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="bg-card border border-border/30 rounded-xl overflow-hidden"
+                  transition={{ delay: index * 0.03 }}
+                  className="overflow-hidden rounded-xl border border-border/30 bg-card"
                 >
-                  <div className="h-36 bg-secondary/50 flex items-center justify-center">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="flex h-36 items-center justify-center bg-secondary/50">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                     ) : (
-                      <Package className="w-8 h-8 text-muted-foreground/20" />
+                      <Package className="h-8 w-8 text-muted-foreground/20" />
                     )}
                   </div>
-                  <div className="p-4 space-y-2">
+                  <div className="space-y-2 p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-sm">{product.name}</h3>
-                      <Badge className={`text-[10px] shrink-0 ${statusColor[product.status] || statusColor.approved}`}>
-                        {product.status || "approved"}
+                      <h3 className="text-sm font-semibold">{product.name}</h3>
+                      <Badge className={`shrink-0 text-[10px] ${statusColor[product.status] || statusColor.approved}`}>
+                        {t(`statuses.${product.status}`)}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{product.category}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {product.price_per_unit && (
-                        <span className="text-primary font-bold">{product.currency || "USD"} {product.price_per_unit}</span>
-                      )}
-                      {product.moq && <span>MOQ: {product.moq}</span>}
+                      {product.pricePerUnit ? (
+                        <span className="font-bold text-primary">{product.currency} {product.pricePerUnit}</span>
+                      ) : null}
+                      {product.moq ? <span>MOQ: {product.moq}</span> : null}
                     </div>
                     <div className="flex gap-1.5 pt-2">
                       <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleEdit(product)}>
-                        <Pencil className="w-3 h-3 me-1" /> {lang === "ar" ? "تعديل" : "Edit"}
+                        <Pencil className="me-1 h-3 w-3" /> {t("seller.edit")}
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => toggleActive(product.id, product.is_active)}
-                      >
-                        {product.is_active ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => void handleToggleActive(product.id, product.isActive)}>
+                        {product.isActive ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="text-xs text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => void handleDelete(product.id)}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

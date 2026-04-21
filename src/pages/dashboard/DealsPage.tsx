@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   ArrowUpRight,
   FileImage,
@@ -18,47 +18,56 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  fetchDeals,
+  fetchOperationalUsers,
+  updateDealStatus,
+} from "@/domain/operations/service";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import {
-  loadDeals,
-  loadOperationalUsers,
   operationalStatusMeta,
   uploadDealAttachment,
-  updateDealOperation,
 } from "@/lib/operationsDomain";
 import { getShipmentStageCopy } from "@/lib/shipmentStages";
 import { useI18n } from "@/lib/i18n";
+import type { DealOperationalStatus } from "@/types/lourex";
+
+const HEADER_SEPARATOR = " | ";
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error && error.message ? error.message : fallback;
 
 export default function DealsPage() {
   const { lang, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuthSession();
-  const [rows, setRows] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
-  const [users, setUsers] = useState<Awaited<ReturnType<typeof loadOperationalUsers>>>([]);
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
+  const [users, setUsers] = useState<Awaited<ReturnType<typeof fetchOperationalUsers>>>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [notesDraft, setNotesDraft] = useState("");
   const [turkishPartnerId, setTurkishPartnerId] = useState("");
   const [saudiPartnerId, setSaudiPartnerId] = useState("");
-  const [operationalStatus, setOperationalStatus] = useState<string>("awaiting_assignment");
+  const [operationalStatus, setOperationalStatus] =
+    useState<DealOperationalStatus>("awaiting_assignment");
   const [attachmentCategory, setAttachmentCategory] = useState("reference");
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDealNumber = searchParams.get("deal");
   const canManageDeal = profile?.role === "owner" || profile?.role === "operations_employee";
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
-    const [dealsData, usersData] = await Promise.all([loadDeals(), loadOperationalUsers()]);
+    const [dealsData, usersData] = await Promise.all([fetchDeals(), fetchOperationalUsers()]);
     setRows(dealsData);
     setUsers(usersData);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   const selectedDeal = rows.find((row) => row.dealNumber === selectedDealNumber) || rows[0] || null;
 
@@ -69,7 +78,7 @@ export default function DealsPage() {
     setSaudiPartnerId(selectedDeal.saudiPartnerId || "");
     setOperationalStatus(selectedDeal.operationalStatus);
     setAttachmentCategory("reference");
-  }, [selectedDeal?.id]);
+  }, [selectedDeal]);
 
   const turkishPartners = useMemo(
     () => users.filter((user) => user.role === "turkish_partner" && user.status === "active"),
@@ -81,14 +90,28 @@ export default function DealsPage() {
     [users],
   );
 
+  const selectedDealHeaderMeta = selectedDeal
+    ? [
+        selectedDeal.customerName,
+        selectedDeal.requestNumber
+          ? t("deals.requestRef", { value: selectedDeal.requestNumber })
+          : null,
+        selectedDeal.trackingId
+          ? t("deals.trackingRef", { value: selectedDeal.trackingId })
+          : null,
+      ]
+        .filter((value): value is string => Boolean(value))
+        .join(HEADER_SEPARATOR)
+    : "";
+
   const handleSave = async () => {
     if (!selectedDeal) return;
 
     setSaving(true);
     try {
-      const { error } = await updateDealOperation(selectedDeal.id, {
+      const { error } = await updateDealStatus(selectedDeal.id, {
         notes: notesDraft,
-        operationalStatus: operationalStatus as any,
+        operationalStatus,
         turkishPartnerId: turkishPartnerId || null,
         saudiPartnerId: saudiPartnerId || null,
       });
@@ -96,8 +119,8 @@ export default function DealsPage() {
       toast.success(t("deals.toasts.saved"));
       await refresh();
       setSearchParams({ deal: selectedDeal.dealNumber });
-    } catch (error: any) {
-      toast.error(error.message || t("deals.toasts.saveError"));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("deals.toasts.saveError")));
     } finally {
       setSaving(false);
     }
@@ -117,8 +140,8 @@ export default function DealsPage() {
       });
       toast.success(t("deals.toasts.attachmentUploaded"));
       await refresh();
-    } catch (error: any) {
-      toast.error(error.message || t("deals.toasts.attachmentError"));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("deals.toasts.attachmentError")));
     } finally {
       event.target.value = "";
       setUploadingAttachment(false);
@@ -149,9 +172,13 @@ export default function DealsPage() {
     <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
       <BentoCard className="space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("deals.inboxEyebrow")}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {t("deals.inboxEyebrow")}
+          </p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("deals.inboxTitle")}</h2>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("deals.inboxDescription")}</p>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            {t("deals.inboxDescription")}
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -185,22 +212,24 @@ export default function DealsPage() {
           <div className="border-b border-border/50 p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("deals.operationalCenter")}</p>
-                <h2 className="mt-2 font-serif text-3xl font-semibold">{selectedDeal.dealNumber}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {selectedDeal.customerName}
-                  {selectedDeal.requestNumber ? ` • ${t("deals.requestRef", { value: selectedDeal.requestNumber })}` : ""}
-                  {selectedDeal.trackingId ? ` • ${t("deals.trackingRef", { value: selectedDeal.trackingId })}` : ""}
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {t("deals.operationalCenter")}
                 </p>
+                <h2 className="mt-2 font-serif text-3xl font-semibold">{selectedDeal.dealNumber}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{selectedDealHeaderMeta}</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 {selectedDeal.sourceRequestId ? (
                   <Button variant="outline" asChild>
-                    <Link to={`/dashboard/requests?request=${selectedDeal.sourceRequestId}`}>{t("deals.backToRequest")}</Link>
+                    <Link to={`/dashboard/requests?request=${selectedDeal.sourceRequestId}`}>
+                      {t("deals.backToRequest")}
+                    </Link>
                   </Button>
                 ) : null}
                 <Button variant="gold" asChild>
-                  <Link to={`/dashboard/tracking?deal=${selectedDeal.dealNumber}&tracking=${selectedDeal.trackingId || ""}`}>
+                  <Link
+                    to={`/dashboard/tracking?deal=${selectedDeal.dealNumber}&tracking=${selectedDeal.trackingId || ""}`}
+                  >
                     {t("deals.openTracking")}
                   </Link>
                 </Button>
@@ -212,16 +241,46 @@ export default function DealsPage() {
             <div className="border-b border-border/50 p-6 2xl:border-b-0 2xl:border-e">
               <div className="grid gap-3 md:grid-cols-2">
                 {[
-                  { label: t("deals.labels.customer"), value: selectedDeal.customerName || t("common.notSpecified") },
-                  { label: t("deals.labels.email"), value: selectedDeal.customerEmail || t("common.notSpecified") },
-                  { label: t("deals.labels.phone"), value: selectedDeal.customerPhone || t("common.notAvailable") },
-                  { label: t("deals.labels.operationTitle"), value: selectedDeal.operationTitle || t("common.notSpecified") },
-                  { label: t("deals.labels.requestNumber"), value: selectedDeal.requestNumber || t("common.notSpecified") },
-                  { label: t("deals.labels.trackingNumber"), value: selectedDeal.trackingId || t("deals.noTracking") },
-                  { label: t("deals.labels.accountingReference"), value: selectedDeal.accountingReference || t("common.notSpecified") },
-                  { label: t("deals.labels.origin"), value: selectedDeal.originCountry || "Turkey" },
-                  { label: t("deals.labels.destination"), value: selectedDeal.destinationCountry || t("common.notSpecified") },
-                  { label: t("deals.labels.dealValue"), value: `${selectedDeal.totalValue.toLocaleString()} ${selectedDeal.currency || "SAR"}` },
+                  {
+                    label: t("deals.labels.customer"),
+                    value: selectedDeal.customerName || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.email"),
+                    value: selectedDeal.customerEmail || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.phone"),
+                    value: selectedDeal.customerPhone || t("common.notAvailable"),
+                  },
+                  {
+                    label: t("deals.labels.operationTitle"),
+                    value: selectedDeal.operationTitle || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.requestNumber"),
+                    value: selectedDeal.requestNumber || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.trackingNumber"),
+                    value: selectedDeal.trackingId || t("deals.noTracking"),
+                  },
+                  {
+                    label: t("deals.labels.accountingReference"),
+                    value: selectedDeal.accountingReference || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.origin"),
+                    value: selectedDeal.originCountry || t("roles.partnerTurkey"),
+                  },
+                  {
+                    label: t("deals.labels.destination"),
+                    value: selectedDeal.destinationCountry || t("common.notSpecified"),
+                  },
+                  {
+                    label: t("deals.labels.dealValue"),
+                    value: `${selectedDeal.totalValue.toLocaleString()} ${selectedDeal.currency || "SAR"}`,
+                  },
                 ].map((item) => (
                   <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4">
                     <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -231,9 +290,15 @@ export default function DealsPage() {
               </div>
 
               <div className="mt-5 rounded-[1.5rem] border border-primary/15 bg-primary/8 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-primary/80">{t("deals.labels.currentStage")}</p>
-                <p className="mt-2 font-serif text-2xl font-semibold">{getShipmentStageCopy(selectedDeal.stage, lang).label}</p>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("deals.operationContext")}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                  {t("deals.labels.currentStage")}
+                </p>
+                <p className="mt-2 font-serif text-2xl font-semibold">
+                  {getShipmentStageCopy(selectedDeal.stage, lang).label}
+                </p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {t("deals.operationContext")}
+                </p>
               </div>
 
               <div className="mt-5 rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
@@ -254,7 +319,10 @@ export default function DealsPage() {
                     {
                       label: t("deals.labels.netSignal"),
                       value: `${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
-                      className: selectedDeal.accountingSummary.net >= 0 ? "text-emerald-400" : "text-rose-400",
+                      className:
+                        selectedDeal.accountingSummary.net >= 0
+                          ? "text-emerald-400"
+                          : "text-rose-400",
                     },
                     {
                       label: t("deals.labels.entriesCount"),
@@ -279,7 +347,9 @@ export default function DealsPage() {
                   </div>
                   <div className="mt-4 grid gap-4">
                     <div>
-                      <label className="text-xs text-muted-foreground">{t("deals.labels.turkishPartner")}</label>
+                      <label className="text-xs text-muted-foreground">
+                        {t("deals.labels.turkishPartner")}
+                      </label>
                       <select
                         value={turkishPartnerId}
                         onChange={(event) => setTurkishPartnerId(event.target.value)}
@@ -295,7 +365,9 @@ export default function DealsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground">{t("deals.labels.saudiPartner")}</label>
+                      <label className="text-xs text-muted-foreground">
+                        {t("deals.labels.saudiPartner")}
+                      </label>
                       <select
                         value={saudiPartnerId}
                         onChange={(event) => setSaudiPartnerId(event.target.value)}
@@ -311,10 +383,14 @@ export default function DealsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground">{t("deals.labels.operationalStatus")}</label>
+                      <label className="text-xs text-muted-foreground">
+                        {t("deals.labels.operationalStatus")}
+                      </label>
                       <select
                         value={operationalStatus}
-                        onChange={(event) => setOperationalStatus(event.target.value)}
+                        onChange={(event) =>
+                          setOperationalStatus(event.target.value as DealOperationalStatus)
+                        }
                         disabled={!canManageDeal}
                         className="mt-2 flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                       >
@@ -329,7 +405,11 @@ export default function DealsPage() {
                       <Save className={`me-2 h-4 w-4 ${saving ? "animate-pulse" : ""}`} />
                       {saving ? t("deals.saving") : t("deals.saveChanges")}
                     </Button>
-                    {!canManageDeal ? <p className="text-xs leading-6 text-muted-foreground">{t("deals.saveLimited")}</p> : null}
+                    {!canManageDeal ? (
+                      <p className="text-xs leading-6 text-muted-foreground">
+                        {t("deals.saveLimited")}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -353,7 +433,12 @@ export default function DealsPage() {
                     <p className="font-medium">{t("deals.labels.attachments")}</p>
                   </div>
 
-                  <input ref={attachmentInputRef} type="file" className="hidden" onChange={handleAttachmentUpload} />
+                  <input
+                    ref={attachmentInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleAttachmentUpload}
+                  />
 
                   <div className="mt-4 rounded-[1.2rem] border border-border/60 bg-card/60 p-4">
                     <div className="grid gap-3 md:grid-cols-[1fr_auto]">
@@ -369,10 +454,14 @@ export default function DealsPage() {
                         onClick={() => attachmentInputRef.current?.click()}
                       >
                         <FileUp className="me-2 h-4 w-4" />
-                        {uploadingAttachment ? t("deals.uploadingAttachment") : t("deals.uploadAttachment")}
+                        {uploadingAttachment
+                          ? t("deals.uploadingAttachment")
+                          : t("deals.uploadAttachment")}
                       </Button>
                     </div>
-                    <p className="mt-3 text-xs leading-6 text-muted-foreground">{t("deals.attachmentHint")}</p>
+                    <p className="mt-3 text-xs leading-6 text-muted-foreground">
+                      {t("deals.attachmentHint")}
+                    </p>
                   </div>
 
                   {selectedDeal.attachments.length === 0 ? (
@@ -390,7 +479,9 @@ export default function DealsPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-medium">{attachment.fileName}</p>
-                              <p className="mt-1 text-xs text-muted-foreground">{attachment.category}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {attachment.category}
+                              </p>
                             </div>
                             <ArrowUpRight className="mt-0.5 h-4 w-4 text-muted-foreground" />
                           </div>
