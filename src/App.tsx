@@ -25,7 +25,6 @@ const DealsPage = lazy(() => import("@/pages/dashboard/DealsPage"));
 const TrackingPage = lazy(() => import("@/pages/dashboard/TrackingPage"));
 const AccountingPage = lazy(() => import("@/pages/dashboard/AccountingPage"));
 const EditRequestsPage = lazy(() => import("@/pages/dashboard/EditRequestsPage"));
-const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -34,133 +33,125 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      <span className="text-sm font-medium tracking-wide text-muted-foreground">LOUREX</span>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-medium tracking-wide text-muted-foreground">LOUREX</span>
+        </div>
     </div>
-  </div>
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <I18nProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthSessionProvider>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/request" element={<RequestPage />} />
-                  <Route path="/track" element={<TrackPage />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
+    <QueryClientProvider client={queryClient}>
+        <I18nProvider>
+            <TooltipProvider>
+                <ErrorBoundary>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                        <AuthSessionProvider>
+                            <Suspense fallback={<PageLoader />}>
+                                <Routes>
+                                    <Route path="/" element={<HomePage />} />
+                                    <Route path="/request" element={<RequestPage />} />
+                                    <Route path="/track" element={<TrackPage />} />
+                                    <Route path="/auth" element={<Auth />} />
+                                    <Route path="/about" element={<AboutPage />} />
+                                    <Route path="/contact" element={<ContactPage />} />
 
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute requireInternal allowedRoles={INTERNAL_ROLES}>
-                        <DashboardLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<OverviewPage />} />
-                    <Route
-                      path="requests"
-                      element={
-                        <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
-                          <PurchaseRequestsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="customers"
-                      element={
-                        <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
-                          <CustomersPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="deals"
-                      element={
-                        <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                          <DealsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="tracking"
-                      element={
-                        <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                          <TrackingPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="accounting"
-                      element={
-                        <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
-                          <AccountingPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="edit-requests"
-                      element={
-                        <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
-                          <EditRequestsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="audit"
-                      element={
-                        <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                          <AuditPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="reports"
-                      element={
-                        <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
-                          <ReportsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Route>
+                                    <Route
+                                        path="/dashboard"
+                                        element={
+                                            <ProtectedRoute requireInternal allowedRoles={INTERNAL_ROLES}>
+                                                <DashboardLayout />
+                                            </ProtectedRoute>
+                                        }
+                                    >
+                                        <Route index element={<OverviewPage />} />
+                                        <Route
+                                            path="requests"
+                                            element={
+                                                <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
+                                                    <PurchaseRequestsPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="customers"
+                                            element={
+                                                <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
+                                                    <CustomersPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="deals"
+                                            element={
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                    <DealsPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="tracking"
+                                            element={
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                    <TrackingPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="accounting"
+                                            element={
+                                                <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
+                                                    <AccountingPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="edit-requests"
+                                            element={
+                                                <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
+                                                    <EditRequestsPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="reports"
+                                            element={
+                                                <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
+                                                    <ReportsPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                    </Route>
 
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}>
-                        <Admin />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-              <AICommandBar />
-            </AuthSessionProvider>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </I18nProvider>
-  </QueryClientProvider>
+                                    <Route
+                                        path="/profile"
+                                        element={
+                                            <ProtectedRoute>
+                                                <Profile />
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/admin"
+                                        element={
+                                            <ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}>
+                                                <Admin />
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route path="*" element={<NotFound />} />
+                                </Routes>
+                            </Suspense>
+                            <AICommandBar />
+                        </AuthSessionProvider>
+                    </BrowserRouter>
+                </ErrorBoundary>
+            </TooltipProvider>
+        </I18nProvider>
+    </QueryClientProvider>
 );
 
 export default App;
