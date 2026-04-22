@@ -98,7 +98,7 @@ const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
 });
 
 import { supabase } from "@/integrations/supabase/client";
-import { createDomainError, success, failure } from "@/domain/operations/service";
+import { createDomainError, success, failure } from "@/domain/shared/utils";
 import type { DomainResult } from "@/domain/operations/types";
 
 const uploadPurchaseRequestImagesWithId = async (
