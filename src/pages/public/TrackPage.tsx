@@ -15,12 +15,10 @@ export default function TrackPage() {
   const [error, setError] = useState("");
 
   const stageIndex = shipmentStages.findIndex((item) => item.code === result?.currentStage);
-  const nextStage = stageIndex >= 0 && stageIndex < shipmentStages.length - 1 
-    ? getShipmentStageCopy(shipmentStages[stageIndex + 1]?.code, lang) 
-    : null;
+  const nextStage = stageIndex >= 0 ? getShipmentStageCopy(shipmentStages[stageIndex + 1]?.code, lang) : null;
   const completedStages = stageIndex >= 0 ? stageIndex : 0;
   const remainingStages = stageIndex >= 0 ? shipmentStages.length - stageIndex - 1 : shipmentStages.length;
-  const progressRatio = result?.progressRatio || (stageIndex >= 0 ? ((stageIndex + 1) / shipmentStages.length) * 100 : 0);
+  const progressRatio = result?.progressRatio || 0;
   const currentStage = result ? getShipmentStageCopy(result.currentStage, lang) : null;
 
   const publicTimeline = useMemo(

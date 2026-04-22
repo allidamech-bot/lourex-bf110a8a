@@ -22,8 +22,8 @@ const FinalCTA = forwardRef<HTMLElement>((_props, ref) => {
           </div>
           <h2 className="mt-6 font-serif text-3xl font-bold md:text-5xl">
             {lang === "ar"
-              ? "ابدأ مع Lourex كعملية منضبطة لا كطلب عابر"
-              : "Start with Lourex as a disciplined operation, not a casual inquiry"}
+              ? "ابدأ مع Lourex كمنظومة تشغيل لا كمجرد طلب"
+              : "Start with Lourex as an operation, not just an inquiry"}
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
             {lang === "ar"

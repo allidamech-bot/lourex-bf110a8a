@@ -5,7 +5,6 @@ import CoreFeatures from "@/components/CoreFeatures";
 import WhyTurkeySection from "@/components/WhyTurkeySection";
 import TrustSection from "@/components/TrustSection";
 import WhyLourexSafe from "@/components/WhyLourexSafe";
-import SuppliersPreview from "@/components/SuppliersPreview";
 import Testimonials from "@/components/Testimonials";
 import FAQSection from "@/components/FAQSection";
 import FinalCTA from "@/components/FinalCTA";
@@ -22,7 +21,6 @@ const Index = () => {
       <WhyTurkeySection />
       <TrustSection />
       <WhyLourexSafe />
-      <SuppliersPreview />
       <Testimonials />
       <FAQSection />
       <FinalCTA />

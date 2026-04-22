@@ -64,7 +64,7 @@ const HeroSection = () => {
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-background/50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary backdrop-blur">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                {lang === "ar" ? "وكيل تركيا • وكيل السعودية • العميل" : "Turkey agent • Saudi agent • Customer"}
+                {lang === "ar" ? "وساطة ذكية • تشغيل متكامل • مراجعة دقيقة" : "Smart Intermediary • Managed Operations • Precise Review"}
               </div>
             </motion.div>
 
@@ -74,13 +74,13 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.08 }}
               className="font-serif text-4xl font-bold leading-[1.08] text-foreground md:text-6xl xl:text-7xl"
             >
-              {lang === "ar" ? "Lourex تدير الرحلة من" : "Lourex manages the flow from"}
+              {lang === "ar" ? "Lourex تدير عمليات" : "Lourex manages your"}
               <span className="text-gradient-gold">
-                {lang === "ar" ? " طلب شراء تفصيلي " : " detailed purchase request "}
+                {lang === "ar" ? " الاستيراد والوساطة " : " sourcing operations "}
               </span>
               {lang === "ar"
-                ? "إلى صفقة تشغيلية وشحنة مضبوطة ومحاسبة قابلة للتدقيق."
-                : "to an auditable deal, controlled shipment, and disciplined accounting."}
+                ? "من طلب الشراء حتى التسليم النهائي بكل انضباط."
+                : "from purchase request to final delivery with full discipline."}
             </motion.h1>
 
             <motion.p

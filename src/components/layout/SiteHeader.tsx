@@ -28,7 +28,7 @@ export const SiteHeader = () => {
         to: profile?.role === "customer" ? "/customer-portal/tracking" : profile ? "/dashboard/tracking" : "/track",
         label: t("nav.trackShipment"),
       },
-      { to: "/about", label: t("nav.about") },
+      { to: "/why-lourex", label: t("nav.whyLourex") },
       { to: "/contact", label: t("nav.contact") },
     ],
     [profile, t],

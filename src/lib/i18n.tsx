@@ -130,10 +130,6 @@ const translations: Record<Lang, TranslationTree> = {
         avgTime: "Avg. processing time",
       },
       monthlyTrend: "Monthly Trend",
-      exportPdf: "Export PDF",
-      financialReport: "Financial Report",
-      customerReport: "Customer Report",
-      opsReport: "Operations Report",
     },
     tracking: {
       noShipments: "No shipments found matching your account.",
@@ -852,10 +848,6 @@ const translations: Record<Lang, TranslationTree> = {
         avgTime: "متوسط وقت التنفيذ",
       },
       monthlyTrend: "الاتجاه الشهري",
-      exportPdf: "تصدير PDF",
-      financialReport: "التقرير المالي",
-      customerReport: "تقرير العملاء",
-      opsReport: "تقرير العمليات",
     },
     tracking: {
       noShipments: "لم يتم العثور على شحنات مرتبطة بحسابك.",

@@ -727,17 +727,6 @@ export const createPurchaseRequestRecord = async (input: {
     db.from("attachments").insert(attachments),
   );
 
-  const recipients = await getInternalNotificationRecipients();
-  await createNotifications(
-    recipients.map((recipientId) => ({
-      userId: recipientId,
-      type: "purchase_request_created",
-      title: "طلب شراء جديد",
-      message: `تم استلام طلب شراء جديد برقم ${input.requestNumber} لمنتج ${input.productName}.`,
-      link: `/dashboard/requests?request=${input.requestNumber}`,
-    })),
-  );
-
   return { data: inserted.data, error: attachmentError || null };
 };
 
@@ -1265,27 +1254,19 @@ export const convertRequestToDeal = async (
     },
   });
 
-  const recipients = await getInternalNotificationRecipients([
+  const notificationRecipients = await getInternalNotificationRecipients([
     options?.turkishPartnerId,
     options?.saudiPartnerId,
-    request.customer_id,
   ]);
 
   await createNotifications(
-    recipients.filter(Boolean).map((recipientId) => {
-      const isRecipientCustomer = recipientId === request.customer_id;
-      return {
-        userId: recipientId as string,
-        type: isRecipientCustomer ? "request_conversion_customer" : "request_conversion",
-        title: isRecipientCustomer ? "بدء صفقة تشغيلية" : "تم تحويل طلب إلى صفقة تشغيلية",
-        message: isRecipientCustomer
-          ? `طلبك ${request.requestNumber} تم قبوله وبدأت الصفقة ${dealNumber}.`
-          : `الطلب ${request.requestNumber} أصبح الآن الصفقة ${dealNumber}.`,
-        link: isRecipientCustomer
-          ? `/customer/tracking?tracking=${trackingNumber}`
-          : `/dashboard/deals?deal=${dealNumber}`,
-      };
-    }),
+    notificationRecipients.map((recipientId) => ({
+      userId: recipientId,
+      type: "request_conversion",
+      title: "تم تحويل طلب إلى صفقة تشغيلية",
+      message: `الطلب ${request.requestNumber} أصبح الآن الصفقة ${dealNumber}.`,
+      link: `/dashboard/deals?deal=${dealNumber}`,
+    })),
   );
 
   return {
@@ -1670,27 +1651,17 @@ export const createTrackingUpdate = async (input: {
     deal?.saudiPartnerId,
   ]);
 
-  const notifications = notificationRecipients.map((recipientId) => ({
-    userId: recipientId,
-    type: "tracking_update",
-    title: "تم تسجيل تحديث تتبع جديد",
-    message: `${shipment.tracking_id} انتقل إلى مرحلة ${stageLabelByCode[input.stageCode]}.`,
-    link: deal?.dealNumber
-      ? `/dashboard/tracking?deal=${deal.dealNumber}&tracking=${shipment.tracking_id}`
-      : `/dashboard/tracking?tracking=${shipment.tracking_id}`,
-  }));
-
-  if (input.visibility === "customer_visible" && deal?.customerId) {
-    notifications.push({
-      userId: deal.customerId,
-      type: "tracking_update_customer",
-      title: "تحديث في حالة الشحنة",
-      message: `شحنتك ${shipment.tracking_id} أصبحت الآن في مرحلة: ${stageLabelByCode[input.stageCode]}.`,
-      link: `/customer/tracking?tracking=${shipment.tracking_id}`,
-    });
-  }
-
-  await createNotifications(notifications);
+  await createNotifications(
+    notificationRecipients.map((recipientId) => ({
+      userId: recipientId,
+      type: "tracking_update",
+      title: "تم تسجيل تحديث تتبع جديد",
+      message: `${shipment.tracking_id} انتقل إلى مرحلة ${stageLabelByCode[input.stageCode]}.`,
+      link: deal?.dealNumber
+        ? `/dashboard/tracking?deal=${deal.dealNumber}&tracking=${shipment.tracking_id}`
+        : `/dashboard/tracking?tracking=${shipment.tracking_id}`,
+    })),
+  );
 
   return inserted.data;
 };
