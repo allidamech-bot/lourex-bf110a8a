@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
+import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
@@ -17,6 +18,7 @@ export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
   const [searchParams] = useSearchParams();
   const { profile } = useAuthSession();
+  const isInternal = isInternalRole(profile?.role);
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +58,6 @@ export default function TrackingPage() {
     const nextOrder = shipmentStages.find((stage) => stage.code === nextStageCode)?.order ?? 0;
 
     if (profile.role === "owner" || profile.role === "operations_employee") return true;
-    if (profile.role === "turkish_partner") return nextOrder <= 6;
     if (profile.role === "saudi_partner") return nextOrder >= 7;
     return false;
   }, [profile, nextStageCode]);
@@ -136,12 +137,15 @@ export default function TrackingPage() {
             { label: t("tracking.labels.destination"), value: activeShipment.destination },
             { label: t("tracking.labels.deal"), value: activeShipment.dealNumber || t("tracking.unlinked") },
             { label: t("tracking.labels.lastUpdated"), value: new Date(activeShipment.updatedAt).toLocaleString(locale) },
-          ].map((item) => (
-            <div key={item.label} className="rounded-[1.2rem] bg-secondary/25 p-4">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="mt-1 font-medium">{item.value}</p>
-            </div>
-          ))}
+          ].map((item) => {
+            if (item.label === t("tracking.labels.customer") && !isInternal) return null;
+            return (
+              <div key={item.label} className="rounded-[1.2rem] bg-secondary/25 p-4">
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+                <p className="mt-1 font-medium">{item.value}</p>
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -157,7 +161,7 @@ export default function TrackingPage() {
           ))}
         </div>
 
-        {nextStage ? (
+        {isInternal && nextStage ? (
           <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
             <div className="flex items-center gap-3">
               <Send className="h-4 w-4 text-primary" />
@@ -184,9 +188,7 @@ export default function TrackingPage() {
 
             <div className="mt-4 flex items-center justify-between gap-3">
               <p className="text-xs leading-6 text-muted-foreground">
-                {profile?.role === "turkish_partner"
-                  ? t("tracking.turkeyRule")
-                  : profile?.role === "saudi_partner"
+                {profile?.role === "saudi_partner"
                     ? t("tracking.saudiRule")
                     : t("tracking.internalRule")}
               </p>
@@ -197,29 +199,35 @@ export default function TrackingPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-[1.35rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
-            {t("tracking.completedMessage")}
-          </div>
+          !isInternal && nextStage ? null : (
+            <div className="rounded-[1.35rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
+              {t("tracking.completedMessage")}
+            </div>
+          )
         )}
 
         <div className="grid gap-3">
           {activeShipment.dealNumber ? (
             <>
-              <Link
-                to={`/dashboard/deals?deal=${activeShipment.dealNumber}`}
-                className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-                {t("tracking.backToDeal")}
-              </Link>
+              {isInternal && (
+                <>
+                  <Link
+                    to={`/dashboard/deals?deal=${activeShipment.dealNumber}`}
+                    className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                  >
+                    <ArrowRightLeft className="h-4 w-4" />
+                    {t("tracking.backToDeal")}
+                  </Link>
 
-              <Link
-                to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`}
-                className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
-              >
-                <PackageSearch className="h-4 w-4" />
-                {t("tracking.openAccounting")}
-              </Link>
+                  <Link
+                    to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`}
+                    className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                  >
+                    <PackageSearch className="h-4 w-4" />
+                    {t("tracking.openAccounting")}
+                  </Link>
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -264,25 +272,35 @@ export default function TrackingPage() {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium">{getShipmentStageCopy(event.stageCode, lang).label || event.stageCode}</p>
+                        <p className="font-medium">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{new Date(event.occurredAt).toLocaleString(locale)}</p>
                       </div>
 
-                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                        {visibilityLabel(event.visibility)}
-                      </span>
+                      {isInternal && (
+                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                          {visibilityLabel(event.visibility)}
+                        </span>
+                      )}
                     </div>
 
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {event.note || t("tracking.noInternalNote")}
-                    </p>
+                    {isInternal && (
+                      <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                        {event.note || t("tracking.noInternalNote")}
+                      </p>
+                    )}
 
                     {event.customerNote ? (
                       <div className="mt-3 rounded-[1rem] border border-primary/15 bg-primary/8 px-4 py-3 text-sm text-muted-foreground">
                         <span className="font-medium text-foreground">{t("tracking.customerNoteLabel")}:</span>{" "}
                         {event.customerNote}
                       </div>
-                    ) : null}
+                    ) : (
+                      !isInternal && !event.customerNote && (
+                        <p className="mt-3 text-sm italic text-muted-foreground">
+                          {t("tracking.noCustomerNote")}
+                        </p>
+                      )
+                    )}
                   </div>
                 ))}
             </div>

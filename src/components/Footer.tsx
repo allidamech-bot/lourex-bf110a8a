@@ -18,9 +18,8 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   ];
 
   const platformLinks = [
-    { label: lang === "ar" ? "السوق" : "Marketplace", href: "/marketplace" },
-    { label: lang === "ar" ? "الموردون" : "Suppliers", href: "/catalog" },
-    { label: lang === "ar" ? "تتبع الشحن" : "Track Shipment", href: "/track" },
+    { label: lang === "ar" ? "طلب شراء" : "Purchase Request", href: "/dashboard/requests" },
+    { label: lang === "ar" ? "تتبع الشحن" : "Track Shipment", href: "/dashboard/tracking" },
   ];
 
   return (
@@ -33,8 +32,8 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             <img src="/lourex-logo.png" alt="LOUREX" className="h-8 w-auto" />
             <p className="text-sm text-muted-foreground leading-relaxed">
               {lang === "ar"
-                ? "سوق B2B عالمي موثوق يربط المشترين والموردين والمصنعين."
-                : "Verified global B2B marketplace connecting buyers, suppliers, and manufacturers."}
+                ? "منصة وساطة وتشغيل ذكية تربط العميل بصفقات شراء وتتبع ومحاسبة منضبطة."
+                : "Smart broker operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
             </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Globe className="w-3.5 h-3.5 text-primary" />
@@ -91,7 +90,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             © {new Date().getFullYear()} LOUREX. {t("footer.tagline")}
           </p>
           <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">
-            Verified Global B2B Marketplace
+            Private Smart Broker Operations Platform
           </p>
         </div>
       </div>

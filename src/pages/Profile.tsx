@@ -7,7 +7,6 @@ import { useI18n } from "@/lib/i18n";
 
 const roleIcons = {
   owner: Crown,
-  turkish_partner: BriefcaseBusiness,
   saudi_partner: BriefcaseBusiness,
   operations_employee: Shield,
   customer: Users,
@@ -19,12 +18,10 @@ const Profile = () => {
 
   if (!profile) return null;
 
-  const RoleIcon = roleIcons[profile.role];
+  const RoleIcon = roleIcons[profile.role as keyof typeof roleIcons] || Users;
   const statusLabel = t(`common.${profile.status}`);
   const partnerLabel =
-    profile.partnerType === "turkey"
-      ? t("profile.turkeyContext")
-      : profile.partnerType === "saudi"
+    profile.partnerType === "saudi"
         ? t("profile.saudiContext")
         : null;
 

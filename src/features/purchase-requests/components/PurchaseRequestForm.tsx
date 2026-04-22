@@ -1,24 +1,21 @@
 import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { AlertCircle, CheckCircle2, ImagePlus, Loader2, ShieldCheck, Upload, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, ImagePlus, Loader2, ShieldCheck, Upload, X, Hash, MapPin, Package, ClipboardCheck, Calendar, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   createRequest,
   uploadPurchaseRequestImages,
 } from "@/domain/operations/service";
 import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
-import { submitPurchaseRequestInquiry } from "@/domain/public/inquiries";
 import { useI18n } from "@/lib/i18n";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 
 type PurchaseRequestFormState = {
-  fullName: string;
-  phone: string;
-  email: string;
-  country: string;
-  city: string;
   productName: string;
   productDescription: string;
   quantity: string;
@@ -29,14 +26,20 @@ type PurchaseRequestFormState = {
   referenceLink: string;
   preferredShippingMethod: string;
   deliveryNotes: string;
+  // Phase 4 expanded fields
+  weight: string;
+  manufacturingCountry: string;
+  brand: string;
+  qualityLevel: string;
+  isReadyMade: boolean;
+  hasPreviousSample: boolean;
+  expectedSupplyDate: string;
+  destination: string;
+  deliveryAddress: string;
+  isFullSourcing: boolean;
 };
 
 const initialState: PurchaseRequestFormState = {
-  fullName: "",
-  phone: "",
-  email: "",
-  country: "",
-  city: "",
   productName: "",
   productDescription: "",
   quantity: "",
@@ -45,8 +48,18 @@ const initialState: PurchaseRequestFormState = {
   material: "",
   technicalSpecs: "",
   referenceLink: "",
-  preferredShippingMethod: "",
+  preferredShippingMethod: "sea",
   deliveryNotes: "",
+  weight: "",
+  manufacturingCountry: "",
+  brand: "",
+  qualityLevel: "",
+  isReadyMade: false,
+  hasPreviousSample: false,
+  expectedSupplyDate: "",
+  destination: "",
+  deliveryAddress: "",
+  isFullSourcing: true,
 };
 
 const SectionCard = ({
@@ -79,11 +92,12 @@ const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
 
 export const PurchaseRequestForm = () => {
   const { t } = useI18n();
+  const { profile } = useAuthSession();
   const [form, setForm] = useState<PurchaseRequestFormState>(initialState);
   const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [submittedRequest, setSubmittedRequest] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<{ requestNumber: string; trackingCode: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const successSteps = useMemo(
@@ -95,7 +109,7 @@ export const PurchaseRequestForm = () => {
     [t],
   );
 
-  const updateField = (field: keyof PurchaseRequestFormState, value: string) => {
+  const updateField = (field: keyof PurchaseRequestFormState, value: any) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -155,11 +169,6 @@ export const PurchaseRequestForm = () => {
 
   const handleSubmit = async () => {
     const requiredFields: Array<keyof PurchaseRequestFormState> = [
-      "fullName",
-      "phone",
-      "email",
-      "country",
-      "city",
       "productName",
       "productDescription",
       "quantity",
@@ -168,10 +177,14 @@ export const PurchaseRequestForm = () => {
       "material",
       "technicalSpecs",
       "preferredShippingMethod",
-      "deliveryNotes",
+      "destination",
     ];
 
-    const missing = requiredFields.some((field) => !form[field].trim());
+    const missing = requiredFields.some((field) => {
+      const val = form[field];
+      return typeof val === "string" ? !val.trim() : !val;
+    });
+
     if (missing) {
       setErrorMessage(t("requests.intake.errors.missingFields"));
       return;
@@ -182,36 +195,31 @@ export const PurchaseRequestForm = () => {
       return;
     }
 
+    if (!profile) {
+      setErrorMessage("You must be logged in to submit a request.");
+      return;
+    }
+
     setSubmitting(true);
     setErrorMessage("");
 
     try {
       const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+      const trackingCode = `TRX-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+      
       const uploadResult = await uploadPurchaseRequestImages(requestNumber, uploads);
       if (uploadResult.error || !uploadResult.data) {
         throw new Error(uploadResult.error?.message || t("requests.intake.errors.submitFailed"));
       }
 
-      const inquiryResult = await submitPurchaseRequestInquiry({
-        name: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        company: `${form.country} - ${form.city}`,
-        message: buildPayload(requestNumber, uploadResult.data),
-        factory_name: form.preferredShippingMethod,
-      });
-
-      if (inquiryResult.error) {
-        throw new Error(inquiryResult.error.message);
-      }
-
       const structuredResult = await createRequest({
         requestNumber,
-        fullName: form.fullName,
-        phone: form.phone,
-        email: form.email,
-        country: form.country,
-        city: form.city,
+        trackingCode,
+        fullName: profile.fullName || "Customer",
+        phone: profile.phone || "",
+        email: profile.email || "",
+        country: profile.country || "",
+        city: profile.city || "",
         productName: form.productName,
         productDescription: form.productDescription,
         quantity: Number(form.quantity || 0),
@@ -223,13 +231,24 @@ export const PurchaseRequestForm = () => {
         preferredShippingMethod: form.preferredShippingMethod,
         deliveryNotes: form.deliveryNotes,
         imageUrls: uploadResult.data,
+        // Expanded Phase 4 fields
+        weight: form.weight,
+        manufacturingCountry: form.manufacturingCountry,
+        brand: form.brand,
+        qualityLevel: form.qualityLevel,
+        isReadyMade: form.isReadyMade,
+        hasPreviousSample: form.hasPreviousSample,
+        expectedSupplyDate: form.expectedSupplyDate,
+        destination: form.destination,
+        deliveryAddress: form.deliveryAddress,
+        isFullSourcing: form.isFullSourcing,
       });
 
       if (structuredResult.error) {
         throw new Error(structuredResult.error.message);
       }
 
-      setSubmittedRequest(requestNumber);
+      setSubmittedData({ requestNumber, trackingCode });
       setForm(initialState);
       clearUploads(uploads);
       setUploads([]);
@@ -247,7 +266,7 @@ export const PurchaseRequestForm = () => {
     }
   };
 
-  if (submittedRequest) {
+  if (submittedData) {
     return (
       <div className="rounded-[2rem] border border-primary/20 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.92))] p-8 shadow-[0_28px_60px_-36px_rgba(0,0,0,0.22)] dark:shadow-[0_28px_60px_-36px_rgba(0,0,0,0.68)] md:p-10">
         <div className="mx-auto max-w-3xl text-center">
@@ -257,9 +276,21 @@ export const PurchaseRequestForm = () => {
           <h3 className="mt-6 font-serif text-3xl font-semibold">
             {t("requests.intake.successTitle")}
           </h3>
-          <p className="mt-4 text-base leading-8 text-muted-foreground">
-            {t("requests.intake.successReference")}{" "}
-            <span className="font-semibold text-foreground">{submittedRequest}</span>.{" "}
+          
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col items-center justify-center rounded-[1.4rem] border border-primary/20 bg-primary/5 p-6">
+               <Hash className="mb-2 h-6 w-6 text-primary" />
+               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("requests.intake.successReference")}</span>
+               <span className="mt-1 text-2xl font-bold text-foreground">{submittedData.requestNumber}</span>
+            </div>
+            <div className="flex flex-col items-center justify-center rounded-[1.4rem] border border-primary/20 bg-primary/5 p-6">
+               <ShieldCheck className="mb-2 h-6 w-6 text-primary" />
+               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("nav.track")}</span>
+               <span className="mt-1 text-2xl font-bold text-foreground">{submittedData.trackingCode}</span>
+            </div>
+          </div>
+
+          <p className="mt-6 text-base leading-8 text-muted-foreground">
             {t("requests.intake.successDescription")}
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -269,7 +300,7 @@ export const PurchaseRequestForm = () => {
               </div>
             ))}
           </div>
-          <Button variant="gold" className="mt-8" onClick={() => setSubmittedRequest(null)}>
+          <Button variant="gold" className="mt-8" onClick={() => setSubmittedData(null)}>
             {t("requests.intake.submitAnother")}
           </Button>
         </div>
@@ -291,41 +322,81 @@ export const PurchaseRequestForm = () => {
         description={t("requests.intake.productDescription")}
       >
         <div className="md:col-span-2">
-          <Label>{t("requests.intake.productName")}</Label>
+          <Label>{t("requests.intake.productName")} *</Label>
           <Input value={form.productName} onChange={(event) => updateField("productName", event.target.value)} />
           <FieldHint text={t("requests.intake.productNameHint")} />
         </div>
 
         <div className="md:col-span-2">
-          <Label>{t("requests.intake.productDescriptionLabel")}</Label>
+          <Label>{t("requests.intake.productDescriptionLabel")} *</Label>
           <Textarea rows={4} value={form.productDescription} onChange={(event) => updateField("productDescription", event.target.value)} />
           <FieldHint text={t("requests.intake.productDescriptionHint")} />
         </div>
 
         <div>
-          <Label>{t("requests.intake.quantity")}</Label>
+          <Label>{t("requests.intake.quantity")} *</Label>
           <Input value={form.quantity} onChange={(event) => updateField("quantity", event.target.value)} placeholder={t("requests.intake.quantityPlaceholder")} />
         </div>
 
         <div>
-          <Label>{t("requests.intake.dimensions")}</Label>
+          <Label>{t("requests.intake.dimensions")} *</Label>
           <Input value={form.sizeDimensions} onChange={(event) => updateField("sizeDimensions", event.target.value)} placeholder={t("requests.intake.dimensionsPlaceholder")} />
         </div>
 
         <div>
-          <Label>{t("requests.intake.color")}</Label>
+          <Label>{t("requests.intake.color")} *</Label>
           <Input value={form.color} onChange={(event) => updateField("color", event.target.value)} />
         </div>
 
         <div>
-          <Label>{t("requests.intake.material")}</Label>
+          <Label>{t("requests.intake.material")} *</Label>
           <Input value={form.material} onChange={(event) => updateField("material", event.target.value)} />
         </div>
 
+        <div>
+          <Label>{t("requests.intake.weight")}</Label>
+          <Input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} />
+        </div>
+
+        <div>
+          <Label>{t("requests.intake.brand")}</Label>
+          <Input value={form.brand} onChange={(event) => updateField("brand", event.target.value)} />
+        </div>
+
+        <div>
+          <Label>{t("requests.intake.manufacturingCountry")}</Label>
+          <Input value={form.manufacturingCountry} onChange={(event) => updateField("manufacturingCountry", event.target.value)} />
+        </div>
+
+        <div>
+          <Label>{t("requests.intake.qualityLevel")}</Label>
+          <Input value={form.qualityLevel} onChange={(event) => updateField("qualityLevel", event.target.value)} />
+        </div>
+
         <div className="md:col-span-2">
-          <Label>{t("requests.intake.technicalSpecs")}</Label>
+          <Label>{t("requests.intake.technicalSpecs")} *</Label>
           <Textarea rows={4} value={form.technicalSpecs} onChange={(event) => updateField("technicalSpecs", event.target.value)} />
           <FieldHint text={t("requests.intake.technicalSpecsHint")} />
+        </div>
+
+        <div className="md:col-span-2 space-y-4">
+           <div className="flex items-center space-x-2 rtl:space-x-reverse">
+             <Checkbox 
+               id="isReadyMade" 
+               checked={form.isReadyMade} 
+               onCheckedChange={(checked) => updateField("isReadyMade", !!checked)} 
+             />
+             <Label htmlFor="isReadyMade" className="cursor-pointer font-normal">{t("requests.intake.readyMade")}</Label>
+           </div>
+           
+           <div className="flex items-center space-x-2 rtl:space-x-reverse">
+             <Checkbox 
+               id="hasPreviousSample" 
+               checked={form.hasPreviousSample} 
+               onCheckedChange={(checked) => updateField("hasPreviousSample", !!checked)} 
+             />
+             <Label htmlFor="hasPreviousSample" className="cursor-pointer font-normal">{t("requests.intake.hasPreviousSample")}</Label>
+           </div>
         </div>
 
         <div className="md:col-span-2">
@@ -339,7 +410,7 @@ export const PurchaseRequestForm = () => {
         description={t("requests.intake.shippingDescription")}
       >
         <div className="md:col-span-2">
-          <Label>{t("requests.intake.images")}</Label>
+          <Label>{t("requests.intake.images")} *</Label>
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
           <button
             type="button"
@@ -372,45 +443,84 @@ export const PurchaseRequestForm = () => {
           )}
         </div>
 
+        <div className="md:col-span-2">
+           <Label>{t("requests.intake.preferredShippingMethod")} *</Label>
+           <RadioGroup 
+             value={form.preferredShippingMethod} 
+             onValueChange={(val) => updateField("preferredShippingMethod", val)}
+             className="mt-3 grid grid-cols-3 gap-4"
+           >
+              {['air', 'sea', 'land'].map((method) => (
+                <div key={method}>
+                  <RadioGroupItem value={method} id={`ship-${method}`} className="peer sr-only" />
+                  <Label
+                    htmlFor={`ship-${method}`}
+                    className="flex flex-col items-center justify-between rounded-2xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                  >
+                    {method === 'air' && <Truck className="mb-2 h-6 w-6 rotate-[-15deg]" />}
+                    {method === 'sea' && <Truck className="mb-2 h-6 w-6" />}
+                    {method === 'land' && <Truck className="mb-2 h-6 w-6" />}
+                    <span className="text-xs font-semibold capitalize">{method}</span>
+                  </Label>
+                </div>
+              ))}
+           </RadioGroup>
+        </div>
+
         <div>
-          <Label>{t("requests.intake.preferredShippingMethod")}</Label>
-          <Input
-            placeholder={t("requests.intake.preferredShippingPlaceholder")}
-            value={form.preferredShippingMethod}
-            onChange={(event) => updateField("preferredShippingMethod", event.target.value)}
+          <Label>{t("requests.intake.destination")} *</Label>
+          <Input 
+            value={form.destination} 
+            onChange={(event) => updateField("destination", event.target.value)} 
+            placeholder={t("requests.intake.destination")} 
           />
         </div>
 
         <div>
+          <Label>{t("requests.intake.expectedSupplyDate")}</Label>
+          <Input 
+            type="date" 
+            value={form.expectedSupplyDate} 
+            onChange={(event) => updateField("expectedSupplyDate", event.target.value)} 
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <Label>{t("requests.intake.deliveryAddress")}</Label>
+          <Input 
+            value={form.deliveryAddress} 
+            onChange={(event) => updateField("deliveryAddress", event.target.value)} 
+          />
+        </div>
+
+        <div className="md:col-span-2">
+           <Label className="mb-3 block">{t("requests.intake.type")}</Label>
+           <RadioGroup 
+             value={form.isFullSourcing ? "full" : "shipping"} 
+             onValueChange={(val) => updateField("isFullSourcing", val === "full")}
+             className="grid grid-cols-2 gap-4"
+           >
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <RadioGroupItem value="full" id="type-full" />
+                <Label htmlFor="type-full" className="font-normal">{t("requests.intake.isFullSourcing")}</Label>
+              </div>
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <RadioGroupItem value="shipping" id="type-shipping" />
+                <Label htmlFor="type-shipping" className="font-normal">{t("requests.intake.isShippingOnly")}</Label>
+              </div>
+           </RadioGroup>
+        </div>
+
+        <div className="md:col-span-2">
           <Label>{t("requests.intake.deliveryNotes")}</Label>
-          <Input value={form.deliveryNotes} onChange={(event) => updateField("deliveryNotes", event.target.value)} placeholder={t("requests.intake.deliveryNotesPlaceholder")} />
+          <Textarea 
+            value={form.deliveryNotes} 
+            onChange={(event) => updateField("deliveryNotes", event.target.value)} 
+            placeholder={t("requests.intake.deliveryNotesPlaceholder")} 
+          />
         </div>
       </SectionCard>
 
-      <SectionCard
-        title={t("requests.intake.contactTitle")}
-        description={t("requests.intake.contactDescription")}
-      >
-        <div>
-          <Label>{t("requests.intake.fullName")}</Label>
-          <Input value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} />
-        </div>
-        <div>
-          <Label>{t("requests.intake.phoneNumber")}</Label>
-          <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
-        </div>
-        <div>
-          <Label>{t("requests.intake.emailAddress")}</Label>
-          <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
-        </div>
-        <div>
-          <Label>{t("requests.intake.countryCity")}</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <Input placeholder={t("requests.intake.countryPlaceholder")} value={form.country} onChange={(event) => updateField("country", event.target.value)} />
-            <Input placeholder={t("requests.intake.cityPlaceholder")} value={form.city} onChange={(event) => updateField("city", event.target.value)} />
-          </div>
-        </div>
-      </SectionCard>
 
       <div className="rounded-[1.8rem] border border-primary/15 bg-[linear-gradient(180deg,hsla(var(--card)/0.96),hsla(var(--card)/0.92))] px-6 py-5 shadow-[0_18px_42px_-32px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_42px_-32px_rgba(0,0,0,0.45)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

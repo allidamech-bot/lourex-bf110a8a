@@ -28,6 +28,7 @@ const EditRequestsPage = lazy(() => import("@/pages/dashboard/EditRequestsPage")
 const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
+const CustomerPortal = lazy(() => import("@/pages/customer/CustomerPortal"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -54,8 +55,22 @@ const App = () => (
                             <Suspense fallback={<PageLoader />}>
                                 <Routes>
                                     <Route path="/" element={<HomePage />} />
-                                    <Route path="/request" element={<RequestPage />} />
-                                    <Route path="/track" element={<TrackPage />} />
+                                    <Route
+                                        path="/request"
+                                        element={
+                                            <ProtectedRoute allowedRoles={["customer"]}>
+                                                <RequestPage />
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/track"
+                                        element={
+                                            <ProtectedRoute allowedRoles={["customer"]}>
+                                                <TrackPage />
+                                            </ProtectedRoute>
+                                        }
+                                    />
                                     <Route path="/auth" element={<Auth />} />
                                     <Route path="/about" element={<AboutPage />} />
                                     <Route path="/contact" element={<ContactPage />} />
@@ -63,16 +78,23 @@ const App = () => (
                                     <Route
                                         path="/dashboard"
                                         element={
-                                            <ProtectedRoute requireInternal allowedRoles={INTERNAL_ROLES}>
+                                            <ProtectedRoute allowedRoles={[...INTERNAL_ROLES, "customer"]}>
                                                 <DashboardLayout />
                                             </ProtectedRoute>
                                         }
                                     >
-                                        <Route index element={<OverviewPage />} />
+                                        <Route 
+                                            index 
+                                            element={
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                    <OverviewPage />
+                                                </ProtectedRoute>
+                                            } 
+                                        />
                                         <Route
                                             path="requests"
                                             element={
-                                                <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
+                                                <ProtectedRoute allowedRoles={["owner", "operations_employee", "customer"]}>
                                                     <PurchaseRequestsPage />
                                                 </ProtectedRoute>
                                             }
@@ -96,7 +118,7 @@ const App = () => (
                                         <Route
                                             path="tracking"
                                             element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                <ProtectedRoute allowedRoles={[...INTERNAL_ROLES, "customer"]}>
                                                     <TrackingPage />
                                                 </ProtectedRoute>
                                             }
@@ -140,6 +162,14 @@ const App = () => (
                                         element={
                                             <ProtectedRoute>
                                                 <Profile />
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/customer-portal"
+                                        element={
+                                            <ProtectedRoute allowedRoles={["customer"]}>
+                                                <CustomerPortal />
                                             </ProtectedRoute>
                                         }
                                     />

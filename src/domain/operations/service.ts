@@ -115,6 +115,12 @@ export const fetchCustomers = async (): Promise<OperationsCustomer[]> => {
   return customers.map(normalizeCustomer);
 };
 
+export const fetchCustomerDashboard = async (email: string): Promise<OperationsCustomer | null> => {
+  const customers = await loadCustomerDashboards();
+  const customer = customers.find(c => c.email.toLowerCase() === email.toLowerCase());
+  return customer ? normalizeCustomer(customer) : null;
+};
+
 export const fetchRequests = async (): Promise<OperationsRequest[]> => {
   const requests = await loadPurchaseRequests();
   return requests.map(normalizeRequest);
@@ -227,7 +233,19 @@ export const createRequest = async (
     preferredShippingMethod: normalizeText(input.preferredShippingMethod),
     deliveryNotes: normalizeText(input.deliveryNotes),
     imageUrls: input.imageUrls.filter((url) => normalizeText(url).length > 0),
-  };
+    // Phase 4 expansion
+    weight: normalizeText(input.weight),
+    manufacturingCountry: normalizeText(input.manufacturingCountry),
+    brand: normalizeText(input.brand),
+    qualityLevel: normalizeText(input.qualityLevel),
+    isReadyMade: !!input.isReadyMade,
+    hasPreviousSample: !!input.hasPreviousSample,
+    expectedSupplyDate: normalizeText(input.expectedSupplyDate),
+    destination: normalizeText(input.destination),
+    deliveryAddress: normalizeText(input.deliveryAddress),
+    isFullSourcing: !!input.isFullSourcing,
+    trackingCode: normalizeText(input.trackingCode),
+  } satisfies CreateRequestInput;
 
   if (!normalizedInput.requestNumber) {
     return failure("A purchase request reference is required.");

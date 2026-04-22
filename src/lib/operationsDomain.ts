@@ -120,6 +120,18 @@ type PurchaseRequestRow = {
   converted_deal_number?: string | null;
   internal_notes?: string | null;
   last_reviewed_at?: string | null;
+  // Phase 4 expansion
+  weight?: string | null;
+  manufacturing_country?: string | null;
+  brand?: string | null;
+  quality_level?: string | null;
+  is_ready_made?: boolean | null;
+  has_previous_sample?: boolean | null;
+  expected_supply_date?: string | null;
+  destination?: string | null;
+  delivery_address?: string | null;
+  is_full_sourcing?: boolean | null;
+  tracking_code?: string | null;
 };
 
 type AttachmentRow = {
@@ -567,6 +579,18 @@ export const createPurchaseRequestRecord = async (input: {
   preferredShippingMethod: string;
   deliveryNotes: string;
   imageUrls: string[];
+  // Phase 4 expanded
+  weight: string;
+  manufacturingCountry: string;
+  brand: string;
+  qualityLevel: string;
+  isReadyMade: boolean;
+  hasPreviousSample: boolean;
+  expectedSupplyDate: string;
+  destination: string;
+  deliveryAddress: string;
+  isFullSourcing: boolean;
+  trackingCode: string;
 }) => {
   const inserted = await safeStructuredMutation<PurchaseRequestRow>(() =>
     db
@@ -590,6 +614,18 @@ export const createPurchaseRequestRecord = async (input: {
         preferred_shipping_method: input.preferredShippingMethod,
         delivery_notes: input.deliveryNotes,
         image_urls: input.imageUrls,
+        // Phase 4 expansion mapping
+        weight: input.weight,
+        manufacturing_country: input.manufacturingCountry,
+        brand: input.brand,
+        quality_level: input.qualityLevel,
+        is_ready_made: input.isReadyMade,
+        has_previous_sample: input.hasPreviousSample,
+        expected_supply_date: input.expectedSupplyDate,
+        destination: input.destination,
+        delivery_address: input.deliveryAddress,
+        is_full_sourcing: input.isFullSourcing,
+        tracking_code: input.trackingCode,
       })
       .select("*")
       .single(),
@@ -643,6 +679,18 @@ const mapExplicitRequest = (
   deliveryNotes: row.delivery_notes || "",
   imageUrls: row.image_urls || [],
   createdAt: row.created_at || row.submitted_at,
+  // Phase 4 fields
+  weight: row.weight || "",
+  manufacturingCountry: row.manufacturing_country || "",
+  brand: row.brand || "",
+  qualityLevel: row.quality_level || "",
+  isReadyMade: !!row.is_ready_made,
+  hasPreviousSample: !!row.has_previous_sample,
+  expectedSupplyDate: row.expected_supply_date || "",
+  destination: row.destination || "",
+  deliveryAddress: row.delivery_address || "",
+  isFullSourcing: !!row.is_full_sourcing,
+  trackingCode: row.tracking_code || "",
   sourceInquiryId: row.source_inquiry_id,
   convertedDealId: row.converted_deal_id || null,
   convertedDealNumber: row.converted_deal_number || null,
@@ -732,6 +780,18 @@ export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest
         isLegacyFallback: true,
         internalNotes: "",
         reviewedAt: null,
+        // Legacy fallback fields for Phase 4
+        weight: "",
+        manufacturingCountry: "",
+        brand: "",
+        qualityLevel: "",
+        isReadyMade: false,
+        hasPreviousSample: false,
+        expectedSupplyDate: "",
+        destination: country, // Use country as a guess
+        deliveryAddress: "",
+        isFullSourcing: true,
+        trackingCode: "",
         attachments: (payload.imageUrls || []).map((url, index) => ({
           id: `${row.id}-${index}`,
           entityType: "purchase_request",
@@ -963,6 +1023,25 @@ export const convertRequestToDeal = async (
   const trackingNumber = `TRK-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
   const accountingReference = `ACC-${dealNumber}`;
 
+  // Build a comprehensive operational summary for the deal notes
+  const operationalSummary = [
+    `Product: ${request.productName}`,
+    `Quantity: ${request.quantity}`,
+    `Weight: ${request.weight || "N/A"}`,
+    `Brand: ${request.brand || "N/A"}`,
+    `Quality Level: ${request.qualityLevel || "N/A"}`,
+    `Manufacturing Country: ${request.manufacturingCountry || "N/A"}`,
+    `Preferred Shipping: ${request.preferredShippingMethod}`,
+    `Destination: ${request.destination || "N/A"}`,
+    `Sourcing: ${request.isFullSourcing ? "Full Sourcing/Procurement" : "Shipping Only"}`,
+    `Product Type: ${request.isReadyMade ? "Ready-made" : "Requires Manufacturing"}`,
+    `Has Sample: ${request.hasPreviousSample ? "Yes" : "No"}`,
+    `Expected Date: ${request.expectedSupplyDate || "N/A"}`,
+    `Delivery Address: ${request.deliveryAddress || "N/A"}`,
+    "-------------------",
+    `Internal Review Notes: ${options?.operationalNotes || request.internalNotes || "None"}`,
+  ].join("\n");
+
   const insertedDeal = await db
     .from<DealRow>("deals")
     .insert({
@@ -979,7 +1058,7 @@ export const convertRequestToDeal = async (
       origin_country: "Turkey",
       total_value: 0,
       currency: "SAR",
-      notes: options?.operationalNotes || request.internalNotes || `Source Request: ${request.requestNumber}`,
+      notes: operationalSummary,
       assigned_turkish_partner_id: options?.turkishPartnerId || null,
       assigned_saudi_partner_id: options?.saudiPartnerId || null,
     })
@@ -1110,6 +1189,9 @@ export const loadTrackingUpdates = async (): Promise<TrackingUpdateRecord[]> => 
 };
 
 export const loadDeals = async (): Promise<OperationalDeal[]> => {
+  const { profile } = await getCurrentUserContext();
+  const isCustomer = profile?.role === "customer";
+
   const [{ data: deals }, requests, customers, shipments, attachmentRows, trackingRows, entryRows, profileRows] =
     await Promise.all([
       db.from<DealRow>("deals").select("*").order("created_at", { ascending: false }),
@@ -1135,7 +1217,12 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
   const trackingMap = getTrackingMap(trackingUpdates);
   const profileMap = new Map<string, ProfileRow>((profileRows || []).map((row) => [row.id, row]));
 
-  return (deals || []).map((row) => {
+  const filteredDeals = (deals || []).filter((row) => {
+    if (!isCustomer) return true;
+    return row.customer_id === profile?.id;
+  });
+
+  return filteredDeals.map((row) => {
     const customer = row.customer_id ? customerMap.get(row.customer_id) : null;
     const sourceRequest = row.source_request_id ? requestMap.get(row.source_request_id) : null;
     const shipment = row.shipment_id ? shipmentMap.get(row.shipment_id) : shipmentByDealId.get(row.id);
@@ -1146,6 +1233,11 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
     const expense = entries
       .filter((entry) => entry.type === "expense")
       .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+
+    const dealTracking = shipment?.id ? trackingMap.get(shipment.id) || [] : [];
+    const filteredTracking = isCustomer
+      ? dealTracking.filter((update) => update.visibility === "customer_visible")
+      : dealTracking;
 
     return {
       id: row.id,
@@ -1170,7 +1262,7 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
       createdAt: row.created_at,
       notes: row.notes || "",
       attachments: attachmentsMap.get(`deal:${row.id}`) || [],
-      trackingUpdates: shipment?.id ? trackingMap.get(shipment.id) || [] : [],
+      trackingUpdates: filteredTracking,
       turkishPartnerId: row.assigned_turkish_partner_id || null,
       turkishPartnerName: row.assigned_turkish_partner_id
         ? profileMap.get(row.assigned_turkish_partner_id)?.full_name || ""
@@ -1322,6 +1414,9 @@ export const uploadDealAttachment = async (input: {
 };
 
 export const loadShipments = async (): Promise<OperationalShipment[]> => {
+  const { profile } = await getCurrentUserContext();
+  const isCustomer = profile?.role === "customer";
+
   const [shipments, deals, trackingRows] = await Promise.all([
     safeStructuredSelect<ShipmentRow>("shipments"),
     loadDeals(),
@@ -1331,18 +1426,31 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const trackingMap = getTrackingMap((trackingRows || []).map(mapTrackingUpdate));
 
-  return (shipments || []).map((row) => ({
-    id: row.id,
-    trackingId: row.tracking_id,
-    clientName: row.client_name,
-    destination: row.destination,
-    dealId: row.deal_id,
-    dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
-    stage: row.current_stage_code || mapShipmentStatusToStage(row.status),
-    updatedAt: row.updated_at,
-    customerVisibleNote: row.customer_visible_note || "",
-    timeline: trackingMap.get(row.id) || [],
-  }));
+  const filteredShipments = (shipments || []).filter((row) => {
+    if (!isCustomer) return true;
+    const deal = row.deal_id ? dealMap.get(row.deal_id) : null;
+    return deal?.customerId === profile?.id;
+  });
+
+  return filteredShipments.map((row) => {
+    const timeline = (trackingMap.get(row.id) || []).filter((update) => {
+      if (!isCustomer) return true;
+      return update.visibility === "customer_visible";
+    });
+
+    return {
+      id: row.id,
+      trackingId: row.tracking_id,
+      clientName: row.client_name,
+      destination: row.destination,
+      dealId: row.deal_id,
+      dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
+      stage: row.current_stage_code || mapShipmentStatusToStage(row.status),
+      updatedAt: row.updated_at,
+      customerVisibleNote: row.customer_visible_note || "",
+      timeline,
+    };
+  });
 };
 
 export const createTrackingUpdate = async (input: {

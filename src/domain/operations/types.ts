@@ -130,6 +130,18 @@ export type CreateRequestInput = {
   preferredShippingMethod: string;
   deliveryNotes: string;
   imageUrls: string[];
+  // Phase 4 expanded fields
+  weight: string;
+  manufacturingCountry: string;
+  brand: string;
+  qualityLevel: string;
+  isReadyMade: boolean;
+  hasPreviousSample: boolean;
+  expectedSupplyDate: string;
+  destination: string;
+  deliveryAddress: string;
+  isFullSourcing: boolean;
+  trackingCode: string;
 };
 
 export type UpdateDealStatusInput = {

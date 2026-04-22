@@ -29,6 +29,9 @@ const mapProfileRow = (row: any): LourexProfile => ({
   role: row.role,
   partnerType: row.partner_type || null,
   status: row.status,
+  phone: row.phone || undefined,
+  country: row.country || undefined,
+  city: row.city || undefined,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -46,7 +49,7 @@ const ensureOwnProfile = async (user: User) => {
   const { data, error } = await (supabase as any)
     .from("profiles")
     .upsert(payload, { onConflict: "id" })
-    .select("id, email, full_name, role, partner_type, status, created_at, updated_at")
+    .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at, updated_at")
     .single();
 
   if (error) throw error;
@@ -72,7 +75,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
 
     const { data, error } = await (supabase as any)
       .from("profiles")
-      .select("id, email, full_name, role, partner_type, status, created_at, updated_at")
+      .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at, updated_at")
       .eq("id", user.id)
       .maybeSingle();
 

@@ -25,14 +25,14 @@ export type DealOperationalStatus =
 export type ShipmentStageCode =
   | "deal_accepted"
   | "product_preparation"
-  | "transfer_to_port"
-  | "origin_port"
+  | "moving_to_origin_port"
+  | "at_origin_port"
   | "origin_customs"
-  | "departed_origin"
-  | "in_transit"
+  | "left_origin_country"
+  | "transit_to_destination"
   | "arrived_destination"
   | "destination_customs"
-  | "transfer_to_warehouse"
+  | "moving_to_warehouse"
   | "delivered";
 
 export interface ShipmentStageDefinition {
@@ -104,6 +104,18 @@ export interface PurchaseRequest {
   convertedDealId?: string | null;
   convertedDealNumber?: string | null;
   attachments?: AttachmentRecord[];
+  // New operational fields for Phase 4
+  weight?: string;
+  manufacturingCountry?: string;
+  brand?: string;
+  qualityLevel?: string;
+  isReadyMade: boolean;
+  hasPreviousSample: boolean;
+  expectedSupplyDate?: string;
+  destination: string;
+  deliveryAddress?: string;
+  isFullSourcing: boolean;
+  trackingCode: string;
 }
 
 export interface DealOperation {

@@ -1,11 +1,10 @@
 export type LourexRole =
   | "owner"
-  | "turkish_partner"
   | "saudi_partner"
   | "operations_employee"
   | "customer";
 
-export type LourexPartnerType = "turkey" | "saudi" | null;
+export type LourexPartnerType = "saudi" | null;
 export type LourexAccountStatus = "active" | "inactive" | "pending";
 
 export interface LourexProfile {
@@ -15,27 +14,29 @@ export interface LourexProfile {
   role: LourexRole;
   partnerType: LourexPartnerType;
   status: LourexAccountStatus;
+  phone?: string;
+  country?: string;
+  city?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export const INTERNAL_ROLES: LourexRole[] = [
   "owner",
-  "turkish_partner",
   "saudi_partner",
   "operations_employee",
 ];
 
 export const OWNER_ONLY_ROLES: LourexRole[] = ["owner"];
 export const ACCOUNTING_ROLES: LourexRole[] = ["owner", "operations_employee"];
-export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
+export const PARTNER_ROLES: LourexRole[] = ["saudi_partner"];
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
-  requests: ["owner", "operations_employee"] as LourexRole[],
+  requests: [...INTERNAL_ROLES, "customer"] as LourexRole[],
   customers: ["owner", "operations_employee"] as LourexRole[],
   deals: INTERNAL_ROLES,
-  tracking: INTERNAL_ROLES,
+  tracking: [...INTERNAL_ROLES, "customer"] as LourexRole[],
   accounting: ACCOUNTING_ROLES,
   editRequests: ACCOUNTING_ROLES,
   audit: INTERNAL_ROLES,
@@ -51,9 +52,8 @@ export const isInternalRole = (role: LourexRole | null | undefined): role is Lou
 export const getDefaultRouteForRole = (role: LourexRole) => {
   switch (role) {
     case "customer":
-      return "/request";
+      return "/customer-portal";
     case "owner":
-    case "turkish_partner":
     case "saudi_partner":
     case "operations_employee":
     default:

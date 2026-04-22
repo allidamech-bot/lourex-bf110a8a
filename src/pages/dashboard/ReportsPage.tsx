@@ -128,7 +128,7 @@ export default function ReportsPage() {
         income,
         expense,
         average_operation_value: filteredDeals.length > 0 ? filteredDeals.reduce((sum, item) => sum + item.totalValue, 0) / filteredDeals.length : 0,
-        in_transit: filteredShipments.filter((item) => item.stage === "in_transit").length,
+        in_transit: filteredShipments.filter((item) => item.stage === "transit_to_destination").length,
         destination: filteredShipments.filter((item) => item.stage === "arrived_destination" || item.stage === "destination_customs").length,
         delivered: filteredShipments.filter((item) => item.stage === "delivered").length,
       });

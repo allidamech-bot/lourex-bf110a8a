@@ -19,8 +19,8 @@ export const SiteHeader = () => {
   const publicLinks = useMemo(
     () => [
       { to: "/", label: t("nav.home") },
-      { to: "/request", label: t("nav.purchaseRequest") },
-      { to: "/track", label: t("nav.trackShipment") },
+      { to: "/dashboard/requests", label: t("nav.purchaseRequest") },
+      { to: "/dashboard/tracking", label: t("nav.trackShipment") },
       { to: "/about", label: t("nav.about") },
       { to: "/contact", label: t("nav.contact") },
     ],

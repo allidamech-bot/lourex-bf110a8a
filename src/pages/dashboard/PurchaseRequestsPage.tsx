@@ -27,6 +27,10 @@ import {
   updatePurchaseRequestStatus,
 } from "@/lib/operationsDomain";
 import type { PurchaseRequestStatus } from "@/types/lourex";
+import {
+  isInternalRole,
+} from "@/features/auth/rbac";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
@@ -50,6 +54,8 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 export default function PurchaseRequestsPage() {
   const { locale, t } = useI18n();
+  const { profile } = useAuthSession();
+  const isInternal = isInternalRole(profile?.role);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -402,7 +408,7 @@ export default function PurchaseRequestsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                      {selectedRow.convertedDealNumber ? (
+                      {isInternal && selectedRow.convertedDealNumber ? (
                           <Button variant="outline" asChild>
                             <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
                               <Eye className="me-2 h-4 w-4" />
@@ -411,23 +417,28 @@ export default function PurchaseRequestsPage() {
                           </Button>
                       ) : null}
 
-                      <Button
-                          variant="gold"
-                          disabled={convertingId === selectedRow.id}
-                          onClick={handleConvert}
-                      >
-                        {convertingId === selectedRow.id ? (
-                            <>
-                              <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                              {t("requests.converting")}
-                            </>
-                        ) : (
-                            <>
-                              <ArrowRightLeft className="me-2 h-4 w-4" />
-                              {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
-                            </>
-                        )}
-                      </Button>
+                      {isInternal && (
+                        <Button
+                            variant="gold"
+                            disabled={
+                              convertingId === selectedRow.id || 
+                              (selectedRow.status !== "ready_for_conversion" && !selectedRow.convertedDealNumber)
+                            }
+                            onClick={handleConvert}
+                        >
+                          {convertingId === selectedRow.id ? (
+                              <>
+                                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                                {t("requests.converting")}
+                              </>
+                          ) : (
+                              <>
+                                <ArrowRightLeft className="me-2 h-4 w-4" />
+                                {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
+                              </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -470,8 +481,27 @@ export default function PurchaseRequestsPage() {
                             label: t("requests.labels.location"),
                             value: `${selectedRow.customer.country || "—"} / ${selectedRow.customer.city || "—"}`,
                           },
+                          { label: t("requests.labels.trackingCode"), value: selectedRow.trackingCode || "—" },
                           { label: t("requests.labels.quantity"), value: String(selectedRow.quantity || "—") },
                           { label: t("requests.labels.shipping"), value: selectedRow.preferredShippingMethod || "—" },
+                          { label: t("requests.labels.destination"), value: selectedRow.destination || "—" },
+                          { label: t("requests.labels.expectedDate"), value: selectedRow.expectedSupplyDate || "—" },
+                          { label: t("requests.labels.weight"), value: selectedRow.weight || "—" },
+                          { label: t("requests.labels.brand"), value: selectedRow.brand || "—" },
+                          { label: t("requests.labels.qualityLevel"), value: selectedRow.qualityLevel || "—" },
+                          { label: t("requests.labels.manufacturingCountry"), value: selectedRow.manufacturingCountry || "—" },
+                          { 
+                            label: t("requests.labels.sourcingType"), 
+                            value: selectedRow.isFullSourcing ? t("requests.labels.fullSourcing") : t("requests.labels.shippingOnly") 
+                          },
+                          {
+                            label: t("requests.labels.product"),
+                            value: selectedRow.isReadyMade ? t("requests.labels.readyMade") : t("requests.labels.manufacturing")
+                          },
+                          {
+                            label: t("requests.labels.hasSample"),
+                            value: selectedRow.hasPreviousSample ? t("common.yes") : t("common.no")
+                          },
                           { label: t("requests.labels.size"), value: selectedRow.sizeDimensions || "—" },
                           { label: t("requests.labels.material"), value: selectedRow.material || "—" },
                           { label: t("requests.labels.color"), value: selectedRow.color || "—" },
@@ -522,95 +552,97 @@ export default function PurchaseRequestsPage() {
                     </div>
                   </div>
 
-                  <div className="p-6">
-                    <div className="space-y-5">
-                      <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-                        {t("requests.reviewPanel")}
-                      </div>
-
-                      <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
-                        <div className="flex items-center gap-3">
-                          <StickyNote className="h-4 w-4 text-primary" />
-                          <p className="font-medium">{t("requests.labels.internalNotes")}</p>
+                  {isInternal && (
+                    <div className="p-6">
+                      <div className="space-y-5">
+                        <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                          {t("requests.reviewPanel")}
                         </div>
 
-                        <Textarea
-                            rows={8}
-                            value={internalNotesDraft}
-                            onChange={(event) => setInternalNotesDraft(event.target.value)}
-                            className="mt-4"
-                            placeholder={t("requests.notesPlaceholder")}
-                        />
-
-                        <Button
-                            className="mt-4"
-                            variant="outline"
-                            onClick={handleSaveNotes}
-                            disabled={savingNotesId === selectedRow.id}
-                        >
-                          {savingNotesId === selectedRow.id ? (
-                              <>
-                                <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                {t("requests.savingNotes")}
-                              </>
-                          ) : (
-                              t("requests.saveNotes")
-                          )}
-                        </Button>
-                      </div>
-
-                      {!selectedRow.convertedDealNumber ? (
-                          <div className="grid gap-3">
-                            {statusActions.map((action) => (
-                                <Button
-                                    key={action.value}
-                                    variant={selectedRow.status === action.value ? "gold" : "outline"}
-                                    disabled={
-                                        updatingStatusId === selectedRow.id ||
-                                        selectedRow.status === action.value ||
-                                        Boolean(selectedRow.isLegacyFallback)
-                                    }
-                                    onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
-                                >
-                                  {updatingStatusId === selectedRow.id && selectedRow.status !== action.value ? (
-                                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                  ) : action.value === "ready_for_conversion" ? (
-                                      <CheckCircle2 className="me-2 h-4 w-4" />
-                                  ) : (
-                                      <MessageSquareWarning className="me-2 h-4 w-4" />
-                                  )}
-                                  {action.label}
-                                </Button>
-                            ))}
+                        <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                          <div className="flex items-center gap-3">
+                            <StickyNote className="h-4 w-4 text-primary" />
+                            <p className="font-medium">{t("requests.labels.internalNotes")}</p>
                           </div>
-                      ) : (
-                          <div className="rounded-[1.25rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
-                            {t("requests.convertedHint")}
-                          </div>
-                      )}
 
-                      <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm">
-                        <div className="flex items-center gap-3">
-                          <ShieldCheck className="h-4 w-4 text-primary" />
-                          <p className="font-medium">{t("requests.labels.reviewHistory")}</p>
+                          <Textarea
+                              rows={8}
+                              value={internalNotesDraft}
+                              onChange={(event) => setInternalNotesDraft(event.target.value)}
+                              className="mt-4"
+                              placeholder={t("requests.notesPlaceholder")}
+                          />
+
+                          <Button
+                              className="mt-4"
+                              variant="outline"
+                              onClick={handleSaveNotes}
+                              disabled={savingNotesId === selectedRow.id}
+                          >
+                            {savingNotesId === selectedRow.id ? (
+                                <>
+                                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                                  {t("requests.savingNotes")}
+                                </>
+                            ) : (
+                                t("requests.saveNotes")
+                            )}
+                          </Button>
                         </div>
 
-                        <p className="mt-2 text-muted-foreground">
-                          {t("requests.receivedAt", {
-                            value: new Date(selectedRow.createdAt).toLocaleString(locale),
-                          })}
-                        </p>
+                        {!selectedRow.convertedDealNumber ? (
+                            <div className="grid gap-3">
+                              {statusActions.map((action) => (
+                                  <Button
+                                      key={action.value}
+                                      variant={selectedRow.status === action.value ? "gold" : "outline"}
+                                      disabled={
+                                          updatingStatusId === selectedRow.id ||
+                                          selectedRow.status === action.value ||
+                                          Boolean(selectedRow.isLegacyFallback)
+                                      }
+                                      onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
+                                  >
+                                    {updatingStatusId === selectedRow.id && selectedRow.status !== action.value ? (
+                                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                                    ) : action.value === "ready_for_conversion" ? (
+                                        <CheckCircle2 className="me-2 h-4 w-4" />
+                                    ) : (
+                                        <MessageSquareWarning className="me-2 h-4 w-4" />
+                                    )}
+                                    {action.label}
+                                  </Button>
+                              ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-[1.25rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
+                              {t("requests.convertedHint")}
+                            </div>
+                        )}
 
-                        <p className="mt-1 text-muted-foreground">
-                          {selectedRow.reviewedAt
-                              ? t("requests.reviewedAt", {
-                                value: new Date(selectedRow.reviewedAt).toLocaleString(locale),
-                              })
-                              : t("requests.noReviewYet")}
-                        </p>
+                        <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm">
+                          <div className="flex items-center gap-3">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
+                            <p className="font-medium">{t("requests.labels.reviewHistory")}</p>
+                          </div>
+
+                          <p className="mt-2 text-muted-foreground">
+                            {t("requests.receivedAt", {
+                              value: new Date(selectedRow.createdAt).toLocaleString(locale),
+                            })}
+                          </p>
+
+                          <p className="mt-1 text-muted-foreground">
+                            {selectedRow.reviewedAt
+                                ? t("requests.reviewedAt", {
+                                  value: new Date(selectedRow.reviewedAt).toLocaleString(locale),
+                                })
+                                : t("requests.noReviewYet")}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </BentoCard>
           ) : (
