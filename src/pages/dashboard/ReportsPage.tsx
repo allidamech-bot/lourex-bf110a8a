@@ -114,11 +114,12 @@ export default function ReportsPage() {
     };
 
     const loadFallback = async () => {
-      const [financialSummary, customerReport, operationsReport, auditCount] = await Promise.all([
+      const [financialSummary, customerReport, operationsReport, auditCount, entries] = await Promise.all([
         getFinancialSummaryReport(rangeStart, rangeEnd),
         getCustomerReport(),
         getOperationsReport(),
         supabase.from("audit_logs").select("id", { count: "exact", head: true }),
+        loadFinancialEntries(),
       ]);
 
       setFinancialTrends(financialSummary.trends);
@@ -133,6 +134,9 @@ export default function ReportsPage() {
       const filteredRequests = requests.filter((item) => isInRange(item.createdAt || "", rangeStart, rangeEnd));
       const filteredDeals = deals.filter((item) => isInRange(item.createdAt || "", rangeStart, rangeEnd));
       const filteredShipments = shipments.filter((item) => isInRange(item.updatedAt, rangeStart, rangeEnd));
+      const filteredEntries = entries.filter((item) => isInRange(item.entryDate, rangeStart, rangeEnd));
+
+      const linkedEntriesCount = filteredEntries.filter((e) => e.dealId || e.customerId).length;
 
       setSummary({
         requests: filteredRequests.length,
@@ -140,7 +144,7 @@ export default function ReportsPage() {
         shipments: filteredShipments.length,
         customers: customers.length,
         audits: auditCount.count || 0,
-        linked_entries: financialSummary.totalIncome > 0 || financialSummary.totalExpense > 0 ? 1 : 0, // Simplified flag
+        linked_entries: linkedEntriesCount,
         income: financialSummary.totalIncome,
         expense: financialSummary.totalExpense,
         average_operation_value: filteredDeals.length > 0 ? filteredDeals.reduce((sum, item) => sum + (item.totalValue || 0), 0) / filteredDeals.length : 0,
@@ -164,10 +168,7 @@ export default function ReportsPage() {
           })),
       );
 
-      // We still use entries for expense categories as reportsDomain doesn't group by category yet
-      const entries = await loadFinancialEntries();
-      const filteredEntries = entries.filter((item) => isInRange(item.entryDate, rangeStart, rangeEnd));
-
+      // Use already loaded and filtered entries for expense categories
       const categoryMap = new Map<string, number>();
       filteredEntries
         .filter((entry) => entry.type === "expense")
@@ -289,7 +290,7 @@ export default function ReportsPage() {
         <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-xl font-semibold capitalize">
-              {drillDownData.type.replace('_', ' ')} Details
+              {drillDownData.type.replace('_', ' ')} {t("reports.title")}
             </h2>
             <button onClick={() => setDrillDownData(null)} className="text-sm text-primary hover:underline">
               {t("common.close")}

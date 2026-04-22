@@ -13,40 +13,28 @@ import heroImg from "@/assets/hero-trade.jpg";
 import { useI18n } from "@/lib/i18n";
 
 const HeroSection = () => {
-  const { lang } = useI18n();
+  const { t } = useI18n();
 
   const stats = [
     {
       icon: ClipboardList,
-      value: lang === "ar" ? "طلب منظم" : "Structured intake",
-      label:
-        lang === "ar"
-          ? "صور ومواصفات تنفيذية واضحة منذ البداية"
-          : "Images and execution-ready specifications from the first step",
+      value: t("home.hero.stats.intake.value"),
+      label: t("home.hero.stats.intake.label"),
     },
     {
       icon: PackageSearch,
-      value: lang === "ar" ? "صفقة تشغيلية" : "Operational deal",
-      label:
-        lang === "ar"
-          ? "تحويل الطلب إلى مركز عمليات واضح ومترابط"
-          : "Conversion from request into a connected operational center",
+      value: t("home.hero.stats.deal.value"),
+      label: t("home.hero.stats.deal.label"),
     },
     {
       icon: Route,
-      value: lang === "ar" ? "11 مرحلة" : "11 stages",
-      label:
-        lang === "ar"
-          ? "تتبع رسمي من قبول الصفقة حتى التسليم"
-          : "Official tracking from deal acceptance to final delivery",
+      value: t("home.hero.stats.stages.value"),
+      label: t("home.hero.stats.stages.label"),
     },
     {
       icon: BadgeDollarSign,
-      value: lang === "ar" ? "قيد مقفل" : "Locked entry",
-      label:
-        lang === "ar"
-          ? "محاسبة منضبطة مع تعديل رسمي وسجل تدقيق"
-          : "Controlled accounting with formal edit requests and audit trace",
+      value: t("home.hero.stats.locked.value"),
+      label: t("home.hero.stats.locked.label"),
     },
   ];
 
@@ -64,7 +52,7 @@ const HeroSection = () => {
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-background/50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary backdrop-blur">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                {lang === "ar" ? "وساطة ذكية • تشغيل متكامل • مراجعة دقيقة" : "Smart Intermediary • Managed Operations • Precise Review"}
+                {t("home.hero.eyebrow")}
               </div>
             </motion.div>
 
@@ -74,13 +62,11 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.08 }}
               className="font-serif text-4xl font-bold leading-[1.08] text-foreground md:text-6xl xl:text-7xl"
             >
-              {lang === "ar" ? "Lourex تدير عمليات" : "Lourex manages your"}
+              {t("home.hero.titlePrefix")}
               <span className="text-gradient-gold">
-                {lang === "ar" ? " الاستيراد والوساطة " : " sourcing operations "}
+                {t("home.hero.titleGradient")}
               </span>
-              {lang === "ar"
-                ? "من طلب الشراء حتى التسليم النهائي بكل انضباط."
-                : "from purchase request to final delivery with full discipline."}
+              {t("home.hero.titleSuffix")}
             </motion.h1>
 
             <motion.p
@@ -89,9 +75,7 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.16 }}
               className="mt-7 max-w-2xl text-lg leading-8 text-foreground/80 md:text-xl"
             >
-              {lang === "ar"
-                ? "Lourex ليست سوقًا ولا منصة عرض موردين. هي نظام وساطة وتشغيل يربط العميل ووكيل تركيا ووكيل السعودية ضمن طلبات مراجعة، صفقات تنفيذ، تتبع رسمي، انضباط مالي، وسجل أعمال موثوق."
-                : "Lourex is not a marketplace or supplier listing. It is a broker operations platform connecting the customer, Turkish partner, and Saudi partner through reviewed requests, managed deals, official tracking, disciplined finance, and trusted audit history."}
+              {t("home.hero.description")}
             </motion.p>
 
             <motion.div
@@ -102,7 +86,7 @@ const HeroSection = () => {
             >
               <Button variant="gold" size="lg" className="px-8 text-base font-semibold" asChild>
                 <Link to="/request">
-                  {lang === "ar" ? "ابدأ طلب شراء" : "Start a purchase request"}
+                  {t("home.hero.ctaRequest")}
                   <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -112,7 +96,7 @@ const HeroSection = () => {
                 className="border-border/80 bg-background/60 px-8 text-base text-foreground hover:bg-background/80"
                 asChild
               >
-                <Link to="/track">{lang === "ar" ? "تتبع الشحنة" : "Track shipment"}</Link>
+                <Link to="/track">{t("home.hero.ctaTrack")}</Link>
               </Button>
             </motion.div>
           </div>
@@ -131,17 +115,15 @@ const HeroSection = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {lang === "ar" ? "ضبط تشغيلي" : "Operational control"}
+                      {t("home.hero.controlTitle")}
                     </p>
                     <p className="font-serif text-2xl font-semibold text-foreground">
-                      {lang === "ar" ? "صفقة • تتبع • محاسبة" : "Deal • Tracking • Accounting"}
+                      {t("home.hero.controlSubtitle")}
                     </p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                  {lang === "ar"
-                    ? "رؤية تنفيذية موحدة من استلام الطلب إلى التسليم، مع وضوح المرحلة الحالية والقرار المالي والأثر التدقيقي."
-                    : "A unified execution view from intake to delivery, with clear stage ownership, financial context, and audit visibility."}
+                  {t("home.hero.controlDescription")}
                 </p>
               </div>
 

@@ -11,40 +11,28 @@ import { BadgeDollarSign, ClipboardCheck, Route, Users2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export default function HomePage() {
-  const { lang } = useI18n();
+  const { t } = useI18n();
 
   const charter = [
     {
       icon: Users2,
-      title: lang === "ar" ? "نموذج الأطراف الثلاثة" : "Three-party operating model",
-      description:
-        lang === "ar"
-          ? "Lourex تعمل بين العميل ووكيل تركيا ووكيل السعودية ضمن مسؤوليات واضحة لا ضمن سوق مفتوح وفوضوي."
-          : "Lourex operates between the customer, Turkish partner, and Saudi partner through clearly defined responsibilities, not an open marketplace.",
+      title: t("home.charter.items.model.title"),
+      description: t("home.charter.items.model.description"),
     },
     {
       icon: ClipboardCheck,
-      title: lang === "ar" ? "من الطلب إلى العملية" : "From request to operation",
-      description:
-        lang === "ar"
-          ? "كل طلب يبدأ بصورة ومواصفات، ثم يراجع داخليًا، ثم يتحول إلى صفقة تشغيلية قابلة للمتابعة والتنفيذ."
-          : "Every request starts with images and details, is reviewed internally, then becomes a managed operational deal.",
+      title: t("home.charter.items.request.title"),
+      description: t("home.charter.items.request.description"),
     },
     {
       icon: Route,
-      title: lang === "ar" ? "مسار لوجستي رسمي" : "Official logistics flow",
-      description:
-        lang === "ar"
-          ? "الشحنة تتحرك عبر 11 مرحلة Lourex الرسمية مع وضوح المرحلة الحالية والجهة المسؤولة والتقدم المتبقي."
-          : "Shipments move through Lourex's official 11 stages with clear current status, ownership, and remaining progress.",
+      title: t("home.charter.items.logistics.title"),
+      description: t("home.charter.items.logistics.description"),
     },
     {
       icon: BadgeDollarSign,
-      title: lang === "ar" ? "انضباط مالي مدقق" : "Auditable financial discipline",
-      description:
-        lang === "ar"
-          ? "القيود المالية إما عامة أو مرتبطة بالصفقة، وتغلق بعد الإنشاء، وأي تصحيح يمر عبر طلب تعديل رسمي."
-          : "Financial entries are either global or deal-linked, lock after creation, and any correction must go through a formal edit request.",
+      title: t("home.charter.items.finance.title"),
+      description: t("home.charter.items.finance.description"),
     },
   ];
 
@@ -61,17 +49,13 @@ export default function HomePage() {
             className="mx-auto max-w-4xl text-center"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
-              {lang === "ar" ? "ميثاق Lourex" : "Lourex Charter"}
+              {t("home.charter.eyebrow")}
             </p>
             <h2 className="mt-5 font-serif text-3xl font-bold md:text-5xl">
-              {lang === "ar"
-                ? "منصة وسيطة تضبط الرحلة التجارية كاملة"
-                : "An intermediary platform that controls the full trade journey"}
+              {t("home.charter.title")}
             </h2>
             <p className="mt-5 text-base leading-8 text-muted-foreground">
-              {lang === "ar"
-                ? "Lourex ليست مجرد واجهة طلبات ولا واجهة شحن مستقلة. هي نظام تشغيلي متكامل يربط قبول الطلب، تشغيل الصفقة، تقدم الشحنة، الانضباط المالي، وسجل التدقيق في قصة واحدة واضحة للعميل والفريق."
-                : "Lourex is not just a form front-end or a separate shipment viewer. It is a connected operating system that ties together request intake, deal execution, shipment progress, financial discipline, and audit history in one coherent story."}
+              {t("home.charter.description")}
             </p>
           </motion.div>
 

@@ -10,6 +10,9 @@ import {
   loadPurchaseRequests,
   loadShipments,
   updateDealOperation,
+  updatePurchaseRequestImages,
+  deletePurchaseRequestRecord,
+  deleteStorageFolder,
 } from "@/lib/operationsDomain";
 import type {
   AuditPreviewRow,
@@ -286,6 +289,35 @@ export const createRequest = async (
       data: null,
       error: createDomainError(error, "Unable to create the purchase request."),
     };
+  }
+};
+
+export const deleteRequest = async (requestId: string): Promise<DomainResult<void>> => {
+  try {
+    await deletePurchaseRequestRecord(requestId);
+    try {
+      await deleteStorageFolder("product-images", `purchase-requests/${requestId}`);
+    } catch (e) {
+      console.error("[Cleanup] Failed to delete storage folder", e);
+    }
+    return success(undefined);
+  } catch (error) {
+    return { data: null, error: createDomainError(error, "Failed to cleanup request data.") };
+  }
+};
+
+export const updateRequestWithImages = async (
+  requestId: string,
+  imageUrls: string[],
+): Promise<DomainResult<OperationsRequest>> => {
+  try {
+    const updated = await updatePurchaseRequestImages(requestId, imageUrls);
+    const requests = await loadPurchaseRequests();
+    const result = requests.find((r) => r.id === (updated as any).id);
+    if (!result) throw new Error("Could not reload updated request.");
+    return success(normalizeRequest(result));
+  } catch (error) {
+    return { data: null, error: createDomainError(error, "Failed to update request with images.") };
   }
 };
 

@@ -9,13 +9,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   createRequest,
-  uploadPurchaseRequestImages,
+  updateRequestWithImages,
+  deleteRequest,
 } from "@/domain/operations/service";
 import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 
 type PurchaseRequestFormState = {
+  fullName: string;
+  email: string;
+  phone: string;
   productName: string;
   productDescription: string;
   quantity: string;
@@ -40,6 +44,9 @@ type PurchaseRequestFormState = {
 };
 
 const initialState: PurchaseRequestFormState = {
+  fullName: "",
+  email: "",
+  phone: "",
   productName: "",
   productDescription: "",
   quantity: "",
@@ -89,6 +96,32 @@ const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
   name: file.name,
   sizeLabel: `${Math.round(file.size / 1024)} KB`,
 });
+
+import { supabase } from "@/integrations/supabase/client";
+import { createDomainError, success, failure } from "@/domain/operations/service";
+import type { DomainResult } from "@/domain/operations/types";
+
+const uploadPurchaseRequestImagesWithId = async (
+  requestId: string,
+  uploads: PurchaseRequestImageUpload[],
+): Promise<DomainResult<string[]>> => {
+  const files = uploads.map((u) => u.file);
+  try {
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const filePath = `purchase-requests/${requestId}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file);
+      if (uploadError) {
+        return { data: null, error: createDomainError(uploadError, "Unable to upload images.") };
+      }
+      const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
+      uploadedUrls.push(data.publicUrl);
+    }
+    return success(uploadedUrls);
+  } catch (error) {
+    return { data: null, error: createDomainError(error, "Unable to upload images.") };
+  }
+};
 
 export const PurchaseRequestForm = () => {
   const { t } = useI18n();
@@ -169,6 +202,9 @@ export const PurchaseRequestForm = () => {
 
   const handleSubmit = async () => {
     const requiredFields: Array<keyof PurchaseRequestFormState> = [
+      "fullName",
+      "email",
+      "phone",
       "productName",
       "productDescription",
       "quantity",
@@ -179,6 +215,15 @@ export const PurchaseRequestForm = () => {
       "preferredShippingMethod",
       "destination",
     ];
+
+    if (profile) {
+      // If logged in, we don't need to validate guest contact info
+      const guestContactFields: Array<keyof PurchaseRequestFormState> = ["fullName", "email", "phone"];
+      guestContactFields.forEach(f => {
+        const idx = requiredFields.indexOf(f);
+        if (idx > -1) requiredFields.splice(idx, 1);
+      });
+    }
 
     const missing = requiredFields.some((field) => {
       const val = form[field];
@@ -195,11 +240,6 @@ export const PurchaseRequestForm = () => {
       return;
     }
 
-    if (!profile) {
-      setErrorMessage("You must be logged in to submit a request.");
-      return;
-    }
-
     setSubmitting(true);
     setErrorMessage("");
 
@@ -207,19 +247,15 @@ export const PurchaseRequestForm = () => {
       const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
       const trackingCode = `TRX-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
       
-      const uploadResult = await uploadPurchaseRequestImages(requestNumber, uploads);
-      if (uploadResult.error || !uploadResult.data) {
-        throw new Error(uploadResult.error?.message || t("requests.intake.errors.submitFailed"));
-      }
-
-      const structuredResult = await createRequest({
+      // 1. Create the DB record first (without images)
+      const creationResult = await createRequest({
         requestNumber,
         trackingCode,
-        fullName: profile.fullName || "Customer",
-        phone: profile.phone || "",
-        email: profile.email || "",
-        country: profile.country || "",
-        city: profile.city || "",
+        fullName: profile?.fullName || form.fullName,
+        phone: profile?.phone || form.phone,
+        email: profile?.email || form.email,
+        country: profile?.country || "",
+        city: profile?.city || "",
         productName: form.productName,
         productDescription: form.productDescription,
         quantity: Number(form.quantity || 0),
@@ -230,7 +266,7 @@ export const PurchaseRequestForm = () => {
         referenceLink: form.referenceLink,
         preferredShippingMethod: form.preferredShippingMethod,
         deliveryNotes: form.deliveryNotes,
-        imageUrls: uploadResult.data,
+        imageUrls: [], // No images yet
         // Expanded Phase 4 fields
         weight: form.weight,
         manufacturingCountry: form.manufacturingCountry,
@@ -244,15 +280,35 @@ export const PurchaseRequestForm = () => {
         isFullSourcing: form.isFullSourcing,
       });
 
-      if (structuredResult.error) {
-        throw new Error(structuredResult.error.message);
+      if (creationResult.error || !creationResult.data) {
+        throw new Error(creationResult.error?.message || t("requests.intake.errors.submitFailed"));
       }
 
-      setSubmittedData({ requestNumber, trackingCode });
-      setForm(initialState);
-      clearUploads(uploads);
-      setUploads([]);
-      toast.success(t("requests.intake.errors.success"));
+      const requestId = creationResult.data.id;
+
+      // 2. Upload images using the stable DB record ID for the path
+      try {
+        const uploadResult = await uploadPurchaseRequestImagesWithId(requestId, uploads);
+        if (uploadResult.error || !uploadResult.data) {
+          throw new Error(uploadResult.error?.message || t("requests.intake.errors.submitFailed"));
+        }
+
+        // 3. Update the record with image URLs and create attachments
+        const updateResult = await updateRequestWithImages(requestId, uploadResult.data);
+        if (updateResult.error) {
+          throw new Error(updateResult.error.message);
+        }
+
+        setSubmittedData({ requestNumber, trackingCode });
+        setForm(initialState);
+        clearUploads(uploads);
+        setUploads([]);
+        toast.success(t("requests.intake.errors.success"));
+      } catch (uploadError: any) {
+        // Cleanup on failure
+        await deleteRequest(requestId);
+        throw uploadError;
+      }
     } catch (error: unknown) {
       const message =
         error instanceof Error && error.message
@@ -316,6 +372,28 @@ export const PurchaseRequestForm = () => {
           <span>{errorMessage}</span>
         </div>
       ) : null}
+
+      {!profile && (
+        <SectionCard
+          title={t("requests.intake.contactTitle") || "Contact Information"}
+          description={t("requests.intake.contactDescription") || "Please provide your contact details so we can reach out to you."}
+        >
+          <div className="md:col-span-2">
+            <Label>{t("common.fullName") || "Full Name"} *</Label>
+            <Input value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} />
+          </div>
+
+          <div>
+            <Label>{t("common.email") || "Email"} *</Label>
+            <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
+          </div>
+
+          <div>
+            <Label>{t("common.phone") || "Phone"} *</Label>
+            <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
+          </div>
+        </SectionCard>
+      )}
 
       <SectionCard
         title={t("requests.intake.productTitle")}
@@ -500,13 +578,23 @@ export const PurchaseRequestForm = () => {
              onValueChange={(val) => updateField("isFullSourcing", val === "full")}
              className="grid grid-cols-2 gap-4"
            >
-              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <RadioGroupItem value="full" id="type-full" />
-                <Label htmlFor="type-full" className="font-normal">{t("requests.intake.isFullSourcing")}</Label>
+              <div className="flex flex-col space-y-2 rounded-2xl border border-border/50 bg-secondary/5 p-4 transition-colors hover:border-primary/20">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="full" id="type-full" />
+                  <Label htmlFor="type-full" className="font-semibold">{t("requests.intake.isFullSourcing")}</Label>
+                </div>
+                <p className="text-xs leading-5 text-muted-foreground ps-6 rtl:pe-6 rtl:ps-0">
+                  {t("requests.intake.isFullSourcingHint")}
+                </p>
               </div>
-              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <RadioGroupItem value="shipping" id="type-shipping" />
-                <Label htmlFor="type-shipping" className="font-normal">{t("requests.intake.isShippingOnly")}</Label>
+              <div className="flex flex-col space-y-2 rounded-2xl border border-border/50 bg-secondary/5 p-4 transition-colors hover:border-primary/20">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="shipping" id="type-shipping" />
+                  <Label htmlFor="type-shipping" className="font-semibold">{t("requests.intake.isShippingOnly")}</Label>
+                </div>
+                <p className="text-xs leading-5 text-muted-foreground ps-6 rtl:pe-6 rtl:ps-0">
+                  {t("requests.intake.isShippingOnlyHint")}
+                </p>
               </div>
            </RadioGroup>
         </div>

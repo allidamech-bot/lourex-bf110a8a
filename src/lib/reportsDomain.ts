@@ -167,7 +167,7 @@ export const getOperationsReport = async (): Promise<OperationsReport> => {
   
   deals.forEach(d => {
     if ((d.status === 'delivered' || d.stage === 'delivered') && d.createdAt) {
-      const deliveryDate = d.timeline?.find(t => t.stageCode === 'delivered')?.occurredAt;
+      const deliveryDate = d.trackingUpdates?.find(t => t.stageCode === 'delivered')?.occurredAt;
       if (deliveryDate) {
         const start = new Date(d.createdAt).getTime();
         const end = new Date(deliveryDate).getTime();
@@ -203,8 +203,9 @@ export const getMetricDetails = async (metric: 'active_deals' | 'pending_request
   
   if (metric === 'pending_requests') {
     const requests = await loadPurchaseRequests();
+    const pendingStatuses = ["intake_submitted", "under_review", "awaiting_clarification"];
     return requests
-      .filter(r => r.status === 'pending')
+      .filter(r => pendingStatuses.includes(r.status))
       .slice(0, limit);
   }
 

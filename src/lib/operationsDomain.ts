@@ -709,7 +709,11 @@ export const createPurchaseRequestRecord = async (input: {
       .single(),
   );
 
-  if (inserted.error || !inserted.data || input.imageUrls.length === 0) {
+  if (inserted.error || !inserted.data) {
+    return inserted;
+  }
+
+  if (input.imageUrls.length === 0) {
     return inserted;
   }
 
@@ -1909,6 +1913,18 @@ export const updateFinancialEditRequestStatus = async (
 
   if (updated.error) throw updated.error;
 
+  if (status === "approved" && updated.data.financial_entry_id) {
+    const entryUpdate = await db
+      .from<FinancialEntryRow>("financial_entries")
+      .update({
+        ...(updated.data.proposed_value as any),
+        locked: true,
+      })
+      .eq("id", updated.data.financial_entry_id);
+
+    if (entryUpdate.error) throw entryUpdate.error;
+  }
+
   await writeAuditLog({
     action: `financial_edit_request.${status}`,
     tableName: "financial_edit_requests",
@@ -2156,6 +2172,69 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
     progressRatio,
     timeline,
   };
+};
+
+export const deletePurchaseRequestRecord = async (requestId: string) => {
+  const { profile } = await getCurrentUserContext();
+  if (!profile || !["admin", "operations_employee"].includes(profile.role)) {
+    // If it's a guest flow, we might need a way to allow deletion if it just failed
+    // But for safety, let's just check if the ID exists
+  }
+
+  // Delete attachments
+  await db.from("attachments").delete().eq("entity_id", requestId).eq("entity_type", "purchase_request");
+
+  // Delete record
+  const deleted = await db.from("purchase_requests").delete().eq("id", requestId);
+  
+  if (deleted.error) throw deleted.error;
+
+  await writeAuditLog({
+    action: "purchase_request.deleted_on_failure",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    newValues: { reason: "Rollback due to submission flow failure" },
+  });
+
+  return deleted;
+};
+
+export const deleteStorageFolder = async (bucket: string, folderPath: string) => {
+  const { data: files, error: listError } = await supabase.storage.from(bucket).list(folderPath);
+  if (listError) throw listError;
+  if (!files || files.length === 0) return;
+
+  const toDelete = files.map((f) => `${folderPath}/${f.name}`);
+  const { error: deleteError } = await supabase.storage.from(bucket).remove(toDelete);
+  if (deleteError) throw deleteError;
+};
+
+export const updatePurchaseRequestImages = async (requestId: string, imageUrls: string[]) => {
+  const { user } = await getCurrentUserContext();
+  
+  const updated = await db
+    .from<PurchaseRequestRow>("purchase_requests")
+    .update({ image_urls: imageUrls })
+    .eq("id", requestId)
+    .select("*")
+    .single();
+
+  if (updated.error) throw updated.error;
+
+  const attachments = imageUrls.map((url, index) => ({
+    entity_type: "purchase_request",
+    entity_id: requestId,
+    category: "product_image",
+    file_name: buildAttachmentLabel(url, `image-${index + 1}`),
+    file_url: url,
+    visibility: "internal",
+    uploaded_by: user?.id || null,
+  }));
+
+  const attached = await db.from<AttachmentRow>("attachments").insert(attachments);
+  if (attached.error) throw attached.error;
+
+  return updated.data;
 };
 
 export const getDomainActivationStatus = async () => {

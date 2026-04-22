@@ -58,22 +58,8 @@ const App = () => (
                             <Suspense fallback={<PageLoader />}>
                                 <Routes>
                                     <Route path="/" element={<HomePage />} />
-                                    <Route
-                                        path="/request"
-                                        element={
-                                            <ProtectedRoute allowedRoles={["customer"]}>
-                                                <RequestPage />
-                                            </ProtectedRoute>
-                                        }
-                                    />
-                                    <Route
-                                        path="/track"
-                                        element={
-                                            <ProtectedRoute allowedRoles={["customer"]}>
-                                                <TrackPage />
-                                            </ProtectedRoute>
-                                        }
-                                    />
+                                    <Route path="/request" element={<RequestPage />} />
+                                    <Route path="/track" element={<TrackPage />} />
                                     <Route path="/auth" element={<Auth />} />
                                     <Route path="/about" element={<AboutPage />} />
                                     <Route path="/contact" element={<ContactPage />} />
