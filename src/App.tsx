@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import AICommandBar from "@/components/AICommandBar";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { CustomerLayout } from "@/components/layout/CustomerLayout";
 import { AuthSessionProvider } from "@/features/auth/AuthSessionProvider";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -29,6 +30,8 @@ const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const CustomerPortal = lazy(() => import("@/pages/customer/CustomerPortal"));
+const CustomerRequestsPage = lazy(() => import("@/pages/customer/CustomerRequestsPage"));
+const CustomerTrackingPage = lazy(() => import("@/pages/customer/CustomerTrackingPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -78,7 +81,11 @@ const App = () => (
                                     <Route
                                         path="/dashboard"
                                         element={
-                                            <ProtectedRoute allowedRoles={[...INTERNAL_ROLES, "customer"]}>
+                                            <ProtectedRoute
+                                                allowedRoles={INTERNAL_ROLES}
+                                                requireInternal
+                                                redirectToDefault
+                                            >
                                                 <DashboardLayout />
                                             </ProtectedRoute>
                                         }
@@ -94,7 +101,7 @@ const App = () => (
                                         <Route
                                             path="requests"
                                             element={
-                                                <ProtectedRoute allowedRoles={["owner", "operations_employee", "customer"]}>
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
                                                     <PurchaseRequestsPage />
                                                 </ProtectedRoute>
                                             }
@@ -118,7 +125,7 @@ const App = () => (
                                         <Route
                                             path="tracking"
                                             element={
-                                                <ProtectedRoute allowedRoles={[...INTERNAL_ROLES, "customer"]}>
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
                                                     <TrackingPage />
                                                 </ProtectedRoute>
                                             }
@@ -169,10 +176,28 @@ const App = () => (
                                         path="/customer-portal"
                                         element={
                                             <ProtectedRoute allowedRoles={["customer"]}>
-                                                <CustomerPortal />
+                                                <CustomerLayout />
                                             </ProtectedRoute>
                                         }
-                                    />
+                                    >
+                                        <Route index element={<CustomerPortal />} />
+                                        <Route
+                                            path="requests"
+                                            element={
+                                                <ProtectedRoute allowedRoles={["customer"]}>
+                                                    <CustomerRequestsPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="tracking"
+                                            element={
+                                                <ProtectedRoute allowedRoles={["customer"]}>
+                                                    <CustomerTrackingPage />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                    </Route>
                                     <Route
                                         path="/admin"
                                         element={

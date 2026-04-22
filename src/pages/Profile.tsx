@@ -3,6 +3,7 @@ import { BriefcaseBusiness, Crown, Shield, UserCircle2, Users } from "lucide-rea
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SharedAccountPanel } from "@/components/account/SharedAccountPanel";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { getEntityLabel, getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
 const roleIcons = {
@@ -20,10 +21,9 @@ const Profile = () => {
 
   const RoleIcon = roleIcons[profile.role as keyof typeof roleIcons] || Users;
   const statusLabel = t(`common.${profile.status}`);
-  const partnerLabel =
-    profile.partnerType === "saudi"
-        ? t("profile.saudiContext")
-        : null;
+  const roleLabel = getRoleDisplayName(profile.role, t);
+  const entityLabel = getEntityLabel(profile, t);
+  const workspaceTitle = getWorkspaceTitle(profile, t);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,19 +35,20 @@ const Profile = () => {
               {t("profile.title")} <span className="text-gradient-gold">Lourex</span>
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
+            <p className="mt-2 text-sm font-medium text-foreground">{workspaceTitle}</p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
                 <RoleIcon className="h-3.5 w-3.5" />
-                {t(`roles.${profile.role}`)}
+                {roleLabel}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
                 <UserCircle2 className="h-3.5 w-3.5" />
                 {statusLabel}
               </span>
-              {partnerLabel ? (
+              {entityLabel ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
-                  {partnerLabel}
+                  {entityLabel}
                 </span>
               ) : null}
             </div>

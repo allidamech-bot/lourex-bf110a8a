@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
+import { Globe } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { Mail, MapPin, Globe } from "lucide-react";
 
 const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const { t, lang } = useI18n();
@@ -9,7 +9,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const navLinks = [
     { label: t("nav.about"), href: "/about" },
     { label: t("nav.whyLourex"), href: "/why-lourex" },
-    { label: lang === "ar" ? "تواصل معنا" : "Contact", href: "/contact" },
+    { label: lang === "ar" ? "\u062a\u0648\u0627\u0635\u0644 \u0645\u0639\u0646\u0627" : "Contact", href: "/contact" },
   ];
 
   const legalLinks = [
@@ -18,36 +18,33 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   ];
 
   const platformLinks = [
-    { label: lang === "ar" ? "طلب شراء" : "Purchase Request", href: "/dashboard/requests" },
-    { label: lang === "ar" ? "تتبع الشحن" : "Track Shipment", href: "/dashboard/tracking" },
+    { label: lang === "ar" ? "\u0637\u0644\u0628 \u0634\u0631\u0627\u0621" : "Purchase Request", href: "/request" },
+    { label: lang === "ar" ? "\u062a\u062a\u0628\u0639 \u0627\u0644\u0634\u062d\u0646" : "Track Shipment", href: "/track" },
   ];
 
   return (
     <footer ref={ref} className="border-t border-border/50 bg-surface-overlay">
       <div className="container mx-auto px-4 md:px-8">
-        {/* Main footer */}
-        <div className="py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand */}
+        <div className="grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
             <img src="/lourex-logo.png" alt="LOUREX" className="h-8 w-auto" />
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {lang === "ar"
-                ? "منصة وساطة وتشغيل ذكية تربط العميل بصفقات شراء وتتبع ومحاسبة منضبطة."
+                ? "\u0645\u0646\u0635\u0629 \u0648\u0633\u0627\u0637\u0629 \u0648\u062a\u0634\u063a\u064a\u0644 \u0630\u0643\u064a\u0629 \u062a\u0631\u0628\u0637 \u0627\u0644\u0639\u0645\u064a\u0644 \u0628\u0635\u0641\u0642\u0627\u062a \u0634\u0631\u0627\u0621 \u0648\u062a\u062a\u0628\u0639 \u0648\u0645\u062d\u0627\u0633\u0628\u0629 \u0645\u0646\u0636\u0628\u0637\u0629."
                 : "Smart broker operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
             </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Globe className="w-3.5 h-3.5 text-primary" />
-              <span>{lang === "ar" ? "متاح عالمياً" : "Available Worldwide"}</span>
+              <Globe className="h-3.5 w-3.5 text-primary" />
+              <span>{lang === "ar" ? "\u0645\u062a\u0627\u062d \u0639\u0627\u0644\u0645\u064a\u0627\u064b" : "Available Worldwide"}</span>
             </div>
           </div>
 
-          {/* Platform */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">{lang === "ar" ? "المنصة" : "Platform"}</h4>
+            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "\u0627\u0644\u0645\u0646\u0635\u0629" : "Platform"}</h4>
             <ul className="space-y-2.5">
               {platformLinks.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -55,13 +52,12 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             </ul>
           </div>
 
-          {/* Company */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">{lang === "ar" ? "الشركة" : "Company"}</h4>
+            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "\u0627\u0644\u0634\u0631\u0643\u0629" : "Company"}</h4>
             <ul className="space-y-2.5">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -69,13 +65,12 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">{lang === "ar" ? "قانوني" : "Legal"}</h4>
+            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "\u0642\u0627\u0646\u0648\u0646\u064a" : "Legal"}</h4>
             <ul className="space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -84,12 +79,11 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-border/50 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-border/50 py-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} LOUREX. {t("footer.tagline")}
+            {"\u00A9"} {new Date().getFullYear()} LOUREX. {t("footer.tagline")}
           </p>
-          <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground/60">
             Private Smart Broker Operations Platform
           </p>
         </div>
@@ -97,6 +91,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
     </footer>
   );
 });
+
 Footer.displayName = "Footer";
 
 export default Footer;

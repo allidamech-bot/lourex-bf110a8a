@@ -13,11 +13,16 @@ import { NavLink, Outlet } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { dashboardRoutePermissions } from "@/features/auth/rbac";
+import { getEntityLabel, getRoleDisplayName, getWorkspaceDescription, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
 export const DashboardLayout = () => {
   const { profile } = useAuthSession();
   const { t } = useI18n();
+  const workspaceTitle = profile ? getWorkspaceTitle(profile, t) : t("identity.workspaces.operations_employee.title");
+  const workspaceDescription = profile ? getWorkspaceDescription(profile, t) : "";
+  const roleLabel = profile ? getRoleDisplayName(profile.role, t) : t("identity.labels.role");
+  const entityLabel = profile ? getEntityLabel(profile, t) : null;
 
   const dashboardLinks = [
     {
@@ -86,14 +91,24 @@ export const DashboardLayout = () => {
         <aside className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm">
           <div className="mb-5 rounded-2xl bg-secondary/70 p-4">
             <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-              {t("workspace.operatingSystem")}
+              {t("identity.labels.workspace")}
             </p>
             <h2 className="mt-2 font-serif text-xl font-bold">
-              {profile ? t(`roles.${profile.role}`) : t("workspace.operationsRoom")}
+              {workspaceTitle}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {profile ? t(`workspace.roleDescriptions.${profile.role}`) : ""}
+              {workspaceDescription}
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <div className="rounded-full bg-background px-3 py-1 text-xs font-medium text-foreground">
+                {t("identity.labels.role")}: {roleLabel}
+              </div>
+              {entityLabel ? (
+                <div className="rounded-full bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+                  {t("identity.labels.entity")}: {entityLabel}
+                </div>
+              ) : null}
+            </div>
           </div>
           <nav className="space-y-1">
             {visibleLinks.map((link) => (
@@ -121,17 +136,24 @@ export const DashboardLayout = () => {
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-primary/80">
-                  {t("workspace.operationsRoom")}
+                  {t("identity.labels.workspace")}
                 </p>
                 <h1 className="mt-2 font-serif text-2xl font-semibold">
-                  {t("workspace.environmentTitle")}
+                  {workspaceTitle}
                 </h1>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  {t("workspace.environmentDescription")}
+                  {workspaceDescription}
                 </p>
               </div>
-              <div className="rounded-full bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
-                {profile ? t(`roles.${profile.role}`) : t("workspace.accessLabel")}
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-full bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
+                  {t("identity.labels.role")}: {roleLabel}
+                </div>
+                {entityLabel ? (
+                  <div className="rounded-full bg-secondary px-4 py-2 text-xs font-medium text-muted-foreground">
+                    {t("identity.labels.entity")}: {entityLabel}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

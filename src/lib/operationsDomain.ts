@@ -1,6 +1,7 @@
 import { parsePurchaseRequestMessage } from "@/features/purchase-requests/lib";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { isValidRole, type LourexAccountStatus, type LourexRole } from "@/features/auth/rbac";
 import { shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import type {
@@ -224,6 +225,23 @@ type LegacyTrackingLookupRow = {
   updated_at: string;
 };
 
+type CurrentCustomerUpsertRow = {
+  customer_id: string;
+};
+
+type SecureTrackingLookupRow = {
+  tracking_id: string;
+  destination: string;
+  client_name: string;
+  current_stage_code?: ShipmentStageCode | null;
+  customer_note?: string | null;
+  last_updated: string;
+  deal_number?: string | null;
+  request_number?: string | null;
+  operation_title?: string | null;
+  timeline?: Json | null;
+};
+
 const db = supabase as unknown as LooseDomainClient;
 
 let lourexDomainAvailable: boolean | null = null;
@@ -259,6 +277,39 @@ const safeStructuredSelect = async <T extends Record<string, unknown>>(table: st
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder;
+  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error) throw error;
+  return data || [];
+};
+
+const safeStructuredSelectWhereEq = async <T extends Record<string, unknown>>(
+  table: string,
+  column: string,
+  value: unknown,
+  query?: string,
+) => {
+  const available = await getLourexDomainAvailability();
+  if (!available) return [] as T[];
+
+  const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
+  const { data, error } = await builder.eq(column, value);
+  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error) throw error;
+  return data || [];
+};
+
+const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
+  table: string,
+  column: string,
+  values: unknown[],
+  query?: string,
+) => {
+  const available = await getLourexDomainAvailability();
+  if (!available || values.length === 0) return [] as T[];
+
+  const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
+  // @ts-ignore - LooseDomainClient typing might not perfectly match the .in call
+  const { data, error } = await builder.in(column, values);
   if (error && isMissingSchemaError(error)) return [] as T[];
   if (error) throw error;
   return data || [];
@@ -409,9 +460,9 @@ export type OperationalUser = {
   id: string;
   email: string;
   fullName: string;
-  role: string;
+  role: LourexRole;
   partnerType: string | null;
-  status: string;
+  status: LourexAccountStatus;
   createdAt: string;
   updatedAt: string;
 };
@@ -592,12 +643,39 @@ export const createPurchaseRequestRecord = async (input: {
   isFullSourcing: boolean;
   trackingCode: string;
 }) => {
+  const { user, profile } = await getCurrentUserContext();
+  let customerId: string | null = null;
+
+  if (user && profile?.role === "customer") {
+    const upsertedCustomer = await db
+      .rpc<CurrentCustomerUpsertRow>("upsert_current_customer_record", {
+        p_full_name: input.fullName,
+        p_email: input.email,
+        p_phone: input.phone,
+        p_country: input.country,
+        p_city: input.city,
+      })
+      .maybeSingle();
+
+    if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+      return {
+        data: null,
+        error: upsertedCustomer.error || {
+          message: "تعذر تهيئة سجل العميل المرتبط بطلب الشراء.",
+        },
+      };
+    }
+
+    customerId = upsertedCustomer.data.customer_id;
+  }
+
   const inserted = await safeStructuredMutation<PurchaseRequestRow>(() =>
     db
       .from<PurchaseRequestRow>("purchase_requests")
       .insert({
         request_number: input.requestNumber,
         status: "intake_submitted",
+        customer_id: customerId,
         full_name: input.fullName,
         phone: input.phone,
         email: input.email,
@@ -642,6 +720,7 @@ export const createPurchaseRequestRecord = async (input: {
     file_name: buildAttachmentLabel(url, `image-${index + 1}`),
     file_url: url,
     visibility: "internal",
+    uploaded_by: user?.id || null,
   }));
 
   const { error: attachmentError } = await safeStructuredMutation(() =>
@@ -700,20 +779,34 @@ const mapExplicitRequest = (
   attachments: attachmentsMap.get(`purchase_request:${row.id}`) || [],
 });
 
-export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest[]> => {
-  const [explicitRows, attachmentRows, { data: legacyRows }, { data: conversions }] = await Promise.all([
-    safeStructuredSelect<PurchaseRequestRow>("purchase_requests"),
-    safeStructuredSelect<AttachmentRow>("attachments"),
-    supabase
-      .from("inquiries")
-      .select("id, name, email, phone, company, message, created_at")
-      .eq("inquiry_type", "purchase_request")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("audit_logs")
-      .select("record_id, new_values")
-      .eq("action", "purchase_request.converted_to_deal")
-      .order("created_at", { ascending: false }),
+export const loadPurchaseRequests = async (
+  options: { includeAttachments?: boolean; includeLegacy?: boolean } = {
+    includeAttachments: true,
+    includeLegacy: true,
+  },
+): Promise<OperationalPurchaseRequest[]> => {
+  const { profile } = await getCurrentUserContext();
+  const isCustomer = profile?.role === "customer";
+
+  const [explicitRows, attachmentRows, legacyResult, { data: conversions }] = await Promise.all([
+    isCustomer && profile?.id
+      ? safeStructuredSelectWhereEq<PurchaseRequestRow>("purchase_requests", "customer_id", profile.id)
+      : safeStructuredSelect<PurchaseRequestRow>("purchase_requests"),
+    options.includeAttachments ? safeStructuredSelect<AttachmentRow>("attachments") : Promise.resolve([] as AttachmentRow[]),
+    !options.includeLegacy || isCustomer
+      ? Promise.resolve({ data: [] as InquiryRow[] | null, error: null })
+      : supabase
+          .from("inquiries")
+          .select("id, name, email, phone, company, message, created_at")
+          .eq("inquiry_type", "purchase_request")
+          .order("created_at", { ascending: false }),
+    isCustomer
+      ? Promise.resolve({ data: [] as AuditConversionRow[] | null, error: null })
+      : supabase
+          .from("audit_logs")
+          .select("record_id, new_values")
+          .eq("action", "purchase_request.converted_to_deal")
+          .order("created_at", { ascending: false }),
   ]);
 
   const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
@@ -741,7 +834,7 @@ export const loadPurchaseRequests = async (): Promise<OperationalPurchaseRequest
 
   const explicitLegacyIds = new Set(explicit.map((row) => row.sourceInquiryId).filter(Boolean));
 
-  const legacy = ((legacyRows || []) as InquiryRow[])
+  const legacy = ((legacyResult.data || []) as InquiryRow[])
     .filter((row) => !explicitLegacyIds.has(row.id))
     .map((row) => {
       const payload = parsePurchaseRequestMessage(row.message);
@@ -1192,17 +1285,54 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
   const { profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
 
-  const [{ data: deals }, requests, customers, shipments, attachmentRows, trackingRows, entryRows, profileRows] =
-    await Promise.all([
-      db.from<DealRow>("deals").select("*").order("created_at", { ascending: false }),
-      safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_id"),
-      safeStructuredSelect<CustomerRow>("lourex_customers"),
-      safeStructuredSelect<ShipmentRow>("shipments"),
-      safeStructuredSelect<AttachmentRow>("attachments"),
-      safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
-      safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-      safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
-    ]);
+  const deals = isCustomer && profile?.id
+    ? await safeStructuredSelectWhereEq<DealRow>("deals", "customer_id", profile.id)
+    : await safeStructuredSelect<DealRow>("deals");
+
+  const dealIds = deals.map((row) => row.id);
+  const requestIds = Array.from(
+    new Set(deals.map((row) => row.source_request_id).filter((value): value is string => typeof value === "string")),
+  );
+  const partnerIds = Array.from(
+    new Set(
+      deals
+        .flatMap((row) => [row.assigned_turkish_partner_id, row.assigned_saudi_partner_id])
+        .filter((value): value is string => typeof value === "string"),
+    ),
+  );
+
+  const [requests, customers, shipments, attachmentRows, trackingRows, entryRows, profileRows] = await Promise.all([
+    isCustomer
+      ? safeStructuredSelectWhereIn<PurchaseRequestRow>(
+          "purchase_requests",
+          "id",
+          requestIds,
+          "id, request_number, converted_deal_id",
+        )
+      : safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_number"),
+    isCustomer && profile?.id
+      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+      : safeStructuredSelect<CustomerRow>("lourex_customers"),
+    isCustomer
+      ? safeStructuredSelectWhereIn<ShipmentRow>("shipments", "deal_id", dealIds)
+      : safeStructuredSelect<ShipmentRow>("shipments"),
+    isCustomer
+      ? (async () => {
+          const rows = await safeStructuredSelectWhereIn<AttachmentRow>("attachments", "entity_id", dealIds);
+          return rows.filter((row) => row.entity_type === "deal");
+        })()
+      : safeStructuredSelect<AttachmentRow>("attachments"),
+    isCustomer ? [] : await safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
+    isCustomer
+      ? safeStructuredSelectWhereIn<FinancialEntryRow>("financial_entries", "deal_id", dealIds)
+      : await safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+    isCustomer ? [] : await safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
+  ]);
+
+  const shipmentIds = shipments.map((row) => row.id);
+  const customerTrackingRows = isCustomer
+    ? await safeStructuredSelectWhereIn<TrackingUpdateRow>("tracking_updates", "shipment_id", shipmentIds)
+    : trackingRows;
 
   const requestMap = new Map<string, PurchaseRequestRow>((requests || []).map((row) => [row.id, row]));
   const customerMap = new Map<string, CustomerRow>((customers || []).map((row) => [row.id, row]));
@@ -1213,14 +1343,11 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
       .map((row) => [row.deal_id, row]),
   );
   const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
-  const trackingUpdates = (trackingRows || []).map(mapTrackingUpdate);
+  const trackingUpdates = (customerTrackingRows || []).map(mapTrackingUpdate);
   const trackingMap = getTrackingMap(trackingUpdates);
   const profileMap = new Map<string, ProfileRow>((profileRows || []).map((row) => [row.id, row]));
 
-  const filteredDeals = (deals || []).filter((row) => {
-    if (!isCustomer) return true;
-    return row.customer_id === profile?.id;
-  });
+  const filteredDeals = deals || [];
 
   return filteredDeals.map((row) => {
     const customer = row.customer_id ? customerMap.get(row.customer_id) : null;
@@ -1417,16 +1544,29 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
   const { profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
 
-  const [shipments, deals, trackingRows] = await Promise.all([
-    safeStructuredSelect<ShipmentRow>("shipments"),
-    loadDeals(),
-    safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
-  ]);
+  // Use loadDeals to get the list of deals (this is already optimized)
+  const deals = await loadDeals();
+  const dealIds = deals.map((deal) => deal.id);
+
+  // In customer mode, we already have shipments from loadDeals, but loadDeals returns OperationalDeal
+  // We need to fetch the raw ShipmentRows to build OperationalShipments properly if we want the full list.
+  // Actually, loadDeals already fetched all shipments for these deals.
+  
+  const shipments = isCustomer
+    ? await safeStructuredSelectWhereIn<ShipmentRow>("shipments", "deal_id", dealIds)
+    : await safeStructuredSelect<ShipmentRow>("shipments");
+
+  const shipmentIds = shipments.map((s) => s.id);
+
+  const trackingRows = isCustomer
+    ? await safeStructuredSelectWhereIn<TrackingUpdateRow>("tracking_updates", "shipment_id", shipmentIds)
+    : await safeStructuredSelect<TrackingUpdateRow>("tracking_updates");
 
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const trackingMap = getTrackingMap((trackingRows || []).map(mapTrackingUpdate));
-
-  const filteredShipments = (shipments || []).filter((row) => {
+  
+  // RLS handles visibility, but we double-check customer ownership if needed.
+  const filteredShipments = shipments.filter((row) => {
     if (!isCustomer) return true;
     const deal = row.deal_id ? dealMap.get(row.deal_id) : null;
     return deal?.customerId === profile?.id;
@@ -1438,13 +1578,15 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       return update.visibility === "customer_visible";
     });
 
+    const deal = row.deal_id ? dealMap.get(row.deal_id) : undefined;
+
     return {
       id: row.id,
       trackingId: row.tracking_id,
       clientName: row.client_name,
       destination: row.destination,
       dealId: row.deal_id,
-      dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
+      dealNumber: deal?.dealNumber,
       stage: row.current_stage_code || mapShipmentStatusToStage(row.status),
       updatedAt: row.updated_at,
       customerVisibleNote: row.customer_visible_note || "",
@@ -1524,11 +1666,18 @@ export const createTrackingUpdate = async (input: {
   return inserted.data;
 };
 
-export const loadFinancialEntries = async (): Promise<FinancialEntry[]> => {
+export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
+  const { profile } = await getCurrentUserContext();
+  const isCustomer = profile?.role === "customer";
+
   const [entries, deals, customers] = await Promise.all([
-    safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-    loadDeals(),
-    safeStructuredSelect<CustomerRow>("lourex_customers"),
+    isCustomer && profile?.id
+      ? safeStructuredSelectWhereEq<FinancialEntryRow>("financial_entries", "customer_id", profile.id)
+      : safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+    options.deals ? Promise.resolve(options.deals) : loadDeals(),
+    isCustomer && profile?.id
+      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+      : safeStructuredSelect<CustomerRow>("lourex_customers"),
   ]);
 
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
@@ -1793,28 +1942,42 @@ export const updateFinancialEditRequestStatus = async (
 };
 
 export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => {
-  const [customers, requests, deals, entries, audits] = await Promise.all([
-    safeStructuredSelect<CustomerRow>("lourex_customers"),
-    loadPurchaseRequests(),
-    loadDeals(),
-    loadFinancialEntries(),
-    supabase.from("audit_logs").select("id, record_id, table_name, new_values"),
+  const { profile } = await getCurrentUserContext();
+  const isCustomer = profile?.role === "customer";
+
+  // Optimization: Pre-fetch all data once and pass to sub-loaders where possible
+  const deals = await loadDeals();
+  const [customers, requests, entries] = await Promise.all([
+    isCustomer && profile?.id
+      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+      : safeStructuredSelect<CustomerRow>("lourex_customers"),
+    loadPurchaseRequests({ includeAttachments: false, includeLegacy: !isCustomer }),
+    loadFinancialEntries({ deals }),
   ]);
 
+  const auditCounts = new Map<string, number>();
+
+  if (isCustomer) {
+    [...requests, ...deals].forEach((row) => {
+      auditCounts.set(row.id, 0);
+    });
+  } else {
+    const { data, error } = await supabase.from("audit_logs").select("id, record_id, table_name, new_values");
+    if (error) throw error;
+
+    ((data || []) as AuditLogRow[]).forEach((row) => {
+      auditCounts.set(row.record_id, (auditCounts.get(row.record_id) || 0) + 1);
+    });
+  }
+
   return (customers || []).map((customer) => {
-    const customerRequests = requests.filter(
-      (request) => request.customer.id === customer.id || request.customer.email === customer.email,
+    const customerRequests = requests.filter((request) => request.customer.id === customer.id);
+    const customerDeals = deals.filter((deal) => deal.customerId === customer.id);
+    const customerEntries = entries.filter((entry) => entry.customerId === customer.id);
+    const customerAuditCount = [...customerRequests, ...customerDeals].reduce(
+      (sum, row) => sum + (auditCounts.get(row.id) || 0),
+      0,
     );
-    const customerDeals = deals.filter(
-      (deal) => deal.customerId === customer.id || deal.customerEmail === customer.email,
-    );
-    const customerEntries = entries.filter(
-      (entry) => entry.customerId === customer.id || entry.customerName === customer.full_name,
-    );
-    const customerAuditCount = ((audits.data || []) as AuditLogRow[]).filter((row) => {
-      const json = asJsonObject(row.new_values) || {};
-      return json.customer_id === customer.id || json.customer_name === customer.full_name;
-    }).length;
 
     return {
       id: customer.id,
@@ -1843,13 +2006,14 @@ export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
   );
 
   return (rows || [])
+    .filter((row) => isValidRole(row.role))
     .map((row) => ({
       id: row.id,
       email: row.email || "",
       fullName: row.full_name || "",
-      role: row.role || "customer",
+      role: row.role,
       partnerType: row.partner_type || null,
-      status: row.status || "pending",
+      status: (row.status || "pending") as LourexAccountStatus,
       createdAt: row.created_at,
       updatedAt: row.updated_at || row.created_at,
     }))
@@ -1858,7 +2022,7 @@ export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
 
 export const updateOperationalUserProfile = async (
   userId: string,
-  input: { role?: string; partnerType?: string | null; status?: string },
+  input: { role?: LourexRole; partnerType?: string | null; status?: LourexAccountStatus },
 ) => {
   const currentUsers = await loadOperationalUsers();
   const current = currentUsers.find((user) => user.id === userId);
@@ -1926,44 +2090,69 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
     };
   }
 
-  const shipmentQuery = await db
-    .from<ShipmentRow>("shipments")
-    .select("*")
-    .eq("tracking_id", normalized)
+  const trackingLookup = await db
+    .rpc<SecureTrackingLookupRow>("lookup_lourex_tracking", {
+      p_tracking_id: normalized,
+    })
     .maybeSingle();
-  if (shipmentQuery.error) throw shipmentQuery.error;
-  if (!shipmentQuery.data) return null;
 
-  const shipment = shipmentQuery.data;
-  const [deals, requests, trackingRows] = await Promise.all([
-    loadDeals(),
-    loadPurchaseRequests(),
-    safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
-  ]);
+  if (trackingLookup.error) throw trackingLookup.error;
+  if (!trackingLookup.data) return null;
 
-  const deal = deals.find((row) => row.id === shipment.deal_id) || null;
-  const request = requests.find((row) => row.id === deal?.sourceRequestId) || null;
-  const timeline = (trackingRows || [])
-    .map(mapTrackingUpdate)
-    .filter((row) => row.shipmentId === shipment.id && (row.visibility === "customer_visible" || row.customerNote))
+  const timelinePayload = Array.isArray(trackingLookup.data.timeline) ? trackingLookup.data.timeline : [];
+  const timeline = timelinePayload
+    .map((row) => {
+      if (!row || typeof row !== "object" || Array.isArray(row)) {
+        return null;
+      }
+
+      const payload = row as Record<string, unknown>;
+      const stageCode =
+        typeof payload.stageCode === "string" ? (payload.stageCode as ShipmentStageCode) : "deal_accepted";
+
+      return {
+        id: typeof payload.id === "string" ? payload.id : "",
+        shipmentId: typeof payload.shipmentId === "string" ? payload.shipmentId : "",
+        dealId: typeof payload.dealId === "string" ? payload.dealId : undefined,
+        stageCode,
+        previousStageCode:
+          typeof payload.previousStageCode === "string"
+            ? (payload.previousStageCode as ShipmentStageCode)
+            : null,
+        note: typeof payload.note === "string" ? payload.note : "",
+        customerNote: typeof payload.customerNote === "string" ? payload.customerNote : "",
+        visibility:
+          payload.visibility === "customer_visible" ? "customer_visible" : "internal",
+        updatedBy: typeof payload.updatedBy === "string" ? payload.updatedBy : undefined,
+        updatedByRole: typeof payload.updatedByRole === "string" ? payload.updatedByRole : "",
+        occurredAt:
+          typeof payload.occurredAt === "string"
+            ? payload.occurredAt
+            : typeof payload.createdAt === "string"
+              ? payload.createdAt
+              : new Date().toISOString(),
+        createdAt: typeof payload.createdAt === "string" ? payload.createdAt : new Date().toISOString(),
+      } satisfies TrackingUpdateRecord;
+    })
+    .filter((row): row is TrackingUpdateRecord => Boolean(row))
     .sort((a, b) => +new Date(a.occurredAt) - +new Date(b.occurredAt));
 
-  const currentStage = (shipment.current_stage_code || mapShipmentStatusToStage(shipment.status)) as ShipmentStageCode;
+  const currentStage = (trackingLookup.data.current_stage_code || "deal_accepted") as ShipmentStageCode;
   const progressRatio =
     ((shipmentStages.findIndex((item) => item.code === currentStage) + 1) / shipmentStages.length) * 100;
 
   return {
-    trackingId: shipment.tracking_id,
-    dealNumber: deal?.dealNumber,
-    requestNumber: request?.requestNumber,
-    operationTitle: deal?.operationTitle || request?.productName || "عملية Lourex",
-    destination: shipment.destination,
-    clientName: shipment.client_name,
+    trackingId: trackingLookup.data.tracking_id,
+    dealNumber: trackingLookup.data.deal_number || undefined,
+    requestNumber: trackingLookup.data.request_number || undefined,
+    operationTitle: trackingLookup.data.operation_title || "عملية Lourex",
+    destination: trackingLookup.data.destination,
+    clientName: trackingLookup.data.client_name,
     currentStage,
     currentStageLabel: stageLabelByCode[currentStage],
     currentStageDescription: stageDescriptionByCode[currentStage],
-    customerNote: shipment.customer_visible_note || timeline[timeline.length - 1]?.customerNote || "",
-    lastUpdated: shipment.updated_at,
+    customerNote: trackingLookup.data.customer_note || timeline[timeline.length - 1]?.customerNote || "",
+    lastUpdated: trackingLookup.data.last_updated,
     progressRatio,
     timeline,
   };

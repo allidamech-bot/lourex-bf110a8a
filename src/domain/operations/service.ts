@@ -115,9 +115,9 @@ export const fetchCustomers = async (): Promise<OperationsCustomer[]> => {
   return customers.map(normalizeCustomer);
 };
 
-export const fetchCustomerDashboard = async (email: string): Promise<OperationsCustomer | null> => {
+export const fetchCustomerDashboard = async (): Promise<OperationsCustomer | null> => {
   const customers = await loadCustomerDashboards();
-  const customer = customers.find(c => c.email.toLowerCase() === email.toLowerCase());
+  const customer = customers[0] ?? null;
   return customer ? normalizeCustomer(customer) : null;
 };
 

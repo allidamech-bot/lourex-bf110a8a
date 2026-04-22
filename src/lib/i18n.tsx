@@ -57,6 +57,9 @@ const translations: Record<Lang, TranslationTree> = {
       noNotes: "No notes yet.",
       yes: "Yes",
       no: "No",
+      active: "Active",
+      inactive: "Inactive",
+      days: "days",
     },
     search: {
       placeholder: "Search products, suppliers, orders, or pages...",
@@ -89,6 +92,44 @@ const translations: Record<Lang, TranslationTree> = {
       editRequests: "Edit Requests",
       audit: "Audit Log",
       reports: "Reports",
+    },
+    reports: {
+      title: "Operational Analytics",
+      window: "Reporting Window",
+      uncategorized: "Uncategorized",
+      noCustomers: "No customer activity found in this period.",
+      noExpenses: "No expenses recorded in this period.",
+      operationsRead: "Operations context",
+      shipmentSummary: "Shipment progress",
+      topCustomers: "Customer performance",
+      topExpenses: "Expense distribution",
+      structuredHint: "Data is aggregated from live operational activity and financial discipline logs.",
+      inTransit: "In transit",
+      destination: "Arrived at destination",
+      delivered: "Successfully delivered",
+      requestsCount: "{{count}} requests",
+      dealsCount: "{{count}} deals",
+      ranges: {
+        monthly: "Last 30 days",
+        quarterly: "Last 90 days",
+        semiannual: "Last 6 months",
+        annual: "Last year",
+        custom: "Custom range",
+      },
+      metrics: {
+        requests: "Total requests",
+        deals: "Active deals",
+        shipments: "Total shipments",
+        customers: "Active customers",
+        audits: "Audit records",
+        linkedEntries: "Linked financial entries",
+        income: "Total income",
+        expense: "Total expense",
+        profit: "Net profit",
+        averageValue: "Avg. deal value",
+        avgTime: "Avg. processing time",
+      },
+      monthlyTrend: "Monthly Trend",
     },
     tracking: {
       noShipments: "No shipments found matching your account.",
@@ -184,6 +225,80 @@ const translations: Record<Lang, TranslationTree> = {
       customer: "Customer",
       partnerTurkey: "Turkey",
       partnerSaudi: "Saudi Arabia",
+    },
+    identity: {
+      labels: {
+        workspace: "Workspace",
+        role: "Role",
+        entity: "Entity",
+      },
+      roles: {
+        owner: "Owner",
+        saudi_partner: "Saudi Partner",
+        operations_employee: "Operations Employee",
+        customer: "Customer",
+      },
+      entities: {
+        general_management: "General Management",
+        saudi_partner: "Saudi Partner",
+      },
+      workspaces: {
+        owner: {
+          title: "General Management",
+          description: "Platform oversight, operational visibility, and reporting live here.",
+        },
+        saudi_partner: {
+          title: "Partner Workspace",
+          description: "Destination execution, arrival handling, and local follow-up stay organized here.",
+        },
+        operations_employee: {
+          title: "Operations Room",
+          description: "Daily execution, cross-team coordination, and operational follow-up happen here.",
+        },
+        customer: {
+          title: "Customer Portal",
+          description: "Track requests, shipment progress, and account activity for your company.",
+        },
+      },
+    },
+    customerPortal: {
+      eyebrow: "Customer Portal",
+      welcome: "Welcome back,",
+      description: "Manage your requests, follow shipment progress, and stay updated on your Lourex account activity.",
+      actions: {
+        newRequest: {
+          title: "New Request",
+          description: "Submit a new purchase request to the Lourex team.",
+        },
+        requests: {
+          title: "My Requests",
+          description: "Review your submitted purchase requests and their latest status.",
+        },
+        tracking: {
+          title: "Shipment Tracking",
+          description: "Follow shipment updates and delivery progress for your active operations.",
+        },
+        profile: {
+          title: "My Profile",
+          description: "Review your account details and company information.",
+        },
+      },
+      financial: {
+        title: "Account Overview",
+        balance: "Financial balance",
+        operations: "Active operations",
+        empty: "No account summary is available yet.",
+      },
+      recent: {
+        title: "Recent Requests",
+        viewAll: "View all requests",
+        firstRequest: "Submit your first request",
+      },
+    },
+    profile: {
+      title: "Account Profile",
+      personalTitle: "Personal Information",
+      companyTitle: "Company Information",
     },
     statuses: {
       intake_submitted: "Submitted",
@@ -660,6 +775,9 @@ const translations: Record<Lang, TranslationTree> = {
       noNotes: "لا توجد ملاحظات بعد.",
       yes: "نعم",
       no: "لا",
+      active: "\u0646\u0634\u0637",
+      inactive: "\u063a\u064a\u0631 \u0646\u0634\u0637",
+      days: "أيام",
     },
     search: {
       placeholder: "ابحث عن منتجات أو موردين أو طلبات أو صفحات...",
@@ -692,6 +810,44 @@ const translations: Record<Lang, TranslationTree> = {
       editRequests: "طلبات التعديل",
       audit: "سجل التدقيق",
       reports: "التقارير",
+    },
+    reports: {
+      title: "التحليلات التشغيلية",
+      window: "فترة التقرير",
+      uncategorized: "غير مصنف",
+      noCustomers: "لم يتم العثور على نشاط للعملاء في هذه الفترة.",
+      noExpenses: "لم يتم تسجيل مصروفات في هذه الفترة.",
+      operationsRead: "السياق التشغيلي",
+      shipmentSummary: "تقدم الشحنات",
+      topCustomers: "أداء العملاء",
+      topExpenses: "توزيع المصروفات",
+      structuredHint: "يتم تجميع البيانات من النشاط التشغيلي المباشر وسجلات الانضباط المالي.",
+      inTransit: "في الطريق",
+      destination: "وصلت إلى الوجهة",
+      delivered: "تم التسليم بنجاح",
+      requestsCount: "{{count}} طلب",
+      dealsCount: "{{count}} صفقة",
+      ranges: {
+        monthly: "آخر 30 يومًا",
+        quarterly: "آخر 90 يومًا",
+        semiannual: "آخر 6 أشهر",
+        annual: "آخر سنة",
+        custom: "فترة مخصصة",
+      },
+      metrics: {
+        requests: "إجمالي الطلبات",
+        deals: "الصفقات النشطة",
+        shipments: "إجمالي الشحنات",
+        customers: "العملاء النشطون",
+        audits: "سجلات التدقيق",
+        linkedEntries: "القيود المالية المرتبطة",
+        income: "إجمالي الإيرادات",
+        expense: "إجمالي المصروفات",
+        profit: "صافي الربح",
+        averageValue: "متوسط قيمة الصفقة",
+        avgTime: "متوسط وقت التنفيذ",
+      },
+      monthlyTrend: "الاتجاه الشهري",
     },
     tracking: {
       noShipments: "لم يتم العثور على شحنات مرتبطة بحسابك.",
@@ -787,6 +943,80 @@ const translations: Record<Lang, TranslationTree> = {
       customer: "العميل",
       partnerTurkey: "تركيا",
       partnerSaudi: "السعودية",
+    },
+    identity: {
+      labels: {
+        workspace: "مساحة العمل",
+        role: "الدور",
+        entity: "الجهة",
+      },
+      roles: {
+        owner: "المالك",
+        saudi_partner: "الشريك السعودي",
+        operations_employee: "موظف العمليات",
+        customer: "العميل",
+      },
+      entities: {
+        general_management: "الإدارة العامة",
+        saudi_partner: "الشريك السعودي",
+      },
+      workspaces: {
+        owner: {
+          title: "الإدارة العامة",
+          description: "هنا تظهر المتابعة الشاملة للمنصة والرؤية التشغيلية والتقارير.",
+        },
+        saudi_partner: {
+          title: "مساحة الشريك",
+          description: "هنا يتم تنظيم تنفيذ الوصول والتعامل المحلي والمتابعة داخل المملكة.",
+        },
+        operations_employee: {
+          title: "غرفة العمليات",
+          description: "هنا تتم المتابعة اليومية والتنسيق بين الفرق وتنفيذ العمليات.",
+        },
+        customer: {
+          title: "بوابة العميل",
+          description: "تابع الطلبات والشحنات ونشاط الحساب الخاص بشركتك من هنا.",
+        },
+      },
+    },
+    customerPortal: {
+      eyebrow: "\u0628\u0648\u0627\u0628\u0629 \u0627\u0644\u0639\u0645\u064a\u0644",
+      welcome: "\u0645\u0631\u062d\u0628\u064b\u0627 \u0628\u0639\u0648\u062f\u062a\u0643\u060c",
+      description: "\u0623\u062f\u0631 \u0637\u0644\u0628\u0627\u062a\u0643\u060c \u0648\u062a\u0627\u0628\u0639 \u062a\u0642\u062f\u0645 \u0627\u0644\u0634\u062d\u0646\u0627\u062a\u060c \u0648\u0627\u0628\u0642 \u0639\u0644\u0649 \u0627\u0637\u0644\u0627\u0639 \u0628\u0623\u062d\u062f\u062b \u0646\u0634\u0627\u0637 \u062d\u0633\u0627\u0628\u0643 \u0641\u064a Lourex.",
+      actions: {
+        newRequest: {
+          title: "\u0637\u0644\u0628 \u062c\u062f\u064a\u062f",
+          description: "\u0623\u0631\u0633\u0644 \u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062c\u062f\u064a\u062f \u0625\u0644\u0649 \u0641\u0631\u064a\u0642 Lourex.",
+        },
+        requests: {
+          title: "\u0637\u0644\u0628\u0627\u062a\u064a",
+          description: "\u0631\u0627\u062c\u0639 \u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0634\u0631\u0627\u0621 \u0627\u0644\u0645\u0631\u0633\u0644\u0629 \u0648\u0622\u062e\u0631 \u062d\u0627\u0644\u0629 \u0644\u0643\u0644 \u0637\u0644\u0628.",
+        },
+        tracking: {
+          title: "\u062a\u062a\u0628\u0639 \u0627\u0644\u0634\u062d\u0646\u0627\u062a",
+          description: "\u062a\u0627\u0628\u0639 \u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0627\u0644\u0634\u062d\u0646 \u0648\u062a\u0642\u062f\u0645 \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0644\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0646\u0634\u0637\u0629.",
+        },
+        profile: {
+          title: "\u0645\u0644\u0641\u064a",
+          description: "\u0631\u0627\u062c\u0639 \u0628\u064a\u0627\u0646\u0627\u062a \u062d\u0633\u0627\u0628\u0643 \u0648\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0627\u0644\u0634\u0631\u0643\u0629.",
+        },
+      },
+      financial: {
+        title: "\u0646\u0638\u0631\u0629 \u0639\u0644\u0649 \u0627\u0644\u062d\u0633\u0627\u0628",
+        balance: "\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0645\u0627\u0644\u064a",
+        operations: "\u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0646\u0634\u0637\u0629",
+        empty: "\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0644\u062e\u0635\u0627\u062a \u0644\u0644\u062d\u0633\u0627\u0628 \u062d\u0627\u0644\u064a\u064b\u0627.",
+      },
+      recent: {
+        title: "\u0622\u062e\u0631 \u0627\u0644\u0637\u0644\u0628\u0627\u062a",
+        viewAll: "\u0639\u0631\u0636 \u0643\u0644 \u0627\u0644\u0637\u0644\u0628\u0627\u062a",
+        firstRequest: "\u0623\u0631\u0633\u0644 \u0623\u0648\u0644 \u0637\u0644\u0628",
+      },
+    },
+    profile: {
+      title: "\u0645\u0644\u0641 \u0627\u0644\u062d\u0633\u0627\u0628",
+      personalTitle: "\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0634\u062e\u0635\u064a\u0629",
+      companyTitle: "\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0634\u0631\u0643\u0629",
     },
     statuses: {
       intake_submitted: "تم الاستلام",

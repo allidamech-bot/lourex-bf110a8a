@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import type { LourexProfile } from "@/features/auth/rbac";
+import { isValidRole, type LourexProfile } from "@/features/auth/rbac";
 
 type AuthContextValue = {
   session: Session | null;
@@ -22,44 +22,36 @@ type AuthContextValue = {
 
 const AuthSessionContext = createContext<AuthContextValue | undefined>(undefined);
 
-const mapProfileRow = (row: any): LourexProfile => ({
-  id: row.id,
-  email: row.email || "",
-  fullName: row.full_name || "",
-  role: row.role,
-  partnerType: row.partner_type || null,
-  status: row.status,
-  phone: row.phone || undefined,
-  country: row.country || undefined,
-  city: row.city || undefined,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-});
+const mapProfileRow = (row: any): LourexProfile | null => {
+  if (!isValidRole(row?.role)) {
+    return null;
+  }
 
-const ensureOwnProfile = async (user: User) => {
-  const payload = {
-    id: user.id,
-    email: user.email || "",
-    full_name: user.user_metadata?.full_name || "",
-    role: "customer",
-    partner_type: null,
-    status: "active",
+  return {
+    id: row.id,
+    email: row.email || "",
+    fullName: row.full_name || "",
+    role: row.role,
+    partnerType: row.partner_type || null,
+    status: row.status,
+    phone: row.phone || undefined,
+    country: row.country || undefined,
+    city: row.city || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
-
-  const { data, error } = await (supabase as any)
-    .from("profiles")
-    .upsert(payload, { onConflict: "id" })
-    .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at, updated_at")
-    .single();
-
-  if (error) throw error;
-  return data;
 };
 
 export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<LourexProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const clearInvalidSession = useCallback(async () => {
+    setSession(null);
+    setProfile(null);
+    await supabase.auth.signOut();
+  }, []);
 
   const loadSessionState = useCallback(async (nextSession: Session | null) => {
     setLoading(true);
@@ -86,20 +78,22 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (data) {
-      setProfile(mapProfileRow(data));
+      const mappedProfile = mapProfileRow(data);
+
+      if (!mappedProfile) {
+        await clearInvalidSession();
+        setLoading(false);
+        return;
+      }
+
+      setProfile(mappedProfile);
       setLoading(false);
       return;
     }
 
-    try {
-      const created = await ensureOwnProfile(user);
-      setProfile(mapProfileRow(created));
-    } catch {
-      setProfile(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    setProfile(null);
+    setLoading(false);
+  }, [clearInvalidSession]);
 
   useEffect(() => {
     let mounted = true;

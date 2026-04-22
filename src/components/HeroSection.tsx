@@ -101,7 +101,7 @@ const HeroSection = () => {
               className="mt-10 flex flex-wrap gap-4"
             >
               <Button variant="gold" size="lg" className="px-8 text-base font-semibold" asChild>
-                <Link to="/dashboard/requests">
+                <Link to="/request">
                   {lang === "ar" ? "ابدأ طلب شراء" : "Start a purchase request"}
                   <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
@@ -112,7 +112,7 @@ const HeroSection = () => {
                 className="border-border/80 bg-background/60 px-8 text-base text-foreground hover:bg-background/80"
                 asChild
               >
-                <Link to="/dashboard/tracking">{lang === "ar" ? "تتبع الشحنة" : "Track shipment"}</Link>
+                <Link to="/track">{lang === "ar" ? "تتبع الشحنة" : "Track shipment"}</Link>
               </Button>
             </motion.div>
           </div>
@@ -171,3 +171,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+

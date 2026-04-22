@@ -10,6 +10,7 @@ import {
   loadOperationalUsers,
   updateOperationalUserProfile,
 } from "@/lib/operationsDomain";
+import { isValidRole, type LourexAccountStatus } from "@/features/auth/rbac";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
@@ -46,9 +47,15 @@ export default function Admin() {
     try {
       const payload =
         field === "role"
-          ? { role: value, partnerType: value === "turkish_partner" ? "turkey" : value === "saudi_partner" ? "saudi" : null }
+          ? (() => {
+              if (!isValidRole(value)) {
+                throw new Error("Invalid role.");
+              }
+
+              return { role: value, partnerType: value === "saudi_partner" ? "saudi" : null };
+            })()
           : field === "status"
-            ? { status: value }
+            ? { status: value as LourexAccountStatus }
             : { partnerType: value || null };
 
       const { error } = await updateOperationalUserProfile(userId, payload);
@@ -116,7 +123,7 @@ export default function Admin() {
           {[
             { icon: Users, label: t("admin.internalUsers"), value: internalUsers.length },
             { icon: ShieldCheck, label: t("admin.ownerAccounts"), value: users.filter((user) => user.role === "owner").length },
-            { icon: Activity, label: t("admin.partnerAccounts"), value: users.filter((user) => user.role === "turkish_partner" || user.role === "saudi_partner").length },
+            { icon: Activity, label: t("admin.partnerAccounts"), value: users.filter((user) => user.role === "saudi_partner").length },
           ].map((item) => (
             <BentoCard key={item.label}>
               <div className="flex items-center gap-3">
@@ -162,7 +169,6 @@ export default function Admin() {
                         disabled={savingId === user.id}
                       >
                         <option value="owner">owner</option>
-                        <option value="turkish_partner">turkish_partner</option>
                         <option value="saudi_partner">saudi_partner</option>
                         <option value="operations_employee">operations_employee</option>
                         <option value="customer">customer</option>

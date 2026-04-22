@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthStateScreen } from "@/components/auth/AuthStateScreen";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { getRoleDisplayName } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 import {
   canAccessRole,
@@ -14,6 +15,7 @@ type ProtectedRouteProps = {
   children: ReactNode;
   allowedRoles?: LourexRole[];
   requireInternal?: boolean;
+  redirectToDefault?: boolean;
 };
 
 const LoadingState = () => (
@@ -29,6 +31,7 @@ export const ProtectedRoute = ({
   children,
   allowedRoles,
   requireInternal = false,
+  redirectToDefault = false,
 }: ProtectedRouteProps) => {
   const location = useLocation();
   const { user, profile, loading, signOut } = useAuthSession();
@@ -67,6 +70,10 @@ export const ProtectedRoute = ({
   }
 
   if (requireInternal && !isInternalRole(profile.role)) {
+    if (redirectToDefault) {
+      return <Navigate to={getDefaultRouteForRole(profile.role)} replace />;
+    }
+
     return (
       <AuthStateScreen
         variant="forbidden"
@@ -79,11 +86,15 @@ export const ProtectedRoute = ({
   }
 
   if (!canAccessRole(profile.role, allowedRoles)) {
+    if (redirectToDefault) {
+      return <Navigate to={getDefaultRouteForRole(profile.role)} replace />;
+    }
+
     return (
       <AuthStateScreen
         variant="forbidden"
         title={t("auth.forbiddenTitle")}
-        description={t("auth.forbiddenDescription", { role: t(`roles.${profile.role}`) })}
+        description={t("auth.forbiddenDescription", { role: getRoleDisplayName(profile.role, t) })}
         primaryAction={{ label: t("auth.myArea"), to: getDefaultRouteForRole(profile.role) }}
         secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
       />

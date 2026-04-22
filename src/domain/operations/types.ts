@@ -9,6 +9,7 @@ import type {
   TrackingUpdateRecord,
 } from "@/types/lourex";
 import type { Json } from "@/integrations/supabase/types";
+import type { LourexAccountStatus, LourexRole } from "@/features/auth/rbac";
 
 export type DomainError = {
   message: string;
@@ -98,9 +99,9 @@ export type OperationsUser = {
   id: string;
   email: string;
   fullName: string;
-  role: string;
+  role: LourexRole;
   partnerType: string | null;
-  status: string;
+  status: LourexAccountStatus;
   createdAt: string;
   updatedAt: string;
 };

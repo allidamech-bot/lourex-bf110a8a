@@ -7,7 +7,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { getDefaultRouteForRole, isInternalRole } from "@/features/auth/rbac";
+import { getDefaultRouteForRole } from "@/features/auth/rbac";
+import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
 export const SiteHeader = () => {
@@ -19,20 +20,25 @@ export const SiteHeader = () => {
   const publicLinks = useMemo(
     () => [
       { to: "/", label: t("nav.home") },
-      { to: "/dashboard/requests", label: t("nav.purchaseRequest") },
-      { to: "/dashboard/tracking", label: t("nav.trackShipment") },
+      {
+        to: profile?.role === "customer" ? "/customer-portal/requests" : profile ? "/dashboard/requests" : "/request",
+        label: t("nav.purchaseRequest"),
+      },
+      {
+        to: profile?.role === "customer" ? "/customer-portal/tracking" : profile ? "/dashboard/tracking" : "/track",
+        label: t("nav.trackShipment"),
+      },
       { to: "/about", label: t("nav.about") },
       { to: "/contact", label: t("nav.contact") },
     ],
-    [t],
+    [profile, t],
   );
 
   const workspaceLink = profile ? getDefaultRouteForRole(profile.role) : "/auth";
   const workspaceLabel = profile
-    ? isInternalRole(profile.role)
-      ? t("nav.operationsRoom")
-      : t("nav.customerPortal")
+    ? getWorkspaceTitle(profile, t)
     : t("nav.signIn");
+  const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
 
   const handleLogout = async () => {
     await signOut();
@@ -99,7 +105,7 @@ export const SiteHeader = () => {
           {user && profile ? (
             <>
               <div className="hidden rounded-full border border-border/60 bg-card px-4 py-2 text-xs text-muted-foreground lg:block">
-                {t(`roles.${profile.role}`)}
+                {roleLabel}
               </div>
 
               <Button variant="outline" asChild className="hidden lg:inline-flex">
@@ -143,7 +149,7 @@ export const SiteHeader = () => {
             {user && profile ? (
               <>
                 <div className="px-3 py-2 text-xs text-muted-foreground">
-                  {t(`roles.${profile.role}`)}
+                  {roleLabel}
                 </div>
 
                 {profile.role === "owner" ? (

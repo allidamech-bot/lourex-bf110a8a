@@ -1,8 +1,11 @@
-export type LourexRole =
-  | "owner"
-  | "saudi_partner"
-  | "operations_employee"
-  | "customer";
+export const LOUREX_ROLES = [
+  "owner",
+  "saudi_partner",
+  "operations_employee",
+  "customer",
+] as const;
+
+export type LourexRole = (typeof LOUREX_ROLES)[number];
 
 export type LourexPartnerType = "saudi" | null;
 export type LourexAccountStatus = "active" | "inactive" | "pending";
@@ -33,10 +36,10 @@ export const PARTNER_ROLES: LourexRole[] = ["saudi_partner"];
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
-  requests: [...INTERNAL_ROLES, "customer"] as LourexRole[],
+  requests: INTERNAL_ROLES,
   customers: ["owner", "operations_employee"] as LourexRole[],
   deals: INTERNAL_ROLES,
-  tracking: [...INTERNAL_ROLES, "customer"] as LourexRole[],
+  tracking: INTERNAL_ROLES,
   accounting: ACCOUNTING_ROLES,
   editRequests: ACCOUNTING_ROLES,
   audit: INTERNAL_ROLES,
@@ -45,6 +48,9 @@ export const dashboardRoutePermissions = {
 
 export const canAccessRole = (role: LourexRole | null | undefined, allowedRoles?: LourexRole[]) =>
   Boolean(role && (!allowedRoles || allowedRoles.includes(role)));
+
+export const isValidRole = (role: string | null | undefined): role is LourexRole =>
+  typeof role === "string" && LOUREX_ROLES.includes(role as LourexRole);
 
 export const isInternalRole = (role: LourexRole | null | undefined): role is LourexRole =>
   Boolean(role && INTERNAL_ROLES.includes(role));
