@@ -7,26 +7,35 @@ import {
   UserCircle2,
   Wallet,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
 
 export default function CustomerPortal() {
-  const { profile } = useAuthSession();
+  const { profile, loading: sessionLoading } = useAuthSession();
+  const navigate = useNavigate();
   const { locale, t } = useI18n();
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
   const [recentRequests, setRecentRequests] = useState<OperationsRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (sessionLoading) return;
+    if (!profile || profile.role !== "customer") {
+      // Internal users should not use this portal without a specific customer context
+      // but if they hit it, we just show a state instead of the first random customer
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
-      if (!profile?.id) return;
       setLoading(true);
       try {
         const [dashboard, requests] = await Promise.all([
@@ -46,7 +55,7 @@ export default function CustomerPortal() {
     };
 
     void loadData();
-  }, [profile?.id]);
+  }, [profile?.id, profile?.role, sessionLoading]);
 
   const menuItems = [
     {
@@ -82,6 +91,23 @@ export default function CustomerPortal() {
       bgColor: "bg-orange-500/10",
     },
   ];
+
+  if (!loading && (!profile || profile.role !== "customer")) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[2rem] border border-border bg-card p-12 text-center shadow-sm">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h2 className="mt-6 text-2xl font-bold">{t("common.error")}</h2>
+        <p className="mt-2 max-w-md text-muted-foreground">
+          {t("common.unauthorized")}
+        </p>
+        <Button variant="gold" className="mt-8" onClick={() => navigate("/dashboard")}>
+          {t("nav.dashboard")}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>

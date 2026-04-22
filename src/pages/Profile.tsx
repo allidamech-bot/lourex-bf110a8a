@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, Crown, Shield, UserCircle2, Users } from "lucide-react";
+import { BriefcaseBusiness, Crown, Loader2, Shield, UserCircle2, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SharedAccountPanel } from "@/components/account/SharedAccountPanel";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
@@ -14,10 +14,20 @@ const roleIcons = {
 } as const;
 
 const Profile = () => {
-  const { user, profile } = useAuthSession();
+  const { user, profile, loading: sessionLoading } = useAuthSession();
   const { t } = useI18n();
+  const loading = sessionLoading || !profile;
 
-  if (!profile) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   const RoleIcon = roleIcons[profile.role as keyof typeof roleIcons] || Users;
   const statusLabel = t(`common.${profile.status}`);

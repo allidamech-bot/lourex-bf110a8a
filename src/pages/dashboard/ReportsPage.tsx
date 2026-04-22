@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Truck,
   Users,
+  Download,
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +27,7 @@ import {
   type CustomerReportItem,
   type OperationsReport
 } from "@/lib/reportsDomain";
+import { exportToPdf, type ExportData } from "@/lib/exportUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { Clock, ExternalLink } from "lucide-react";
@@ -89,6 +91,7 @@ export default function ReportsPage() {
   const [operations, setOperations] = useState<OperationsReport | null>(null);
   const [financialTrends, setFinancialTrends] = useState<FinancialSummaryReport['trends']>([]);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: any[] } | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
@@ -230,6 +233,51 @@ export default function ReportsPage() {
     }
   };
 
+  const handleExport = async () => {
+    if (!summary) return;
+    setExporting(true);
+    try {
+      const startStr = rangeStart.toLocaleDateString();
+      const endStr = rangeEnd.toLocaleDateString();
+      
+      const exportData: ExportData = {
+        title: t("reports.financialReport"),
+        dateRange: `${startStr} - ${endStr}`,
+        metrics: [
+          { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR` },
+          { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR` },
+          { label: t("reports.metrics.profit"), value: `${metrics.net.toLocaleString()} SAR` },
+          { label: t("reports.metrics.requests"), value: metrics.requests },
+          { label: t("reports.metrics.deals"), value: metrics.deals },
+          { label: t("reports.metrics.shipments"), value: metrics.shipments },
+        ],
+        tables: []
+      };
+
+      // Add Top Customers Table
+      if (topCustomers.length > 0) {
+        exportData.tables.push({
+          title: t("reports.topCustomers"),
+          headers: [t("common.name"), t("reports.metrics.requests"), t("reports.metrics.deals")],
+          rows: topCustomers.map(c => [c.full_name, c.requests_count, c.deals_count])
+        });
+      }
+
+      // Add Top Expenses Table
+      if (topExpenseCategories.length > 0) {
+        exportData.tables.push({
+          title: t("reports.topExpenses"),
+          headers: [t("common.category"), t("common.amount")],
+          rows: topExpenseCategories.map(e => [e.category, `${Number(e.amount).toLocaleString()} SAR`])
+        });
+      }
+
+      exportToPdf(exportData, `lourex_report_${new Date().toISOString().split('T')[0]}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4 lg:grid-cols-2">
@@ -247,7 +295,7 @@ export default function ReportsPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("reports.window")}</p>
             <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
@@ -261,6 +309,14 @@ export default function ReportsPage() {
             </select>
             <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {exporting ? t("common.loading") : t("reports.exportPdf")}
+            </button>
           </div>
         </div>
       </BentoCard>
