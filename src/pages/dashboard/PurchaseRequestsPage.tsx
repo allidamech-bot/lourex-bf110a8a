@@ -69,6 +69,7 @@ export default function PurchaseRequestsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
   const [internalNotesDraft, setInternalNotesDraft] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const selectedRequestId = searchParams.get("request");
 
@@ -105,6 +106,7 @@ export default function PurchaseRequestsPage() {
   const refresh = useCallback(
       async (preserveSelection = true) => {
         setLoading(true);
+        setLoadError("");
 
         try {
           const data = await loadPurchaseRequests();
@@ -121,11 +123,13 @@ export default function PurchaseRequestsPage() {
 
           setSelectedRequest(data[0]?.id ?? null);
         } catch (error: unknown) {
+          const message = getErrorMessage(
+            error,
+            t("requests.toasts.loadError") || "Failed to load purchase requests",
+          );
+          setLoadError(message);
           toast.error(
-              getErrorMessage(
-                  error,
-                  t("requests.toasts.loadError") || "Failed to load purchase requests",
-              ),
+              message,
           );
         } finally {
           setLoading(false);
@@ -352,6 +356,9 @@ export default function PurchaseRequestsPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => void refresh()}>
+                  {t("common.refresh")}
+                </Button>
                 {requestFilters.map((filter) => (
                     <Button
                         key={filter.key}
@@ -365,6 +372,12 @@ export default function PurchaseRequestsPage() {
                 ))}
               </div>
             </div>
+
+            {loadError ? (
+                <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+                  {loadError}
+                </div>
+            ) : null}
 
             {filteredRows.length === 0 ? (
                 <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">

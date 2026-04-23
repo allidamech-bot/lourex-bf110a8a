@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
   getDashboardReportSnapshot,
   getMetricDetails,
@@ -104,12 +105,20 @@ export default function ReportsPage() {
   };
 
   const handleExport = () => {
-    if (!snapshot) return;
+    if (!snapshot) {
+      const message = "No report data is available to export yet.";
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
     const exported = downloadCsv(`lourex-report-${range}.csv`, buildReportCsv(snapshot));
     if (!exported) {
       logOperationalError("reports_export_unavailable", new Error("CSV export unavailable"));
       setLoadError("CSV export is unavailable in this environment.");
+      toast.error("CSV export is unavailable in this environment.");
+      return;
     }
+    toast.success("Report CSV exported.");
   };
 
   if (loading) {

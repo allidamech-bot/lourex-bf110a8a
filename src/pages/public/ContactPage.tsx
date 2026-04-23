@@ -193,7 +193,11 @@ export default function ContactPage() {
     <div className="min-h-screen bg-background">
       <SEO 
         title={t("nav.contact")}
-        description="Contact LOUREX for inquiries about international sourcing, logistics, and trade operations."
+        description={
+          dir === "rtl"
+            ? "تواصل مع Lourex للاستفسارات المتعلقة بالتوريد الدولي والخدمات اللوجستية والعمليات التجارية."
+            : "Contact Lourex for inquiries about international sourcing, logistics, and trade operations."
+        }
       />
       <SiteHeader />
 

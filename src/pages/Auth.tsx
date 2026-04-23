@@ -130,6 +130,10 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
         trackEvent("login_failure", {
           reason: error?.status || error?.message || "unknown",
         });
+      } else {
+        trackEvent("signup_failure", {
+          reason: error?.status || error?.message || "unknown",
+        });
       }
       
       let message = t("auth.authError");

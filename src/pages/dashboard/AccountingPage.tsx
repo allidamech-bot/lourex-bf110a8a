@@ -150,10 +150,20 @@ export default function AccountingPage() {
   };
 
   const handleExport = () => {
+    if (visibleEntries.length === 0) {
+      const message = "No accounting entries match the current view.";
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
     const exported = downloadCsv(`lourex-accounting-${focusDeal || "all"}.csv`, buildAccountingEntriesCsv(visibleEntries));
     if (!exported) {
-      setLoadError("CSV export is unavailable in this environment.");
+      const message = "CSV export is unavailable in this environment.";
+      setLoadError(message);
+      toast.error(message);
+      return;
     }
+    toast.success("Accounting CSV exported.");
   };
 
   if (loading) {
