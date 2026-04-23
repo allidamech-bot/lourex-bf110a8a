@@ -36,6 +36,7 @@ type DomainSingleResult<T> = Promise<{
 
 interface DomainSelectBuilder<T> extends PromiseLike<{ data: T[] | null; error: DomainError | null }> {
   eq(column: string, value: unknown): DomainSelectBuilder<T>;
+  in(column: string, values: unknown[]): DomainSelectBuilder<T>;
   limit(count: number): DomainSelectBuilder<T>;
   order(column: string, options?: { ascending?: boolean }): DomainSelectBuilder<T>;
   single(): DomainSingleResult<T>;
@@ -310,7 +311,6 @@ const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
   if (!available || values.length === 0) return [] as T[];
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
-  // @ts-ignore - LooseDomainClient typing might not perfectly match the .in call
   const { data, error } = await builder.in(column, values);
   if (error && isMissingSchemaError(error)) return [] as T[];
   if (error) throw error;
@@ -347,6 +347,47 @@ const requestNumberFromLegacyMessage = (message?: string | null, id?: string) =>
 
 const parseNoteLine = (notes: string | null | undefined, label: string) =>
   notes?.split("\n").find((line) => line.startsWith(`${label}:`))?.split(":")[1]?.trim() || "";
+
+const parsePurchaseRequestMessage = (message?: string | null) => {
+  const result = {
+    productName: "",
+    productDescription: "",
+    quantity: "",
+    sizeDimensions: "",
+    color: "",
+    material: "",
+    technicalSpecs: "",
+    referenceLink: "",
+    preferredShippingMethod: "",
+    deliveryNotes: "",
+    imageUrls: [] as string[],
+  };
+
+  if (!message) return result;
+
+  const lines = message.split("\n");
+  for (const line of lines) {
+    const [label, ...rest] = line.split(":");
+    const value = rest.join(":").trim();
+    if (!label || !value) continue;
+
+    const cleanLabel = label.trim().toLowerCase();
+
+    if (cleanLabel.includes("product name")) result.productName = value;
+    else if (cleanLabel.includes("product description")) result.productDescription = value;
+    else if (cleanLabel.includes("quantity")) result.quantity = value;
+    else if (cleanLabel.includes("size") || cleanLabel.includes("dimension")) result.sizeDimensions = value;
+    else if (cleanLabel.includes("color")) result.color = value;
+    else if (cleanLabel.includes("material")) result.material = value;
+    else if (cleanLabel.includes("technical")) result.technicalSpecs = value;
+    else if (cleanLabel.includes("reference") || cleanLabel.includes("link")) result.referenceLink = value;
+    else if (cleanLabel.includes("shipping")) result.preferredShippingMethod = value;
+    else if (cleanLabel.includes("delivery") || cleanLabel.includes("note")) result.deliveryNotes = value;
+    else if (cleanLabel.includes("image url")) result.imageUrls.push(value);
+  }
+
+  return result;
+};
 
 const buildAttachmentLabel = (url: string, fallback: string) => {
   try {
@@ -1302,7 +1343,7 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
           requestIds,
           "id, request_number, converted_deal_id",
         )
-      : safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_number"),
+        : safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_id"),
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
       : safeStructuredSelect<CustomerRow>("lourex_customers"),

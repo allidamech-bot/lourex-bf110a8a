@@ -36,7 +36,6 @@ import {
   normalizeOptionalText,
   normalizeText,
   success,
-  normalizeImageFiles,
 } from "@/domain/shared/utils";
 
 const MAX_PURCHASE_REQUEST_IMAGES = 5;
