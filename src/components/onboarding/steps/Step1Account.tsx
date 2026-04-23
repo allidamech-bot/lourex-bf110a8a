@@ -82,8 +82,8 @@ export const Step1Account = ({ onComplete, initialEmail, alreadyAuthenticated, i
       }
 
       onComplete({ userId, email: email.trim(), contactName: contactName.trim(), phone: phone.trim() });
-    } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }

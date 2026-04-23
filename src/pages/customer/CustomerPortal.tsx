@@ -51,6 +51,7 @@ export default function CustomerPortal() {
     };
 
     void loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
   const menuItems = [

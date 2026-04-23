@@ -63,7 +63,7 @@ export const ContainerSimulator = () => {
         {(Object.keys(CONTAINERS) as Array<keyof typeof CONTAINERS>).map((key) => (
           <button
             key={key}
-            onClick={() => { setContainer(key as any); setResult(null); }}
+            onClick={() => { setContainer(key as "20ft" | "40ft" | "40hc"); setResult(null); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               container === key
                 ? "bg-gold text-primary-foreground"

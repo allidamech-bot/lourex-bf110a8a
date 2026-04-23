@@ -77,8 +77,8 @@ const AddProductModal = ({ open, onOpenChange, factoryId, userId, onSuccess }: A
       onOpenChange(false);
       resetForm();
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add product");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add product");
     } finally {
       setSaving(false);
     }

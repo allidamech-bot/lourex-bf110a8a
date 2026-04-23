@@ -47,7 +47,7 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
 
     try {
       const { data, error: dbError } = await supabase
-        .rpc("lookup_shipment_by_tracking" as any, { p_tracking_id: id })
+        .rpc("lookup_shipment_by_tracking" as never, { p_tracking_id: id })
         .abortSignal(controller.signal)
         .maybeSingle();
 
@@ -58,8 +58,8 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
       } else {
         setResult(data as Shipment);
       }
-    } catch (err: any) {
-      if (err?.name === "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
         setError("Request timed out. Please try again.");
       } else {
         setError(t("track.error"));

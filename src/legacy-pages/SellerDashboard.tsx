@@ -131,6 +131,7 @@ const SellerDashboard = () => {
     };
 
     void init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, t]);
 
   const resetForm = () => {

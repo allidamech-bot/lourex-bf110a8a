@@ -40,6 +40,7 @@ export default function CustomerRequestsPage() {
     };
 
     void loadRows();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [

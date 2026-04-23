@@ -9,8 +9,8 @@ import { Loader2, Send, Inbox } from "lucide-react";
 interface Props { factoryId: string; }
 
 const FactoryRfqInbox = ({ factoryId }: Props) => {
-  const [rfqs, setRfqs] = useState<any[]>([]);
-  const [myQuotes, setMyQuotes] = useState<Record<string, any>>({});
+  const [rfqs, setRfqs] = useState<Record<string, unknown>[]>([]);
+  const [myQuotes, setMyQuotes] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [activeRfq, setActiveRfq] = useState<string | null>(null);
   const [form, setForm] = useState({ price_per_unit: "", moq: "1", lead_time: "", currency: "USD", notes: "" });
@@ -21,13 +21,14 @@ const FactoryRfqInbox = ({ factoryId }: Props) => {
     // RLS will filter to invited + broadcast-eligible RFQs
     const { data: r } = await supabase.from("rfqs").select("*").in("status", ["open", "pending", "quoted"]).order("created_at", { ascending: false });
     setRfqs(r || []);
-    const { data: q } = await supabase.from("quotes" as any).select("*").eq("factory_id", factoryId);
-    const map: Record<string, any> = {};
-    ((q as any[]) || []).forEach((row) => { map[row.rfq_id] = row; });
+    const { data: q } = await supabase.from("quotes" as never).select("*").eq("factory_id", factoryId);
+    const map: Record<string, unknown> = {};
+    ((q as Record<string, unknown>[]) || []).forEach((row) => { map[row.rfq_id as string] = row; });
     setMyQuotes(map);
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [factoryId]);
 
   const openQuoteForm = (rfqId: string) => {
@@ -47,7 +48,7 @@ const FactoryRfqInbox = ({ factoryId }: Props) => {
     if (!activeRfq) return;
     if (!form.price_per_unit) { toast.error("Price per unit is required"); return; }
     setSubmitting(true);
-    const { error } = await supabase.rpc("submit_quote" as any, {
+    const { error } = await supabase.rpc("submit_quote" as never, {
       p_rfq_id: activeRfq,
       p_factory_id: factoryId,
       p_price_per_unit: parseFloat(form.price_per_unit),

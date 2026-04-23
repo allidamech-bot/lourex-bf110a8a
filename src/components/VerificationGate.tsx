@@ -80,8 +80,8 @@ const VerificationGate = ({ children }: VerificationGateProps) => {
       }
       toast.success(lang === "ar" ? "تم رفع المستندات بنجاح" : "Documents uploaded successfully");
       setSelectedFiles([]);
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
     }

@@ -328,7 +328,7 @@ export const createPurchaseRequestWithAttachments = async (
     }
 
     return success(updateResult.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Cleanup on failure
     const cleanupResult = await deleteRequest(requestId);
     if (cleanupResult.error) {

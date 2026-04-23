@@ -54,6 +54,7 @@ export default function AccountingPage() {
 
   useEffect(() => {
     void refresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const focusedDeal = deals.find((row) => row.dealNumber === focusDeal) || null;

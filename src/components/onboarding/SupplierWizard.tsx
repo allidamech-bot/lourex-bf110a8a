@@ -151,8 +151,8 @@ export const SupplierWizard = () => {
 
       toast.success("Application submitted! We'll review it within 24–48 hours.");
       navigate("/factory-dashboard");
-    } catch (err: any) {
-      toast.error(err.message ?? "Submission failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Submission failed");
     } finally {
       setSubmitting(false);
     }

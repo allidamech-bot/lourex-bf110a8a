@@ -50,6 +50,7 @@ export default function TrackingPage() {
 
   useEffect(() => {
     void refresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredRows = useMemo(() => filterShipments(rows, search), [rows, search]);
@@ -62,6 +63,7 @@ export default function TrackingPage() {
   useEffect(() => {
     setInternalNote("");
     setCustomerNote(activeShipment?.customerVisibleNote || "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeShipment?.id]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;

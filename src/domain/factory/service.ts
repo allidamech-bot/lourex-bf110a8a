@@ -14,9 +14,9 @@ import {
 type FactoryRow = Tables<"factories">;
 type OrderRow = Tables<"orders">;
 type ProductRow = Tables<"products">;
-type StaffRow = any;
-type ProfileRow = any;
-type UserRoleRow = any;
+type StaffRow = Record<string, unknown>;
+type ProfileRow = Record<string, unknown>;
+type UserRoleRow = Record<string, unknown>;
 
 const ADVANCEABLE_STATUSES = ["confirmed", "in_production", "quality_check", "shipped", "delivered"] as const;
 
@@ -367,7 +367,7 @@ export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember
       throw error;
     }
 
-    return success((data ?? []).map((row: any) => normalizeStaffMember(row)));
+    return success((data ?? []).map((row: Record<string, unknown>) => normalizeStaffMember(row)));
   } catch (error) {
     return {
       data: null,
@@ -391,9 +391,9 @@ export const addOrganizationStaff = async (
     const { error } = await supabase.from("profiles").upsert({
       email,
       full_name: fullName,
-      role: role as any,
+      role: role as never,
       status: "active",
-    } as any, { onConflict: "email" });
+    } as never, { onConflict: "email" });
 
     if (error) {
       throw error;

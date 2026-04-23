@@ -40,6 +40,7 @@ const Cart = () => {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchCart(); }, []);
 
   const updateQty = async (id: string, qty: number) => {

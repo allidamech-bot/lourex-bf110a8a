@@ -82,7 +82,7 @@ export async function getSupplierContext(): Promise<SupplierContext> {
     .maybeSingle();
 
   // Company profile + product count (only if factory exists)
-  let profile: any = null;
+  let profile: Record<string, unknown> | null = null;
   let productCount = 0;
   if (factory?.id) {
     const [{ data: p }, { count }] = await Promise.all([

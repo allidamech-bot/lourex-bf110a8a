@@ -47,6 +47,7 @@ export const FactoryApplications = ({ filter = "active" }: FactoryApplicationsPr
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchApps(); }, []);
 
   const handleAction = async (app: Application, action: "approved" | "rejected") => {
@@ -59,7 +60,7 @@ export const FactoryApplications = ({ filter = "active" }: FactoryApplicationsPr
       }
       // Idempotent server-side approval (creates factory + role only if missing).
       const { error: rpcErr } = await supabase.rpc(
-        "admin_approve_factory_application" as any,
+        "admin_approve_factory_application" as never,
         { p_application_id: app.id }
       );
       if (rpcErr) {

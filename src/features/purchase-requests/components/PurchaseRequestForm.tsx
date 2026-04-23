@@ -115,7 +115,7 @@ export const PurchaseRequestForm = () => {
     [t],
   );
 
-  const updateField = (field: keyof PurchaseRequestFormState, value: any) => {
+  const updateField = (field: keyof PurchaseRequestFormState, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 

@@ -145,7 +145,7 @@ describe("accounting utils", () => {
         auditCount: 0,
       },
       [{ id: "deal-1", customerId: "customer-1" }],
-      [{ id: "req-1", createdAt: "2026-04-21", customer: { id: "customer-1" } as any }],
+      [{ id: "req-1", createdAt: "2026-04-21", customer: { id: "customer-1" } as never }],
       [
         {
           id: "1",

@@ -29,7 +29,7 @@ interface Deal {
   created_at: string;
 }
 
-const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+const statusConfig: Record<string, { color: string; icon: React.ElementType; label: string }> = {
   draft: { color: "bg-muted text-muted-foreground", icon: FileText, label: "Draft" },
   rfq_sent: { color: "bg-blue-500/10 text-blue-400", icon: Send, label: "RFQ Sent" },
   quoted: { color: "bg-amber-500/10 text-amber-400", icon: DollarSign, label: "Quoted" },
@@ -60,6 +60,7 @@ const Deals = () => {
 
   useEffect(() => {
     loadDeals();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDeals = async () => {
@@ -189,8 +190,8 @@ const NewDealForm = ({
   onClose,
   onCreated,
 }: {
-  product?: any;
-  factory?: any;
+  product?: Record<string, unknown>;
+  factory?: Record<string, unknown>;
   onClose: () => void;
   onCreated: () => void;
 }) => {

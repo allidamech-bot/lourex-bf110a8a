@@ -98,7 +98,7 @@ export const Step4Documents = ({ onComplete, onBack, loading }: Props) => {
 const FileSlot = ({
   label, hint, accept, file, onChange, icon: Icon,
 }: {
-  label: string; hint: string; accept: string; file: File | null; onChange: (f: File | null) => void; icon: any;
+  label: string; hint: string; accept: string; file: File | null; onChange: (f: File | null) => void; icon: React.ElementType;
 }) => {
   const ref = useRef<HTMLInputElement>(null);
   return (

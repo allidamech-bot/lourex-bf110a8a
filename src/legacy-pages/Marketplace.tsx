@@ -124,7 +124,7 @@ const Marketplace = () => {
   );
 
   const filtered = useMemo(() => {
-    let result = products.filter((p) => {
+    const result = products.filter((p) => {
       if (category !== "All" && p.category !== category) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       if (p.price_per_unit && (p.price_per_unit < priceRange[0] || p.price_per_unit > priceRange[1])) return false;

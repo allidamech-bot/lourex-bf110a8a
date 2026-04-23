@@ -40,7 +40,7 @@ const LourexAIHelper = () => {
       if (error) throw error;
       const reply = data?.reply || data?.choices?.[0]?.message?.content || "I couldn't process that request.";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I'm temporarily unavailable. Please try again." }]);
     } finally {
       setLoading(false);

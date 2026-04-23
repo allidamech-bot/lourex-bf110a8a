@@ -98,8 +98,8 @@ const RequestOrderForm = ({ product, factoryName, onClose }: RequestOrderFormPro
 
       // Navigate to orders after a brief success display
       setTimeout(() => navigate("/orders"), 1500);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create order");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to create order");
     } finally {
       setSubmitting(false);
     }

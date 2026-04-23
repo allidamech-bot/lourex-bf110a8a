@@ -39,7 +39,7 @@ const MessageCenter = () => {
         setOrderNumber(order?.order_number || orderId);
 
         const { data } = await supabase
-          .from("messages" as any)
+          .from("messages" as never)
           .select("*")
           .eq("order_id", orderId)
           .order("created_at", { ascending: true });
@@ -75,7 +75,7 @@ const MessageCenter = () => {
     if (!newMessage.trim() || !user || !orderId) return;
     setSending(true);
 
-    const { error } = await supabase.from("messages" as any).insert({
+    const { error } = await supabase.from("messages" as never).insert({
       order_id: orderId,
       sender_id: user.id,
       content: newMessage.trim(),

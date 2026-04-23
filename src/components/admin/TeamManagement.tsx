@@ -40,7 +40,7 @@ export const TeamManagement = () => {
       .select("*")
       .in("role", INTERNAL_ROLES)
       .order("created_at", { ascending: false });
-    setStaff((data as any) || []);
+    setStaff((data as unknown as StaffMember[]) || []);
     setLoading(false);
   };
 
@@ -61,7 +61,7 @@ export const TeamManagement = () => {
       full_name: form.full_name,
       role: form.role,
       status: "active",
-    } as any, { onConflict: "email" });
+    } as never, { onConflict: "email" });
 
     if (error) {
       toast.error(error.message);

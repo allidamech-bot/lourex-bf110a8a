@@ -67,6 +67,7 @@ export default function EditRequestsPage() {
 
   useEffect(() => {
     void refresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const entry = entries.find((row) => row.id === focusEntry || row.entryNumber === focusEntry) || null;
@@ -82,6 +83,7 @@ export default function EditRequestsPage() {
     setProposedCounterparty(entry.counterparty || "");
     setProposedCategory(entry.category || "");
     setProposedNote(entry.note || "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry?.id]);
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {

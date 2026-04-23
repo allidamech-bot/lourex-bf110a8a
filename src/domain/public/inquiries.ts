@@ -83,7 +83,7 @@ const insertInquiry = async (
 
 export const submitContactInquiry = async (
   payload: ContactInquiryInput,
-): Promise<DomainResult<any>> => {
+): Promise<DomainResult<unknown>> => {
   const normalized = normalizeInquiryPayload(payload);
   if (normalized.error || !normalized.data) {
     return normalized;
@@ -117,7 +117,7 @@ export const submitContactInquiry = async (
 
 export const submitPurchaseRequestInquiry = async (
   payload: PurchaseRequestInquiryInput,
-): Promise<DomainResult<any>> => {
+): Promise<DomainResult<unknown>> => {
   const normalized = normalizeInquiryPayload(payload);
   if (normalized.error || !normalized.data) {
     return normalized;

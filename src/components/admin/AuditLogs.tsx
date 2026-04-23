@@ -9,8 +9,8 @@ interface AuditLog {
   table_name: string;
   record_id: string;
   action: string;
-  new_values: any;
-  old_values: any;
+  new_values: Record<string, unknown> | null;
+  old_values: Record<string, unknown> | null;
   changed_by: string;
   created_at: string;
 }

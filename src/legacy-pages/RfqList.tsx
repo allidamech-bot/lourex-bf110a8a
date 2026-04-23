@@ -15,7 +15,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 const RfqList = () => {
   const navigate = useNavigate();
-  const [rfqs, setRfqs] = useState<any[]>([]);
+  const [rfqs, setRfqs] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

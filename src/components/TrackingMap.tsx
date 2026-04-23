@@ -25,7 +25,7 @@ interface ShipmentMarker {
 export const TrackingMap = () => {
   const { t } = useI18n();
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const [shipments, setShipments] = useState<ShipmentMarker[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +71,7 @@ export const TrackingMap = () => {
       const mapboxgl = await import("mapbox-gl");
       await import("mapbox-gl/dist/mapbox-gl.css");
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mapboxgl as any).accessToken = mapboxToken;
 
       const map = new mapboxgl.Map({

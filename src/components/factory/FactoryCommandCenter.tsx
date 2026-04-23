@@ -80,6 +80,7 @@ export const FactoryCommandCenter = () => {
     };
 
     void init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleUploadMedia = async (orderId: string) => {

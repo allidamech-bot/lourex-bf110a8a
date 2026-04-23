@@ -136,6 +136,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
           reason: error?.status || error?.message || "unknown",
         });
       }
+    }
   };
 
   return (

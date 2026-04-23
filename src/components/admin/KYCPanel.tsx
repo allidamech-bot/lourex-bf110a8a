@@ -98,8 +98,8 @@ export const KYCPanel = () => {
 
       toast.success(verified ? "✅ User verified — profile, company, and factory updated" : "Verification revoked");
       await fetchData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update verification");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update verification");
     }
     setActing(null);
   };

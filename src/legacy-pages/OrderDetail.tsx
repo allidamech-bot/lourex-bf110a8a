@@ -9,8 +9,8 @@ import { Check, Loader2, MessageSquare } from "lucide-react";
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<any>(null);
-  const [events, setEvents] = useState<any[]>([]);
+  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
+  const [events, setEvents] = useState<Record<string, unknown>[]>([]);
   const [me, setMe] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -22,16 +22,17 @@ const OrderDetail = () => {
     setMe(user.id);
     const { data: o } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
     setOrder(o);
-    const { data: ev } = await supabase.from("order_events" as any).select("*").eq("order_id", id).order("created_at", { ascending: false });
-    setEvents((ev as any[]) || []);
+    const { data: ev } = await supabase.from("order_events" as never).select("*").eq("order_id", id).order("created_at", { ascending: false });
+    setEvents((ev as Record<string, unknown>[]) || []);
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [id]);
 
   const confirmDelivery = async () => {
     setConfirming(true);
-    const { error } = await supabase.rpc("confirm_delivery" as any, { p_order_id: id, p_message: "" });
+    const { error } = await supabase.rpc("confirm_delivery" as never, { p_order_id: id, p_message: "" });
     setConfirming(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Delivery confirmed");
