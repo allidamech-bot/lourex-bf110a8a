@@ -32,34 +32,26 @@ serve(async (req) => {
         userId = user.id;
         userEmail = user.email || null;
 
-        // Fetch role
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id);
-        if (roles && roles.length > 0) {
-          userRole = roles[0].role;
-        }
-
-        // Fetch profile
+        // Fetch role from profile (single source of truth)
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, company_name")
+          .select("full_name, company_name, role")
           .eq("id", user.id)
           .single();
         if (profile) {
           userName = profile.full_name || "";
           companyName = profile.company_name || "";
+          userRole = profile.role || "guest";
         }
       }
     }
 
     const roleContext = {
-      admin: `The current user is the OWNER/ADMIN of LOUREX. Provide business intelligence, risk alerts, revenue analysis, platform health metrics, and strategic recommendations. You can discuss any aspect of the business.`,
-      factory: `The current user is a SUPPLIER/FACTORY. Help with order forecasting, production scheduling, document automation (invoices, packing lists), certification guidance (SFDA, SABER, Halal, ISO), and shipment optimization. Focus on their production pipeline.`,
-      buyer: `The current user is a CLIENT/IMPORTER. Help with landed cost estimations, product discovery, order tracking, customs documentation, and trade compliance. Focus on helping them understand total import costs and timelines.`,
-      user: `The current user is an EMPLOYEE. Help with task prioritization, order processing workflows, document handling, and operational procedures. Focus on execution efficiency.`,
-      moderator: `The current user is a MANAGER. Help with operations oversight, team performance tracking, order management, and workflow optimization. Provide actionable operational insights.`,
+      owner: `The current user is the OWNER of LOUREX. Provide business intelligence, risk alerts, revenue analysis, platform health metrics, and strategic recommendations. You can discuss any aspect of the business.`,
+      turkish_partner: `The current user is a TURKISH PARTNER/SUPPLIER. Help with order forecasting, production scheduling, document automation (invoices, packing lists), certification guidance (SFDA, SABER, Halal, ISO), and shipment optimization. Focus on their production pipeline.`,
+      saudi_partner: `The current user is a SAUDI PARTNER/IMPORTER. Help with landed cost estimations, product discovery, order tracking, customs documentation, and trade compliance. Focus on helping them understand total import costs and timelines.`,
+      operations_employee: `The current user is an OPERATIONS EMPLOYEE. Help with task prioritization, order processing workflows, document handling, and operational procedures. Focus on execution efficiency.`,
+      customer: `The current user is a CUSTOMER. Help them with sourcing requests, order tracking, and general platform inquiries. Focus on a premium service experience.`,
       guest: `The user is not logged in. Greet them, explain LOUREX services, and encourage them to sign up or log in for full access.`,
     };
 
@@ -117,8 +109,9 @@ If you CANNOT fully resolve a user's query (e.g., requires human review, specifi
 ## ONBOARDING (First message only)
 If this is the first message, greet the user by name if known, acknowledge their role, and offer role-specific quick actions:
 - Owner: "View platform analytics" / "Check pending approvals"
-- Supplier: "Check order pipeline" / "Upload documents"
-- Client: "Calculate import costs" / "Track shipment"
+- Turkish Partner: "Check order pipeline" / "Upload documents"
+- Saudi Partner: "Calculate import costs" / "Track shipment"
+- Customer: "Submit new request" / "Track my orders"
 - Employee: "View assigned tasks" / "Process pending orders"
 
 ## RULES

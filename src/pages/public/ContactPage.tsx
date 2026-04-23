@@ -1,3 +1,4 @@
+import { SEO } from "@/components/seo/SEO";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { z } from "zod";
 import {
@@ -153,10 +154,14 @@ export default function ContactPage() {
     };
 
     try {
-      const { error } = await submitContactInquiry(payload);
+      const { data, error } = await submitContactInquiry(payload);
 
       if (error) {
         throw new Error(error.message);
+      }
+
+      if (data && data.success === false) {
+        throw new Error(data.message || t("contact.failureDescription"));
       }
 
       setValues(initialValues);
@@ -164,10 +169,11 @@ export default function ContactPage() {
       toast.success(t("contact.successTitle"), {
         description: t("contact.successDescription"),
       });
-    } catch (error) {
-      logDevError("Contact inquiry insert failed.", error);
+    } catch (error: any) {
+      logDevError("Contact inquiry submission failed.", error);
+      const message = error?.message || t("contact.failureDescription");
       toast.error(t("contact.failureTitle"), {
-        description: t("contact.failureDescription"),
+        description: message,
       });
     } finally {
       setIsSubmitting(false);
@@ -176,6 +182,10 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title={t("nav.contact")}
+        description="Contact LOUREX for inquiries about international sourcing, logistics, and trade operations."
+      />
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-12 md:px-8">

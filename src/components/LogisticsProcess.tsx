@@ -110,8 +110,8 @@ const LogisticsProcess = () => {
               className="group rounded-[2rem] border border-primary/10 bg-[linear-gradient(180deg,hsla(var(--card)/0.96),hsla(var(--card)/0.88))] p-6 shadow-[0_24px_55px_-36px_rgba(0,0,0,0.26)] dark:shadow-[0_24px_55px_-36px_rgba(0,0,0,0.68)]"
             >
               <div className="flex items-start gap-4">
-                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                  <step.icon className="h-6 w-6" />
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary rtl:rotate-0">
+                  <step.icon className="h-6 w-6 rtl:-scale-x-100" />
                   <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                     {index + 1}
                   </span>

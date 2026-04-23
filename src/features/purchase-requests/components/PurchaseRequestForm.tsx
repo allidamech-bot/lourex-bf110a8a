@@ -8,9 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  createRequest,
-  updateRequestWithImages,
-  deleteRequest,
+  createPurchaseRequestWithAttachments,
 } from "@/domain/operations/service";
 import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
@@ -96,32 +94,6 @@ const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
   name: file.name,
   sizeLabel: `${Math.round(file.size / 1024)} KB`,
 });
-
-import { supabase } from "@/integrations/supabase/client";
-import { createDomainError, success, failure } from "@/domain/shared/utils";
-import type { DomainResult } from "@/domain/operations/types";
-
-const uploadPurchaseRequestImagesWithId = async (
-  requestId: string,
-  uploads: PurchaseRequestImageUpload[],
-): Promise<DomainResult<string[]>> => {
-  const files = uploads.map((u) => u.file);
-  try {
-    const uploadedUrls: string[] = [];
-    for (const file of files) {
-      const filePath = `purchase-requests/${requestId}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file);
-      if (uploadError) {
-        return { data: null, error: createDomainError(uploadError, "Unable to upload images.") };
-      }
-      const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
-      uploadedUrls.push(data.publicUrl);
-    }
-    return success(uploadedUrls);
-  } catch (error) {
-    return { data: null, error: createDomainError(error, "Unable to upload images.") };
-  }
-};
 
 export const PurchaseRequestForm = () => {
   const { t } = useI18n();
@@ -247,8 +219,7 @@ export const PurchaseRequestForm = () => {
       const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
       const trackingCode = `TRX-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
       
-      // 1. Create the DB record first (without images)
-      const creationResult = await createRequest({
+      const creationResult = await createPurchaseRequestWithAttachments({
         requestNumber,
         trackingCode,
         fullName: profile?.fullName || form.fullName,
@@ -266,8 +237,7 @@ export const PurchaseRequestForm = () => {
         referenceLink: form.referenceLink,
         preferredShippingMethod: form.preferredShippingMethod,
         deliveryNotes: form.deliveryNotes,
-        imageUrls: [], // No images yet
-        // Expanded Phase 4 fields
+        imageUrls: [],
         weight: form.weight,
         manufacturingCountry: form.manufacturingCountry,
         brand: form.brand,
@@ -278,37 +248,17 @@ export const PurchaseRequestForm = () => {
         destination: form.destination,
         deliveryAddress: form.deliveryAddress,
         isFullSourcing: form.isFullSourcing,
-      });
+      }, uploads);
 
       if (creationResult.error || !creationResult.data) {
         throw new Error(creationResult.error?.message || t("requests.intake.errors.submitFailed"));
       }
 
-      const requestId = creationResult.data.id;
-
-      // 2. Upload images using the stable DB record ID for the path
-      try {
-        const uploadResult = await uploadPurchaseRequestImagesWithId(requestId, uploads);
-        if (uploadResult.error || !uploadResult.data) {
-          throw new Error(uploadResult.error?.message || t("requests.intake.errors.submitFailed"));
-        }
-
-        // 3. Update the record with image URLs and create attachments
-        const updateResult = await updateRequestWithImages(requestId, uploadResult.data);
-        if (updateResult.error) {
-          throw new Error(updateResult.error.message);
-        }
-
-        setSubmittedData({ requestNumber, trackingCode });
-        setForm(initialState);
-        clearUploads(uploads);
-        setUploads([]);
-        toast.success(t("requests.intake.errors.success"));
-      } catch (uploadError: any) {
-        // Cleanup on failure
-        await deleteRequest(requestId);
-        throw uploadError;
-      }
+      setSubmittedData({ requestNumber, trackingCode });
+      setForm(initialState);
+      clearUploads(uploads);
+      setUploads([]);
+      toast.success(t("requests.intake.errors.success"));
     } catch (error: unknown) {
       const message =
         error instanceof Error && error.message

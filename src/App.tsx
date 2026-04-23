@@ -5,18 +5,22 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
-import AICommandBar from "@/components/AICommandBar";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { CustomerLayout } from "@/components/layout/CustomerLayout";
 import { AuthSessionProvider } from "@/features/auth/AuthSessionProvider";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+
+const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout").then(m => ({ default: m.DashboardLayout })));
+const CustomerLayout = lazy(() => import("@/components/layout/CustomerLayout").then(m => ({ default: m.CustomerLayout })));
+const AICommandBar = lazy(() => import("@/components/AICommandBar"));
 import { ACCOUNTING_ROLES, INTERNAL_ROLES, OWNER_ONLY_ROLES } from "@/features/auth/rbac";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
 const RequestPage = lazy(() => import("@/pages/public/RequestPage"));
 const TrackPage = lazy(() => import("@/pages/public/TrackPage"));
 const AboutPage = lazy(() => import("@/pages/public/AboutPage"));
+const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage"));
+const TermsPage = lazy(() => import("@/pages/public/TermsPage"));
+const WhyLourexPage = lazy(() => import("@/pages/public/WhyLourexPage"));
 const ContactPage = lazy(() => import("@/pages/public/ContactPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const OverviewPage = lazy(() => import("@/pages/dashboard/OverviewPage"));
@@ -46,6 +50,13 @@ const PageLoader = () => (
     </div>
 );
 
+const PageWithAI = ({ component }: { component: React.ReactNode }) => (
+    <>
+        {component}
+        <AICommandBar />
+    </>
+);
+
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <I18nProvider>
@@ -58,11 +69,14 @@ const App = () => (
                             <Suspense fallback={<PageLoader />}>
                                 <Routes>
                                     <Route path="/" element={<HomePage />} />
-                                    <Route path="/request" element={<RequestPage />} />
-                                    <Route path="/track" element={<TrackPage />} />
+                                    <Route path="/request" element={<PageWithAI component={<RequestPage />} />} />
+                                    <Route path="/track" element={<PageWithAI component={<TrackPage />} />} />
                                     <Route path="/auth" element={<Auth />} />
-                                    <Route path="/about" element={<AboutPage />} />
-                                    <Route path="/contact" element={<ContactPage />} />
+                                    <Route path="/about" element={<PageWithAI component={<AboutPage />} />} />
+                                    <Route path="/privacy" element={<PageWithAI component={<PrivacyPage />} />} />
+                                    <Route path="/terms" element={<PageWithAI component={<TermsPage />} />} />
+                                    <Route path="/why-lourex" element={<PageWithAI component={<WhyLourexPage />} />} />
+                                    <Route path="/contact" element={<PageWithAI component={<ContactPage />} />} />
 
                                     <Route
                                         path="/dashboard"
@@ -80,7 +94,7 @@ const App = () => (
                                             index 
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <OverviewPage />
+                                                    <PageWithAI component={<OverviewPage />} />
                                                 </ProtectedRoute>
                                             } 
                                         />
@@ -88,7 +102,7 @@ const App = () => (
                                             path="requests"
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PurchaseRequestsPage />
+                                                    <PageWithAI component={<PurchaseRequestsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -96,7 +110,7 @@ const App = () => (
                                             path="customers"
                                             element={
                                                 <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
-                                                    <CustomersPage />
+                                                    <PageWithAI component={<CustomersPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -104,7 +118,7 @@ const App = () => (
                                             path="deals"
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <DealsPage />
+                                                    <PageWithAI component={<DealsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -112,7 +126,7 @@ const App = () => (
                                             path="tracking"
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <TrackingPage />
+                                                    <PageWithAI component={<TrackingPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -120,7 +134,7 @@ const App = () => (
                                             path="accounting"
                                             element={
                                                 <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
-                                                    <AccountingPage />
+                                                    <PageWithAI component={<AccountingPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -128,7 +142,7 @@ const App = () => (
                                             path="edit-requests"
                                             element={
                                                 <ProtectedRoute allowedRoles={ACCOUNTING_ROLES}>
-                                                    <EditRequestsPage />
+                                                    <PageWithAI component={<EditRequestsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -136,7 +150,7 @@ const App = () => (
                                             path="audit"
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <AuditPage />
+                                                    <PageWithAI component={<AuditPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -144,7 +158,7 @@ const App = () => (
                                             path="reports"
                                             element={
                                                 <ProtectedRoute allowedRoles={["owner", "operations_employee"]}>
-                                                    <ReportsPage />
+                                                    <PageWithAI component={<ReportsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -154,7 +168,7 @@ const App = () => (
                                         path="/profile"
                                         element={
                                             <ProtectedRoute>
-                                                <Profile />
+                                                <PageWithAI component={<Profile />} />
                                             </ProtectedRoute>
                                         }
                                     />
@@ -166,12 +180,12 @@ const App = () => (
                                             </ProtectedRoute>
                                         }
                                     >
-                                        <Route index element={<CustomerPortal />} />
+                                        <Route index element={<PageWithAI component={<CustomerPortal />} />} />
                                         <Route
                                             path="requests"
                                             element={
                                                 <ProtectedRoute allowedRoles={["customer"]}>
-                                                    <CustomerRequestsPage />
+                                                    <PageWithAI component={<CustomerRequestsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -179,7 +193,7 @@ const App = () => (
                                             path="tracking"
                                             element={
                                                 <ProtectedRoute allowedRoles={["customer"]}>
-                                                    <CustomerTrackingPage />
+                                                    <PageWithAI component={<CustomerTrackingPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
@@ -188,14 +202,13 @@ const App = () => (
                                         path="/admin"
                                         element={
                                             <ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}>
-                                                <Admin />
+                                                <PageWithAI component={<Admin />} />
                                             </ProtectedRoute>
                                         }
                                     />
                                     <Route path="*" element={<NotFound />} />
                                 </Routes>
                             </Suspense>
-                            <AICommandBar />
                         </AuthSessionProvider>
                     </BrowserRouter>
                 </ErrorBoundary>

@@ -30,15 +30,11 @@ const VerificationGate = ({ children }: VerificationGateProps) => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("verification_status")
+        .select("role, verification_status")
         .eq("id", user.id)
         .maybeSingle();
 
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
-      const isAdmin = roles?.some((r) => r.role === "admin");
+      const isAdmin = profile?.role === "owner" || profile?.role === "operations_employee";
       if (isAdmin) { setStatus("verified"); return; }
 
       const vs = profile?.verification_status ?? "pending";

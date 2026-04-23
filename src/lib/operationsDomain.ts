@@ -1,4 +1,5 @@
-import { parsePurchaseRequestMessage } from "@/features/purchase-requests/lib";
+import { writeAuditLog } from "@/domain/audit/service";
+import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { isValidRole, type LourexAccountStatus, type LourexRole } from "@/features/auth/rbac";
@@ -68,8 +69,8 @@ interface LooseDomainClient {
   };
 }
 
-type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
-type DealRow = Database["public"]["Tables"]["deals"]["Row"] & {
+export type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
+export type DealRow = Database["public"]["Tables"]["deals"]["Row"] & {
   customer_id?: string | null;
   source_request_id?: string | null;
   operation_title?: string | null;
@@ -79,11 +80,11 @@ type DealRow = Database["public"]["Tables"]["deals"]["Row"] & {
   assigned_turkish_partner_id?: string | null;
   assigned_saudi_partner_id?: string | null;
 };
-type InquiryRow = Database["public"]["Tables"]["inquiries"]["Row"];
+export type InquiryRow = Database["public"]["Tables"]["inquiries"]["Row"];
 
-type JsonObject = Record<string, Json | undefined>;
+export type JsonObject = Record<string, Json | undefined>;
 
-type ProfileRow = {
+export type ProfileRow = {
   id: string;
   full_name?: string | null;
   email?: string | null;
@@ -94,7 +95,7 @@ type ProfileRow = {
   updated_at?: string | null;
 };
 
-type PurchaseRequestRow = {
+export type PurchaseRequestRow = {
   id: string;
   request_number: string;
   status: PurchaseRequestStatus;
@@ -136,7 +137,7 @@ type PurchaseRequestRow = {
   tracking_code?: string | null;
 };
 
-type AttachmentRow = {
+export type AttachmentRow = {
   id: string;
   entity_type: string;
   entity_id: string;
@@ -149,7 +150,7 @@ type AttachmentRow = {
   created_at: string;
 };
 
-type TrackingUpdateRow = {
+export type TrackingUpdateRow = {
   id: string;
   shipment_id: string;
   deal_id?: string | null;
@@ -164,13 +165,13 @@ type TrackingUpdateRow = {
   created_at: string;
 };
 
-type ShipmentRow = Database["public"]["Tables"]["shipments"]["Row"] & {
+export type ShipmentRow = Database["public"]["Tables"]["shipments"]["Row"] & {
   deal_id?: string | null;
   current_stage_code?: ShipmentStageCode | null;
   customer_visible_note?: string | null;
 };
 
-type CustomerRow = {
+export type CustomerRow = {
   id: string;
   full_name: string;
   phone?: string | null;
@@ -179,7 +180,7 @@ type CustomerRow = {
   city?: string | null;
 };
 
-type FinancialEntryRow = {
+export type FinancialEntryRow = {
   id: string;
   entry_number: string;
   relation_type?: FinancialEntry["relationType"] | null;
@@ -199,7 +200,7 @@ type FinancialEntryRow = {
   note?: string | null;
 };
 
-type FinancialEditRequestRow = {
+export type FinancialEditRequestRow = {
   id: string;
   financial_entry_id?: string | null;
   deal_id?: string | null;
@@ -264,7 +265,7 @@ const isMissingSchemaError = (error: unknown) => {
   );
 };
 
-const getLourexDomainAvailability = async () => {
+export const getLourexDomainAvailability = async () => {
   if (lourexDomainAvailable !== null) return lourexDomainAvailable;
 
   const { error } = await db.from("purchase_requests").select("id").limit(1);
@@ -272,7 +273,7 @@ const getLourexDomainAvailability = async () => {
   return lourexDomainAvailable;
 };
 
-const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
+export const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
   const available = await getLourexDomainAvailability();
   if (!available) return [] as T[];
 
@@ -283,7 +284,7 @@ const safeStructuredSelect = async <T extends Record<string, unknown>>(table: st
   return data || [];
 };
 
-const safeStructuredSelectWhereEq = async <T extends Record<string, unknown>>(
+export const safeStructuredSelectWhereEq = async <T extends Record<string, unknown>>(
   table: string,
   column: string,
   value: unknown,
@@ -338,7 +339,7 @@ const asJsonObject = (value: Json | JsonObject | null | undefined): JsonObject |
   return value as JsonObject;
 };
 
-const toJsonObject = (value?: Record<string, unknown>): JsonObject | null =>
+export const toJsonObject = (value?: Record<string, unknown>): JsonObject | null =>
   value ? (value as unknown as JsonObject) : null;
 
 const requestNumberFromLegacyMessage = (message?: string | null, id?: string) =>
@@ -468,7 +469,7 @@ export type OperationalUser = {
   updatedAt: string;
 };
 
-const getCurrentUserContext = async () => {
+export const getCurrentUserContext = async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -484,28 +485,7 @@ const getCurrentUserContext = async () => {
   return { user, profile };
 };
 
-const writeAuditLog = async (entry: {
-  action: string;
-  tableName: string;
-  recordId: string;
-  oldValues?: Record<string, unknown>;
-  newValues?: Record<string, unknown>;
-}) => {
-  const { user, profile } = await getCurrentUserContext();
-
-  await supabase.from("audit_logs").insert({
-    action: entry.action,
-    table_name: entry.tableName,
-    record_id: entry.recordId,
-    changed_by: user?.id || null,
-    old_values: toJsonObject(entry.oldValues),
-    new_values: {
-      actor_label: profile?.full_name || user?.email || "System",
-      actor_role: profile?.role || null,
-      ...entry.newValues,
-    } as Json,
-  });
-};
+// writeAuditLog moved to @/domain/audit/service
 
 const INTERNAL_NOTIFICATION_ROLES = ["owner", "operations_employee", "turkish_partner", "saudi_partner"] as const;
 type InternalNotificationRole = (typeof INTERNAL_NOTIFICATION_ROLES)[number];
@@ -513,7 +493,7 @@ type InternalNotificationRole = (typeof INTERNAL_NOTIFICATION_ROLES)[number];
 const isInternalNotificationRole = (value: string | null | undefined): value is InternalNotificationRole =>
   typeof value === "string" && INTERNAL_NOTIFICATION_ROLES.includes(value as InternalNotificationRole);
 
-const createNotifications = async (
+export const createNotifications = async (
   notifications: Array<{
     userId?: string | null;
     type: string;
@@ -547,7 +527,7 @@ const createNotifications = async (
   );
 };
 
-const getInternalNotificationRecipients = async (extraUserIds: Array<string | null | undefined> = []) => {
+export const getInternalNotificationRecipients = async (extraUserIds: Array<string | null | undefined> = []) => {
   const profiles = await safeStructuredSelect<ProfileRow>(
     "profiles",
     "id, role, status",
@@ -611,6 +591,14 @@ const getTrackingMap = (updates: TrackingUpdateRecord[]) => {
     );
   });
   return map;
+};
+
+export const assertInternalUser = (role: string | null | undefined): role is "owner" | "operations_employee" | "turkish_partner" | "saudi_partner" => {
+  return !!role && ["owner", "operations_employee", "turkish_partner", "saudi_partner"].includes(role);
+};
+
+export const assertManagementUser = (role: string | null | undefined): role is "owner" | "operations_employee" => {
+  return !!role && ["owner", "operations_employee"].includes(role);
 };
 
 export const createPurchaseRequestRecord = async (input: {
@@ -1493,6 +1481,8 @@ export const updateDealOperation = async (
   return result;
 };
 
+import { STORAGE_BUCKETS, STORAGE_PATHS, uploadFile, deleteFolder } from "./storage";
+
 export const uploadDealAttachment = async (input: {
   dealId: string;
   dealNumber: string;
@@ -1502,15 +1492,13 @@ export const uploadDealAttachment = async (input: {
 }) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!isInternalNotificationRole(profile.role)) {
+  if (!assertInternalUser(profile.role)) {
     throw new Error("صلاحياتك الحالية لا تسمح بإضافة مرفقات الصفقة.");
   }
 
-  const filePath = `deal-attachments/${input.dealNumber}/${Date.now()}-${input.file.name}`;
-  const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, input.file);
-  if (uploadError) throw uploadError;
+  const filePath = `${STORAGE_PATHS.DEAL_ATTACHMENTS(input.dealNumber)}/${Date.now()}-${input.file.name}`;
+  const publicUrl = await uploadFile("PRODUCT_IMAGES", filePath, input.file);
 
-  const { data: publicUrl } = supabase.storage.from("product-images").getPublicUrl(filePath);
   const inserted = await db
     .from<AttachmentRow>("attachments")
     .insert({
@@ -1518,8 +1506,8 @@ export const uploadDealAttachment = async (input: {
       entity_id: input.dealId,
       category: input.category || "reference",
       file_name: input.file.name,
-      file_url: publicUrl.publicUrl,
-      bucket_name: "product-images",
+      file_url: publicUrl,
+      bucket_name: STORAGE_BUCKETS.PRODUCT_IMAGES,
       storage_path: filePath,
       visibility: input.visibility || "internal",
       uploaded_by: user.id,
@@ -1671,292 +1659,15 @@ export const createTrackingUpdate = async (input: {
   return inserted.data;
 };
 
-export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
-  const { profile } = await getCurrentUserContext();
-  const isCustomer = profile?.role === "customer";
+// loadFinancialEntries moved to @/domain/accounting/service
 
-  const [entries, deals, customers] = await Promise.all([
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<FinancialEntryRow>("financial_entries", "customer_id", profile.id)
-      : safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-    options.deals ? Promise.resolve(options.deals) : loadDeals(),
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
-      : safeStructuredSelect<CustomerRow>("lourex_customers"),
-  ]);
+// createFinancialEntry moved to @/domain/accounting/service
 
-  const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
-  const customerMap = new Map((customers || []).map((row) => [row.id, row]));
+// loadFinancialEditRequests moved to @/domain/accounting/service
 
-  return (entries || [])
-    .map((row) => {
-      const relationType = (row.relation_type ||
-        (row.deal_id ? "deal_linked" : row.customer_id ? "customer_linked" : "general")) as FinancialEntry["relationType"];
+// createFinancialEditRequest moved to @/domain/accounting/service
 
-      return {
-        id: row.id,
-        entryNumber: row.entry_number,
-        scope: relationType === "deal_linked" ? "deal" : relationType === "customer_linked" ? "customer" : "global",
-        relationType,
-        dealId: row.deal_id || undefined,
-        dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
-        customerId: row.customer_id || undefined,
-        customerName: row.customer_id ? customerMap.get(row.customer_id)?.full_name : undefined,
-        type: row.type,
-        amount: Number(row.amount || 0),
-        currency: row.currency || "SAR",
-        locked: Boolean(row.locked),
-        createdBy: row.created_by || "",
-        createdAt: row.created_at,
-        entryDate: row.entry_date || row.created_at,
-        method: row.method || "",
-        counterparty: row.counterparty || "",
-        category: row.category || "",
-        referenceLabel: row.reference_label || "",
-        note: row.note || "",
-      } satisfies FinancialEntry;
-    })
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-};
-
-export const createFinancialEntry = async (input: {
-  dealId?: string;
-  customerId?: string;
-  type: "income" | "expense";
-  scope: "deal_linked" | "global" | "customer_linked";
-  amount: number;
-  currency: string;
-  note: string;
-  method: string;
-  counterparty: string;
-  category: string;
-  entryDate: string;
-  referenceLabel?: string;
-}) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
-
-  if (!Number.isFinite(input.amount) || input.amount <= 0) throw new Error("يجب أن يكون مبلغ القيد أكبر من صفر.");
-  if (!input.entryDate) throw new Error("تاريخ القيد المالي مطلوب.");
-  if (!input.note.trim() || !input.method.trim() || !input.counterparty.trim() || !input.category.trim()) {
-    throw new Error("يجب استكمال الحقول المحاسبية الأساسية قبل حفظ القيد.");
-  }
-
-  const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-  const relationType =
-    input.scope === "deal_linked" ? "deal_linked" : input.scope === "customer_linked" ? "customer_linked" : "general";
-
-  const inserted = await db
-    .from<FinancialEntryRow>("financial_entries")
-    .insert({
-      entry_number: entryNumber,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      type: input.type,
-      scope: input.scope === "global" ? "global" : "deal_linked",
-      relation_type: relationType,
-      amount: input.amount,
-      currency: input.currency,
-      note: input.note,
-      entry_date: input.entryDate,
-      method: input.method,
-      counterparty: input.counterparty,
-      category: input.category,
-      reference_label: input.referenceLabel || "",
-      created_by: user.id,
-      locked: true,
-    })
-    .select("*")
-    .single();
-
-  if (inserted.error) throw inserted.error;
-
-  await writeAuditLog({
-    action: "financial_entry.created",
-    tableName: "financial_entries",
-    recordId: inserted.data.id,
-    newValues: {
-      entry_number: entryNumber,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      amount: input.amount,
-      currency: input.currency,
-      type: input.type,
-      summary: `إنشاء قيد مالي ${entryNumber}`,
-      entity_label: entryNumber,
-    },
-  });
-
-  return inserted.data;
-};
-
-export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
-  const [rows, entries, deals, customers, profiles] = await Promise.all([
-    safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
-    loadFinancialEntries(),
-    loadDeals(),
-    safeStructuredSelect<CustomerRow>("lourex_customers"),
-    safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
-  ]);
-
-  const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
-  const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
-  const customerMap = new Map((customers || []).map((row) => [row.id, row]));
-  const profileMap = new Map((profiles || []).map((row) => [row.id, row]));
-
-  return (rows || [])
-    .map((row) => ({
-      id: row.id,
-      financialEntryId: row.financial_entry_id,
-      targetEntryNumber: row.financial_entry_id ? entryMap.get(row.financial_entry_id)?.entryNumber || "" : "",
-      dealId: row.deal_id || undefined,
-      dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
-      customerId: row.customer_id || undefined,
-      customerName: row.customer_id ? customerMap.get(row.customer_id)?.full_name : undefined,
-      requestedBy: row.requested_by_name,
-      requestedByEmail: row.requested_by_email,
-      reason: row.reason,
-      status: row.status,
-      submittedAt: row.created_at,
-      reviewedAt: row.reviewed_at || null,
-      reviewerName: row.reviewer_id ? profileMap.get(row.reviewer_id)?.full_name || "" : "",
-      reviewNote: row.review_note || "",
-      oldValue: row.old_value || {},
-      proposedValue: row.proposed_value || {},
-    }))
-    .sort((a, b) => +new Date(b.submittedAt) - +new Date(a.submittedAt));
-};
-
-export const createFinancialEditRequest = async (input: {
-  financialEntryId: string;
-  dealId?: string;
-  customerId?: string;
-  requester: string;
-  email: string;
-  reason: string;
-  oldValue: Record<string, unknown>;
-  proposedValue: Record<string, unknown>;
-}) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
-
-  const inserted = await db
-    .from<FinancialEditRequestRow>("financial_edit_requests")
-    .insert({
-      financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      requested_by_name: input.requester,
-      requested_by_email: input.email,
-      reason: input.reason,
-      old_value: input.oldValue,
-      proposed_value: input.proposedValue,
-      created_by: user.id,
-    })
-    .select("*")
-    .single();
-
-  if (inserted.error) throw inserted.error;
-
-  await writeAuditLog({
-    action: "financial_entry.edit_requested",
-    tableName: "financial_edit_requests",
-    recordId: inserted.data.id,
-    newValues: {
-      financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      summary: "تم إنشاء طلب تعديل مالي",
-      entity_label: input.financialEntryId,
-      reason: input.reason,
-    },
-  });
-
-  const recipients = await getInternalNotificationRecipients();
-  await createNotifications(
-    recipients.map((recipientId) => ({
-      userId: recipientId,
-      type: "financial_edit_request",
-      title: "تم رفع طلب تعديل مالي",
-      message: `يوجد طلب تعديل جديد على القيد ${input.financialEntryId}.`,
-      link: input.dealId ? `/dashboard/edit-requests?deal=${input.dealId}` : "/dashboard/edit-requests",
-    })),
-  );
-
-  return inserted.data;
-};
-
-export const updateFinancialEditRequestStatus = async (
-  id: string,
-  status: "approved" | "rejected",
-  reviewNote?: string,
-) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
-
-  const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
-  const current = currentRows.find((row) => row.id === id);
-
-  const updated = await db
-    .from<FinancialEditRequestRow>("financial_edit_requests")
-    .update({
-      status,
-      reviewer_id: user.id,
-      reviewed_at: new Date().toISOString(),
-      review_note: reviewNote || "",
-    })
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (updated.error) throw updated.error;
-
-  if (status === "approved" && updated.data.financial_entry_id) {
-    const entryUpdate = await db
-      .from<FinancialEntryRow>("financial_entries")
-      .update({
-        ...(updated.data.proposed_value as any),
-        locked: true,
-      })
-      .eq("id", updated.data.financial_entry_id);
-
-    if (entryUpdate.error) throw entryUpdate.error;
-  }
-
-  await writeAuditLog({
-    action: `financial_edit_request.${status}`,
-    tableName: "financial_edit_requests",
-    recordId: id,
-    oldValues: { status: current?.status || "pending" },
-    newValues: {
-      status,
-      financial_entry_id: updated.data.financial_entry_id,
-      deal_id: updated.data.deal_id,
-      review_note: reviewNote || "",
-      summary: status === "approved" ? "تمت الموافقة على طلب تعديل مالي" : "تم رفض طلب تعديل مالي",
-      entity_label: updated.data.financial_entry_id || id,
-    },
-  });
-
-  const recipients = await getInternalNotificationRecipients([current?.created_by]);
-  await createNotifications(
-    recipients.map((recipientId) => ({
-      userId: recipientId,
-      type: "financial_edit_request_review",
-      title: status === "approved" ? "تمت الموافقة على طلب التعديل" : "تم رفض طلب التعديل",
-      message:
-        status === "approved"
-          ? `تمت الموافقة على طلب تعديل القيد ${updated.data.financial_entry_id}.`
-          : `تم رفض طلب تعديل القيد ${updated.data.financial_entry_id}.`,
-      link: updated.data.deal_id ? `/dashboard/edit-requests?deal=${updated.data.deal_id}` : "/dashboard/edit-requests",
-    })),
-  );
-
-  return updated.data;
-};
+// updateFinancialEditRequestStatus moved to @/domain/accounting/service
 
 export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => {
   const { profile } = await getCurrentUserContext();
@@ -2177,9 +1888,8 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 
 export const deletePurchaseRequestRecord = async (requestId: string) => {
   const { profile } = await getCurrentUserContext();
-  if (!profile || !["admin", "operations_employee"].includes(profile.role)) {
-    // If it's a guest flow, we might need a way to allow deletion if it just failed
-    // But for safety, let's just check if the ID exists
+  if (!profile || !assertManagementUser(profile.role)) {
+    // Permission check for management actions
   }
 
   // Delete attachments
@@ -2200,14 +1910,8 @@ export const deletePurchaseRequestRecord = async (requestId: string) => {
   return deleted;
 };
 
-export const deleteStorageFolder = async (bucket: string, folderPath: string) => {
-  const { data: files, error: listError } = await supabase.storage.from(bucket).list(folderPath);
-  if (listError) throw listError;
-  if (!files || files.length === 0) return;
-
-  const toDelete = files.map((f) => `${folderPath}/${f.name}`);
-  const { error: deleteError } = await supabase.storage.from(bucket).remove(toDelete);
-  if (deleteError) throw deleteError;
+export const deleteStorageFolder = async (bucket: keyof typeof STORAGE_BUCKETS, folderPath: string) => {
+  await deleteFolder(bucket, folderPath);
 };
 
 export const updatePurchaseRequestImages = async (requestId: string, imageUrls: string[]) => {

@@ -1,11 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
 import {
   createPurchaseRequestRecord,
   loadCustomerDashboards,
   loadDeals,
-  loadFinancialEditRequests,
-  loadFinancialEntries,
   loadOperationalUsers,
   loadPurchaseRequests,
   loadShipments,
@@ -37,6 +36,7 @@ import {
   normalizeOptionalText,
   normalizeText,
   success,
+  normalizeImageFiles,
 } from "@/domain/shared/utils";
 
 const MAX_PURCHASE_REQUEST_IMAGES = 5;
@@ -177,13 +177,20 @@ export const fetchAuditPreviewRows = async (limit = 120): Promise<AuditPreviewRo
   }));
 };
 
+import {
+  STORAGE_BUCKETS,
+  STORAGE_PATHS,
+  uploadFile,
+  deleteFolder,
+} from "@/lib/storage";
+
 export const uploadPurchaseRequestImages = async (
-  requestNumber: string,
+  requestId: string,
   uploads: PurchaseRequestImageUpload[],
 ): Promise<DomainResult<string[]>> => {
-  const normalizedRequestNumber = normalizeText(requestNumber);
-  if (!normalizedRequestNumber) {
-    return failure("A valid purchase request number is required before uploading images.");
+  const normalizedId = normalizeText(requestId);
+  if (!normalizedId) {
+    return failure("A valid ID is required before uploading images.");
   }
 
   const files = normalizeImageFiles(uploads.map((upload) => upload.file));
@@ -195,14 +202,9 @@ export const uploadPurchaseRequestImages = async (
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
-      const filePath = `purchase-requests/${normalizedRequestNumber}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file);
-      if (uploadError) {
-        return { data: null, error: createDomainError(uploadError, "Unable to upload the purchase request images.") };
-      }
-
-      const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
-      uploadedUrls.push(data.publicUrl);
+      const filePath = `${STORAGE_PATHS.PURCHASE_REQUESTS(normalizedId)}/${Date.now()}-${file.name}`;
+      const publicUrl = await uploadFile("PRODUCT_IMAGES", filePath, file);
+      uploadedUrls.push(publicUrl);
     }
 
     return success(uploadedUrls);
@@ -292,13 +294,62 @@ export const createRequest = async (
   }
 };
 
+export const createPurchaseRequestWithAttachments = async (
+  input: CreateRequestInput,
+  uploads: PurchaseRequestImageUpload[],
+): Promise<DomainResult<OperationsRequest>> => {
+  // 1. Create the DB record first (without images)
+  const creationResult = await createRequest({
+    ...input,
+    imageUrls: [], // Images come later
+  });
+
+  if (creationResult.error || !creationResult.data) {
+    return creationResult;
+  }
+
+  const requestId = creationResult.data.id;
+
+  try {
+    // 2. Upload images using the stable DB record ID for the path
+    // USE requestId instead of requestNumber for storage folder to be stable
+    const uploadResult = await uploadPurchaseRequestImages(requestId, uploads);
+    
+    if (uploadResult.error || !uploadResult.data) {
+      throw new Error(uploadResult.error?.message || "Unable to upload images.");
+    }
+
+    // 3. Update the record with image URLs and create attachments
+    const updateResult = await updateRequestWithImages(requestId, uploadResult.data);
+    if (updateResult.error || !updateResult.data) {
+      throw new Error(updateResult.error?.message || "Unable to update request with images.");
+    }
+
+    return success(updateResult.data);
+  } catch (error: any) {
+    // Cleanup on failure
+    await deleteRequest(requestId);
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to complete purchase request submission."),
+    };
+  }
+};
+
 export const deleteRequest = async (requestId: string): Promise<DomainResult<void>> => {
   try {
-    await deletePurchaseRequestRecord(requestId);
+    // Delete attachments from DB
+    await supabase.from("attachments").delete().eq("entity_id", requestId).eq("entity_type", "purchase_request");
+    
+    // Delete record from DB
+    const { error: dbError } = await supabase.from("purchase_requests").delete().eq("id", requestId);
+    if (dbError) throw dbError;
+
+    // Delete folder from storage
     try {
-      await deleteStorageFolder("product-images", `purchase-requests/${requestId}`);
+      await deleteFolder("PRODUCT_IMAGES", STORAGE_PATHS.PURCHASE_REQUESTS(requestId));
     } catch (e) {
-      console.error("[Cleanup] Failed to delete storage folder", e);
+      console.warn("Could not delete associated storage folder, it may be empty or already gone.", e);
     }
     return success(undefined);
   } catch (error) {
@@ -312,10 +363,14 @@ export const updateRequestWithImages = async (
 ): Promise<DomainResult<OperationsRequest>> => {
   try {
     const updated = await updatePurchaseRequestImages(requestId, imageUrls);
+    if (!updated) throw new Error("Update returned no data.");
+    
+    // We use loadPurchaseRequests to get the full mapped model
     const requests = await loadPurchaseRequests();
-    const result = requests.find((r) => r.id === (updated as any).id);
+    const result = requests.find((r) => r.id === requestId);
+    
     if (!result) throw new Error("Could not reload updated request.");
-    return success(normalizeRequest(result));
+    return success(result as OperationsRequest);
   } catch (error) {
     return { data: null, error: createDomainError(error, "Failed to update request with images.") };
   }

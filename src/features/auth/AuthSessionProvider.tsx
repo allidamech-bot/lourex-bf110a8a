@@ -23,7 +23,7 @@ type AuthContextValue = {
 const AuthSessionContext = createContext<AuthContextValue | undefined>(undefined);
 
 const mapProfileRow = (row: any): LourexProfile | null => {
-  if (!isValidRole(row?.role)) {
+  if (!row?.role || !isValidRole(row.role)) {
     return null;
   }
 
@@ -31,9 +31,9 @@ const mapProfileRow = (row: any): LourexProfile | null => {
     id: row.id,
     email: row.email || "",
     fullName: row.full_name || "",
-    role: row.role,
-    partnerType: row.partner_type || null,
-    status: row.status,
+    role: row.role as any,
+    partnerType: row.partner_type as any || null,
+    status: row.status as any,
     phone: row.phone || undefined,
     country: row.country || undefined,
     city: row.city || undefined,
@@ -65,7 +65,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
 
     const user = nextSession.user;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at, updated_at")
       .eq("id", user.id)

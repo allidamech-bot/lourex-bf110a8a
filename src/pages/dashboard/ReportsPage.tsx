@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { loadFinancialEntries } from "@/domain/accounting/service";
 import {
   loadCustomerDashboards,
   loadDeals,
-  loadFinancialEntries,
   loadPurchaseRequests,
   loadShipments,
 } from "@/lib/operationsDomain";

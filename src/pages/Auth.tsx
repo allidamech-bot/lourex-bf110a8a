@@ -83,6 +83,11 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     setLoading(true);
 
     try {
+      // Check for missing Supabase config
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+        throw new Error("CONFIG_ERROR");
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -114,7 +119,26 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
         setPassword("");
       }
     } catch (error: any) {
-      toast.error(error.message || t("auth.authError"));
+      console.error("[Auth] Login failure:", error);
+      
+      let message = t("auth.authError");
+      
+      if (error.message === "CONFIG_ERROR") {
+        message = t("auth.configError");
+      } else if (error.status === 400 || error.message?.includes("Invalid login credentials") || error.message?.includes("invalid_credentials")) {
+        message = t("auth.invalidCredentials");
+      } else if (error.message?.includes("Email not confirmed") || error.message?.includes("email_not_confirmed")) {
+        message = t("auth.emailNotConfirmed");
+      } else if (error.status === 429 || error.message?.includes("too_many_requests")) {
+        message = t("auth.tooManyRequests");
+      } else if (error.message?.includes("NetworkError") || error.message?.includes("fetch")) {
+        message = t("auth.networkError");
+      } else if (error.message) {
+        // Fallback to original message if it's already user-friendly or unknown
+        message = error.message;
+      }
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }

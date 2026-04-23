@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { loadFinancialEntries } from "@/domain/accounting/service";
 import { 
   loadDeals, 
-  loadFinancialEntries, 
   loadPurchaseRequests, 
   loadCustomerDashboards
 } from "./operationsDomain";

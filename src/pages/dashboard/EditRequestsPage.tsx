@@ -10,11 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   createFinancialEditRequest,
-  loadDeals,
   loadFinancialEditRequests,
   loadFinancialEntries,
   updateFinancialEditRequestStatus,
-} from "@/lib/operationsDomain";
+} from "@/domain/accounting/service";
+import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 

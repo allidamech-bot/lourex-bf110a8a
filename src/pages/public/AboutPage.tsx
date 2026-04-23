@@ -1,3 +1,4 @@
+import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useI18n } from "@/lib/i18n";
@@ -20,6 +21,10 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title={lang === "ar" ? "عن Lourex" : "About Lourex"}
+        description={lang === "ar" ? "تعرف على Lourex كمنصة وسيط عمليات تربط بين العملاء والشركاء في تركيا والسعودية." : "Learn about Lourex as an intermediary operations platform connecting customers with partners in Turkey and Saudi Arabia."}
+      />
       <SiteHeader />
       <div className="container mx-auto px-4 py-12 md:px-8">
         <SectionHeading

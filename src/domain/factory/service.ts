@@ -14,9 +14,9 @@ import {
 type FactoryRow = Tables<"factories">;
 type OrderRow = Tables<"orders">;
 type ProductRow = Tables<"products">;
-type StaffRow = Tables<"organization_staff">;
-type ProfileRow = Tables<"profiles">;
-type UserRoleRow = Tables<"user_roles">;
+type StaffRow = any;
+type ProfileRow = any;
+type UserRoleRow = any;
 
 const ADVANCEABLE_STATUSES = ["confirmed", "in_production", "quality_check", "shipped", "delivered"] as const;
 
@@ -353,18 +353,21 @@ export const advanceFactoryOrderStatus = async (
   }
 };
 
+import { LourexRole, INTERNAL_ROLES } from "@/features/auth/rbac";
+
 export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember[]>> => {
   try {
     const { data, error } = await supabase
-      .from("organization_staff")
+      .from("profiles")
       .select("id, email, full_name, role, status, created_at")
+      .in("role", INTERNAL_ROLES)
       .order("created_at", { ascending: false });
 
     if (error) {
       throw error;
     }
 
-    return success((data ?? []).map(normalizeStaffMember));
+    return success((data ?? []).map((row: any) => normalizeStaffMember(row)));
   } catch (error) {
     return {
       data: null,
@@ -374,24 +377,23 @@ export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember
 };
 
 export const addOrganizationStaff = async (
-  payload: Pick<TablesInsert<"organization_staff">, "owner_id" | "email" | "full_name" | "role">,
+  payload: { email: string; full_name: string; role: LourexRole },
 ): Promise<DomainResult<null>> => {
-  const ownerId = normalizeText(payload.owner_id);
   const email = normalizeText(payload.email).toLowerCase();
   const fullName = normalizeOptionalText(payload.full_name ?? null);
   const role = normalizeText(payload.role);
 
-  if (!ownerId || !email || !role) {
-    return failure("Owner, email, and role are required.");
+  if (!email || !role) {
+    return failure("Email and role are required.");
   }
 
   try {
-    const { error } = await supabase.from("organization_staff").insert({
-      owner_id: ownerId,
+    const { error } = await supabase.from("profiles").upsert({
       email,
       full_name: fullName,
-      role,
-    });
+      role: role as any,
+      status: "active",
+    }, { onConflict: "email" });
 
     if (error) {
       throw error;
@@ -413,7 +415,7 @@ export const removeOrganizationStaff = async (id: string): Promise<DomainResult<
   }
 
   try {
-    const { error } = await supabase.from("organization_staff").delete().eq("id", normalizedId);
+    const { error } = await supabase.from("profiles").update({ role: "customer" }).eq("id", normalizedId);
 
     if (error) {
       throw error;

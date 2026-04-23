@@ -1,3 +1,4 @@
+import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import CoreFeatures from "@/components/CoreFeatures";
 import DashboardPreview from "@/components/DashboardPreview";
@@ -38,6 +39,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title={t("nav.home")} 
+        description={t("home.charter.description")}
+      />
       <SiteHeader />
       <HeroSection />
       <section className="relative overflow-hidden border-y border-border/50 bg-[linear-gradient(180deg,hsla(var(--secondary)/0.35),transparent)] py-20">

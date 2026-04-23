@@ -19,4 +19,19 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("lucide-react")) return "vendor-lucide";
+            if (id.includes("framer-motion")) return "vendor-framer";
+            if (id.includes("@tanstack")) return "vendor-tanstack";
+            if (id.includes("supabase")) return "vendor-supabase";
+            return "vendor";
+          }
+        },
+      },
+    },
+  },
 }));

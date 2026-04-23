@@ -62,9 +62,17 @@ export const getDefaultRouteForRole = (role: LourexRole) => {
     case "customer":
       return "/customer-portal";
     case "owner":
+    case "turkish_partner":
     case "saudi_partner":
     case "operations_employee":
     default:
       return "/dashboard";
   }
 };
+
+// Permission Helpers
+export const canManageUsers = (role: LourexRole) => role === "owner";
+export const canManagePurchaseRequests = (role: LourexRole) => ["owner", "operations_employee"].includes(role);
+export const canManageAccounting = (role: LourexRole) => ACCOUNTING_ROLES.includes(role);
+export const canViewPartnerArea = (role: LourexRole) => INTERNAL_ROLES.includes(role);
+export const canViewCustomerArea = (role: LourexRole) => role === "customer" || INTERNAL_ROLES.includes(role);

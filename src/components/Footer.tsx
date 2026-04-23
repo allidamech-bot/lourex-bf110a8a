@@ -27,7 +27,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <img src="/lourex-logo.png" alt="LOUREX" className="h-8 w-auto" />
+            <img src="/logo.png" alt="LOUREX" className="h-8 w-auto" />
             <p className="text-sm leading-relaxed text-muted-foreground">
               {lang === "ar"
                 ? "منصة وساطة وتشغيل ذكية تربط العميل بصفقات شراء وتتبع ومحاسبة منضبطة."

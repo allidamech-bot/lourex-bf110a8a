@@ -7,37 +7,40 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import BentoCard from "@/components/BentoCard";
 
+import { LourexRole, LOUREX_ROLES, INTERNAL_ROLES } from "@/features/auth/rbac";
+
 interface StaffMember {
   id: string;
   email: string;
   full_name: string;
-  role: string;
+  role: LourexRole;
   status: string;
   created_at: string;
 }
 
-const ROLE_CONFIG: Record<string, { icon: typeof Shield; label: string; color: string }> = {
-  admin: { icon: Shield, label: "Admin", color: "text-primary" },
-  manager: { icon: Briefcase, label: "Manager", color: "text-amber-500" },
-  support: { icon: Headset, label: "Support", color: "text-blue-400" },
-  logistics: { icon: Truck, label: "Logistics", color: "text-emerald-400" },
-  viewer: { icon: UserCheck, label: "Viewer", color: "text-muted-foreground" },
+const ROLE_CONFIG: Record<LourexRole, { icon: typeof Shield; label: string; color: string }> = {
+  owner: { icon: Shield, label: "Owner", color: "text-primary" },
+  operations_employee: { icon: Briefcase, label: "Operations", color: "text-amber-500" },
+  turkish_partner: { icon: Truck, label: "TR Partner", color: "text-emerald-400" },
+  saudi_partner: { icon: Truck, label: "SA Partner", color: "text-emerald-400" },
+  customer: { icon: UserCheck, label: "Customer", color: "text-muted-foreground" },
 };
 
 export const TeamManagement = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ email: "", full_name: "", role: "support" });
+  const [form, setForm] = useState({ email: "", full_name: "", role: "operations_employee" as LourexRole });
   const [submitting, setSubmitting] = useState(false);
 
   const fetchStaff = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("organization_staff")
+      .from("profiles")
       .select("*")
+      .in("role", INTERNAL_ROLES)
       .order("created_at", { ascending: false });
-    setStaff((data as StaffMember[]) || []);
+    setStaff((data as any) || []);
     setLoading(false);
   };
 
@@ -50,18 +53,21 @@ export const TeamManagement = () => {
       return;
     }
     setSubmitting(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("organization_staff").insert({
-      owner_id: user?.id,
+    
+    // Note: In a real system, we might invite the user or create a profile.
+    // For this UI, we update or insert into profiles.
+    const { error } = await supabase.from("profiles").upsert({
       email: form.email,
       full_name: form.full_name,
       role: form.role,
-    });
+      status: "active",
+    }, { onConflict: "email" });
+
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success(`${form.full_name} added as ${form.role}`);
-      setForm({ email: "", full_name: "", role: "support" });
+      toast.success(`${form.full_name} added/updated as ${form.role}`);
+      setForm({ email: "", full_name: "", role: "operations_employee" });
       setShowForm(false);
       await fetchStaff();
     }
@@ -69,12 +75,13 @@ export const TeamManagement = () => {
   };
 
   const handleRemove = async (id: string) => {
-    const { error } = await supabase.from("organization_staff").delete().eq("id", id);
+    // Instead of deleting the user (which might be dangerous), we reset their role to customer
+    const { error } = await supabase.from("profiles").update({ role: "customer" }).eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Staff member removed"); await fetchStaff(); }
+    else { toast.success("Staff access removed (reverted to customer)"); await fetchStaff(); }
   };
 
-  const getRoleConfig = (role: string) => ROLE_CONFIG[role] || ROLE_CONFIG.viewer;
+  const getRoleConfig = (role: LourexRole) => ROLE_CONFIG[role] || ROLE_CONFIG.customer;
 
   if (loading) {
     return (
@@ -123,11 +130,11 @@ export const TeamManagement = () => {
               />
               <select
                 value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                onChange={(e) => setForm({ ...form, role: e.target.value as LourexRole })}
                 className="h-10 rounded-md border border-border bg-secondary px-3 text-sm text-foreground"
               >
-                {Object.entries(ROLE_CONFIG).map(([key, cfg]) => (
-                  <option key={key} value={key}>{cfg.label}</option>
+                {INTERNAL_ROLES.map((role) => (
+                  <option key={role} value={role}>{ROLE_CONFIG[role].label}</option>
                 ))}
               </select>
             </div>

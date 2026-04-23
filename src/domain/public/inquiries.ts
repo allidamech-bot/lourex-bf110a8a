@@ -82,34 +82,54 @@ const insertInquiry = async (
 
 export const submitContactInquiry = async (
   payload: ContactInquiryInput,
-): Promise<DomainResult<InquiryRow>> => {
-  const normalized = normalizeInquiryPayload(payload);
-  if (normalized.error || !normalized.data) {
-    return { data: null, error: normalized.error };
-  }
+): Promise<DomainResult<any>> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("submit-inquiry", {
+      body: {
+        ...payload,
+        inquiry_type: "contact",
+      },
+    });
 
-  return insertInquiry(
-    {
-      ...normalized.data,
-      inquiry_type: "contact",
-    },
-    "Unable to submit the contact inquiry.",
-  );
+    if (error) {
+      return {
+        data: null,
+        error: createDomainError(error, "Unable to submit the contact inquiry."),
+      };
+    }
+
+    return success(data);
+  } catch (error) {
+    return {
+      data: null,
+      error: createDomainError(error, "Unable to submit the contact inquiry."),
+    };
+  }
 };
 
 export const submitPurchaseRequestInquiry = async (
   payload: PurchaseRequestInquiryInput,
-): Promise<DomainResult<InquiryRow>> => {
-  const normalized = normalizeInquiryPayload(payload);
-  if (normalized.error || !normalized.data) {
-    return { data: null, error: normalized.error };
-  }
+): Promise<DomainResult<any>> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("submit-inquiry", {
+      body: {
+        ...payload,
+        inquiry_type: "purchase_request",
+      },
+    });
 
-  return insertInquiry(
-    {
-      ...normalized.data,
-      inquiry_type: "purchase_request",
-    },
-    "Unable to submit the purchase request inquiry.",
-  );
+    if (error) {
+      return {
+        data: null,
+        error: createDomainError(error, "Unable to submit the purchase request inquiry."),
+      };
+    }
+
+    return success(data);
+  } catch (error) {
+    return {
+      data: null,
+      error: createDomainError(error, "Unable to submit the purchase request inquiry."),
+    };
+  }
 };

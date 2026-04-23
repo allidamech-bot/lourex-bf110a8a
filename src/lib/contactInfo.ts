@@ -1,8 +1,8 @@
 export const publicContactInfo = {
-  email: "ops@lourex.com",
-  phone: "+90 (212) 000 0000",
-  website: "www.lourex.com",
-  websiteUrl: "https://www.lourex.com",
+  email: "ops@lou-rex.com",
+  phone: "+90 (500) 000 0000",
+  website: "www.lou-rex.com",
+  websiteUrl: "https://www.lou-rex.com",
   location: {
     en: "Istanbul, Turkey",
     ar: "إسطنبول، تركيا",

@@ -1,3 +1,4 @@
+import { SEO } from "@/components/seo/SEO";
 import { ClipboardList, PackageSearch, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SectionHeading } from "@/components/shared/SectionHeading";
@@ -36,6 +37,10 @@ export default function RequestPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title={lang === "ar" ? "إرسال طلب شراء" : "Submit Purchase Request"}
+        description={lang === "ar" ? "أرسل طلب شراء جديد لعمليات الاستيراد والتصدير عبر لوحة تحكم Lourex." : "Submit a new purchase request for import/export operations through Lourex dashboard."}
+      />
       <SiteHeader />
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.08),transparent_30%)]" />
