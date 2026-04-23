@@ -393,7 +393,7 @@ export const addOrganizationStaff = async (
       full_name: fullName,
       role: role as any,
       status: "active",
-    }, { onConflict: "email" });
+    } as any, { onConflict: "email" });
 
     if (error) {
       throw error;

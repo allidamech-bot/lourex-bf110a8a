@@ -61,7 +61,7 @@ export const TeamManagement = () => {
       full_name: form.full_name,
       role: form.role,
       status: "active",
-    }, { onConflict: "email" });
+    } as any, { onConflict: "email" });
 
     if (error) {
       toast.error(error.message);

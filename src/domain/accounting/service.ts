@@ -9,14 +9,13 @@ import {
   safeStructuredSelectWhereEq
 } from "@/lib/operationsDomain";
 import type { 
-  FinancialEntry, 
-  FinancialEditRequest,
   FinancialEntryRow,
   FinancialEditRequestRow,
   CustomerRow,
   ProfileRow
 } from "@/lib/operationsDomain";
-import type { OperationalDeal } from "@/domain/operations/types";
+import type { FinancialEntry, FinancialEditRequest } from "@/types/lourex";
+import type { OperationalDeal } from "@/lib/operationsDomain";
 
 export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
   const { profile } = await getCurrentUserContext();
@@ -201,7 +200,7 @@ export const createFinancialEditRequest = async (input: {
       old_value: input.oldValue,
       proposed_value: input.proposedValue,
       created_by: user.id,
-    })
+    } as any)
     .select("*")
     .single();
 
