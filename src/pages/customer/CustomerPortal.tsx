@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
 import { logOperationalError } from "@/lib/monitoring";
+import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 
 export default function CustomerPortal() {
   const { profile } = useAuthSession();
@@ -24,11 +25,13 @@ export default function CustomerPortal() {
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
   const [recentRequests, setRecentRequests] = useState<OperationsRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
       if (!profile?.id) return;
       setLoading(true);
+      setLoadError("");
       try {
         const [dashboard, requests] = await Promise.all([
           fetchCustomerDashboard(),
@@ -41,6 +44,7 @@ export default function CustomerPortal() {
         setRecentRequests(myRequests.slice(0, 3));
       } catch (error) {
         logOperationalError("customer_portal_load", error, { customerId: profile.id });
+        setLoadError(t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -83,6 +87,12 @@ export default function CustomerPortal() {
       bgColor: "bg-orange-500/10",
     },
   ];
+  const lang = locale === "ar" ? "ar" : "en";
+  const recentRequestStatus = recentRequests[0] ? getCustomerRequestStatusCopy(recentRequests[0].status, lang) : null;
+  const financialSummaryCopy = getCustomerFinancialSummaryCopy(lang, {
+    hasMixedCurrencies: false,
+    dealsCount: customerData?.dealsCount || 0,
+  });
 
   return (
     <>
@@ -151,32 +161,37 @@ export default function CustomerPortal() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : customerData ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                <p className="text-xs text-muted-foreground">{t("customerPortal.financial.balance")}</p>
-                <p
-                  className={`mt-2 text-2xl font-bold ${
+            <div className="space-y-4">
+              <div className="rounded-[1.25rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                {financialSummaryCopy}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.balance")}</p>
+                  <p
+                    className={`mt-2 text-2xl font-bold ${
                     customerData.financialBalance >= 0 ? "text-emerald-500" : "text-rose-500"
                   }`}
                 >
                   {customerData.financialBalance.toLocaleString(locale)} SAR
                 </p>
-              </div>
-              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                <p className="text-xs text-muted-foreground">{t("customerPortal.financial.operations")}</p>
-                <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
-              </div>
-              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                <p className="text-xs text-muted-foreground">Income tracked</p>
-                <p className="mt-2 text-2xl font-bold text-emerald-500">
-                  {customerData.financialIncome.toLocaleString(locale)} SAR
-                </p>
-              </div>
-              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                <p className="text-xs text-muted-foreground">Expense tracked</p>
-                <p className="mt-2 text-2xl font-bold text-rose-500">
-                  {customerData.financialExpense.toLocaleString(locale)} SAR
-                </p>
+                </div>
+                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.operations")}</p>
+                  <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
+                </div>
+                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                  <p className="text-xs text-muted-foreground">Income tracked</p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-500">
+                    {customerData.financialIncome.toLocaleString(locale)} SAR
+                  </p>
+                </div>
+                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                  <p className="text-xs text-muted-foreground">Expense tracked</p>
+                  <p className="mt-2 text-2xl font-bold text-rose-500">
+                    {customerData.financialExpense.toLocaleString(locale)} SAR
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
@@ -197,6 +212,12 @@ export default function CustomerPortal() {
             <h3 className="font-serif text-xl font-semibold">{t("customerPortal.recent.title")}</h3>
           </div>
 
+          {loadError ? (
+            <div className="mb-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+              {loadError}
+            </div>
+          ) : null}
+
           {loading ? (
             <div className="space-y-3">
               <Skeleton className="h-14 w-full" />
@@ -204,16 +225,22 @@ export default function CustomerPortal() {
             </div>
           ) : recentRequests.length > 0 ? (
             <div className="space-y-3">
+              {recentRequestStatus ? (
+                <div className="rounded-[1.2rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                  <p className="font-medium text-foreground">{recentRequestStatus.label}</p>
+                  <p className="mt-2">{recentRequestStatus.nextStep}</p>
+                </div>
+              ) : null}
               {recentRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between rounded-xl border border-border/40 bg-secondary/5 p-3"
+                  className="flex flex-col gap-3 rounded-xl border border-border/40 bg-secondary/5 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <p className="text-sm font-medium">{request.requestNumber}</p>
-                    <p className="max-w-[150px] truncate text-xs text-muted-foreground">{request.productName}</p>
+                    <p className="max-w-[220px] truncate text-xs text-muted-foreground">{request.productName}</p>
                   </div>
-                  <span className="rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
+                  <span className="w-fit rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
                     {request.statusLabel || request.status}
                   </span>
                 </div>

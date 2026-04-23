@@ -19,7 +19,7 @@ export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
         const owner = lang === "ar" ? stage.owner : stage.ownerEn;
 
         return (
-          <div key={stage.code} className="flex items-start gap-4">
+          <div key={stage.code} className="flex items-start gap-3 sm:gap-4">
             <div className="flex flex-col items-center">
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border ${
@@ -37,7 +37,7 @@ export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
               ) : null}
             </div>
 
-            <div className="rounded-2xl border border-border/50 bg-card px-4 py-3">
+            <div className="min-w-0 rounded-2xl border border-border/50 bg-card px-3 py-3 sm:px-4">
               <p className={`font-medium ${active ? "text-primary" : "text-foreground"}`}>
                 {stage.order}. {lang === "ar" ? stage.label : stage.labelEn}
               </p>

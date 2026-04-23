@@ -157,6 +157,16 @@ export default function TrackPage() {
                 </div>
                 <p className="mt-4 font-serif text-3xl font-semibold">{currentStage?.label || result.currentStageLabel}</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentStage?.description || result.currentStageDescription}</p>
+                <div className="mt-5 rounded-[1.35rem] border border-primary/15 bg-background/65 px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    {lang === "ar" ? "ماذا يعني ذلك" : "What this means"}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">
+                    {lang === "ar"
+                      ? "هذه هي آخر مرحلة مؤكدة داخل مسار Lourex الرسمي. قد تبقى الشحنة في المرحلة نفسها لبعض الوقت حتى يكتمل الإجراء التشغيلي التالي."
+                      : "This is the latest confirmed stage inside Lourex's official workflow. A shipment can remain in the same stage for some time until the next operational step is completed."}
+                  </p>
+                </div>
                 {result.customerNote ? (
                   <div className="mt-5 rounded-[1.35rem] border border-primary/15 bg-background/65 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -164,7 +174,18 @@ export default function TrackPage() {
                     </p>
                     <p className="mt-2 text-sm leading-7 text-foreground">{result.customerNote}</p>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="mt-5 rounded-[1.35rem] border border-border/60 bg-background/65 px-4 py-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      {lang === "ar" ? "تحديث العميل" : "Customer update"}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-foreground">
+                      {lang === "ar"
+                        ? "لا توجد ملاحظة عميل جديدة منشورة بعد. ما زالت المرحلة الحالية ووقت آخر تحديث يمثلان الحالة الرسمية المعروضة لك."
+                        : "No new customer note has been published yet. The current stage and last update time still reflect the official status shown to you."}
+                    </p>
+                  </div>
+                )}
                 {nextStage ? (
                   <div className="mt-5 rounded-[1.35rem] border border-primary/15 bg-background/65 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -177,7 +198,7 @@ export default function TrackPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
                 {[
                   { label: lang === "ar" ? "مراحل مكتملة" : "Completed", value: completedStages },
                   { label: lang === "ar" ? "مراحل متبقية" : "Remaining", value: remainingStages },

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadPurchaseRequests, requestStatusMeta } from "@/lib/operationsDomain";
+import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import type { PurchaseRequestStatus } from "@/types/lourex";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError } from "@/lib/monitoring";
 
 export default function CustomerRequestsPage() {
   const { locale, t } = useI18n();
@@ -16,6 +18,7 @@ export default function CustomerRequestsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
 
@@ -24,9 +27,13 @@ export default function CustomerRequestsPage() {
   useEffect(() => {
     const loadRows = async () => {
       setLoading(true);
+      setError("");
 
       try {
         setRows(await loadPurchaseRequests());
+      } catch (error) {
+        logOperationalError("customer_requests_load", error);
+        setError(t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -63,6 +70,8 @@ export default function CustomerRequestsPage() {
 
     return filteredRows.find((row) => row.id === selectedRequestId) || filteredRows[0] || null;
   }, [filteredRows, selectedRequestId]);
+
+  const selectedStatusCopy = selectedRow ? getCustomerRequestStatusCopy(selectedRow.status, locale === "ar" ? "ar" : "en") : null;
 
   useEffect(() => {
     if (!filteredRows.length) {
@@ -129,7 +138,7 @@ export default function CustomerRequestsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               { label: t("requests.total"), value: requestMetrics.total },
               { label: t("requests.review"), value: requestMetrics.review },
@@ -165,6 +174,12 @@ export default function CustomerRequestsPage() {
               </Button>
             ))}
           </div>
+
+          {error ? (
+            <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+              {error}
+            </div>
+          ) : null}
 
           <div className="space-y-3">
             {filteredRows.map((row) => {
@@ -233,6 +248,14 @@ export default function CustomerRequestsPage() {
             </div>
 
             <div className="space-y-5">
+              {selectedStatusCopy ? (
+                <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary/80">{selectedStatusCopy.label}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{selectedStatusCopy.description}</p>
+                  <p className="mt-3 text-sm font-medium text-foreground">{selectedStatusCopy.nextStep}</p>
+                </div>
+              ) : null}
+
               <p className="text-sm leading-7 text-muted-foreground">
                 {selectedRow.productDescription || t("requests.noDescription")}
               </p>
@@ -279,6 +302,16 @@ export default function CustomerRequestsPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
+                {selectedRow.convertedDealNumber
+                  ? locale === "ar"
+                    ? "تم إنشاء عملية تشغيلية لهذا الطلب. يمكنك الآن استخدام صفحة التتبع لمعرفة المرحلة الحالية وآخر التحديثات الآمنة للعميل."
+                    : "An active operation has been created for this request. You can now use the tracking page to see the current stage and latest customer-safe updates."
+                  : locale === "ar"
+                    ? "إذا لم يظهر رقم صفقة بعد، فهذا يعني أن الطلب ما زال في مرحلة المراجعة أو التحضير الداخلي قبل بدء التتبع."
+                    : "If no deal number is shown yet, the request is still in review or internal preparation before tracking begins."}
               </div>
             </div>
           </BentoCard>
