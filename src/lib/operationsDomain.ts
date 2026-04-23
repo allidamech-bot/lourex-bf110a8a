@@ -58,6 +58,7 @@ interface DomainTableBuilder<T> {
   select(query?: string): DomainSelectBuilder<T>;
   insert(values: unknown): DomainMutationBuilder<T>;
   update(values: unknown): DomainMutationBuilder<T>;
+  delete(): DomainMutationBuilder<T>;
 }
 
 interface LooseDomainClient {
@@ -2027,7 +2028,7 @@ export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
       id: row.id,
       email: row.email || "",
       fullName: row.full_name || "",
-      role: row.role,
+      role: row.role as LourexRole,
       partnerType: row.partner_type || null,
       status: (row.status || "pending") as LourexAccountStatus,
       createdAt: row.created_at,

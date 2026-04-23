@@ -1,5 +1,6 @@
 export const LOUREX_ROLES = [
   "owner",
+  "turkish_partner",
   "saudi_partner",
   "operations_employee",
   "customer",
@@ -7,7 +8,7 @@ export const LOUREX_ROLES = [
 
 export type LourexRole = (typeof LOUREX_ROLES)[number];
 
-export type LourexPartnerType = "saudi" | null;
+export type LourexPartnerType = "turkish" | "saudi" | null;
 export type LourexAccountStatus = "active" | "inactive" | "pending";
 
 export interface LourexProfile {
@@ -26,13 +27,14 @@ export interface LourexProfile {
 
 export const INTERNAL_ROLES: LourexRole[] = [
   "owner",
+  "turkish_partner",
   "saudi_partner",
   "operations_employee",
 ];
 
 export const OWNER_ONLY_ROLES: LourexRole[] = ["owner"];
 export const ACCOUNTING_ROLES: LourexRole[] = ["owner", "operations_employee"];
-export const PARTNER_ROLES: LourexRole[] = ["saudi_partner"];
+export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,

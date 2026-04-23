@@ -3,16 +3,15 @@ import {
   loadDeals, 
   loadFinancialEntries, 
   loadPurchaseRequests, 
-  loadShipments,
   loadCustomerDashboards
 } from "./operationsDomain";
 import type { 
-  OperationalDeal, 
-  FinancialEntry, 
-  OperationalPurchaseRequest, 
-  OperationalShipment,
-  CustomerDashboard
-} from "@/types/lourex";
+  OperationsDeal as DealOperation, 
+  OperationsFinancialEntry as FinancialEntry, 
+  OperationsRequest as PurchaseRequest, 
+  OperationsShipment,
+  OperationsCustomer as CustomerDashboard
+} from "@/domain/operations/types";
 
 export type FinancialTrend = {
   month: string;
@@ -130,7 +129,7 @@ export const getCustomerReport = async (): Promise<CustomerReportItem[]> => {
     const activeDeals = customerDeals.filter(deal => !['closed', 'delivered', 'cancelled'].includes(deal.status)).length;
     
     // Find last activity (latest update among deals or requests)
-    const dealDates = customerDeals.map(deal => new Date(deal.updatedAt || deal.createdAt || 0).getTime());
+    const dealDates = customerDeals.map(deal => new Date(deal.createdAt || 0).getTime());
     const lastDate = dealDates.length > 0 ? new Date(Math.max(...dealDates)).toISOString() : '';
 
     return {
