@@ -8,14 +8,9 @@ import { Send, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { User } from "@supabase/supabase-js";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
-interface Message {
-  id: string;
-  order_id: string;
-  sender_id: string;
-  content: string;
-  created_at: string;
-}
+type Message = Tables<"messages">;
 
 const MessageCenter = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -39,11 +34,11 @@ const MessageCenter = () => {
         setOrderNumber(order?.order_number || orderId);
 
         const { data } = await supabase
-          .from("messages" as never)
+          .from("messages")
           .select("*")
           .eq("order_id", orderId)
           .order("created_at", { ascending: true });
-        setMessages((data as unknown as Message[]) || []);
+        setMessages(data || []);
       }
     };
     init();
@@ -75,11 +70,12 @@ const MessageCenter = () => {
     if (!newMessage.trim() || !user || !orderId) return;
     setSending(true);
 
-    const { error } = await supabase.from("messages" as never).insert({
+    const payload: TablesInsert<"messages"> = {
       order_id: orderId,
       sender_id: user.id,
       content: newMessage.trim(),
-    });
+    };
+    const { error } = await supabase.from("messages").insert(payload);
 
     if (!error) setNewMessage("");
     setSending(false);

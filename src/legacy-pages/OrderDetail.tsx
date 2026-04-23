@@ -5,12 +5,18 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Check, Loader2, MessageSquare } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
+
+type LegacyOrder = Tables<"orders">;
+type LegacyOrderEvent = Tables<"order_events">;
+
+const formatEventType = (eventType: string) => eventType.replace(/_/g, " ");
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
-  const [events, setEvents] = useState<Record<string, unknown>[]>([]);
+  const [order, setOrder] = useState<LegacyOrder | null>(null);
+  const [events, setEvents] = useState<LegacyOrderEvent[]>([]);
   const [me, setMe] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -22,8 +28,8 @@ const OrderDetail = () => {
     setMe(user.id);
     const { data: o } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
     setOrder(o);
-    const { data: ev } = await supabase.from("order_events" as never).select("*").eq("order_id", id).order("created_at", { ascending: false });
-    setEvents((ev as Record<string, unknown>[]) || []);
+    const { data: ev } = await supabase.from("order_events").select("*").eq("order_id", id).order("created_at", { ascending: false });
+    setEvents(ev || []);
     setLoading(false);
   };
 
@@ -31,8 +37,9 @@ const OrderDetail = () => {
   useEffect(() => { load(); }, [id]);
 
   const confirmDelivery = async () => {
+    if (!id) return;
     setConfirming(true);
-    const { error } = await supabase.rpc("confirm_delivery" as never, { p_order_id: id, p_message: "" });
+    const { error } = await supabase.rpc("confirm_delivery", { p_order_id: id, p_message: "" });
     setConfirming(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Delivery confirmed");
@@ -80,7 +87,7 @@ const OrderDetail = () => {
             {events.map((e) => (
               <div key={e.id} className="glass-card rounded-lg p-4">
                 <div className="flex items-center justify-between gap-4">
-                  <p className="font-medium text-sm">{e.event_type.replace(/_/g, " ")}</p>
+                  <p className="font-medium text-sm">{formatEventType(e.event_type)}</p>
                   <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
                 </div>
                 {e.message && <p className="text-sm text-muted-foreground mt-1">{e.message}</p>}

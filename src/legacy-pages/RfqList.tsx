@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
+
+type LegacyRfq = Tables<"rfqs">;
 
 const STATUS_STYLES: Record<string, string> = {
   open: "bg-primary/15 text-primary",
@@ -15,7 +18,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 const RfqList = () => {
   const navigate = useNavigate();
-  const [rfqs, setRfqs] = useState<Record<string, unknown>[]>([]);
+  const [rfqs, setRfqs] = useState<LegacyRfq[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

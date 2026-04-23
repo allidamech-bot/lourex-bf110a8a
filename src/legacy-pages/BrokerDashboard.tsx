@@ -13,6 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import BentoCard from "@/components/BentoCard";
 
+type LegacyBrokerRole =
+  | "owner"
+  | "turkish_partner"
+  | "saudi_partner"
+  | "operations_employee"
+  | "customer"
+  | "broker"
+  | "admin";
+
 interface Deal {
   id: string;
   deal_number: string;
@@ -40,8 +49,9 @@ const BrokerDashboard = () => {
         .select("role")
         .eq("user_id", user.id);
 
-      const isBroker = roles?.some((r) => r.role === "broker");
-      const isAdmin = roles?.some((r) => r.role === "admin");
+      const legacyRoles = (roles ?? []) as Array<{ role: LegacyBrokerRole }>;
+      const isBroker = legacyRoles.some((r) => r.role === "broker");
+      const isAdmin = legacyRoles.some((r) => r.role === "admin");
 
       if (!isBroker && !isAdmin) {
         navigate("/dashboard");

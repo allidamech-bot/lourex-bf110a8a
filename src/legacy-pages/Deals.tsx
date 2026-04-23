@@ -3,8 +3,8 @@ import Navbar from "@/components/Navbar";
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
-  Handshake, Plus, Clock, CheckCircle2, XCircle, MessageSquare,
-  ArrowRight, DollarSign, Globe, FileText, Send
+  Handshake, Plus, CheckCircle2, XCircle, MessageSquare,
+  ArrowRight, DollarSign, Globe, FileText, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,18 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
-type DealStatus = "draft" | "rfq_sent" | "quoted" | "negotiation" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled";
+type DealStatus =
+  | "draft"
+  | "rfq_sent"
+  | "quoted"
+  | "negotiation"
+  | "accepted"
+  | "rejected"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 interface Deal {
   id: string;
@@ -28,6 +38,35 @@ interface Deal {
   notes: string;
   created_at: string;
 }
+
+interface LegacyMarketplaceProduct {
+  id?: string;
+  name?: string;
+  moq?: string | number;
+  price_per_unit?: string | number;
+}
+
+interface LegacyMarketplaceFactory {
+  id?: string;
+  name?: string;
+  owner_user_id?: string;
+  location?: string;
+}
+
+const getText = (value: string | number | null | undefined) =>
+  typeof value === "string" || typeof value === "number" ? String(value) : "";
+
+const getOptionalNumber = (value: string | number | null | undefined) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const insertLegacyDeal = async (payload: TablesInsert<"deals"> & { deal_number: string }) =>
+  supabase.from("deals").insert(payload as never);
 
 const statusConfig: Record<string, { color: string; icon: React.ElementType; label: string }> = {
   draft: { color: "bg-muted text-muted-foreground", icon: FileText, label: "Draft" },
@@ -50,9 +89,8 @@ const Deals = () => {
   const [showNew, setShowNew] = useState(false);
   const [tab, setTab] = useState("active");
 
-  // Check if navigated from marketplace with product data
-  const productFromMarketplace = location.state?.product;
-  const factoryFromMarketplace = location.state?.factory;
+  const productFromMarketplace = location.state?.product as LegacyMarketplaceProduct | undefined;
+  const factoryFromMarketplace = location.state?.factory as LegacyMarketplaceFactory | undefined;
 
   useEffect(() => {
     if (productFromMarketplace) setShowNew(true);
@@ -60,7 +98,7 @@ const Deals = () => {
 
   useEffect(() => {
     loadDeals();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDeals = async () => {
@@ -69,7 +107,7 @@ const Deals = () => {
       navigate("/auth");
       return;
     }
-    // Deals are loaded via RLS - user sees their own deals
+
     const { data } = await supabase
       .from("deals")
       .select("*")
@@ -99,13 +137,15 @@ const Deals = () => {
             </Button>
           </div>
 
-          {/* New Deal Form */}
           {showNew && (
             <NewDealForm
               product={productFromMarketplace}
               factory={factoryFromMarketplace}
               onClose={() => setShowNew(false)}
-              onCreated={() => { setShowNew(false); loadDeals(); }}
+              onCreated={() => {
+                setShowNew(false);
+                loadDeals();
+              }}
             />
           )}
 
@@ -136,6 +176,7 @@ const DealList = ({ deals, loading }: { deals: Deal[]; loading: boolean }) => {
       </div>
     );
   }
+
   if (deals.length === 0) {
     return (
       <div className="text-center py-16">
@@ -144,6 +185,7 @@ const DealList = ({ deals, loading }: { deals: Deal[]; loading: boolean }) => {
       </div>
     );
   }
+
   return (
     <div className="space-y-3">
       {deals.map((deal, i) => {
@@ -165,7 +207,12 @@ const DealList = ({ deals, loading }: { deals: Deal[]; loading: boolean }) => {
                 <div>
                   <p className="font-semibold text-sm">{deal.deal_number}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                    {deal.origin_country && <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{deal.origin_country} → {deal.destination_country}</span>}
+                    {deal.origin_country && (
+                      <span className="flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                        {deal.origin_country} - {deal.destination_country}
+                      </span>
+                    )}
                     <span>{new Date(deal.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -190,16 +237,20 @@ const NewDealForm = ({
   onClose,
   onCreated,
 }: {
-  product?: Record<string, unknown>;
-  factory?: Record<string, unknown>;
+  product?: LegacyMarketplaceProduct;
+  factory?: LegacyMarketplaceFactory;
   onClose: () => void;
   onCreated: () => void;
 }) => {
+  const productName = getText(product?.name);
+  const factoryName = getText(factory?.name);
+  const productMoq = getText(product?.moq) || "100";
+  const productPrice = getOptionalNumber(product?.price_per_unit);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     destination: "",
-    quantity: product?.moq || "100",
-    notes: product ? `Product: ${product.name}\nSupplier: ${factory?.name || ""}` : "",
+    quantity: productMoq,
+    notes: product ? `Product: ${productName}\nSupplier: ${factoryName}` : "",
   });
 
   const handleSubmit = async () => {
@@ -212,17 +263,18 @@ const NewDealForm = ({
     }
 
     const dealNumber = `DEAL-${Date.now().toString(36).toUpperCase()}`;
-    const { error } = await supabase.from("deals").insert({
+    const payload: TablesInsert<"deals"> & { deal_number: string } = {
       deal_number: dealNumber,
       client_id: user.user.id,
-      factory_id: factory?.id || null,
-      supplier_id: factory?.owner_user_id || null,
+      factory_id: factory?.id ?? null,
+      supplier_id: factory?.owner_user_id ?? null,
       status: "draft",
       destination_country: form.destination,
-      origin_country: factory?.location || "Turkey",
+      origin_country: getText(factory?.location) || "Turkey",
       notes: form.notes,
       total_value: 0,
-    });
+    };
+    const { error } = await insertLegacyDeal(payload);
 
     if (error) {
       toast.error(error.message);
@@ -250,9 +302,9 @@ const NewDealForm = ({
 
       {product && (
         <div className="bg-secondary/50 rounded-lg p-3 text-sm">
-          <p className="font-medium">{product.name}</p>
+          <p className="font-medium">{productName}</p>
           <p className="text-xs text-muted-foreground">
-            From: {factory?.name} • {product.price_per_unit ? `$${product.price_per_unit}/unit` : "Price on request"}
+            From: {factoryName} - {productPrice !== undefined ? `$${productPrice}/unit` : "Price on request"}
           </p>
         </div>
       )}
