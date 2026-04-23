@@ -87,9 +87,9 @@ export default function AccountingPage() {
     const currencies = [...new Set(visibleEntries.map((entry) => entry.currency).filter(Boolean))];
     return {
       ...summary,
-      currencyLabel: currencies.length === 1 ? currencies[0] : currencies.length > 1 ? "Mixed" : currency,
+      currencyLabel: currencies.length === 1 ? currencies[0] : currencies.length > 1 ? t("accounting.mixedCurrency") : currency,
     };
-  }, [currency, visibleEntries]);
+  }, [currency, t, visibleEntries]);
 
   const dealFinancialSignal = useMemo(() => {
     if (!focusedDeal) return null;
@@ -141,9 +141,9 @@ export default function AccountingPage() {
       setNote("");
       setType("expense");
       await refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logOperationalError("financial_entry_create", error, { dealId: focusedDeal?.id || null });
-      toast.error(error.message || t("accounting.toasts.createError"));
+      toast.error(error instanceof Error ? error.message : t("accounting.toasts.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -151,19 +151,33 @@ export default function AccountingPage() {
 
   const handleExport = () => {
     if (visibleEntries.length === 0) {
-      const message = "No accounting entries match the current view.";
+      const message = t("accounting.toasts.exportEmpty");
       setLoadError(message);
       toast.error(message);
       return;
     }
-    const exported = downloadCsv(`lourex-accounting-${focusDeal || "all"}.csv`, buildAccountingEntriesCsv(visibleEntries));
+    const exported = downloadCsv(
+      `lourex-accounting-${focusDeal || "all"}.csv`,
+      buildAccountingEntriesCsv(visibleEntries, {
+        entryNumber: t("requests.labels.requestNumber"),
+        scope: t("common.status"),
+        deal: t("accounting.scopeDeal"),
+        customer: t("accounting.scopeCustomer"),
+        type: t("accounting.labels.type"),
+        amount: t("accounting.labels.amount"),
+        currency: t("common.currency"),
+        category: t("accounting.labels.category"),
+        counterparty: t("accounting.counterparty"),
+        date: t("accounting.labels.date"),
+      }),
+    );
     if (!exported) {
-      const message = "CSV export is unavailable in this environment.";
+      const message = t("accounting.toasts.exportUnavailable");
       setLoadError(message);
       toast.error(message);
       return;
     }
-    toast.success("Accounting CSV exported.");
+    toast.success(t("accounting.toasts.exportSuccess"));
   };
 
   if (loading) {
@@ -227,7 +241,7 @@ export default function AccountingPage() {
                 { label: t("accounting.labels.totalIncome"), value: totals.income },
                 { label: t("accounting.labels.totalExpense"), value: totals.expense },
                 { label: t("accounting.labels.net"), value: totals.net, className: totals.net >= 0 ? "text-emerald-400" : "text-rose-400" },
-                { label: "Locked entries", value: totals.lockedCount, hint: `${totals.count} total` },
+                { label: t("accounting.labels.lockedEntries"), value: totals.lockedCount, hint: t("accounting.labels.totalEntries", { count: totals.count }) },
               ].map((item) => (
                 <div key={item.label} className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
                   <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -306,19 +320,19 @@ export default function AccountingPage() {
               </div>
               <div>
                 <Label>{t("accounting.paymentMethod")}</Label>
-                <Input value={method} onChange={(event) => setMethod(event.target.value)} placeholder="Bank transfer / cash / card" />
+                <Input value={method} onChange={(event) => setMethod(event.target.value)} placeholder={t("accounting.paymentMethod")} />
               </div>
               <div>
                 <Label>{t("accounting.counterparty")}</Label>
-                <Input value={counterparty} onChange={(event) => setCounterparty(event.target.value)} placeholder="Customer / supplier / partner" />
+                <Input value={counterparty} onChange={(event) => setCounterparty(event.target.value)} placeholder={t("accounting.counterparty")} />
               </div>
               <div>
                 <Label>{t("common.category")}</Label>
-                <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Shipping / customs / customer payment" />
+                <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder={t("common.category")} />
               </div>
               <div>
                 <Label>{t("accounting.extraReference")}</Label>
-                <Input value={referenceLabel} onChange={(event) => setReferenceLabel(event.target.value)} placeholder="Invoice / receipt / transfer ref" />
+                <Input value={referenceLabel} onChange={(event) => setReferenceLabel(event.target.value)} placeholder={t("accounting.extraReference")} />
               </div>
             </div>
             <div>
@@ -360,16 +374,16 @@ export default function AccountingPage() {
               </div>
               <div className="mt-4">
                 <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by entry number, counterparty, category, customer, or note"
+                    <Input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    placeholder={t("accounting.searchPlaceholder")}
                   />
                   <Button variant="outline" onClick={() => void refresh()}>
-                    Refresh
+                    {t("common.refresh")}
                   </Button>
                   <Button variant="outline" onClick={handleExport}>
-                    Export CSV
+                    {t("common.exportCsv")}
                   </Button>
                 </div>
               </div>

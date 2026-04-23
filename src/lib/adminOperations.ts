@@ -2,6 +2,34 @@ import type { FinancialEntry } from "@/types/lourex";
 import type { DashboardReportSnapshot } from "@/lib/reportsDomain";
 import type { OperationsDeal, OperationsFinancialEditRequest, OperationsShipment } from "@/domain/operations/types";
 
+type ReportCsvLabels = {
+  metric: string;
+  value: string;
+  requests: string;
+  deals: string;
+  shipments: string;
+  customers: string;
+  income: string;
+  expense: string;
+  lockedEntries: string;
+  pendingEditRequests: string;
+  topCustomer: string;
+  outstandingBalance: string;
+};
+
+type AccountingCsvLabels = {
+  entryNumber: string;
+  scope: string;
+  deal: string;
+  customer: string;
+  type: string;
+  amount: string;
+  currency: string;
+  category: string;
+  counterparty: string;
+  date: string;
+};
+
 const normalizeTerm = (value: string) => value.trim().toLowerCase();
 
 export const filterDeals = (rows: OperationsDeal[], search: string) => {
@@ -58,19 +86,19 @@ const escapeCsv = (value: string | number | null | undefined) => {
   return /[",\n]/.test(normalized) ? `"${normalized.replace(/"/g, '""')}"` : normalized;
 };
 
-export const buildReportCsv = (snapshot: DashboardReportSnapshot) => {
+export const buildReportCsv = (snapshot: DashboardReportSnapshot, labels: ReportCsvLabels) => {
   const lines = [
-    ["Metric", "Value"],
-    ["Requests", snapshot.summary.requests],
-    ["Deals", snapshot.summary.deals],
-    ["Shipments", snapshot.summary.shipments],
-    ["Customers", snapshot.summary.customers],
-    ["Income", snapshot.summary.income],
-    ["Expense", snapshot.summary.expense],
-    ["Locked entries", snapshot.summary.lockedEntries],
-    ["Pending edit requests", snapshot.summary.pendingEditRequests],
+    [labels.metric, labels.value],
+    [labels.requests, snapshot.summary.requests],
+    [labels.deals, snapshot.summary.deals],
+    [labels.shipments, snapshot.summary.shipments],
+    [labels.customers, snapshot.summary.customers],
+    [labels.income, snapshot.summary.income],
+    [labels.expense, snapshot.summary.expense],
+    [labels.lockedEntries, snapshot.summary.lockedEntries],
+    [labels.pendingEditRequests, snapshot.summary.pendingEditRequests],
     [],
-    ["Top customer", "Outstanding balance", "Pending edit requests"],
+    [labels.topCustomer, labels.outstandingBalance, labels.pendingEditRequests],
     ...snapshot.topCustomers.map((customer) => [
       customer.fullName,
       customer.outstandingBalance,
@@ -81,9 +109,20 @@ export const buildReportCsv = (snapshot: DashboardReportSnapshot) => {
   return lines.map((row) => row.map((cell) => escapeCsv(cell)).join(",")).join("\n");
 };
 
-export const buildAccountingEntriesCsv = (entries: FinancialEntry[]) => {
+export const buildAccountingEntriesCsv = (entries: FinancialEntry[], labels: AccountingCsvLabels) => {
   const lines = [
-    ["Entry number", "Scope", "Deal", "Customer", "Type", "Amount", "Currency", "Category", "Counterparty", "Date"],
+    [
+      labels.entryNumber,
+      labels.scope,
+      labels.deal,
+      labels.customer,
+      labels.type,
+      labels.amount,
+      labels.currency,
+      labels.category,
+      labels.counterparty,
+      labels.date,
+    ],
     ...entries.map((entry) => [
       entry.entryNumber,
       entry.scope,

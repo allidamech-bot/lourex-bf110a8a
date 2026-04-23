@@ -181,13 +181,13 @@ export default function CustomerPortal() {
                   <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
                 </div>
                 <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">Income tracked</p>
+                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.incomeTracked")}</p>
                   <p className="mt-2 text-2xl font-bold text-emerald-500">
                     {customerData.financialIncome.toLocaleString(locale)} SAR
                   </p>
                 </div>
                 <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">Expense tracked</p>
+                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.expenseTracked")}</p>
                   <p className="mt-2 text-2xl font-bold text-rose-500">
                     {customerData.financialExpense.toLocaleString(locale)} SAR
                   </p>

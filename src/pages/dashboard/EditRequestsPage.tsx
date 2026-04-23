@@ -99,9 +99,9 @@ export default function EditRequestsPage() {
       toast.success(status === "approved" ? t("editRequests.toasts.approved") : t("editRequests.toasts.rejected"));
       setReviewNotes((currentNotes) => ({ ...currentNotes, [id]: "" }));
       await refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logOperationalError("financial_edit_request_review", error, { id, status });
-      toast.error(error.message || t("editRequests.toasts.updateError"));
+      toast.error(error instanceof Error ? error.message : t("editRequests.toasts.updateError"));
     } finally {
       setUpdatingId(null);
     }
@@ -151,9 +151,9 @@ export default function EditRequestsPage() {
       setEmail("");
       setReason("");
       await refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logOperationalError("financial_edit_request_submit", error, { financialEntryId: entry.id });
-      toast.error(error.message || t("editRequests.toasts.submitError"));
+      toast.error(error instanceof Error ? error.message : t("editRequests.toasts.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -253,20 +253,20 @@ export default function EditRequestsPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by requester, email, deal, entry, or reason"
+              placeholder={t("editRequests.searchPlaceholder")}
             />
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | "pending" | "approved" | "rejected")}
               className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="all">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="all">{t("editRequests.filters.all")}</option>
+              <option value="pending">{t("editRequests.filters.pending")}</option>
+              <option value="approved">{t("editRequests.filters.approved")}</option>
+              <option value="rejected">{t("editRequests.filters.rejected")}</option>
             </select>
             <Button variant="outline" onClick={() => void refresh()}>
-              Refresh
+              {t("common.refresh")}
             </Button>
           </div>
           {loadError ? (

@@ -177,10 +177,10 @@ export default function ContactPage() {
       toast.success(t("contact.successTitle"), {
         description: t("contact.successDescription"),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logDevError("Contact inquiry submission failed.", error);
       logOperationalError("contact_submit", error, { hasEmail: Boolean(payload.email) });
-      const message = error?.message || t("contact.failureDescription");
+      const message = error instanceof Error ? error.message : t("contact.failureDescription");
       toast.error(t("contact.failureTitle"), {
         description: message,
       });

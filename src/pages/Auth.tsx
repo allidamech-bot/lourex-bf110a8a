@@ -122,7 +122,8 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
         setIsLogin(true);
         setPassword("");
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as Error & { status?: number };
       logOperationalError(isLogin ? "login_failure" : "signup_failure", error, {
         hasEmail: Boolean(email.trim()),
       });
@@ -135,28 +136,6 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
           reason: error?.status || error?.message || "unknown",
         });
       }
-      
-      let message = t("auth.authError");
-      
-      if (error.message === "CONFIG_ERROR") {
-        message = t("auth.configError");
-      } else if (error.status === 400 || error.message?.includes("Invalid login credentials") || error.message?.includes("invalid_credentials")) {
-        message = t("auth.invalidCredentials");
-      } else if (error.message?.includes("Email not confirmed") || error.message?.includes("email_not_confirmed")) {
-        message = t("auth.emailNotConfirmed");
-      } else if (error.status === 429 || error.message?.includes("too_many_requests")) {
-        message = t("auth.tooManyRequests");
-      } else if (error.message?.includes("NetworkError") || error.message?.includes("fetch")) {
-        message = t("auth.networkError");
-      } else if (error.message) {
-        // Fallback to original message if it's already user-friendly or unknown
-        message = error.message;
-      }
-
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (

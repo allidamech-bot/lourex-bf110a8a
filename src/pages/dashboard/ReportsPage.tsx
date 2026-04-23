@@ -45,7 +45,7 @@ export default function ReportsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
-  const [drillDownData, setDrillDownData] = useState<{ type: string; items: any[] } | null>(null);
+  const [drillDownData, setDrillDownData] = useState<{ type: string; items: Array<{ id: string; status: string; totalValue?: number; amount?: number }> } | null>(null);
   const [loadError, setLoadError] = useState("");
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
@@ -59,13 +59,13 @@ export default function ReportsPage() {
       try {
         const nextSnapshot = await getDashboardReportSnapshot(rangeStart, rangeEnd);
         setSnapshot(nextSnapshot);
-      } catch (error: any) {
+      } catch (error: unknown) {
         logOperationalError("reports_snapshot_load", error, {
           start: rangeStart.toISOString(),
           end: rangeEnd.toISOString(),
         });
         setSnapshot(null);
-        setLoadError(error?.message || t("common.error"));
+        setLoadError(error instanceof Error ? error.message : t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -106,19 +106,35 @@ export default function ReportsPage() {
 
   const handleExport = () => {
     if (!snapshot) {
-      const message = "No report data is available to export yet.";
+      const message = t("reports.export.noData");
       setLoadError(message);
       toast.error(message);
       return;
     }
-    const exported = downloadCsv(`lourex-report-${range}.csv`, buildReportCsv(snapshot));
+    const exported = downloadCsv(
+      `lourex-report-${range}.csv`,
+      buildReportCsv(snapshot, {
+        metric: t("common.value"),
+        value: t("common.value"),
+        requests: t("reports.metrics.requests"),
+        deals: t("reports.metrics.deals"),
+        shipments: t("reports.metrics.shipments"),
+        customers: t("reports.metrics.customers"),
+        income: t("reports.metrics.income"),
+        expense: t("reports.metrics.expense"),
+        lockedEntries: t("reports.metrics.lockedEntries"),
+        pendingEditRequests: t("reports.metrics.pendingEditRequests"),
+        topCustomer: t("reports.topCustomers"),
+        outstandingBalance: t("reports.labels.outstandingBalance"),
+      }),
+    );
     if (!exported) {
       logOperationalError("reports_export_unavailable", new Error("CSV export unavailable"));
-      setLoadError("CSV export is unavailable in this environment.");
-      toast.error("CSV export is unavailable in this environment.");
+      setLoadError(t("reports.export.unavailable"));
+      toast.error(t("reports.export.unavailable"));
       return;
     }
-    toast.success("Report CSV exported.");
+    toast.success(t("reports.export.success"));
   };
 
   if (loading) {
@@ -153,10 +169,10 @@ export default function ReportsPage() {
             <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <button onClick={handleExport} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />Export CSV</span>
+              <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />{t("common.exportCsv")}</span>
             </button>
             <button onClick={() => window.print()} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />Print</span>
+              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />{t("common.print")}</span>
             </button>
           </div>
         </div>
@@ -207,7 +223,7 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {drillDownData.items.map((item: any) => (
+                {drillDownData.items.map((item) => (
                   <tr key={item.id} className="hover:bg-secondary/5">
                     <td className="py-3 font-mono text-xs">{item.id.substring(0, 8)}...</td>
                     <td className="py-3">
@@ -234,8 +250,8 @@ export default function ReportsPage() {
             {[
               { label: t("reports.metrics.audits"), value: metrics.audits, icon: ShieldCheck },
               { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
-              { label: "Locked entries", value: metrics.lockedEntries, icon: Receipt },
-              { label: "Pending edit requests", value: metrics.pendingEditRequests, icon: Receipt },
+              { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries, icon: Receipt },
+              { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests, icon: Receipt },
               { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR`, icon: Receipt },
@@ -290,11 +306,11 @@ export default function ReportsPage() {
                   </div>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
                     <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
-                      <p className="text-xs text-muted-foreground">Outstanding balance</p>
+                      <p className="text-xs text-muted-foreground">{t("reports.labels.outstandingBalance")}</p>
                       <p className="mt-1 font-semibold">{customer.outstandingBalance.toLocaleString()} SAR</p>
                     </div>
                     <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
-                      <p className="text-xs text-muted-foreground">Pending edit requests</p>
+                      <p className="text-xs text-muted-foreground">{t("reports.labels.pendingEditRequests")}</p>
                       <p className="mt-1 font-semibold">{customer.pendingEditRequests}</p>
                     </div>
                   </div>

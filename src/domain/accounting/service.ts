@@ -54,7 +54,7 @@ export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] 
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
   ]);
 
-  const dealMap = new Map((deals as any[]).map((deal) => [deal.id, deal]));
+  const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const customerMap = new Map((customers || []).map((row) => [row.id, row]));
 
   return (entries || [])
@@ -155,7 +155,7 @@ export const createFinancialEntry = async (input: {
       reference_label: normalizedReferenceLabel,
       created_by: user.id,
       locked: true,
-    } as any)
+    })
     .select("*")
     .single();
 
@@ -201,7 +201,7 @@ export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[
   ]);
 
   const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
-  const dealMap = new Map((deals as any[]).map((deal) => [deal.id, deal]));
+  const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const customerMap = new Map((customers || []).map((row) => [row.id, row]));
   const profileMap = new Map((profiles || []).map((row) => [row.id, row]));
 
@@ -222,8 +222,8 @@ export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[
       reviewedAt: row.reviewed_at || null,
       reviewerName: row.reviewer_id ? profileMap.get(row.reviewer_id)?.full_name || "" : "",
       reviewNote: row.review_note || "",
-      oldValue: (row.old_value as any) || {},
-      proposedValue: (row.proposed_value as any) || {},
+      oldValue: (row.old_value as Record<string, unknown>) || {},
+      proposedValue: (row.proposed_value as Record<string, unknown>) || {},
     }))
     .sort((a, b) => +new Date(b.submittedAt) - +new Date(a.submittedAt));
 };
@@ -289,7 +289,7 @@ export const createFinancialEditRequest = async (input: {
       old_value: sanitizeFinancialEditProposal(input.oldValue),
       proposed_value: sanitizedProposal,
       created_by: user.id,
-    } as any)
+    })
     .select("*")
     .single();
 
@@ -375,7 +375,7 @@ export const updateFinancialEditRequestStatus = async (
     const entryUpdate = await supabase
       .from("financial_entries")
       .update({
-        ...(sanitizedProposal as any),
+        ...(sanitizedProposal as Record<string, unknown>),
         locked: true,
       })
       .eq("id", updated.data.financial_entry_id)

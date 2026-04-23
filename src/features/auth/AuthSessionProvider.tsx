@@ -22,23 +22,23 @@ type AuthContextValue = {
 
 const AuthSessionContext = createContext<AuthContextValue | undefined>(undefined);
 
-const mapProfileRow = (row: any): LourexProfile | null => {
-  if (!row?.role || !isValidRole(row.role)) {
+const mapProfileRow = (row: Record<string, unknown>): LourexProfile | null => {
+  if (typeof row?.role !== "string" || !isValidRole(row.role)) {
     return null;
   }
 
   return {
-    id: row.id,
-    email: row.email || "",
-    fullName: row.full_name || "",
-    role: row.role as any,
-    partnerType: row.partner_type as any || null,
-    status: row.status as any,
-    phone: row.phone || undefined,
-    country: row.country || undefined,
-    city: row.city || undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: String(row.id),
+    email: String(row.email || ""),
+    fullName: String(row.full_name || ""),
+    role: row.role as LourexProfile["role"],
+    partnerType: (row.partner_type as LourexProfile["partnerType"]) || null,
+    status: row.status as LourexProfile["status"],
+    phone: typeof row.phone === "string" ? row.phone : undefined,
+    country: typeof row.country === "string" ? row.country : undefined,
+    city: typeof row.city === "string" ? row.city : undefined,
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
   };
 };
 

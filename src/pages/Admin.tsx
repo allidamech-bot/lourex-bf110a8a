@@ -62,8 +62,8 @@ export default function Admin() {
       if (error) throw error;
       toast.success(t("admin.updated"));
       await refresh();
-    } catch (error: any) {
-      toast.error(error.message || t("admin.updateFailed"));
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : t("admin.updateFailed"));
     } finally {
       setSavingId(null);
     }
