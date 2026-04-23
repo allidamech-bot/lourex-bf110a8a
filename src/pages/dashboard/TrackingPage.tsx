@@ -13,6 +13,8 @@ import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { canAdvanceShipmentStage } from "@/domain/operations/guards";
+import { logOperationalError } from "@/lib/monitoring";
 
 export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
@@ -29,8 +31,14 @@ export default function TrackingPage() {
 
   const refresh = async () => {
     setLoading(true);
-    setRows(await loadShipments());
-    setLoading(false);
+    try {
+      setRows(await loadShipments());
+    } catch (error) {
+      logOperationalError("tracking_load", error);
+      toast.error(t("tracking.toasts.advanceError"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -54,16 +62,17 @@ export default function TrackingPage() {
   const nextStage = nextStageCode ? getShipmentStageCopy(nextStageCode, lang) : null;
 
   const canAdvance = useMemo(() => {
-    if (!profile || !nextStageCode) return false;
-    const nextOrder = shipmentStages.find((stage) => stage.code === nextStageCode)?.order ?? 0;
-
-    if (profile.role === "owner" || profile.role === "operations_employee") return true;
-    if (profile.role === "saudi_partner") return nextOrder >= 7;
-    return false;
-  }, [profile, nextStageCode]);
+    if (!profile || !activeShipment) return false;
+    return canAdvanceShipmentStage({
+      role: profile.role,
+      currentStage: activeShipment.stage,
+      nextStage: nextStageCode,
+    });
+  }, [activeShipment, profile, nextStageCode]);
 
   const handleAdvance = async () => {
     if (!activeShipment || !nextStageCode || !nextStage) return;
+    if (submitting) return;
 
     if (!internalNote.trim()) {
       toast.error(t("tracking.toasts.noteRequired"));
@@ -85,6 +94,10 @@ export default function TrackingPage() {
       toast.success(t("tracking.toasts.advanced", { stage: nextStage.label }));
       await refresh();
     } catch (error: unknown) {
+      logOperationalError("tracking_advance", error, {
+        shipmentId: activeShipment.id,
+        stageCode: nextStageCode,
+      });
       const message = error instanceof Error ? error.message : t("tracking.toasts.advanceError");
       toast.error(message);
     } finally {

@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitContactInquiry } from "@/domain/public/inquiries";
 import { publicContactInfo } from "@/lib/contactInfo";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 type ContactFormValues = {
   name: string;
@@ -63,6 +64,7 @@ export default function ContactPage() {
   const [values, setValues] = useState<ContactFormValues>(initialValues);
   const [errors, setErrors] = useState<ContactFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSucceeded, setSubmitSucceeded] = useState(false);
 
   const fieldErrors = useMemo(
     () => ({
@@ -105,6 +107,7 @@ export default function ContactPage() {
       const nextValue = event.target.value;
 
       setValues((current) => ({ ...current, [field]: nextValue }));
+      setSubmitSucceeded(false);
 
       if (errors[field]) {
         setErrors((current) => {
@@ -166,11 +169,17 @@ export default function ContactPage() {
 
       setValues(initialValues);
       setErrors({});
+      setSubmitSucceeded(true);
+      trackEvent("contact_submitted", {
+        hasPhone: Boolean(payload.phone),
+        hasCompany: Boolean(payload.company),
+      });
       toast.success(t("contact.successTitle"), {
         description: t("contact.successDescription"),
       });
     } catch (error: any) {
       logDevError("Contact inquiry submission failed.", error);
+      logOperationalError("contact_submit", error, { hasEmail: Boolean(payload.email) });
       const message = error?.message || t("contact.failureDescription");
       toast.error(t("contact.failureTitle"), {
         description: message,
@@ -276,6 +285,11 @@ export default function ContactPage() {
                   <SendHorizonal className="me-2 h-4 w-4" />
                   {isSubmitting ? t("contact.submitting") : t("contact.submit")}
                 </Button>
+                {submitSucceeded ? (
+                  <p className="text-sm text-primary" role="status">
+                    {t("contact.successDescription")}
+                  </p>
+                ) : null}
               </form>
             </section>
 

@@ -10,6 +10,7 @@ import {
   normalizeText,
   success,
 } from "@/domain/shared/utils";
+import { logOperationalError } from "@/lib/monitoring";
 
 type InquiryInsert = Database["public"]["Tables"]["inquiries"]["Insert"];
 type InquiryRow = Database["public"]["Tables"]["inquiries"]["Row"];
@@ -83,15 +84,21 @@ const insertInquiry = async (
 export const submitContactInquiry = async (
   payload: ContactInquiryInput,
 ): Promise<DomainResult<any>> => {
+  const normalized = normalizeInquiryPayload(payload);
+  if (normalized.error || !normalized.data) {
+    return normalized;
+  }
+
   try {
     const { data, error } = await supabase.functions.invoke("submit-inquiry", {
       body: {
-        ...payload,
+        ...normalized.data,
         inquiry_type: "contact",
       },
     });
 
     if (error) {
+      logOperationalError("contact_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
       return {
         data: null,
         error: createDomainError(error, "Unable to submit the contact inquiry."),
@@ -100,6 +107,7 @@ export const submitContactInquiry = async (
 
     return success(data);
   } catch (error) {
+    logOperationalError("contact_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
     return {
       data: null,
       error: createDomainError(error, "Unable to submit the contact inquiry."),
@@ -110,15 +118,21 @@ export const submitContactInquiry = async (
 export const submitPurchaseRequestInquiry = async (
   payload: PurchaseRequestInquiryInput,
 ): Promise<DomainResult<any>> => {
+  const normalized = normalizeInquiryPayload(payload);
+  if (normalized.error || !normalized.data) {
+    return normalized;
+  }
+
   try {
     const { data, error } = await supabase.functions.invoke("submit-inquiry", {
       body: {
-        ...payload,
+        ...normalized.data,
         inquiry_type: "purchase_request",
       },
     });
 
     if (error) {
+      logOperationalError("purchase_request_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
       return {
         data: null,
         error: createDomainError(error, "Unable to submit the purchase request inquiry."),
@@ -127,6 +141,7 @@ export const submitPurchaseRequestInquiry = async (
 
     return success(data);
   } catch (error) {
+    logOperationalError("purchase_request_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
     return {
       data: null,
       error: createDomainError(error, "Unable to submit the purchase request inquiry."),

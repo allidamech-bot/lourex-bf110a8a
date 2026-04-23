@@ -31,6 +31,7 @@ import {
 import { getShipmentStageCopy } from "@/lib/shipmentStages";
 import { useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
+import { logOperationalError } from "@/lib/monitoring";
 
 const HEADER_SEPARATOR = " | ";
 
@@ -59,11 +60,17 @@ export default function DealsPage() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const [dealsData, usersData] = await Promise.all([fetchDeals(), fetchOperationalUsers()]);
-    setRows(dealsData);
-    setUsers(usersData);
-    setLoading(false);
-  }, []);
+    try {
+      const [dealsData, usersData] = await Promise.all([fetchDeals(), fetchOperationalUsers()]);
+      setRows(dealsData);
+      setUsers(usersData);
+    } catch (error) {
+      logOperationalError("deals_load", error);
+      toast.error(t("deals.toasts.saveError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     void refresh();
@@ -106,6 +113,7 @@ export default function DealsPage() {
 
   const handleSave = async () => {
     if (!selectedDeal) return;
+    if (saving) return;
 
     setSaving(true);
     try {
@@ -120,6 +128,7 @@ export default function DealsPage() {
       await refresh();
       setSearchParams({ deal: selectedDeal.dealNumber });
     } catch (error: unknown) {
+      logOperationalError("deal_save", error, { dealId: selectedDeal.id });
       toast.error(getErrorMessage(error, t("deals.toasts.saveError")));
     } finally {
       setSaving(false);
@@ -129,6 +138,7 @@ export default function DealsPage() {
   const handleAttachmentUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !selectedDeal) return;
+    if (uploadingAttachment) return;
 
     setUploadingAttachment(true);
     try {
@@ -141,6 +151,7 @@ export default function DealsPage() {
       toast.success(t("deals.toasts.attachmentUploaded"));
       await refresh();
     } catch (error: unknown) {
+      logOperationalError("deal_attachment_upload", error, { dealId: selectedDeal.id });
       toast.error(getErrorMessage(error, t("deals.toasts.attachmentError")));
     } finally {
       event.target.value = "";

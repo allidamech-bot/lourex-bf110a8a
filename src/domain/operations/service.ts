@@ -37,6 +37,7 @@ import {
   normalizeText,
   success,
 } from "@/domain/shared/utils";
+import { logOperationalError } from "@/lib/monitoring";
 
 const MAX_PURCHASE_REQUEST_IMAGES = 5;
 
@@ -208,6 +209,7 @@ export const uploadPurchaseRequestImages = async (
 
     return success(uploadedUrls);
   } catch (error) {
+    logOperationalError("purchase_request_image_upload", error, { requestId: normalizedId });
     return {
       data: null,
       error: createDomainError(error, "Unable to upload the purchase request images."),
@@ -286,6 +288,7 @@ export const createRequest = async (
 
     return success(normalizeRequest(createdRequest));
   } catch (error) {
+    logOperationalError("purchase_request_create", error, { requestNumber: normalizedInput.requestNumber });
     return {
       data: null,
       error: createDomainError(error, "Unable to create the purchase request."),
@@ -327,7 +330,11 @@ export const createPurchaseRequestWithAttachments = async (
     return success(updateResult.data);
   } catch (error: any) {
     // Cleanup on failure
-    await deleteRequest(requestId);
+    const cleanupResult = await deleteRequest(requestId);
+    if (cleanupResult.error) {
+      logOperationalError("purchase_request_cleanup", cleanupResult.error, { requestId });
+    }
+    logOperationalError("purchase_request_submit_with_attachments", error, { requestId });
     return {
       data: null,
       error: createDomainError(error, "Failed to complete purchase request submission."),
@@ -371,6 +378,7 @@ export const updateRequestWithImages = async (
     if (!result) throw new Error("Could not reload updated request.");
     return success(result as OperationsRequest);
   } catch (error) {
+    logOperationalError("purchase_request_image_update", error, { requestId });
     return { data: null, error: createDomainError(error, "Failed to update request with images.") };
   }
 };
@@ -408,6 +416,7 @@ export const updateDealStatus = async (
 
     return success(normalizeDeal(updatedDeal));
   } catch (error) {
+    logOperationalError("deal_status_update", error, { dealId: normalizedDealId });
     return {
       data: null,
       error: createDomainError(error, "Unable to update the deal status."),

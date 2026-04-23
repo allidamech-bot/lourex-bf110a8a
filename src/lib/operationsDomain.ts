@@ -5,6 +5,8 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { isValidRole, type LourexAccountStatus, type LourexRole } from "@/features/auth/rbac";
 import { shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
+import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import type {
   AttachmentRecord,
   CustomerAccount,
@@ -940,9 +942,17 @@ export const updatePurchaseRequestStatus = async (
   status: PurchaseRequestStatus,
   internalNotes?: string,
 ) => {
-  const { user } = await getCurrentUserContext();
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("صلاحياتك الحالية لا تسمح بتحديث طلبات الشراء.");
+  }
+
   const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
   const current = currentRows.find((row) => row.id === requestId);
+  if (!current) throw new Error("تعذر العثور على طلب الشراء المطلوب.");
+  if (!canTransitionPurchaseRequestStatus(current.status, status)) {
+    throw new Error("لا يمكن نقل طلب الشراء إلى هذه الحالة من حالته الحالية.");
+  }
 
   const result = await safeStructuredMutation(() =>
     db
@@ -956,7 +966,9 @@ export const updatePurchaseRequestStatus = async (
       .eq("id", requestId),
   );
 
-  if (!result.error) {
+  if (result.error) {
+    logOperationalError("purchase_request_status_update", result.error, { requestId, status });
+  } else {
     await writeAuditLog({
       action: "purchase_request.status_updated",
       tableName: "purchase_requests",
@@ -977,8 +989,14 @@ export const updatePurchaseRequestStatus = async (
 };
 
 export const updatePurchaseRequestInternalNotes = async (requestId: string, internalNotes: string) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("صلاحياتك الحالية لا تسمح بتحديث ملاحظات طلبات الشراء.");
+  }
+
   const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
   const current = currentRows.find((row) => row.id === requestId);
+  if (!current) throw new Error("تعذر العثور على طلب الشراء المطلوب.");
 
   const result = await safeStructuredMutation(() =>
     db
@@ -990,7 +1008,9 @@ export const updatePurchaseRequestInternalNotes = async (requestId: string, inte
       .eq("id", requestId),
   );
 
-  if (!result.error) {
+  if (result.error) {
+    logOperationalError("purchase_request_notes_update", result.error, { requestId });
+  } else {
     await writeAuditLog({
       action: "purchase_request.notes_updated",
       tableName: "purchase_requests",
@@ -1063,8 +1083,16 @@ export const convertRequestToDeal = async (
     saudiPartnerId?: string;
   },
 ) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
+  if (!isValidRole(profile.role)) throw new Error("صلاحيات الحساب الحالية غير صالحة.");
+  if (!canConvertPurchaseRequest({
+    role: profile.role,
+    status: request.status,
+    convertedDealNumber: request.convertedDealNumber,
+  })) {
+    throw new Error("لا يمكن تحويل هذا الطلب إلى صفقة من حالته الحالية أو بصلاحياتك الحالية.");
+  }
 
   const customer = await ensureCustomer(request);
   if (!customer) throw new Error("تعذر إنشاء سجل العميل.");
@@ -1302,6 +1330,12 @@ export const convertRequestToDeal = async (
       link: `/dashboard/deals?deal=${dealNumber}`,
     })),
   );
+
+  trackEvent("deal_converted", {
+    requestNumber: request.requestNumber,
+    dealNumber,
+    hasTracking: Boolean(trackingNumber),
+  });
 
   return {
     dealId: insertedDeal.data.id,
@@ -1639,10 +1673,15 @@ export const createTrackingUpdate = async (input: {
 }) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
+  if (!isValidRole(profile.role)) throw new Error("صلاحيات الحساب الحالية غير صالحة.");
 
   const shipments = await safeStructuredSelect<ShipmentRow>("shipments");
   const shipment = shipments.find((row) => row.id === input.shipmentId);
   if (!shipment) throw new Error("تعذر العثور على الشحنة المطلوبة.");
+  const currentStage = shipment.current_stage_code || mapShipmentStatusToStage(shipment.status);
+  if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage: input.stageCode })) {
+    throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
+  }
 
   const inserted = await db
     .from<TrackingUpdateRow>("tracking_updates")
@@ -1661,7 +1700,13 @@ export const createTrackingUpdate = async (input: {
     .select("*")
     .single();
 
-  if (inserted.error) throw inserted.error;
+  if (inserted.error) {
+    logOperationalError("tracking_update_create", inserted.error, {
+      shipmentId: input.shipmentId,
+      stageCode: input.stageCode,
+    });
+    throw inserted.error;
+  }
 
   await writeAuditLog({
     action: "tracking.updated",
@@ -1696,6 +1741,11 @@ export const createTrackingUpdate = async (input: {
         : `/dashboard/tracking?tracking=${shipment.tracking_id}`,
     })),
   );
+
+  trackEvent("tracking_update_created", {
+    stageCode: input.stageCode,
+    visibility: input.visibility || (input.customerNote ? "customer_visible" : "internal"),
+  });
 
   return inserted.data;
 };

@@ -6,6 +6,7 @@ import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimelin
 import { useI18n } from "@/lib/i18n";
 import { lookupPublicTracking } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 export default function TrackPage() {
   const { lang } = useI18n();
@@ -27,6 +28,10 @@ export default function TrackPage() {
   );
 
   const handleLookup = async () => {
+    if (loading) {
+      return;
+    }
+
     const normalized = trackingId.trim().toUpperCase();
 
     if (!normalized) {
@@ -48,7 +53,15 @@ export default function TrackPage() {
       }
 
       setResult(data);
-    } catch {
+      trackEvent("tracking_viewed", {
+        found: true,
+        trackingId: data.trackingId,
+        stage: data.currentStage,
+      });
+    } catch (error) {
+      logOperationalError("public_tracking_lookup", error, {
+        trackingId: normalized,
+      });
       setError(
         lang === "ar"
           ? "تعذر تنفيذ عملية التتبع حاليًا. حاول مرة أخرى بعد قليل."

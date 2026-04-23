@@ -16,6 +16,7 @@ import type {
 } from "@/lib/operationsDomain";
 import type { FinancialEntry, FinancialEditRequest } from "@/types/lourex";
 import type { OperationalDeal } from "@/lib/operationsDomain";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
   const { profile } = await getCurrentUserContext();
@@ -116,7 +117,10 @@ export const createFinancialEntry = async (input: {
     .select("*")
     .single();
 
-  if (inserted.error) throw inserted.error;
+  if (inserted.error) {
+    logOperationalError("financial_entry_create", inserted.error, { dealId: input.dealId || null });
+    throw inserted.error;
+  }
 
   await writeAuditLog({
     action: "financial_entry.created",
@@ -132,6 +136,12 @@ export const createFinancialEntry = async (input: {
       summary: `إنشاء قيد مالي ${entryNumber}`,
       entity_label: entryNumber,
     },
+  });
+
+  trackEvent("financial_entry_created", {
+    scope: input.scope,
+    type: input.type,
+    currency: input.currency,
   });
 
   return inserted.data;
@@ -187,6 +197,9 @@ export const createFinancialEditRequest = async (input: {
   const { user } = await getCurrentUserContext();
   if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
   if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
+  if (!input.financialEntryId || !input.requester.trim() || !input.email.trim() || !input.reason.trim()) {
+    throw new Error("يجب استكمال بيانات طلب التعديل المالي.");
+  }
 
   const inserted = await supabase
     .from("financial_edit_requests")
@@ -204,7 +217,13 @@ export const createFinancialEditRequest = async (input: {
     .select("*")
     .single();
 
-  if (inserted.error) throw inserted.error;
+  if (inserted.error) {
+    logOperationalError("financial_edit_request_create", inserted.error, {
+      financialEntryId: input.financialEntryId,
+      dealId: input.dealId || null,
+    });
+    throw inserted.error;
+  }
 
   await writeAuditLog({
     action: "financial_entry.edit_requested",
@@ -231,6 +250,11 @@ export const createFinancialEditRequest = async (input: {
     })),
   );
 
+  trackEvent("financial_edit_request_submitted", {
+    hasDeal: Boolean(input.dealId),
+    hasCustomer: Boolean(input.customerId),
+  });
+
   return inserted.data;
 };
 
@@ -245,6 +269,8 @@ export const updateFinancialEditRequestStatus = async (
 
   const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
   const current = currentRows.find((row) => row.id === id);
+  if (!current) throw new Error("تعذر العثور على طلب التعديل المالي.");
+  if (current.status !== "pending") throw new Error("لا يمكن مراجعة طلب تمت معالجته مسبقاً.");
 
   const updated = await supabase
     .from("financial_edit_requests")
@@ -258,7 +284,10 @@ export const updateFinancialEditRequestStatus = async (
     .select("*")
     .single();
 
-  if (updated.error) throw updated.error;
+  if (updated.error) {
+    logOperationalError("financial_edit_request_review", updated.error, { id, status });
+    throw updated.error;
+  }
 
   if (status === "approved" && updated.data.financial_entry_id) {
     const entryUpdate = await supabase
@@ -269,7 +298,13 @@ export const updateFinancialEditRequestStatus = async (
       })
       .eq("id", updated.data.financial_entry_id);
 
-    if (entryUpdate.error) throw entryUpdate.error;
+    if (entryUpdate.error) {
+      logOperationalError("financial_entry_apply_edit", entryUpdate.error, {
+        id,
+        financialEntryId: updated.data.financial_entry_id,
+      });
+      throw entryUpdate.error;
+    }
   }
 
   await writeAuditLog({
@@ -300,6 +335,8 @@ export const updateFinancialEditRequestStatus = async (
       link: updated.data.deal_id ? `/dashboard/edit-requests?deal=${updated.data.deal_id}` : "/dashboard/edit-requests",
     })),
   );
+
+  trackEvent("financial_edit_request_reviewed", { status });
 
   return updated.data;
 };

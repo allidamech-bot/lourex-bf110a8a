@@ -12,6 +12,7 @@ import { createFinancialEntry, loadFinancialEntries } from "@/domain/accounting/
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError } from "@/lib/monitoring";
 
 export default function AccountingPage() {
   const { locale, t } = useI18n();
@@ -33,10 +34,16 @@ export default function AccountingPage() {
 
   const refresh = async () => {
     setLoading(true);
-    const [entriesData, dealsData] = await Promise.all([loadFinancialEntries(), loadDeals()]);
-    setEntries(entriesData);
-    setDeals(dealsData);
-    setLoading(false);
+    try {
+      const [entriesData, dealsData] = await Promise.all([loadFinancialEntries(), loadDeals()]);
+      setEntries(entriesData);
+      setDeals(dealsData);
+    } catch (error) {
+      logOperationalError("accounting_load", error);
+      toast.error(t("accounting.toasts.createError"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -71,6 +78,8 @@ export default function AccountingPage() {
   }, [focusedDeal, totals.net]);
 
   const handleCreateEntry = async () => {
+    if (submitting) return;
+
     const parsedAmount = Number(amount);
     if (!parsedAmount || !note.trim() || !method.trim() || !counterparty.trim() || !category.trim()) {
       toast.error(t("accounting.validation"));
@@ -108,6 +117,7 @@ export default function AccountingPage() {
       setType("expense");
       await refresh();
     } catch (error: any) {
+      logOperationalError("financial_entry_create", error, { dealId: focusedDeal?.id || null });
       toast.error(error.message || t("accounting.toasts.createError"));
     } finally {
       setSubmitting(false);

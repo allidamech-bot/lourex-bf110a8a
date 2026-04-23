@@ -1,0 +1,50 @@
+import { shipmentStages } from "@/lib/shipmentStages";
+import type { LourexRole } from "@/features/auth/rbac";
+import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
+
+const REQUEST_STATUS_TRANSITIONS: Record<PurchaseRequestStatus, PurchaseRequestStatus[]> = {
+  intake_submitted: ["under_review", "awaiting_clarification"],
+  under_review: ["awaiting_clarification", "ready_for_conversion"],
+  awaiting_clarification: ["under_review", "ready_for_conversion"],
+  ready_for_conversion: ["under_review", "converted_to_deal"],
+  converted_to_deal: [],
+};
+
+export const canTransitionPurchaseRequestStatus = (
+  currentStatus: PurchaseRequestStatus,
+  nextStatus: PurchaseRequestStatus,
+) => currentStatus === nextStatus || REQUEST_STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus) === true;
+
+export const canConvertPurchaseRequest = (input: {
+  role: LourexRole | null | undefined;
+  status: PurchaseRequestStatus;
+  convertedDealNumber?: string | null;
+}) =>
+  (input.role === "owner" || input.role === "operations_employee") &&
+  input.status === "ready_for_conversion" &&
+  !input.convertedDealNumber;
+
+export const getNextShipmentStageCode = (currentStage: ShipmentStageCode | null | undefined) => {
+  const currentIndex = shipmentStages.findIndex((stage) => stage.code === currentStage);
+  return currentIndex >= 0 ? shipmentStages[currentIndex + 1]?.code ?? null : null;
+};
+
+export const canAdvanceShipmentStage = (input: {
+  role: LourexRole | null | undefined;
+  currentStage: ShipmentStageCode | null | undefined;
+  nextStage: ShipmentStageCode | null | undefined;
+}) => {
+  const expectedNextStage = getNextShipmentStageCode(input.currentStage);
+
+  if (!expectedNextStage || input.nextStage !== expectedNextStage) {
+    return false;
+  }
+
+  const nextOrder = shipmentStages.find((stage) => stage.code === input.nextStage)?.order ?? 0;
+
+  if (input.role === "owner" || input.role === "operations_employee") {
+    return true;
+  }
+
+  return input.role === "saudi_partner" && nextOrder >= 7;
+};

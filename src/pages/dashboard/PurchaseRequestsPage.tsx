@@ -30,9 +30,11 @@ import type { PurchaseRequestStatus } from "@/types/lourex";
 import {
   isInternalRole,
 } from "@/features/auth/rbac";
+import { canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message.trim()) {
@@ -191,6 +193,13 @@ export default function PurchaseRequestsPage() {
   );
 
   const handleStatusUpdate = async (requestId: string, status: PurchaseRequestStatus) => {
+    if (updatingStatusId) return;
+    const current = rows.find((row) => row.id === requestId);
+    if (!current || !canTransitionPurchaseRequestStatus(current.status, status)) {
+      toast.error(t("requests.toasts.statusError"));
+      return;
+    }
+
     setUpdatingStatusId(requestId);
 
     try {
@@ -203,6 +212,7 @@ export default function PurchaseRequestsPage() {
       await refresh();
       setSelectedRequest(requestId);
     } catch (error: unknown) {
+      logOperationalError("purchase_request_status_update", error, { requestId, status });
       toast.error(getErrorMessage(error, t("requests.toasts.statusError")));
     } finally {
       setUpdatingStatusId(null);
@@ -213,6 +223,7 @@ export default function PurchaseRequestsPage() {
     if (!selectedRow) {
       return;
     }
+    if (savingNotesId) return;
 
     setSavingNotesId(selectedRow.id);
 
@@ -226,6 +237,7 @@ export default function PurchaseRequestsPage() {
       await refresh();
       setSelectedRequest(selectedRow.id);
     } catch (error: unknown) {
+      logOperationalError("purchase_request_notes_update", error, { requestId: selectedRow.id });
       toast.error(getErrorMessage(error, t("requests.toasts.notesError")));
     } finally {
       setSavingNotesId(null);
@@ -236,9 +248,19 @@ export default function PurchaseRequestsPage() {
     if (!selectedRow) {
       return;
     }
+    if (convertingId) return;
 
     if (selectedRow.convertedDealNumber) {
       navigate(`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`);
+      return;
+    }
+
+    if (!canConvertPurchaseRequest({
+      role: profile?.role,
+      status: selectedRow.status,
+      convertedDealNumber: selectedRow.convertedDealNumber,
+    })) {
+      toast.error(t("requests.toasts.convertError"));
       return;
     }
 
@@ -255,10 +277,15 @@ export default function PurchaseRequestsPage() {
             deal: converted.dealNumber,
           }),
       );
+      trackEvent("deal_converted", {
+        requestNumber: selectedRow.requestNumber,
+        dealNumber: converted.dealNumber,
+      });
 
       await refresh();
       navigate(`/dashboard/deals?deal=${converted.dealNumber}`);
     } catch (error: unknown) {
+      logOperationalError("deal_convert", error, { requestId: selectedRow.id });
       toast.error(getErrorMessage(error, t("requests.toasts.convertError")));
     } finally {
       setConvertingId(null);
@@ -422,7 +449,12 @@ export default function PurchaseRequestsPage() {
                             variant="gold"
                             disabled={
                               convertingId === selectedRow.id || 
-                              (selectedRow.status !== "ready_for_conversion" && !selectedRow.convertedDealNumber)
+                              (!selectedRow.convertedDealNumber &&
+                                !canConvertPurchaseRequest({
+                                  role: profile?.role,
+                                  status: selectedRow.status,
+                                  convertedDealNumber: selectedRow.convertedDealNumber,
+                                }))
                             }
                             onClick={handleConvert}
                         >
@@ -599,7 +631,8 @@ export default function PurchaseRequestsPage() {
                                       disabled={
                                           updatingStatusId === selectedRow.id ||
                                           selectedRow.status === action.value ||
-                                          Boolean(selectedRow.isLegacyFallback)
+                                          Boolean(selectedRow.isLegacyFallback) ||
+                                          !canTransitionPurchaseRequestStatus(selectedRow.status, action.value)
                                       }
                                       onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
                                   >

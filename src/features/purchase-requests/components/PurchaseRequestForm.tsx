@@ -13,6 +13,7 @@ import {
 import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 type PurchaseRequestFormState = {
   fullName: string;
@@ -173,6 +174,10 @@ export const PurchaseRequestForm = () => {
     ].join("\n");
 
   const handleSubmit = async () => {
+    if (submitting) {
+      return;
+    }
+
     const requiredFields: Array<keyof PurchaseRequestFormState> = [
       "fullName",
       "email",
@@ -207,6 +212,13 @@ export const PurchaseRequestForm = () => {
       return;
     }
 
+    const parsedQuantity = Number(form.quantity);
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      setErrorMessage(t("requests.intake.errors.submitFailed"));
+      toast.error(t("requests.intake.errors.submitFailed"));
+      return;
+    }
+
     if (uploads.length === 0) {
       setErrorMessage(t("requests.intake.errors.missingImages"));
       return;
@@ -229,7 +241,7 @@ export const PurchaseRequestForm = () => {
         city: profile?.city || "",
         productName: form.productName,
         productDescription: form.productDescription,
-        quantity: Number(form.quantity || 0),
+        quantity: parsedQuantity,
         sizeDimensions: form.sizeDimensions,
         color: form.color,
         material: form.material,
@@ -255,6 +267,12 @@ export const PurchaseRequestForm = () => {
       }
 
       setSubmittedData({ requestNumber, trackingCode });
+      trackEvent("purchase_request_submitted", {
+        authenticated: Boolean(profile),
+        requestNumber,
+        images: uploads.length,
+        isFullSourcing: form.isFullSourcing,
+      });
       setForm(initialState);
       clearUploads(uploads);
       setUploads([]);
@@ -265,6 +283,10 @@ export const PurchaseRequestForm = () => {
           ? error.message
           : t("requests.intake.errors.submitFailed");
 
+      logOperationalError("purchase_request_submit", error, {
+        authenticated: Boolean(profile),
+        images: uploads.length,
+      });
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -443,6 +465,7 @@ export const PurchaseRequestForm = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={submitting}
             className="mt-2 flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-[1.8rem] border-2 border-dashed border-primary/20 bg-[linear-gradient(180deg,hsla(var(--secondary)/0.45),hsla(var(--secondary)/0.25))] px-6 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">

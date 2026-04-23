@@ -10,6 +10,7 @@ import { getDefaultRouteForRole } from "@/features/auth/rbac";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
   const { lang, t } = useI18n();
@@ -80,6 +81,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -96,6 +98,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
         if (error) throw error;
 
+        trackEvent("login_success", { mode: "password" });
         toast.success(t("auth.signInSuccess"));
       } else {
         const passwordError = validatePassword(password);
@@ -114,12 +117,20 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
         if (error) throw error;
 
+        trackEvent("signup_success", { requestedRole: "customer" });
         toast.success(t("auth.signUpSuccess"));
         setIsLogin(true);
         setPassword("");
       }
     } catch (error: any) {
-      console.error("[Auth] Login failure:", error);
+      logOperationalError(isLogin ? "login_failure" : "signup_failure", error, {
+        hasEmail: Boolean(email.trim()),
+      });
+      if (isLogin) {
+        trackEvent("login_failure", {
+          reason: error?.status || error?.message || "unknown",
+        });
+      }
       
       let message = t("auth.authError");
       

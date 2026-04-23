@@ -17,6 +17,7 @@ import {
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError } from "@/lib/monitoring";
 
 export default function EditRequestsPage() {
   const { locale, t } = useI18n();
@@ -41,15 +42,21 @@ export default function EditRequestsPage() {
 
   const refresh = async () => {
     setLoading(true);
-    const [requestRows, entryRows, dealRows] = await Promise.all([
-      loadFinancialEditRequests(),
-      loadFinancialEntries(),
-      loadDeals(),
-    ]);
-    setRows(requestRows);
-    setEntries(entryRows);
-    setDeals(dealRows);
-    setLoading(false);
+    try {
+      const [requestRows, entryRows, dealRows] = await Promise.all([
+        loadFinancialEditRequests(),
+        loadFinancialEntries(),
+        loadDeals(),
+      ]);
+      setRows(requestRows);
+      setEntries(entryRows);
+      setDeals(dealRows);
+    } catch (error) {
+      logOperationalError("financial_edit_requests_load", error);
+      toast.error(t("editRequests.toasts.updateError"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -71,6 +78,13 @@ export default function EditRequestsPage() {
   }, [entry?.id]);
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
+    if (updatingId) return;
+    const current = rows.find((row) => row.id === id);
+    if (!current || current.status !== "pending") {
+      toast.error(t("editRequests.toasts.updateError"));
+      return;
+    }
+
     setUpdatingId(id);
 
     try {
@@ -79,6 +93,7 @@ export default function EditRequestsPage() {
       setReviewNote("");
       await refresh();
     } catch (error: any) {
+      logOperationalError("financial_edit_request_review", error, { id, status });
       toast.error(error.message || t("editRequests.toasts.updateError"));
     } finally {
       setUpdatingId(null);
@@ -86,7 +101,14 @@ export default function EditRequestsPage() {
   };
 
   const submit = async () => {
+    if (submitting) return;
+
     if (!requester.trim() || !email.trim() || !reason.trim() || !entry) {
+      toast.error(t("editRequests.validation"));
+      return;
+    }
+    const parsedAmount = Number(proposedAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       toast.error(t("editRequests.validation"));
       return;
     }
@@ -109,7 +131,7 @@ export default function EditRequestsPage() {
           note: entry.note,
         },
         proposedValue: {
-          amount: Number(proposedAmount || 0),
+          amount: parsedAmount,
           method: proposedMethod,
           counterparty: proposedCounterparty,
           category: proposedCategory,
@@ -123,6 +145,7 @@ export default function EditRequestsPage() {
       setReason("");
       await refresh();
     } catch (error: any) {
+      logOperationalError("financial_edit_request_submit", error, { financialEntryId: entry.id });
       toast.error(error.message || t("editRequests.toasts.submitError"));
     } finally {
       setSubmitting(false);
