@@ -6,6 +6,7 @@ import { isValidRole, type LourexAccountStatus, type LourexRole } from "@/featur
 import { shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
+import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import type {
   AttachmentRecord,
@@ -495,7 +496,11 @@ export type CustomerDashboard = CustomerAccount & {
   requestsCount: number;
   dealsCount: number;
   financialEntriesCount: number;
+  financialIncome: number;
+  financialExpense: number;
   financialBalance: number;
+  pendingEditRequests?: number;
+  lastActivityAt?: string;
   auditCount: number;
   latestRequestNumber?: string;
   latestDealNumber?: string;
@@ -1766,12 +1771,13 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
 
   // Optimization: Pre-fetch all data once and pass to sub-loaders where possible
   const deals = await loadDeals();
-  const [customers, requests, entries] = await Promise.all([
+  const [customers, requests, entries, editRequests] = await Promise.all([
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
     loadPurchaseRequests({ includeAttachments: false, includeLegacy: !isCustomer }),
     loadFinancialEntries({ deals }),
+    loadFinancialEditRequests(),
   ]);
 
   const auditCounts = new Map<string, number>();
@@ -1792,25 +1798,37 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
   return (customers || []).map((customer) => {
     const customerRequests = requests.filter((request) => request.customer.id === customer.id);
     const customerDeals = deals.filter((deal) => deal.customerId === customer.id);
-    const customerEntries = entries.filter((entry) => entry.customerId === customer.id);
     const customerAuditCount = [...customerRequests, ...customerDeals].reduce(
       (sum, row) => sum + (auditCounts.get(row.id) || 0),
       0,
     );
+    const financialSummary = buildCustomerFinancialSummary(
+      {
+        id: customer.id,
+        fullName: customer.full_name,
+        phone: customer.phone || "",
+        email: customer.email,
+        country: customer.country || "",
+        city: customer.city || "",
+        requestsCount: customerRequests.length,
+        dealsCount: customerDeals.length,
+        financialEntriesCount: 0,
+        financialIncome: 0,
+        financialExpense: 0,
+        financialBalance: 0,
+        auditCount: customerAuditCount,
+        latestRequestNumber: customerRequests[0]?.requestNumber,
+        latestDealNumber: customerDeals[0]?.dealNumber,
+      },
+      customerDeals,
+      customerRequests,
+      entries,
+      editRequests,
+    );
 
     return {
+      ...financialSummary,
       id: customer.id,
-      fullName: customer.full_name,
-      phone: customer.phone || "",
-      email: customer.email,
-      country: customer.country || "",
-      city: customer.city || "",
-      requestsCount: customerRequests.length,
-      dealsCount: customerDeals.length,
-      financialEntriesCount: customerEntries.length,
-      financialBalance: customerEntries.reduce((sum, entry) => {
-        return sum + (entry.type === "income" ? entry.amount : -entry.amount);
-      }, 0),
       auditCount: customerAuditCount,
       latestRequestNumber: customerRequests[0]?.requestNumber,
       latestDealNumber: customerDeals[0]?.dealNumber,

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { createFinancialEntry, loadFinancialEntries } from "@/domain/accounting/service";
+import { summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
@@ -31,6 +32,7 @@ export default function AccountingPage() {
   const [category, setCategory] = useState("");
   const [referenceLabel, setReferenceLabel] = useState("");
   const [note, setNote] = useState("");
+  const [search, setSearch] = useState("");
 
   const refresh = async () => {
     setLoading(true);
@@ -51,20 +53,39 @@ export default function AccountingPage() {
   }, []);
 
   const focusedDeal = deals.find((row) => row.dealNumber === focusDeal) || null;
-  const visibleEntries = entries.filter((row) => (!focusDeal ? true : row.dealNumber === focusDeal));
+  const visibleEntries = entries.filter((row) => {
+    if (focusDeal && row.dealNumber !== focusDeal) {
+      return false;
+    }
+
+    if (!search.trim()) {
+      return true;
+    }
+
+    const normalizedSearch = search.trim().toLowerCase();
+    return [
+      row.entryNumber,
+      row.dealNumber,
+      row.customerName,
+      row.counterparty,
+      row.category,
+      row.referenceLabel,
+      row.note,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+  });
   const dealEntries = visibleEntries.filter((row) => row.scope === "deal" || row.scope === "customer");
-  const globalEntries = !focusDeal ? entries.filter((row) => row.scope === "global") : [];
+  const globalEntries = !focusDeal ? visibleEntries.filter((row) => row.scope === "global") : [];
 
   const totals = useMemo(() => {
-    const income = visibleEntries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + entry.amount, 0);
-    const expense = visibleEntries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + entry.amount, 0);
+    const summary = summarizeFinancialEntries(visibleEntries);
+    const currencies = [...new Set(visibleEntries.map((entry) => entry.currency).filter(Boolean))];
     return {
-      income,
-      expense,
-      net: income - expense,
-      count: visibleEntries.length,
+      ...summary,
+      currencyLabel: currencies.length === 1 ? currencies[0] : currencies.length > 1 ? "Mixed" : currency,
     };
-  }, [visibleEntries]);
+  }, [currency, visibleEntries]);
 
   const dealFinancialSignal = useMemo(() => {
     if (!focusedDeal) return null;
@@ -175,15 +196,19 @@ export default function AccountingPage() {
               <Receipt className="h-5 w-5 text-primary" />
               <h2 className="font-serif text-2xl font-semibold">{t("accounting.financialSignals")}</h2>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               {[
                 { label: t("accounting.labels.totalIncome"), value: totals.income },
                 { label: t("accounting.labels.totalExpense"), value: totals.expense },
                 { label: t("accounting.labels.net"), value: totals.net, className: totals.net >= 0 ? "text-emerald-400" : "text-rose-400" },
+                { label: "Locked entries", value: totals.lockedCount, hint: `${totals.count} total` },
               ].map((item) => (
                 <div key={item.label} className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
                   <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className={`mt-2 text-2xl font-bold ${item.className || ""}`}>{item.value.toLocaleString()} {currency}</p>
+                  <p className={`mt-2 text-2xl font-bold ${item.className || ""}`}>
+                    {typeof item.value === "number" ? item.value.toLocaleString() : item.value} {item.hint ? "" : totals.currencyLabel}
+                  </p>
+                  {item.hint ? <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p> : null}
                 </div>
               ))}
             </div>
@@ -299,15 +324,22 @@ export default function AccountingPage() {
           ) : null}
         </div>
 
-        <BentoCard className="p-0">
-          <div className="border-b border-border/60 px-6 py-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-serif text-2xl font-semibold">{t("accounting.entriesTitle")}</h2>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                {t("accounting.count", { count: totals.count })}
-              </span>
+          <BentoCard className="p-0">
+            <div className="border-b border-border/60 px-6 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-serif text-2xl font-semibold">{t("accounting.entriesTitle")}</h2>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  {t("accounting.count", { count: totals.count })}
+                </span>
+              </div>
+              <div className="mt-4">
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search by entry number, counterparty, category, customer, or note"
+                />
+              </div>
             </div>
-          </div>
           <div className="space-y-0">
             {[...dealEntries, ...globalEntries].length === 0 ? (
               <div className="p-6">

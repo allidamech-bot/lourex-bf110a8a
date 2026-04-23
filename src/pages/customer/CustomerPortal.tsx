@@ -16,6 +16,7 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
+import { logOperationalError } from "@/lib/monitoring";
 
 export default function CustomerPortal() {
   const { profile } = useAuthSession();
@@ -39,7 +40,7 @@ export default function CustomerPortal() {
 
         setRecentRequests(myRequests.slice(0, 3));
       } catch (error) {
-        console.error("Failed to load customer portal data:", error);
+        logOperationalError("customer_portal_load", error, { customerId: profile.id });
       } finally {
         setLoading(false);
       }
@@ -164,6 +165,18 @@ export default function CustomerPortal() {
               <div className="rounded-[1.2rem] bg-secondary/15 p-5">
                 <p className="text-xs text-muted-foreground">{t("customerPortal.financial.operations")}</p>
                 <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
+              </div>
+              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                <p className="text-xs text-muted-foreground">Income tracked</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-500">
+                  {customerData.financialIncome.toLocaleString(locale)} SAR
+                </p>
+              </div>
+              <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                <p className="text-xs text-muted-foreground">Expense tracked</p>
+                <p className="mt-2 text-2xl font-bold text-rose-500">
+                  {customerData.financialExpense.toLocaleString(locale)} SAR
+                </p>
               </div>
             </div>
           ) : (

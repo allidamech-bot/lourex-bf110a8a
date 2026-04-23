@@ -7,58 +7,20 @@ import {
   ShieldCheck,
   Truck,
   Users,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { loadFinancialEntries } from "@/domain/accounting/service";
 import {
-  loadCustomerDashboards,
-  loadDeals,
-  loadPurchaseRequests,
-  loadShipments,
-} from "@/lib/operationsDomain";
-import { 
-  getFinancialSummaryReport, 
-  getCustomerReport, 
-  getOperationsReport,
+  getDashboardReportSnapshot,
   getMetricDetails,
-  type FinancialSummaryReport,
-  type CustomerReportItem,
-  type OperationsReport
+  type DashboardReportSnapshot,
 } from "@/lib/reportsDomain";
-import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { Clock, ExternalLink } from "lucide-react";
+import { logOperationalError } from "@/lib/monitoring";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
-
-type ReportSummary = {
-  requests: number;
-  deals: number;
-  shipments: number;
-  customers: number;
-  audits: number;
-  linked_entries: number;
-  income: number;
-  expense: number;
-  average_operation_value: number;
-  in_transit: number;
-  destination: number;
-  delivered: number;
-};
-
-type TopCustomer = {
-  customer_id: string;
-  full_name: string;
-  email: string;
-  requests_count: number;
-  deals_count: number;
-};
-
-type ExpenseCategory = {
-  category: string;
-  amount: number;
-};
 
 const getRangeStart = (range: ReportRange, customStart?: string) => {
   const now = new Date();
@@ -72,125 +34,34 @@ const getRangeStart = (range: ReportRange, customStart?: string) => {
   return start;
 };
 
-const isInRange = (dateValue: string, start: Date, end: Date) => {
-  const date = new Date(dateValue);
-  return date >= start && date <= end;
-};
-
 export default function ReportsPage() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<ReportRange>("monthly");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [summary, setSummary] = useState<ReportSummary | null>(null);
-  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
-  const [topExpenseCategories, setTopExpenseCategories] = useState<ExpenseCategory[]>([]);
-  const [operations, setOperations] = useState<OperationsReport | null>(null);
-  const [financialTrends, setFinancialTrends] = useState<FinancialSummaryReport['trends']>([]);
+  const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: any[] } | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
 
   useEffect(() => {
-    const loadWithStructuredQueries = async () => {
-      const startIso = rangeStart.toISOString();
-      const endIso = rangeEnd.toISOString();
-
-      const [summaryResult, customersResult, expenseResult] = await Promise.all([
-        (supabase as any).rpc("lourex_report_summary", { p_start: startIso, p_end: endIso }),
-        (supabase as any).rpc("lourex_report_top_customers", { p_start: startIso, p_end: endIso, p_limit: 4 }),
-        (supabase as any).rpc("lourex_report_top_expense_categories", { p_start: startIso, p_end: endIso, p_limit: 4 }),
-      ]);
-
-      if (summaryResult.error || customersResult.error || expenseResult.error) {
-        throw summaryResult.error || customersResult.error || expenseResult.error;
-      }
-
-      setSummary((summaryResult.data || null) as ReportSummary | null);
-      setTopCustomers((customersResult.data || []) as TopCustomer[]);
-      setTopExpenseCategories((expenseResult.data || []) as ExpenseCategory[]);
-    };
-
-    const loadFallback = async () => {
-      const [financialSummary, customerReport, operationsReport, auditCount, entries] = await Promise.all([
-        getFinancialSummaryReport(rangeStart, rangeEnd),
-        getCustomerReport(),
-        getOperationsReport(),
-        supabase.from("audit_logs").select("id", { count: "exact", head: true }),
-        loadFinancialEntries(),
-      ]);
-
-      setFinancialTrends(financialSummary.trends);
-
-      const [requests, deals, shipments, customers] = await Promise.all([
-        loadPurchaseRequests(),
-        loadDeals(),
-        loadShipments(),
-        loadCustomerDashboards(),
-      ]);
-
-      const filteredRequests = requests.filter((item) => isInRange(item.createdAt || "", rangeStart, rangeEnd));
-      const filteredDeals = deals.filter((item) => isInRange(item.createdAt || "", rangeStart, rangeEnd));
-      const filteredShipments = shipments.filter((item) => isInRange(item.updatedAt, rangeStart, rangeEnd));
-      const filteredEntries = entries.filter((item) => isInRange(item.entryDate, rangeStart, rangeEnd));
-
-      const linkedEntriesCount = filteredEntries.filter((e) => e.dealId || e.customerId).length;
-
-      setSummary({
-        requests: filteredRequests.length,
-        deals: filteredDeals.length,
-        shipments: filteredShipments.length,
-        customers: customers.length,
-        audits: auditCount.count || 0,
-        linked_entries: linkedEntriesCount,
-        income: financialSummary.totalIncome,
-        expense: financialSummary.totalExpense,
-        average_operation_value: filteredDeals.length > 0 ? filteredDeals.reduce((sum, item) => sum + (item.totalValue || 0), 0) / filteredDeals.length : 0,
-        in_transit: filteredShipments.filter((item) => item.stage === "transit_to_destination").length,
-        destination: filteredShipments.filter((item) => item.stage === "arrived_destination" || item.stage === "destination_customs").length,
-        delivered: filteredShipments.filter((item) => item.stage === "delivered").length,
-      });
-
-      setOperations(operationsReport);
-
-      setTopCustomers(
-        [...customerReport]
-          .sort((a, b) => b.dealsCount - a.dealsCount || b.requestsCount - a.requestsCount)
-          .slice(0, 4)
-          .map((item) => ({
-            customer_id: item.customerId,
-            full_name: item.fullName,
-            email: "", // Not returned by report but usually fine in UI
-            requests_count: item.requestsCount,
-            deals_count: item.dealsCount,
-          })),
-      );
-
-      // Use already loaded and filtered entries for expense categories
-      const categoryMap = new Map<string, number>();
-      filteredEntries
-        .filter((entry) => entry.type === "expense")
-        .forEach((entry) => {
-          const key = entry.category || t("reports.uncategorized");
-          categoryMap.set(key, (categoryMap.get(key) || 0) + entry.amount);
-        });
-
-      setTopExpenseCategories(
-        [...categoryMap.entries()]
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 4)
-          .map(([category, amount]) => ({ category, amount })),
-      );
-    };
-
     const load = async () => {
       setLoading(true);
+      setLoadError("");
+
       try {
-        await loadWithStructuredQueries();
-      } catch {
-        await loadFallback();
+        const nextSnapshot = await getDashboardReportSnapshot(rangeStart, rangeEnd);
+        setSnapshot(nextSnapshot);
+      } catch (error: any) {
+        logOperationalError("reports_snapshot_load", error, {
+          start: rangeStart.toISOString(),
+          end: rangeEnd.toISOString(),
+        });
+        setSnapshot(null);
+        setLoadError(error?.message || t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -199,33 +70,31 @@ export default function ReportsPage() {
     void load();
   }, [rangeStart, rangeEnd, t]);
 
-  const metrics = useMemo(() => {
-    const activeSummary = summary || {
-      requests: 0,
-      deals: 0,
-      shipments: 0,
-      customers: 0,
-      audits: 0,
-      linked_entries: 0,
-      income: 0,
-      expense: 0,
-      average_operation_value: 0,
-      in_transit: 0,
-      destination: 0,
-      delivered: 0,
-    };
+  const metrics = snapshot?.summary || {
+    requests: 0,
+    deals: 0,
+    shipments: 0,
+    customers: 0,
+    audits: 0,
+    linkedEntries: 0,
+    lockedEntries: 0,
+    pendingEditRequests: 0,
+    income: 0,
+    expense: 0,
+    averageOperationValue: 0,
+    inTransit: 0,
+    destination: 0,
+    delivered: 0,
+  };
 
-    return {
-      ...activeSummary,
-      net: activeSummary.income - activeSummary.expense,
-    };
-  }, [summary]);
-
-  const handleDrillDown = async (metric: 'active_deals' | 'pending_requests' | 'recent_expenses') => {
+  const handleDrillDown = async (metric: "active_deals" | "pending_requests" | "recent_expenses") => {
     setLoading(true);
     try {
       const items = await getMetricDetails(metric);
       setDrillDownData({ type: metric, items });
+    } catch (error) {
+      logOperationalError("report_metric_drilldown", error, { metric });
+      setLoadError(t("common.error"));
     } finally {
       setLoading(false);
     }
@@ -264,33 +133,38 @@ export default function ReportsPage() {
             <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
         </div>
+        {loadError ? (
+          <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+            {loadError}
+          </div>
+        ) : null}
       </BentoCard>
 
       <div className="grid gap-4 xl:grid-cols-4">
         {[
-          { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown('pending_requests') },
-          { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown('active_deals') },
+          { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown("pending_requests") },
+          { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
           { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
           { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
         ].map((item) => (
-          <BentoCard key={item.label} className={`space-y-3 ${item.action ? 'cursor-pointer hover:bg-secondary/10 transition-colors' : ''}`} onClick={item.action}>
+          <BentoCard key={item.label} className={`space-y-3 ${item.action ? "cursor-pointer hover:bg-secondary/10 transition-colors" : ""}`} onClick={item.action}>
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <item.icon className="h-5 w-5" />
             </div>
             <div className="flex items-center justify-between">
               <p className="font-serif text-4xl font-bold">{item.value}</p>
-              {item.action && <ExternalLink className="h-4 w-4 text-muted-foreground" />}
+              {item.action ? <ExternalLink className="h-4 w-4 text-muted-foreground" /> : null}
             </div>
             <p className="text-sm text-muted-foreground">{item.label}</p>
           </BentoCard>
         ))}
       </div>
 
-      {drillDownData && (
+      {drillDownData ? (
         <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-xl font-semibold capitalize">
-              {drillDownData.type.replace('_', ' ')} {t("reports.title")}
+              {drillDownData.type.replace("_", " ")} {t("reports.title")}
             </h2>
             <button onClick={() => setDrillDownData(null)} className="text-sm text-primary hover:underline">
               {t("common.close")}
@@ -310,12 +184,10 @@ export default function ReportsPage() {
                   <tr key={item.id} className="hover:bg-secondary/5">
                     <td className="py-3 font-mono text-xs">{item.id.substring(0, 8)}...</td>
                     <td className="py-3">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                        {item.status}
-                      </span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{item.status}</span>
                     </td>
                     <td className="py-3 text-right">
-                      {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : '-'}
+                      {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : "-"}
                     </td>
                   </tr>
                 ))}
@@ -323,7 +195,7 @@ export default function ReportsPage() {
             </table>
           </div>
         </BentoCard>
-      )}
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <BentoCard className="space-y-5">
@@ -334,13 +206,15 @@ export default function ReportsPage() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: t("reports.metrics.audits"), value: metrics.audits, icon: ShieldCheck },
-              { label: t("reports.metrics.linkedEntries"), value: metrics.linked_entries, icon: Receipt },
+              { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
+              { label: "Locked entries", value: metrics.lockedEntries, icon: Receipt },
+              { label: "Pending edit requests", value: metrics.pendingEditRequests, icon: Receipt },
               { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR`, icon: Receipt },
-              { label: t("reports.metrics.profit"), value: `${metrics.net.toLocaleString()} SAR`, icon: Receipt },
-              { label: t("reports.metrics.averageValue"), value: `${Math.round(metrics.average_operation_value).toLocaleString()} SAR`, icon: Receipt },
-              { label: t("common.active"), value: operations?.activeDeals || 0, icon: PackageSearch },
-              { label: t("reports.metrics.avgTime"), value: `${Math.round(operations?.averageProcessingTimeDays || 0)} ${t("common.days")}`, icon: Clock },
+              { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR`, icon: Receipt },
+              { label: t("reports.metrics.averageValue"), value: `${Math.round(metrics.averageOperationValue).toLocaleString()} SAR`, icon: Receipt },
+              { label: t("common.active"), value: snapshot?.operations.activeDeals || 0, icon: PackageSearch },
+              { label: t("reports.metrics.avgTime"), value: `${Math.round(snapshot?.operations.averageProcessingTimeDays || 0)} ${t("common.days")}`, icon: Clock },
             ].map((item) => (
               <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4">
                 <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -357,7 +231,7 @@ export default function ReportsPage() {
           <h2 className="font-serif text-2xl font-semibold">{t("reports.shipmentSummary")}</h2>
           <div className="grid gap-3">
             {[
-              { label: t("reports.inTransit"), value: metrics.in_transit },
+              { label: t("reports.inTransit"), value: metrics.inTransit },
               { label: t("reports.destination"), value: metrics.destination },
               { label: t("reports.delivered"), value: metrics.delivered },
             ].map((item) => (
@@ -374,17 +248,27 @@ export default function ReportsPage() {
         <BentoCard className="space-y-4">
           <h2 className="font-serif text-2xl font-semibold">{t("reports.topCustomers")}</h2>
           <div className="space-y-3">
-            {topCustomers.length > 0 ? (
-              topCustomers.map((customer) => (
-                <div key={customer.customer_id} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
+            {snapshot?.topCustomers.length ? (
+              snapshot.topCustomers.map((customer) => (
+                <div key={customer.customerId} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium">{customer.full_name}</p>
+                      <p className="font-medium">{customer.fullName}</p>
                       <p className="mt-1 text-sm text-muted-foreground">{customer.email}</p>
                     </div>
                     <div className="text-end text-sm text-muted-foreground">
-                      <div>{t("reports.requestsCount", { count: customer.requests_count })}</div>
-                      <div>{t("reports.dealsCount", { count: customer.deals_count })}</div>
+                      <div>{t("reports.requestsCount", { count: customer.requestsCount })}</div>
+                      <div>{t("reports.dealsCount", { count: customer.dealsCount })}</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
+                      <p className="text-xs text-muted-foreground">Outstanding balance</p>
+                      <p className="mt-1 font-semibold">{customer.outstandingBalance.toLocaleString()} SAR</p>
+                    </div>
+                    <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
+                      <p className="text-xs text-muted-foreground">Pending edit requests</p>
+                      <p className="mt-1 font-semibold">{customer.pendingEditRequests}</p>
                     </div>
                   </div>
                 </div>
@@ -400,25 +284,26 @@ export default function ReportsPage() {
         <BentoCard className="space-y-4">
           <h2 className="font-serif text-2xl font-semibold">{t("reports.topExpenses")}</h2>
           <div className="space-y-3">
-            {financialTrends.length > 0 && (
+            {snapshot?.financialSummary.trends.length ? (
               <div className="mb-4 rounded-[1.3rem] border border-primary/15 bg-primary/5 p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
                   {t("reports.monthlyTrend")}
                 </p>
                 <div className="space-y-2">
-                  {financialTrends.slice(-3).map((trend) => (
+                  {snapshot.financialSummary.trends.slice(-3).map((trend) => (
                     <div key={trend.month} className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{trend.month}</span>
-                      <span className={`font-mono font-bold ${trend.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {trend.net > 0 ? '+' : ''}{trend.net.toLocaleString()} SAR
+                      <span className={`font-mono font-bold ${trend.net >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {trend.net > 0 ? "+" : ""}
+                        {trend.net.toLocaleString()} SAR
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-            {topExpenseCategories.length > 0 ? (
-              topExpenseCategories.map((item) => (
+            ) : null}
+            {snapshot?.topExpenseCategories.length ? (
+              snapshot.topExpenseCategories.map((item) => (
                 <div key={item.category} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium">{item.category}</p>

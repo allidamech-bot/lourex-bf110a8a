@@ -26,7 +26,11 @@ export type OperationsCustomer = CustomerAccount & {
   requestsCount: number;
   dealsCount: number;
   financialEntriesCount: number;
+  financialIncome: number;
+  financialExpense: number;
   financialBalance: number;
+  pendingEditRequests?: number;
+  lastActivityAt?: string;
   auditCount: number;
   latestRequestNumber?: string;
   latestDealNumber?: string;

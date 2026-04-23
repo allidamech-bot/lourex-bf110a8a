@@ -1,32 +1,54 @@
 import { supabase } from "@/integrations/supabase/client";
 import { writeAuditLog } from "@/domain/audit/service";
-import { 
-  getCurrentUserContext, 
-  getLourexDomainAvailability, 
+import {
+  getCurrentUserContext,
+  getLourexDomainAvailability,
   getInternalNotificationRecipients,
   createNotifications,
   safeStructuredSelect,
-  safeStructuredSelectWhereEq
+  safeStructuredSelectWhereEq,
 } from "@/lib/operationsDomain";
-import type { 
+import type {
   FinancialEntryRow,
   FinancialEditRequestRow,
   CustomerRow,
-  ProfileRow
+  ProfileRow,
 } from "@/lib/operationsDomain";
 import type { FinancialEntry, FinancialEditRequest } from "@/types/lourex";
 import type { OperationalDeal } from "@/lib/operationsDomain";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
+import { canManageAccounting, isValidRole } from "@/features/auth/rbac";
+import {
+  hasMeaningfulFinancialEditChange,
+  normalizeFinancialCurrency,
+  sanitizeFinancialEditProposal,
+  validateFinancialEntryInput,
+} from "@/domain/accounting/utils";
+
+const assertAccountingActor = async (allowCustomerRead = false) => {
+  const context = await getCurrentUserContext();
+  const role = context.profile?.role;
+
+  if (!context.user || !context.profile || !isValidRole(role)) {
+    throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
+  }
+
+  if (!allowCustomerRead && !canManageAccounting(role)) {
+    throw new Error("طµظ„ط§ط­ظٹط§طھظƒ ط§ظ„ط­ط§ظ„ظٹط© ظ„ط§ طھط³ظ…ط­ ط¨ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط­ط§ط³ط¨ط©.");
+  }
+
+  return context;
+};
 
 export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
-  const { profile } = await getCurrentUserContext();
+  const { profile } = await assertAccountingActor(true);
   const isCustomer = profile?.role === "customer";
 
   const [entries, deals, customers] = await Promise.all([
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<FinancialEntryRow>("financial_entries", "customer_id", profile.id)
       : safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-    options.deals ? Promise.resolve(options.deals) : (import("@/lib/operationsDomain").then(m => m.loadDeals())),
+    options.deals ? Promise.resolve(options.deals) : import("@/lib/operationsDomain").then((m) => m.loadDeals()),
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
@@ -37,8 +59,9 @@ export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] 
 
   return (entries || [])
     .map((row) => {
-      const relationType = (row.relation_type ||
-        (row.deal_id ? "deal_linked" : row.customer_id ? "customer_linked" : "general")) as FinancialEntry["relationType"];
+      const relationType = (
+        row.relation_type || (row.deal_id ? "deal_linked" : row.customer_id ? "customer_linked" : "general")
+      ) as FinancialEntry["relationType"];
 
       return {
         id: row.id,
@@ -80,14 +103,33 @@ export const createFinancialEntry = async (input: {
   entryDate: string;
   referenceLabel?: string;
 }) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
+  const { user } = await assertAccountingActor();
+  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
+  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
 
-  if (!Number.isFinite(input.amount) || input.amount <= 0) throw new Error("يجب أن يكون مبلغ القيد أكبر من صفر.");
-  if (!input.entryDate) throw new Error("تاريخ القيد المالي مطلوب.");
-  if (!input.note.trim() || !input.method.trim() || !input.counterparty.trim() || !input.category.trim()) {
-    throw new Error("يجب استكمال الحقول المحاسبية الأساسية قبل حفظ القيد.");
+  const validationError = validateFinancialEntryInput(input);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const normalizedCurrency = normalizeFinancialCurrency(input.currency);
+  const normalizedNote = input.note.trim();
+  const normalizedMethod = input.method.trim();
+  const normalizedCounterparty = input.counterparty.trim();
+  const normalizedCategory = input.category.trim();
+  const normalizedReferenceLabel = input.referenceLabel?.trim() || "";
+
+  if (input.dealId) {
+    const { loadDeals } = await import("@/lib/operationsDomain");
+    const linkedDeal = (await loadDeals()).find((deal) => deal.id === input.dealId);
+
+    if (!linkedDeal) {
+      throw new Error("The linked deal could not be found for this financial entry.");
+    }
+
+    if (input.customerId && linkedDeal.customerId !== input.customerId) {
+      throw new Error("The selected customer does not match the linked deal.");
+    }
   }
 
   const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
@@ -101,19 +143,19 @@ export const createFinancialEntry = async (input: {
       deal_id: input.dealId || null,
       customer_id: input.customerId || null,
       type: input.type,
-      scope: input.scope === "global" ? "global" : "deal_linked",
+      scope: input.scope,
       relation_type: relationType,
       amount: input.amount,
-      currency: input.currency,
-      note: input.note,
+      currency: normalizedCurrency,
+      note: normalizedNote,
       entry_date: input.entryDate,
-      method: input.method,
-      counterparty: input.counterparty,
-      category: input.category,
-      reference_label: input.referenceLabel || "",
+      method: normalizedMethod,
+      counterparty: normalizedCounterparty,
+      category: normalizedCategory,
+      reference_label: normalizedReferenceLabel,
       created_by: user.id,
       locked: true,
-    })
+    } as any)
     .select("*")
     .single();
 
@@ -131,9 +173,9 @@ export const createFinancialEntry = async (input: {
       deal_id: input.dealId || null,
       customer_id: input.customerId || null,
       amount: input.amount,
-      currency: input.currency,
+      currency: normalizedCurrency,
       type: input.type,
-      summary: `إنشاء قيد مالي ${entryNumber}`,
+      summary: `ط¥ظ†ط´ط§ط، ظ‚ظٹط¯ ظ…ط§ظ„ظٹ ${entryNumber}`,
       entity_label: entryNumber,
     },
   });
@@ -141,17 +183,19 @@ export const createFinancialEntry = async (input: {
   trackEvent("financial_entry_created", {
     scope: input.scope,
     type: input.type,
-    currency: input.currency,
+    currency: normalizedCurrency,
   });
 
   return inserted.data;
 };
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
+  await assertAccountingActor();
+
   const [rows, entries, deals, customers, profiles] = await Promise.all([
     safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
     loadFinancialEntries(),
-    import("@/lib/operationsDomain").then(m => m.loadDeals()),
+    import("@/lib/operationsDomain").then((m) => m.loadDeals()),
     safeStructuredSelect<CustomerRow>("lourex_customers"),
     safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
   ]);
@@ -194,24 +238,56 @@ export const createFinancialEditRequest = async (input: {
   oldValue: Record<string, unknown>;
   proposedValue: Record<string, unknown>;
 }) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
-  if (!input.financialEntryId || !input.requester.trim() || !input.email.trim() || !input.reason.trim()) {
-    throw new Error("يجب استكمال بيانات طلب التعديل المالي.");
+  const { user } = await assertAccountingActor();
+  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
+  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
+
+  const normalizedRequester = input.requester.trim();
+  const normalizedEmail = input.email.trim();
+  const normalizedReason = input.reason.trim();
+  const sanitizedProposal = sanitizeFinancialEditProposal(input.proposedValue);
+
+  if (!input.financialEntryId || !normalizedRequester || !normalizedEmail || !normalizedReason) {
+    throw new Error("ظٹط¬ط¨ ط§ط³طھظƒظ…ط§ظ„ ط¨ظٹط§ظ†ط§طھ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط§ظ„ظٹ.");
+  }
+
+  if (normalizedReason.length < 10) {
+    throw new Error("Please provide a clear reason for the financial edit request.");
+  }
+
+  if (!hasMeaningfulFinancialEditChange(input.oldValue, sanitizedProposal)) {
+    throw new Error("The financial edit request must include a meaningful proposed change.");
+  }
+
+  const entryRows = await safeStructuredSelect<FinancialEntryRow>("financial_entries");
+  const targetEntry = entryRows.find((row) => row.id === input.financialEntryId);
+  if (!targetEntry) {
+    throw new Error("The requested financial entry could not be found.");
+  }
+
+  if (!targetEntry.locked) {
+    throw new Error("Only locked financial entries can be updated through edit requests.");
+  }
+
+  if (targetEntry.deal_id && input.dealId && targetEntry.deal_id !== input.dealId) {
+    throw new Error("The edit request deal does not match the target financial entry.");
+  }
+
+  if (targetEntry.customer_id && input.customerId && targetEntry.customer_id !== input.customerId) {
+    throw new Error("The edit request customer does not match the target financial entry.");
   }
 
   const inserted = await supabase
     .from("financial_edit_requests")
     .insert({
       financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      requested_by_name: input.requester,
-      requested_by_email: input.email,
-      reason: input.reason,
-      old_value: input.oldValue,
-      proposed_value: input.proposedValue,
+      deal_id: input.dealId || targetEntry.deal_id || null,
+      customer_id: input.customerId || targetEntry.customer_id || null,
+      requested_by_name: normalizedRequester,
+      requested_by_email: normalizedEmail,
+      reason: normalizedReason,
+      old_value: sanitizeFinancialEditProposal(input.oldValue),
+      proposed_value: sanitizedProposal,
       created_by: user.id,
     } as any)
     .select("*")
@@ -231,11 +307,11 @@ export const createFinancialEditRequest = async (input: {
     recordId: inserted.data.id,
     newValues: {
       financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      summary: "تم إنشاء طلب تعديل مالي",
+      deal_id: input.dealId || targetEntry.deal_id || null,
+      customer_id: input.customerId || targetEntry.customer_id || null,
+      summary: "طھظ… ط¥ظ†ط´ط§ط، ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
       entity_label: input.financialEntryId,
-      reason: input.reason,
+      reason: normalizedReason,
     },
   });
 
@@ -244,15 +320,15 @@ export const createFinancialEditRequest = async (input: {
     recipients.map((recipientId) => ({
       userId: recipientId,
       type: "financial_edit_request",
-      title: "تم رفع طلب تعديل مالي",
-      message: `يوجد طلب تعديل جديد على القيد ${input.financialEntryId}.`,
+      title: "طھظ… ط±ظپط¹ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
+      message: `ظٹظˆط¬ط¯ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط¬ط¯ظٹط¯ ط¹ظ„ظ‰ ط§ظ„ظ‚ظٹط¯ ${input.financialEntryId}.`,
       link: input.dealId ? `/dashboard/edit-requests?deal=${input.dealId}` : "/dashboard/edit-requests",
     })),
   );
 
   trackEvent("financial_edit_request_submitted", {
-    hasDeal: Boolean(input.dealId),
-    hasCustomer: Boolean(input.customerId),
+    hasDeal: Boolean(input.dealId || targetEntry.deal_id),
+    hasCustomer: Boolean(input.customerId || targetEntry.customer_id),
   });
 
   return inserted.data;
@@ -263,14 +339,20 @@ export const updateFinancialEditRequestStatus = async (
   status: "approved" | "rejected",
   reviewNote?: string,
 ) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
+  const { user } = await assertAccountingActor();
+  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
+  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
 
   const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
   const current = currentRows.find((row) => row.id === id);
-  if (!current) throw new Error("تعذر العثور على طلب التعديل المالي.");
-  if (current.status !== "pending") throw new Error("لا يمكن مراجعة طلب تمت معالجته مسبقاً.");
+  if (!current) throw new Error("طھط¹ط°ط± ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط§ظ„ظٹ.");
+  if (current.status !== "pending") throw new Error("ظ„ط§ ظٹظ…ظƒظ† ظ…ط±ط§ط¬ط¹ط© ط·ظ„ط¨ طھظ…طھ ظ…ط¹ط§ظ„ط¬طھظ‡ ظ…ط³ط¨ظ‚ط§ظ‹.");
+
+  const normalizedReviewNote = reviewNote?.trim() || "";
+  const sanitizedProposal = sanitizeFinancialEditProposal((current.proposed_value as Record<string, unknown>) || {});
+  if (status === "approved" && !hasMeaningfulFinancialEditChange((current.old_value as Record<string, unknown>) || {}, sanitizedProposal)) {
+    throw new Error("This edit request no longer contains a valid financial change to approve.");
+  }
 
   const updated = await supabase
     .from("financial_edit_requests")
@@ -278,7 +360,7 @@ export const updateFinancialEditRequestStatus = async (
       status,
       reviewer_id: user.id,
       reviewed_at: new Date().toISOString(),
-      review_note: reviewNote || "",
+      review_note: normalizedReviewNote,
     })
     .eq("id", id)
     .select("*")
@@ -293,10 +375,11 @@ export const updateFinancialEditRequestStatus = async (
     const entryUpdate = await supabase
       .from("financial_entries")
       .update({
-        ...(updated.data.proposed_value as any),
+        ...(sanitizedProposal as any),
         locked: true,
       })
-      .eq("id", updated.data.financial_entry_id);
+      .eq("id", updated.data.financial_entry_id)
+      .eq("locked", true);
 
     if (entryUpdate.error) {
       logOperationalError("financial_entry_apply_edit", entryUpdate.error, {
@@ -311,27 +394,27 @@ export const updateFinancialEditRequestStatus = async (
     action: `financial_edit_request.${status}`,
     tableName: "financial_edit_requests",
     recordId: id,
-    oldValues: { status: current?.status || "pending" },
+    oldValues: { status: current.status || "pending" },
     newValues: {
       status,
       financial_entry_id: updated.data.financial_entry_id,
       deal_id: updated.data.deal_id,
-      review_note: reviewNote || "",
-      summary: status === "approved" ? "تمت الموافقة على طلب تعديل مالي" : "تم رفض طلب تعديل مالي",
+      review_note: normalizedReviewNote,
+      summary: status === "approved" ? "طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ" : "طھظ… ط±ظپط¶ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
       entity_label: updated.data.financial_entry_id || id,
     },
   });
 
-  const recipients = await getInternalNotificationRecipients([current?.created_by]);
+  const recipients = await getInternalNotificationRecipients([current.created_by]);
   await createNotifications(
     recipients.map((recipientId) => ({
       userId: recipientId,
       type: "financial_edit_request_review",
-      title: status === "approved" ? "تمت الموافقة على طلب التعديل" : "تم رفض طلب التعديل",
+      title: status === "approved" ? "طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„" : "طھظ… ط±ظپط¶ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„",
       message:
         status === "approved"
-          ? `تمت الموافقة على طلب تعديل القيد ${updated.data.financial_entry_id}.`
-          : `تم رفض طلب تعديل القيد ${updated.data.financial_entry_id}.`,
+          ? `طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط§ظ„ظ‚ظٹط¯ ${updated.data.financial_entry_id}.`
+          : `طھظ… ط±ظپط¶ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط§ظ„ظ‚ظٹط¯ ${updated.data.financial_entry_id}.`,
       link: updated.data.deal_id ? `/dashboard/edit-requests?deal=${updated.data.deal_id}` : "/dashboard/edit-requests",
     })),
   );

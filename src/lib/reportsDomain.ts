@@ -1,17 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import { loadFinancialEntries } from "@/domain/accounting/service";
-import { 
-  loadDeals, 
-  loadPurchaseRequests, 
-  loadCustomerDashboards
-} from "./operationsDomain";
-import type { 
-  OperationsDeal as DealOperation, 
-  OperationsFinancialEntry as FinancialEntry, 
-  OperationsRequest as PurchaseRequest, 
-  OperationsShipment,
-  OperationsCustomer as CustomerDashboard
-} from "@/domain/operations/types";
+import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
+import { summarizeFinancialEntries } from "@/domain/accounting/utils";
+import { loadDeals, loadPurchaseRequests, loadCustomerDashboards, loadShipments } from "./operationsDomain";
+import type { OperationsFinancialEntry as FinancialEntry } from "@/domain/operations/types";
 
 export type FinancialTrend = {
   month: string;
@@ -36,11 +27,15 @@ export type FinancialSummaryReport = {
 export type CustomerReportItem = {
   customerId: string;
   fullName: string;
+  email: string;
   requestsCount: number;
   dealsCount: number;
   totalFinancialValue: number;
   outstandingBalance: number;
   activeDeals: number;
+  financialIncome: number;
+  financialExpense: number;
+  pendingEditRequests: number;
   lastActivity: string;
 };
 
@@ -50,168 +45,251 @@ export type OperationsReport = {
   averageProcessingTimeDays: number;
 };
 
-/**
- * Aggregates financial data with trend analysis.
- * Respects RLS as it uses operationsDomain loaders which use authenticated supabase client.
- */
-export const getFinancialSummaryReport = async (startDate?: Date, endDate?: Date): Promise<FinancialSummaryReport> => {
-  const entries = await loadFinancialEntries();
-  
-  const filtered = entries.filter(e => {
-    const d = new Date(e.entryDate);
-    if (startDate && d < startDate) return false;
-    if (endDate && d > endDate) return false;
-    return true;
-  });
+export type ReportSummary = {
+  requests: number;
+  deals: number;
+  shipments: number;
+  customers: number;
+  audits: number;
+  linkedEntries: number;
+  lockedEntries: number;
+  pendingEditRequests: number;
+  income: number;
+  expense: number;
+  averageOperationValue: number;
+  inTransit: number;
+  destination: number;
+  delivered: number;
+};
 
-  const totalIncome = filtered.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
-  const totalExpense = filtered.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
-  
+export type ExpenseCategory = {
+  category: string;
+  amount: number;
+};
+
+export type DashboardReportSnapshot = {
+  summary: ReportSummary;
+  operations: OperationsReport;
+  financialSummary: FinancialSummaryReport;
+  topCustomers: CustomerReportItem[];
+  topExpenseCategories: ExpenseCategory[];
+};
+
+const isInRange = (dateValue: string | undefined | null, start?: Date, end?: Date) => {
+  if (!dateValue) return false;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return false;
+  if (start && date < start) return false;
+  if (end && date > end) return false;
+  return true;
+};
+
+const filterEntriesByDate = (entries: FinancialEntry[], startDate?: Date, endDate?: Date) =>
+  entries.filter((entry) => isInRange(entry.entryDate, startDate, endDate));
+
+export const buildFinancialSummaryReport = (entries: FinancialEntry[]): FinancialSummaryReport => {
+  const totals = summarizeFinancialEntries(entries);
   const byDateMap = new Map<string, { income: number; expense: number }>();
   const trendsMap = new Map<string, { income: number; expense: number }>();
-  
-  filtered.forEach(e => {
-    const date = e.entryDate.split('T')[0];
-    const month = date.substring(0, 7); // YYYY-MM
-    
+
+  entries.forEach((entry) => {
+    const date = entry.entryDate.split("T")[0];
+    const month = date.substring(0, 7);
     const currentDay = byDateMap.get(date) || { income: 0, expense: 0 };
     const currentMonth = trendsMap.get(month) || { income: 0, expense: 0 };
-    
-    if (e.type === 'income') {
-      currentDay.income += e.amount;
-      currentMonth.income += e.amount;
+
+    if (entry.type === "income") {
+      currentDay.income += entry.amount;
+      currentMonth.income += entry.amount;
     } else {
-      currentDay.expense += e.amount;
-      currentMonth.expense += e.amount;
+      currentDay.expense += entry.amount;
+      currentMonth.expense += entry.amount;
     }
-    
+
     byDateMap.set(date, currentDay);
     trendsMap.set(month, currentMonth);
   });
 
-  const byDate = Array.from(byDateMap.entries())
-    .map(([date, vals]) => ({
-      date,
-      income: vals.income,
-      expense: vals.expense,
-      profit: vals.income - vals.expense
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const trends = Array.from(trendsMap.entries())
-    .map(([month, vals]) => ({
-      month,
-      income: vals.income,
-      expense: vals.expense,
-      net: vals.income - vals.expense
-    }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
   return {
-    totalIncome,
-    totalExpense,
-    netProfit: totalIncome - totalExpense,
-    trends,
-    byDate
+    totalIncome: totals.income,
+    totalExpense: totals.expense,
+    netProfit: totals.net,
+    byDate: [...byDateMap.entries()]
+      .map(([date, values]) => ({
+        date,
+        income: values.income,
+        expense: values.expense,
+        profit: values.income - values.expense,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    trends: [...trendsMap.entries()]
+      .map(([month, values]) => ({
+        month,
+        income: values.income,
+        expense: values.expense,
+        net: values.income - values.expense,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
   };
 };
 
-/**
- * Aggregates customer data with deeper analytics.
- */
+export const getFinancialSummaryReport = async (startDate?: Date, endDate?: Date): Promise<FinancialSummaryReport> => {
+  const entries = filterEntriesByDate(await loadFinancialEntries(), startDate, endDate);
+  return buildFinancialSummaryReport(entries);
+};
+
 export const getCustomerReport = async (): Promise<CustomerReportItem[]> => {
   const dashboards = await loadCustomerDashboards();
   const deals = await loadDeals();
-  
-  return dashboards.map(d => {
-    const customerDeals = deals.filter(deal => deal.customerId === d.id);
+
+  return dashboards.map((dashboard) => {
+    const customerDeals = deals.filter((deal) => deal.customerId === dashboard.id);
     const totalValue = customerDeals.reduce((sum, deal) => sum + (deal.totalValue || 0), 0);
-    const activeDeals = customerDeals.filter(deal => !['closed', 'delivered', 'cancelled'].includes(deal.status)).length;
-    
-    // Find last activity (latest update among deals or requests)
-    const dealDates = customerDeals.map(deal => new Date(deal.createdAt || 0).getTime());
-    const lastDate = dealDates.length > 0 ? new Date(Math.max(...dealDates)).toISOString() : '';
+    const activeDeals = customerDeals.filter((deal) => !["closed", "delivered", "cancelled"].includes(deal.status)).length;
+    const dealDates = customerDeals.map((deal) => new Date(deal.createdAt || 0).getTime()).filter(Number.isFinite);
+    const lastActivityTimestamp = [
+      ...dealDates,
+      dashboard.lastActivityAt ? new Date(dashboard.lastActivityAt).getTime() : NaN,
+    ].filter(Number.isFinite);
 
     return {
-      customerId: d.id,
-      fullName: d.fullName,
-      requestsCount: d.requestsCount,
-      dealsCount: d.dealsCount,
+      customerId: dashboard.id,
+      fullName: dashboard.fullName,
+      email: dashboard.email,
+      requestsCount: dashboard.requestsCount,
+      dealsCount: dashboard.dealsCount,
       totalFinancialValue: totalValue,
-      outstandingBalance: d.financialBalance,
+      outstandingBalance: dashboard.financialBalance,
       activeDeals,
-      lastActivity: lastDate
+      financialIncome: dashboard.financialIncome,
+      financialExpense: dashboard.financialExpense,
+      pendingEditRequests: dashboard.pendingEditRequests || 0,
+      lastActivity: lastActivityTimestamp.length ? new Date(Math.max(...lastActivityTimestamp)).toISOString() : "",
     };
   });
 };
 
-/**
- * Aggregates operations data.
- * Processing time is calculated as the average days between deal creation and the 'delivered' stage update.
- */
 export const getOperationsReport = async (): Promise<OperationsReport> => {
   const deals = await loadDeals();
-  const activeDeals = deals.filter(d => d.status !== 'closed' && d.status !== 'delivered' && d.status !== 'cancelled').length;
-  
+  const activeDeals = deals.filter((deal) => !["closed", "delivered", "cancelled"].includes(deal.status)).length;
+
   const dealsByStage: Record<string, number> = {};
-  deals.forEach(d => {
-    const stage = d.stage || 'unknown';
+  deals.forEach((deal) => {
+    const stage = deal.stage || "unknown";
     dealsByStage[stage] = (dealsByStage[stage] || 0) + 1;
   });
 
-  // Calculate average processing time from created_at to delivered
-  // RULE: Only consider 'delivered' deals with a valid 'delivered' stage timestamp in timeline.
   let totalTime = 0;
   let count = 0;
-  
-  deals.forEach(d => {
-    if ((d.status === 'delivered' || d.stage === 'delivered') && d.createdAt) {
-      const deliveryDate = d.trackingUpdates?.find(t => t.stageCode === 'delivered')?.occurredAt;
+
+  deals.forEach((deal) => {
+    if ((deal.status === "delivered" || deal.stage === "delivered") && deal.createdAt) {
+      const deliveryDate = deal.trackingUpdates?.find((update) => update.stageCode === "delivered")?.occurredAt;
       if (deliveryDate) {
-        const start = new Date(d.createdAt).getTime();
+        const start = new Date(deal.createdAt).getTime();
         const end = new Date(deliveryDate).getTime();
         if (end > start) {
-          totalTime += (end - start);
-          count++;
+          totalTime += end - start;
+          count += 1;
         }
       }
     }
   });
 
-  const averageProcessingTimeDays = count > 0 
-    ? (totalTime / count) / (1000 * 60 * 60 * 24) 
-    : 0;
-
   return {
     activeDeals,
     dealsByStage,
-    averageProcessingTimeDays
+    averageProcessingTimeDays: count > 0 ? totalTime / count / (1000 * 60 * 60 * 24) : 0,
   };
 };
 
-/**
- * Helper to fetch drill-down details for a specific metric.
- */
-export const getMetricDetails = async (metric: 'active_deals' | 'pending_requests' | 'recent_expenses', limit = 10) => {
-  if (metric === 'active_deals') {
+export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Date): Promise<DashboardReportSnapshot> => {
+  const [entries, editRequests, deals, requests, shipments, customers, auditCount, operations] = await Promise.all([
+    loadFinancialEntries(),
+    loadFinancialEditRequests(),
+    loadDeals(),
+    loadPurchaseRequests(),
+    loadShipments(),
+    loadCustomerDashboards(),
+    supabase.from("audit_logs").select("id", { count: "exact", head: true }),
+    getOperationsReport(),
+  ]);
+
+  const filteredEntries = filterEntriesByDate(entries, startDate, endDate);
+  const filteredDeals = deals.filter((deal) => isInRange(deal.createdAt, startDate, endDate));
+  const filteredRequests = requests.filter((request) => isInRange(request.createdAt, startDate, endDate));
+  const filteredShipments = shipments.filter((shipment) => isInRange(shipment.updatedAt, startDate, endDate));
+  const filteredEditRequests = editRequests.filter((request) => isInRange(request.submittedAt, startDate, endDate));
+  const financialSummary = buildFinancialSummaryReport(filteredEntries);
+  const customerReport = await getCustomerReport();
+
+  const categoryMap = new Map<string, number>();
+  filteredEntries
+    .filter((entry) => entry.type === "expense")
+    .forEach((entry) => {
+      const key = entry.category || "Uncategorized";
+      categoryMap.set(key, (categoryMap.get(key) || 0) + entry.amount);
+    });
+
+  const topCustomers = [...customerReport]
+    .sort(
+      (a, b) =>
+        b.outstandingBalance - a.outstandingBalance ||
+        b.dealsCount - a.dealsCount ||
+        b.requestsCount - a.requestsCount,
+    )
+    .slice(0, 4);
+
+  const topExpenseCategories = [...categoryMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([category, amount]) => ({ category, amount }));
+
+  return {
+    summary: {
+      requests: filteredRequests.length,
+      deals: filteredDeals.length,
+      shipments: filteredShipments.length,
+      customers: customers.length,
+      audits: auditCount.count || 0,
+      linkedEntries: filteredEntries.filter((entry) => entry.dealId || entry.customerId).length,
+      lockedEntries: filteredEntries.filter((entry) => entry.locked).length,
+      pendingEditRequests: filteredEditRequests.filter((request) => request.status === "pending").length,
+      income: financialSummary.totalIncome,
+      expense: financialSummary.totalExpense,
+      averageOperationValue:
+        filteredDeals.length > 0
+          ? filteredDeals.reduce((sum, deal) => sum + (deal.totalValue || 0), 0) / filteredDeals.length
+          : 0,
+      inTransit: filteredShipments.filter((shipment) => shipment.stage === "transit_to_destination").length,
+      destination: filteredShipments.filter((shipment) =>
+        ["arrived_destination", "destination_customs"].includes(shipment.stage),
+      ).length,
+      delivered: filteredShipments.filter((shipment) => shipment.stage === "delivered").length,
+    },
+    operations,
+    financialSummary,
+    topCustomers,
+    topExpenseCategories,
+  };
+};
+
+export const getMetricDetails = async (metric: "active_deals" | "pending_requests" | "recent_expenses", limit = 10) => {
+  if (metric === "active_deals") {
     const deals = await loadDeals();
-    return deals
-      .filter(d => !['closed', 'delivered', 'cancelled'].includes(d.status))
-      .slice(0, limit);
-  }
-  
-  if (metric === 'pending_requests') {
-    const requests = await loadPurchaseRequests();
-    const pendingStatuses = ["intake_submitted", "under_review", "awaiting_clarification"];
-    return requests
-      .filter(r => pendingStatuses.includes(r.status))
-      .slice(0, limit);
+    return deals.filter((deal) => !["closed", "delivered", "cancelled"].includes(deal.status)).slice(0, limit);
   }
 
-  if (metric === 'recent_expenses') {
+  if (metric === "pending_requests") {
+    const requests = await loadPurchaseRequests();
+    const pendingStatuses = ["intake_submitted", "under_review", "awaiting_clarification"];
+    return requests.filter((request) => pendingStatuses.includes(request.status)).slice(0, limit);
+  }
+
+  if (metric === "recent_expenses") {
     const entries = await loadFinancialEntries();
     return entries
-      .filter(e => e.type === 'expense')
+      .filter((entry) => entry.type === "expense")
       .sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime())
       .slice(0, limit);
   }
