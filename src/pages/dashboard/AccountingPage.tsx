@@ -12,7 +12,7 @@ import { createFinancialEntry, loadFinancialEntries } from "@/domain/accounting/
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
-import { pickText, useI18n } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildAccountingEntriesCsv, downloadCsv } from "@/lib/adminOperations";
 
@@ -275,12 +275,12 @@ export default function AccountingPage() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
-                        {pickText(locale === "ar-SA" ? "ar" : "en", "جاهزية البيان", "Statement readiness")}
+                        {t("accounting.statementReadiness")}
                       </p>
                       <p className="mt-2 font-serif text-2xl font-semibold">
                         {statementSummary?.ready
-                          ? pickText(locale === "ar-SA" ? "ar" : "en", "جاهز للمراجعة النهائية", "Ready for final review")
-                          : pickText(locale === "ar-SA" ? "ar" : "en", "يتطلب مراجعة قبل الإصدار", "Needs review before issue")}
+                          ? t("accounting.readyForFinalReview")
+                          : t("accounting.needsReviewBeforeIssue")}
                       </p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -289,7 +289,7 @@ export default function AccountingPage() {
                         : "bg-amber-500/15 text-amber-200"
                     }`}>
                       {statementSummary?.currencySummaries.length || 0}{" "}
-                      {pickText(locale === "ar-SA" ? "ar" : "en", "عملة/عملات", "currency group(s)")}
+                      {t("accounting.currencyGroupsCount")}
                     </span>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -301,21 +301,13 @@ export default function AccountingPage() {
                             {item.net.toLocaleString()} {item.currency}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {pickText(
-                              locale === "ar-SA" ? "ar" : "en",
-                              `${item.entriesCount} قيود مرتبطة`,
-                              `${item.entriesCount} linked entries`,
-                            )}
+                            {t("accounting.linkedEntriesCount", { count: item.entriesCount })}
                           </p>
                         </div>
                       ))
                     ) : (
                       <div className="rounded-[1.15rem] bg-background/65 p-4 text-sm text-muted-foreground">
-                        {pickText(
-                          locale === "ar-SA" ? "ar" : "en",
-                          "لا توجد قيود مرتبطة بعد لإنشاء بيان نهائي لهذه الصفقة.",
-                          "No linked entries are available yet to prepare a final statement for this deal.",
-                        )}
+                        {t("accounting.noLinkedEntries")}
                       </div>
                     )}
                   </div>

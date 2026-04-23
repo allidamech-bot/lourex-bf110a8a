@@ -13,7 +13,7 @@ import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
-import { pickText, useI18n } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
@@ -82,33 +82,17 @@ export default function TrackingPage() {
     });
   }, [activeShipment, profile, nextStageCode]);
   const partnerWorkspaceHint = isTurkishPartner
-    ? pickText(
-        lang,
-        "تعرض هذه الصفحة الشحنات المرتبطة بالصفقات المعيّنة لك في تركيا فقط، مع إبراز ما يمكن متابعته قبل مغادرة بلد المنشأ.",
-        "This page shows only the shipments tied to deals assigned to you in Turkey, with the stages you can move before the shipment leaves the origin country.",
-      )
+    ? t("tracking.partnerWorkspaceHintTurkey")
     : isSaudiPartner
-      ? pickText(
-          lang,
-          "تعرض هذه الصفحة الشحنات المرتبطة بالصفقات المعيّنة لك في السعودية فقط، مع إبراز ما يمكن متابعته بعد وصول الشحنة إلى بلد العميل.",
-          "This page shows only the shipments tied to deals assigned to you in Saudi Arabia, with the stages you can move after the shipment reaches the customer country.",
-        )
+      ? t("tracking.partnerWorkspaceHintSaudi")
       : null;
   const trackingRuleText = isTurkishPartner
-    ? pickText(
-        lang,
-        "يمكنك تحديث مراحل المصدر فقط حتى مغادرة بلد المنشأ. المراحل الدولية ومراحل الوجهة تُدار لاحقاً من الجهة المناسبة.",
-        "You can update only source-side stages through departure from the origin country. International transit and destination-side stages are handled by the appropriate owner afterward.",
-      )
+    ? t("tracking.trackingRuleTextTurkey")
     : isSaudiPartner
       ? t("tracking.saudiRule")
       : t("tracking.internalRule");
   const searchPlaceholder = isPartnerWorkspace
-    ? pickText(
-        lang,
-        "ابحث برقم التتبع أو الصفقة أو العميل ضمن الشحنات المعيّنة لك",
-        "Search your assigned shipments by tracking, deal, customer, destination, or stage",
-      )
+    ? t("tracking.searchAssignedPlaceholder")
     : t("tracking.searchPlaceholder");
 
   const handleAdvance = async () => {

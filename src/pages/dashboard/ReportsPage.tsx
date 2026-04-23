@@ -20,7 +20,7 @@ import {
   getMetricDetails,
   type DashboardReportSnapshot,
 } from "@/lib/reportsDomain";
-import { pickText, useI18n } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv } from "@/lib/adminOperations";
 
@@ -93,16 +93,8 @@ export default function ReportsPage() {
     currencyGroups: 0,
   };
   const statementExportHint = metrics.currencyGroups > 1
-    ? pickText(
-        lang,
-        "تتضمن هذه الفترة أكثر من عملة واحدة، لذلك يبقى التصدير هنا تقريراً تشغيلياً ويجب فصل البيانات بحسب العملة قبل إصدار بيان نهائي.",
-        "This range includes multiple currencies, so the export remains an operational report and should be split by currency before issuing a final statement.",
-      )
-    : pickText(
-        lang,
-        "يصلح هذا التصدير كمُلخص تشغيلي ومراجعة أولية للبيانات المالية قبل إعداد أي بيان أو فاتورة نهائية.",
-        "This export is suitable for operational review and draft statement preparation before any final statement or invoice is issued.",
-      );
+    ? t("reports.statementExportHintMixed")
+    : t("reports.statementExportHintSingle");
 
   const handleDrillDown = async (metric: "active_deals" | "pending_requests" | "recent_expenses") => {
     setLoading(true);
@@ -279,7 +271,7 @@ export default function ReportsPage() {
               { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
               { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries, icon: Receipt },
               { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests, icon: Receipt },
-              { label: pickText(lang, "مجموعات العملات", "Currency groups"), value: metrics.currencyGroups, icon: Receipt },
+              { label: t("reports.currencyGroups"), value: metrics.currencyGroups, icon: Receipt },
               { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR`, icon: Receipt },

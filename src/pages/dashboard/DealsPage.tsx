@@ -132,31 +132,15 @@ export default function DealsPage() {
         .join(HEADER_SEPARATOR)
     : "";
   const workspaceDescription = isTurkishPartner
-    ? pickText(
-        lang,
-        "يعرض هذا القسم الصفقات المعيّنة لك في الجانب التركي فقط، مع توضيح ما يحتاج إلى متابعة قبل انتقال الشحنة دولياً.",
-        "This workspace shows only the deals assigned to you on the Turkish side, with the next source-side work that still needs follow-up before international transit.",
-      )
+    ? t("deals.workspaceDescriptionTurkey")
     : isSaudiPartner
-      ? pickText(
-          lang,
-          "يعرض هذا القسم الصفقات المعيّنة لك في الجانب السعودي فقط، مع إبراز المراحل التي تتطلب متابعة محلية أو تسليم نهائي.",
-          "This workspace shows only the deals assigned to you on the Saudi side, highlighting the destination-side stages that need local follow-up or final delivery.",
-        )
+      ? t("deals.workspaceDescriptionSaudi")
       : t("deals.inboxDescription");
   const partnerAssignmentHint = isPartnerWorkspace
-    ? pickText(
-        lang,
-        "تعديل التعيينات يتم من الإدارة أو فريق العمليات فقط، بينما يمكنك متابعة الصفقات المكلّف بها والتنقل إلى التتبع والحسابات المرتبطة.",
-        "Assignment changes are handled by management or operations only. You can use this workspace to follow your assigned deals and jump into tracking or accounting when needed.",
-      )
+    ? t("deals.partnerAssignmentHint")
     : null;
   const searchPlaceholder = isPartnerWorkspace
-    ? pickText(
-        lang,
-        "ابحث برقم الصفقة أو العميل أو رقم الطلب أو رقم التتبع ضمن الصفقات المعيّنة لك",
-        "Search your assigned deals by deal, customer, request, or tracking reference",
-      )
+    ? t("deals.searchAssignedPlaceholder")
     : t("deals.searchPlaceholder");
 
   const handleSave = async () => {
@@ -243,9 +227,9 @@ export default function DealsPage() {
         {isPartnerWorkspace ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { label: pickText(lang, "الصفقات المعيّنة", "Assigned deals"), value: assignedSummary.assigned },
-              { label: pickText(lang, "تحتاج متابعة", "Need follow-up"), value: assignedSummary.actionable },
-              { label: pickText(lang, "تم تسليمها", "Delivered"), value: assignedSummary.delivered },
+              { label: t("deals.assignedDeals"), value: assignedSummary.assigned },
+              { label: t("deals.needFollowUp"), value: assignedSummary.actionable },
+              { label: t("deals.delivered"), value: assignedSummary.delivered },
             ].map((item) => (
               <div key={item.label} className="rounded-[1.2rem] bg-secondary/20 p-4 text-center">
                 <p className="text-2xl font-bold">{item.value}</p>

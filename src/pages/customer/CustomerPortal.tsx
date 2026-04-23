@@ -13,13 +13,11 @@ import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { pickText, useI18n } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
 import { logOperationalError } from "@/lib/monitoring";
 import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@/lib/customerExperience";
-
-export default function CustomerPortal() {
   const { profile } = useAuthSession();
   const { locale, t } = useI18n();
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
@@ -94,11 +92,7 @@ export default function CustomerPortal() {
     hasMixedCurrencies: false,
     dealsCount: customerData?.dealsCount || 0,
   });
-  const statementNotice = pickText(
-    lang,
-    "هذه الأرقام تمثل ملخصاً تشغيلياً للحركة المالية الحالية. يتم إعداد أي بيان نهائي لكل صفقة وبحسب العملة المرتبطة بها بعد اكتمال القيود المطلوبة.",
-    "These figures reflect a live operational financial summary. Any final statement is prepared per deal and per currency once the required entries are complete.",
-  );
+  const statementNotice = t("customerPortal.financial.statementNotice");
 
   return (
     <>
