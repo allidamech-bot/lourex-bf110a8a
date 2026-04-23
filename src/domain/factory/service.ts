@@ -14,9 +14,8 @@ import {
 type FactoryRow = Tables<"factories">;
 type OrderRow = Tables<"orders">;
 type ProductRow = Tables<"products">;
-type StaffRow = Record<string, unknown>;
-type ProfileRow = Record<string, unknown>;
-type UserRoleRow = Record<string, unknown>;
+type StaffRow = Pick<Tables<"profiles">, "id" | "email" | "full_name" | "role" | "status" | "created_at">;
+type UserRoleRow = Pick<Tables<"user_roles">, "role">;
 
 const ADVANCEABLE_STATUSES = ["confirmed", "in_production", "quality_check", "shipped", "delivered"] as const;
 
@@ -103,12 +102,12 @@ const normalizeProduct = (product: ProductRow): FactoryCommandCenterProduct => (
 });
 
 const normalizeStaffMember = (member: Pick<StaffRow, "id" | "email" | "full_name" | "role" | "status" | "created_at">): StaffMember => ({
-  id: member.id,
+  id: String(member.id),
   email: normalizeText(member.email).toLowerCase(),
   fullName: normalizeText(member.full_name),
   role: normalizeText(member.role),
   status: normalizeText(member.status),
-  createdAt: member.created_at,
+  createdAt: String(member.created_at),
 });
 
 const buildAnalytics = (orders: FactoryCommandCenterOrder[]) => {
@@ -214,7 +213,7 @@ export const fetchFactoryCommandCenter = async (
     const roles = (roleRes.data ?? []) as Pick<UserRoleRow, "role">[];
     const verificationStatus = normalizeText(profileRes.data?.verification_status);
     const isVerified =
-      roles.some((row) => normalizeText(row.role) === "admin") ||
+      roles.some((row) => normalizeText(row.role) === "owner") ||
       verificationStatus === "verified" ||
       verificationStatus === "approved";
 
@@ -367,7 +366,7 @@ export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember
       throw error;
     }
 
-    return success((data ?? []).map((row: Record<string, unknown>) => normalizeStaffMember(row)));
+    return success((data ?? []).map((row) => normalizeStaffMember(row)));
   } catch (error) {
     return {
       data: null,

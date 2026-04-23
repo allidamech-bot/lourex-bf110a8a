@@ -60,7 +60,7 @@ export const FactoryApplications = ({ filter = "active" }: FactoryApplicationsPr
       }
       // Idempotent server-side approval (creates factory + role only if missing).
       const { error: rpcErr } = await supabase.rpc(
-        "admin_approve_factory_application" as never,
+        "admin_approve_factory_application",
         { p_application_id: app.id }
       );
       if (rpcErr) {

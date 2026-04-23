@@ -102,9 +102,9 @@ export async function getSupplierContext(): Promise<SupplierContext> {
 
   const checklist: ActivationChecklist = {
     hasProfile: !!profile,
-    hasDescription: !!profile?.description && profile.description.trim().length >= 80,
-    hasLogo: !!profile?.logo_url,
-    hasCover: !!profile?.cover_url,
+    hasDescription: typeof profile?.description === "string" && profile.description.trim().length >= 80,
+    hasLogo: typeof profile?.logo_url === "string" && profile.logo_url.length > 0,
+    hasCover: typeof profile?.cover_url === "string" && profile.cover_url.length > 0,
     hasCategories: Array.isArray(profile?.categories) && profile.categories.length > 0,
     hasFirstProduct: productCount > 0,
     completedCount: 0,
@@ -145,8 +145,8 @@ export async function getSupplierContext(): Promise<SupplierContext> {
     applicationId: app?.id ?? null,
     applicationStatus: app?.status ?? null,
     factoryId: factory?.id ?? null,
-    profileId: profile?.id ?? null,
-    onboardingStep: profile?.onboarding_step ?? 1,
+    profileId: typeof profile?.id === "string" ? profile.id : null,
+    onboardingStep: typeof profile?.onboarding_step === "number" ? profile.onboarding_step : 1,
     checklist,
   };
 }

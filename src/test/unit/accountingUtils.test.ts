@@ -141,6 +141,8 @@ describe("accounting utils", () => {
         requestsCount: 0,
         dealsCount: 1,
         financialEntriesCount: 0,
+        financialIncome: 0,
+        financialExpense: 0,
         financialBalance: 0,
         auditCount: 0,
       },

@@ -25,6 +25,25 @@ import {
   validateFinancialEntryInput,
 } from "@/domain/accounting/utils";
 
+type ActiveFinancialEditRequestInsert = {
+  financial_entry_id: string;
+  deal_id: string | null;
+  customer_id: string | null;
+  requested_by_name: string;
+  requested_by_email: string;
+  reason: string;
+  old_value: Record<string, unknown>;
+  proposed_value: Record<string, unknown>;
+  created_by: string;
+};
+
+const insertActiveFinancialEditRequest = async (payload: ActiveFinancialEditRequestInsert) =>
+  supabase
+    .from("financial_edit_requests")
+    .insert(payload as never)
+    .select("*")
+    .single();
+
 const assertAccountingActor = async (allowCustomerRead = false) => {
   const context = await getCurrentUserContext();
   const role = context.profile?.role;
@@ -277,34 +296,30 @@ export const createFinancialEditRequest = async (input: {
     throw new Error("The edit request customer does not match the target financial entry.");
   }
 
-  const inserted = await supabase
-    .from("financial_edit_requests")
-    .insert({
-      financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || targetEntry.deal_id || null,
-      customer_id: input.customerId || targetEntry.customer_id || null,
-      requested_by_name: normalizedRequester,
-      requested_by_email: normalizedEmail,
-      reason: normalizedReason,
-      old_value: sanitizeFinancialEditProposal(input.oldValue),
-      proposed_value: sanitizedProposal,
-      created_by: user.id,
-    })
-    .select("*")
-    .single();
+  const insertedRequest = await insertActiveFinancialEditRequest({
+    financial_entry_id: input.financialEntryId,
+    deal_id: input.dealId || targetEntry.deal_id || null,
+    customer_id: input.customerId || targetEntry.customer_id || null,
+    requested_by_name: normalizedRequester,
+    requested_by_email: normalizedEmail,
+    reason: normalizedReason,
+    old_value: sanitizeFinancialEditProposal(input.oldValue),
+    proposed_value: sanitizedProposal,
+    created_by: user.id,
+  });
 
-  if (inserted.error) {
-    logOperationalError("financial_edit_request_create", inserted.error, {
+  if (insertedRequest.error) {
+    logOperationalError("financial_edit_request_create", insertedRequest.error, {
       financialEntryId: input.financialEntryId,
       dealId: input.dealId || null,
     });
-    throw inserted.error;
+    throw insertedRequest.error;
   }
 
   await writeAuditLog({
     action: "financial_entry.edit_requested",
     tableName: "financial_edit_requests",
-    recordId: inserted.data.id,
+    recordId: insertedRequest.data.id,
     newValues: {
       financial_entry_id: input.financialEntryId,
       deal_id: input.dealId || targetEntry.deal_id || null,
@@ -331,7 +346,7 @@ export const createFinancialEditRequest = async (input: {
     hasCustomer: Boolean(input.customerId || targetEntry.customer_id),
   });
 
-  return inserted.data;
+  return insertedRequest.data;
 };
 
 export const updateFinancialEditRequestStatus = async (

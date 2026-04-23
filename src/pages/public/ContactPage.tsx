@@ -59,6 +59,14 @@ const logDevError = (message: string, details: unknown) => {
   }
 };
 
+const isSubmitInquiryResponse = (
+  value: unknown,
+): value is { success?: boolean; message?: string } =>
+  typeof value === "object" &&
+  value !== null &&
+  (!("success" in value) || typeof value.success === "boolean") &&
+  (!("message" in value) || typeof value.message === "string");
+
 export default function ContactPage() {
   const { dir, t } = useI18n();
   const [values, setValues] = useState<ContactFormValues>(initialValues);
@@ -163,7 +171,7 @@ export default function ContactPage() {
         throw new Error(error.message);
       }
 
-      if (data && data.success === false) {
+      if (isSubmitInquiryResponse(data) && data.success === false) {
         throw new Error(data.message || t("contact.failureDescription"));
       }
 

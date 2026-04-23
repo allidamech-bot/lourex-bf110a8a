@@ -47,7 +47,7 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
 
     try {
       const { data, error: dbError } = await supabase
-        .rpc("lookup_shipment_by_tracking" as never, { p_tracking_id: id })
+        .rpc("lookup_shipment_by_tracking", { p_tracking_id: id })
         .abortSignal(controller.signal)
         .maybeSingle();
 

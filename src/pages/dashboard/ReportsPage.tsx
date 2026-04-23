@@ -25,6 +25,7 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv } from "@/lib/adminOperations";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
+type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
 
 const getRangeStart = (range: ReportRange, customStart?: string) => {
   const now = new Date();
@@ -45,7 +46,7 @@ export default function ReportsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
-  const [drillDownData, setDrillDownData] = useState<{ type: string; items: Array<{ id: string; status: string; totalValue?: number; amount?: number }> } | null>(null);
+  const [drillDownData, setDrillDownData] = useState<{ type: string; items: DrillDownItem[] } | null>(null);
   const [loadError, setLoadError] = useState("");
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
@@ -95,7 +96,18 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const items = await getMetricDetails(metric);
-      setDrillDownData({ type: metric, items });
+      const normalizedItems: DrillDownItem[] = items.map((item) => {
+        if ("totalValue" in item) {
+          return { id: item.id, status: item.status, totalValue: item.totalValue };
+        }
+
+        if ("amount" in item) {
+          return { id: item.id, status: item.type, amount: item.amount };
+        }
+
+        return { id: item.id, status: item.status };
+      });
+      setDrillDownData({ type: metric, items: normalizedItems });
     } catch (error) {
       logOperationalError("report_metric_drilldown", error, { metric });
       setLoadError(t("common.error"));

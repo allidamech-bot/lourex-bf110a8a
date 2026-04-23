@@ -37,9 +37,9 @@ const mapProfileRow = (row: Record<string, unknown>): LourexProfile | null => {
     status: row.status as LourexProfile["status"],
     phone: typeof row.phone === "string" ? row.phone : undefined,
     country: typeof row.country === "string" ? row.country : undefined,
-    city: typeof row.city === "string" ? row.city : undefined,
+    city: undefined,
     createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : String(row.created_at),
   };
 };
 
@@ -68,7 +68,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at, updated_at")
+      .select("id, email, full_name, role, partner_type, status, phone, country, created_at")
       .eq("id", user.id)
       .maybeSingle();
 
