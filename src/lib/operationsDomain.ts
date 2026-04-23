@@ -2151,7 +2151,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
         createdAt: typeof payload.createdAt === "string" ? payload.createdAt : new Date().toISOString(),
       } satisfies TrackingUpdateRecord;
     })
-    .filter((row): row is TrackingUpdateRecord => Boolean(row))
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
     .sort((a, b) => +new Date(a.occurredAt) - +new Date(b.occurredAt));
 
   const currentStage = (trackingLookup.data.current_stage_code || "deal_accepted") as ShipmentStageCode;
