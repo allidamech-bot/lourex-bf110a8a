@@ -46,5 +46,34 @@ export const canAdvanceShipmentStage = (input: {
     return true;
   }
 
-  return input.role === "saudi_partner" && nextOrder >= 7;
+  if (input.role === "turkish_partner") {
+    return nextOrder >= 2 && nextOrder <= 6;
+  }
+
+  if (input.role === "saudi_partner") {
+    return nextOrder >= 8;
+  }
+
+  return false;
+};
+
+export const isAssignedPartnerForDeal = (input: {
+  role: LourexRole | null | undefined;
+  profileId: string | null | undefined;
+  turkishPartnerId?: string | null;
+  saudiPartnerId?: string | null;
+}) => {
+  if (!input.profileId) {
+    return false;
+  }
+
+  if (input.role === "turkish_partner") {
+    return input.turkishPartnerId === input.profileId;
+  }
+
+  if (input.role === "saudi_partner") {
+    return input.saudiPartnerId === input.profileId;
+  }
+
+  return input.role === "owner" || input.role === "operations_employee";
 };

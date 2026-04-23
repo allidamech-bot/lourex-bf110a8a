@@ -179,6 +179,7 @@ export default function ContactPage() {
       setErrors({});
       setSubmitSucceeded(true);
       trackEvent("contact_submitted", {
+        flow: "contact",
         hasPhone: Boolean(payload.phone),
         hasCompany: Boolean(payload.company),
       });
@@ -187,7 +188,7 @@ export default function ContactPage() {
       });
     } catch (error: unknown) {
       logDevError("Contact inquiry submission failed.", error);
-      logOperationalError("contact_submit", error, { hasEmail: Boolean(payload.email) });
+      logOperationalError("contact_submit", error, { flow: "contact", hasEmail: Boolean(payload.email) });
       const message = error instanceof Error ? error.message : t("contact.failureDescription");
       toast.error(t("contact.failureTitle"), {
         description: message,

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  assessStatementReadiness,
+  buildDealStatementSummary,
   buildCustomerFinancialSummary,
   hasMeaningfulFinancialEditChange,
   sanitizeFinancialEditProposal,
+  summarizeFinancialEntriesByCurrency,
   summarizeFinancialEntries,
   validateFinancialEntryInput,
 } from "@/domain/accounting/utils";
@@ -175,5 +178,90 @@ describe("accounting utils", () => {
     expect(summary.financialExpense).toBe(0);
     expect(summary.financialBalance).toBe(1000);
     expect(summary.pendingEditRequests).toBe(1);
+  });
+
+  it("groups statement totals by currency and flags mixed-currency readiness risks", () => {
+    const entries = [
+      {
+        id: "1",
+        entryNumber: "FE-1",
+        scope: "deal",
+        relationType: "deal_linked",
+        type: "income",
+        amount: 1000,
+        currency: "SAR",
+        locked: true,
+        createdBy: "u1",
+        createdAt: "2026-04-20",
+        entryDate: "2026-04-20",
+        method: "Bank",
+        counterparty: "Customer",
+        category: "Payment",
+        note: "Deposit",
+      },
+      {
+        id: "2",
+        entryNumber: "FE-2",
+        scope: "deal",
+        relationType: "deal_linked",
+        type: "expense",
+        amount: 100,
+        currency: "USD",
+        locked: true,
+        createdBy: "u1",
+        createdAt: "2026-04-21",
+        entryDate: "2026-04-21",
+        method: "Cash",
+        counterparty: "Carrier",
+        category: "Shipping",
+        note: "Charge",
+      },
+    ] as const;
+
+    expect(summarizeFinancialEntriesByCurrency(entries as never)).toEqual([
+      { currency: "SAR", income: 1000, expense: 0, net: 1000, entriesCount: 1 },
+      { currency: "USD", income: 0, expense: 100, net: -100, entriesCount: 1 },
+    ]);
+
+    expect(assessStatementReadiness(entries as never)).toMatchObject({
+      ready: false,
+      hasMixedCurrencies: true,
+    });
+  });
+
+  it("builds a deal statement summary with readiness context", () => {
+    const summary = buildDealStatementSummary(
+      {
+        dealNumber: "DL-2026-001",
+        customerName: "Acme",
+        currency: "SAR",
+        totalValue: 5000,
+      },
+      [
+        {
+          id: "1",
+          entryNumber: "FE-1",
+          scope: "deal",
+          relationType: "deal_linked",
+          type: "income",
+          amount: 3000,
+          currency: "SAR",
+          locked: true,
+          createdBy: "u1",
+          createdAt: "2026-04-20",
+          entryDate: "2026-04-20",
+          method: "Bank",
+          counterparty: "Customer",
+          category: "Payment",
+          note: "Deposit",
+        },
+      ],
+    );
+
+    expect(summary.ready).toBe(true);
+    expect(summary.currencySummaries).toEqual([
+      { currency: "SAR", income: 3000, expense: 0, net: 3000, entriesCount: 1 },
+    ]);
+    expect(summary.quotedValue).toBe(5000);
   });
 });

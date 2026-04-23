@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ArrowRightLeft, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -13,7 +13,7 @@ import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
-import { useI18n } from "@/lib/i18n";
+import { pickText, useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
@@ -23,37 +23,40 @@ export default function TrackingPage() {
   const [searchParams] = useSearchParams();
   const { profile } = useAuthSession();
   const isInternal = isInternalRole(profile?.role);
+  const isTurkishPartner = profile?.role === "turkish_partner";
+  const isSaudiPartner = profile?.role === "saudi_partner";
+  const isPartnerWorkspace = isTurkishPartner || isSaudiPartner;
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [internalNote, setInternalNote] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const selectedTracking = searchParams.get("tracking");
   const selectedDeal = searchParams.get("deal");
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
       setRows(await loadShipments());
     } catch (error) {
-      logOperationalError("tracking_load", error);
+      logOperationalError("tracking_load", error, { flow: "tracking_workspace" });
       const message = t("tracking.toasts.advanceError");
       setLoadError(message);
       toast.error(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     void refresh();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
-  const filteredRows = useMemo(() => filterShipments(rows, search), [rows, search]);
+  const filteredRows = useMemo(() => filterShipments(rows, deferredSearch), [deferredSearch, rows]);
   const activeShipment =
     filteredRows.find((row) => (selectedTracking ? row.trackingId === selectedTracking : row.dealNumber === selectedDeal)) ||
     filteredRows.find((row) => row.trackingId === selectedTracking) ||
@@ -63,7 +66,6 @@ export default function TrackingPage() {
   useEffect(() => {
     setInternalNote("");
     setCustomerNote(activeShipment?.customerVisibleNote || "");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeShipment?.id]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
@@ -79,6 +81,35 @@ export default function TrackingPage() {
       nextStage: nextStageCode,
     });
   }, [activeShipment, profile, nextStageCode]);
+  const partnerWorkspaceHint = isTurkishPartner
+    ? pickText(
+        lang,
+        "تعرض هذه الصفحة الشحنات المرتبطة بالصفقات المعيّنة لك في تركيا فقط، مع إبراز ما يمكن متابعته قبل مغادرة بلد المنشأ.",
+        "This page shows only the shipments tied to deals assigned to you in Turkey, with the stages you can move before the shipment leaves the origin country.",
+      )
+    : isSaudiPartner
+      ? pickText(
+          lang,
+          "تعرض هذه الصفحة الشحنات المرتبطة بالصفقات المعيّنة لك في السعودية فقط، مع إبراز ما يمكن متابعته بعد وصول الشحنة إلى بلد العميل.",
+          "This page shows only the shipments tied to deals assigned to you in Saudi Arabia, with the stages you can move after the shipment reaches the customer country.",
+        )
+      : null;
+  const trackingRuleText = isTurkishPartner
+    ? pickText(
+        lang,
+        "يمكنك تحديث مراحل المصدر فقط حتى مغادرة بلد المنشأ. المراحل الدولية ومراحل الوجهة تُدار لاحقاً من الجهة المناسبة.",
+        "You can update only source-side stages through departure from the origin country. International transit and destination-side stages are handled by the appropriate owner afterward.",
+      )
+    : isSaudiPartner
+      ? t("tracking.saudiRule")
+      : t("tracking.internalRule");
+  const searchPlaceholder = isPartnerWorkspace
+    ? pickText(
+        lang,
+        "ابحث برقم التتبع أو الصفقة أو العميل ضمن الشحنات المعيّنة لك",
+        "Search your assigned shipments by tracking, deal, customer, destination, or stage",
+      )
+    : t("tracking.searchPlaceholder");
 
   const handleAdvance = async () => {
     if (!activeShipment || !nextStageCode || !nextStage) return;
@@ -101,10 +132,13 @@ export default function TrackingPage() {
         visibility: customerNote.trim() ? "customer_visible" : "internal",
       });
 
-      toast.success(t("tracking.toasts.advanced", { stage: nextStage.label }));
+      toast.success(
+        `${activeShipment.trackingId}: ${t("tracking.toasts.advanced", { stage: nextStage.label })}`,
+      );
       await refresh();
     } catch (error: unknown) {
       logOperationalError("tracking_advance", error, {
+        flow: "tracking_workspace",
         shipmentId: activeShipment.id,
         stageCode: nextStageCode,
       });
@@ -144,6 +178,7 @@ export default function TrackingPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("tracking.contextEyebrow")}</p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("tracking.contextTitle")}</h2>
           {activeShipment.dealNumber ? <p className="mt-2 text-sm text-muted-foreground">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
+          {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-muted-foreground">{partnerWorkspaceHint}</p> : null}
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto]">
@@ -152,13 +187,13 @@ export default function TrackingPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by tracking, deal, customer, destination, or stage"
+              placeholder={searchPlaceholder}
               className="ps-9"
             />
           </div>
           <Button variant="outline" onClick={() => void refresh()}>
             <RefreshCcw className="me-2 h-4 w-4" />
-            Refresh
+            {t("common.refresh")}
           </Button>
         </div>
 
@@ -209,7 +244,7 @@ export default function TrackingPage() {
         <div className="space-y-3">
           {filteredRows.length === 0 ? (
             <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
-              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description="No shipments match the current search." />
+              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description={t("tracking.noMatches")} />
             </div>
           ) : (
             filteredRows.map((row) => (
@@ -261,9 +296,7 @@ export default function TrackingPage() {
 
             <div className="mt-4 flex items-center justify-between gap-3">
               <p className="text-xs leading-6 text-muted-foreground">
-                {profile?.role === "saudi_partner"
-                    ? t("tracking.saudiRule")
-                    : t("tracking.internalRule")}
+                {trackingRuleText}
               </p>
 
               <Button variant="gold" disabled={!canAdvance || submitting} onClick={handleAdvance}>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   ArrowUpRight,
   FileImage,
@@ -29,7 +29,7 @@ import {
   uploadDealAttachment,
 } from "@/lib/operationsDomain";
 import { getShipmentStageCopy } from "@/lib/shipmentStages";
-import { useI18n } from "@/lib/i18n";
+import { pickText, useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterDeals } from "@/lib/adminOperations";
@@ -50,6 +50,7 @@ export default function DealsPage() {
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [notesDraft, setNotesDraft] = useState("");
   const [turkishPartnerId, setTurkishPartnerId] = useState("");
   const [saudiPartnerId, setSaudiPartnerId] = useState("");
@@ -60,6 +61,9 @@ export default function DealsPage() {
 
   const selectedDealNumber = searchParams.get("deal");
   const canManageDeal = profile?.role === "owner" || profile?.role === "operations_employee";
+  const isTurkishPartner = profile?.role === "turkish_partner";
+  const isSaudiPartner = profile?.role === "saudi_partner";
+  const isPartnerWorkspace = isTurkishPartner || isSaudiPartner;
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -82,8 +86,18 @@ export default function DealsPage() {
     void refresh();
   }, [refresh]);
 
-  const filteredRows = useMemo(() => filterDeals(rows, search), [rows, search]);
+  const filteredRows = useMemo(() => filterDeals(rows, deferredSearch), [deferredSearch, rows]);
   const selectedDeal = filteredRows.find((row) => row.dealNumber === selectedDealNumber) || filteredRows[0] || null;
+  const assignedSummary = useMemo(
+    () => ({
+      assigned: rows.length,
+      actionable: rows.filter((row) =>
+        isTurkishPartner ? row.stage !== "delivered" && row.stage !== "transit_to_destination" : row.stage !== "delivered",
+      ).length,
+      delivered: rows.filter((row) => row.stage === "delivered").length,
+    }),
+    [isTurkishPartner, rows],
+  );
 
   useEffect(() => {
     if (!selectedDeal) return;
@@ -117,6 +131,33 @@ export default function DealsPage() {
         .filter((value): value is string => Boolean(value))
         .join(HEADER_SEPARATOR)
     : "";
+  const workspaceDescription = isTurkishPartner
+    ? pickText(
+        lang,
+        "يعرض هذا القسم الصفقات المعيّنة لك في الجانب التركي فقط، مع توضيح ما يحتاج إلى متابعة قبل انتقال الشحنة دولياً.",
+        "This workspace shows only the deals assigned to you on the Turkish side, with the next source-side work that still needs follow-up before international transit.",
+      )
+    : isSaudiPartner
+      ? pickText(
+          lang,
+          "يعرض هذا القسم الصفقات المعيّنة لك في الجانب السعودي فقط، مع إبراز المراحل التي تتطلب متابعة محلية أو تسليم نهائي.",
+          "This workspace shows only the deals assigned to you on the Saudi side, highlighting the destination-side stages that need local follow-up or final delivery.",
+        )
+      : t("deals.inboxDescription");
+  const partnerAssignmentHint = isPartnerWorkspace
+    ? pickText(
+        lang,
+        "تعديل التعيينات يتم من الإدارة أو فريق العمليات فقط، بينما يمكنك متابعة الصفقات المكلّف بها والتنقل إلى التتبع والحسابات المرتبطة.",
+        "Assignment changes are handled by management or operations only. You can use this workspace to follow your assigned deals and jump into tracking or accounting when needed.",
+      )
+    : null;
+  const searchPlaceholder = isPartnerWorkspace
+    ? pickText(
+        lang,
+        "ابحث برقم الصفقة أو العميل أو رقم الطلب أو رقم التتبع ضمن الصفقات المعيّنة لك",
+        "Search your assigned deals by deal, customer, request, or tracking reference",
+      )
+    : t("deals.searchPlaceholder");
 
   const handleSave = async () => {
     if (!selectedDeal) return;
@@ -195,15 +236,30 @@ export default function DealsPage() {
           </p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("deals.inboxTitle")}</h2>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            {t("deals.inboxDescription")}
+            {workspaceDescription}
           </p>
         </div>
+
+        {isPartnerWorkspace ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { label: pickText(lang, "الصفقات المعيّنة", "Assigned deals"), value: assignedSummary.assigned },
+              { label: pickText(lang, "تحتاج متابعة", "Need follow-up"), value: assignedSummary.actionable },
+              { label: pickText(lang, "تم تسليمها", "Delivered"), value: assignedSummary.delivered },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[1.2rem] bg-secondary/20 p-4 text-center">
+                <p className="text-2xl font-bold">{item.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto]">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by deal, customer, request, tracking, or operation title"
+            placeholder={searchPlaceholder}
           />
           <Button variant="outline" onClick={() => void refresh()}>
             {t("common.refresh")}
@@ -219,7 +275,7 @@ export default function DealsPage() {
         <div className="space-y-3">
           {filteredRows.length === 0 ? (
             <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
-              <EmptyState icon={Route} title={t("deals.emptyTitle")} description="No deals match the current search." />
+              <EmptyState icon={Route} title={t("deals.emptyTitle")} description={t("deals.noMatches")} />
             </div>
           ) : filteredRows.map((row) => (
             <button
@@ -241,6 +297,9 @@ export default function DealsPage() {
                 </span>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">{row.operationTitle}</p>
+              {isPartnerWorkspace ? (
+                <p className="mt-2 text-xs text-muted-foreground">{getShipmentStageCopy(row.stage, lang).description}</p>
+              ) : null}
             </button>
           ))}
         </div>
@@ -444,9 +503,9 @@ export default function DealsPage() {
                       <Save className={`me-2 h-4 w-4 ${saving ? "animate-pulse" : ""}`} />
                       {saving ? t("deals.saving") : t("deals.saveChanges")}
                     </Button>
-                    {!canManageDeal ? (
+                    {!canManageDeal && partnerAssignmentHint ? (
                       <p className="text-xs leading-6 text-muted-foreground">
-                        {t("deals.saveLimited")}
+                        {partnerAssignmentHint}
                       </p>
                     ) : null}
                   </div>

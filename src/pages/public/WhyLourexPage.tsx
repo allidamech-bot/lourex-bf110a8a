@@ -23,7 +23,7 @@ export default function WhyLourexPage() {
     <div className="min-h-screen bg-background">
       <SEO 
         title={t("nav.whyLourex")}
-        description="Six reasons merchants choose LOUREX: verified factories, milestone escrow, real-time tracking, and more."
+        description="Six reasons teams choose LOUREX for structured sourcing operations, live tracking, disciplined accounting, and audit-ready visibility."
       />
       <SiteHeader />
       <main className="pt-24 pb-16">

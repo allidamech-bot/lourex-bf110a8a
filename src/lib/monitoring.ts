@@ -11,10 +11,19 @@ const sanitizePayload = (payload: MonitoringPayload = {}) =>
     Object.entries(payload).filter(([, value]) => typeof value !== "undefined"),
   ) as MonitoringPayload;
 
+const getCurrentPage = () =>
+  typeof window !== "undefined" ? window.location.pathname : "server";
+
+const withBaseContext = (payload: MonitoringPayload = {}) =>
+  sanitizePayload({
+    page: getCurrentPage(),
+    ...payload,
+  });
+
 export const trackEvent = (eventName: string, payload: MonitoringPayload = {}) => {
   const event = {
     event: eventName,
-    ...sanitizePayload(payload),
+    ...withBaseContext(payload),
   };
 
   if (typeof window !== "undefined") {
@@ -23,7 +32,7 @@ export const trackEvent = (eventName: string, payload: MonitoringPayload = {}) =
   }
 
   if (import.meta.env.DEV) {
-    console.info("[analytics]", eventName, sanitizePayload(payload));
+    console.info("[analytics]", eventName, withBaseContext(payload));
   }
 };
 
@@ -33,7 +42,7 @@ export const logOperationalError = (
   context: MonitoringPayload = {},
 ) => {
   const message = error instanceof Error && error.message ? error.message : "Unknown error";
-  const payload = sanitizePayload({ area, message, ...context });
+  const payload = withBaseContext({ area, message, ...context });
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("lourex:error", { detail: payload }));

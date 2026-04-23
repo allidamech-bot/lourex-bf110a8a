@@ -31,7 +31,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             <p className="text-sm leading-relaxed text-muted-foreground">
               {lang === "ar"
                 ? "منصة وساطة وتشغيل ذكية تربط العميل بصفقات شراء وتتبع ومحاسبة منضبطة."
-                : "Smart broker operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
+                : "Smart operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
             </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Globe className="h-3.5 w-3.5 text-primary" />
@@ -84,7 +84,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             {"\u00A9"} {new Date().getFullYear()} LOUREX. {t("footer.tagline")}
           </p>
           <p className="text-xs uppercase tracking-wider text-muted-foreground/60">
-            Private Smart Broker Operations Platform
+            Private Smart Operations Platform
           </p>
         </div>
       </div>

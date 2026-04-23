@@ -179,7 +179,11 @@ export const createFinancialEntry = async (input: {
     .single();
 
   if (inserted.error) {
-    logOperationalError("financial_entry_create", inserted.error, { dealId: input.dealId || null });
+    logOperationalError("financial_entry_create", inserted.error, {
+      flow: "accounting",
+      dealId: input.dealId || null,
+      customerId: input.customerId || null,
+    });
     throw inserted.error;
   }
 
@@ -200,6 +204,9 @@ export const createFinancialEntry = async (input: {
   });
 
   trackEvent("financial_entry_created", {
+    flow: "accounting",
+    dealId: input.dealId || null,
+    customerId: input.customerId || null,
     scope: input.scope,
     type: input.type,
     currency: normalizedCurrency,
@@ -283,6 +290,11 @@ export const createFinancialEditRequest = async (input: {
   if (!targetEntry) {
     throw new Error("The requested financial entry could not be found.");
   }
+  const linkedDealId = input.dealId || targetEntry.deal_id || null;
+  const linkedDealNumber = linkedDealId
+    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === linkedDealId)
+        ?.dealNumber || null
+    : null;
 
   if (!targetEntry.locked) {
     throw new Error("Only locked financial entries can be updated through edit requests.");
@@ -310,6 +322,7 @@ export const createFinancialEditRequest = async (input: {
 
   if (insertedRequest.error) {
     logOperationalError("financial_edit_request_create", insertedRequest.error, {
+      flow: "accounting",
       financialEntryId: input.financialEntryId,
       dealId: input.dealId || null,
     });
@@ -324,8 +337,8 @@ export const createFinancialEditRequest = async (input: {
       financial_entry_id: input.financialEntryId,
       deal_id: input.dealId || targetEntry.deal_id || null,
       customer_id: input.customerId || targetEntry.customer_id || null,
-      summary: "طھظ… ط¥ظ†ط´ط§ط، ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
-      entity_label: input.financialEntryId,
+      summary: `Financial edit request submitted for ${targetEntry.entry_number}.`,
+      entity_label: targetEntry.entry_number || input.financialEntryId,
       reason: normalizedReason,
     },
   });
@@ -335,13 +348,20 @@ export const createFinancialEditRequest = async (input: {
     recipients.map((recipientId) => ({
       userId: recipientId,
       type: "financial_edit_request",
-      title: "طھظ… ط±ظپط¹ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
-      message: `ظٹظˆط¬ط¯ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط¬ط¯ظٹط¯ ط¹ظ„ظ‰ ط§ظ„ظ‚ظٹط¯ ${input.financialEntryId}.`,
-      link: input.dealId ? `/dashboard/edit-requests?deal=${input.dealId}` : "/dashboard/edit-requests",
+      title: "New financial edit request",
+      message: linkedDealNumber
+        ? `Entry ${targetEntry.entry_number} requires review for deal ${linkedDealNumber}.`
+        : `Entry ${targetEntry.entry_number} requires financial review.`,
+      link: linkedDealNumber
+        ? `/dashboard/edit-requests?deal=${linkedDealNumber}&entry=${targetEntry.entry_number}`
+        : `/dashboard/edit-requests?entry=${targetEntry.entry_number}`,
     })),
   );
 
   trackEvent("financial_edit_request_submitted", {
+    flow: "accounting",
+    financialEntryId: input.financialEntryId,
+    dealId: input.dealId || targetEntry.deal_id || null,
     hasDeal: Boolean(input.dealId || targetEntry.deal_id),
     hasCustomer: Boolean(input.customerId || targetEntry.customer_id),
   });
@@ -382,7 +402,11 @@ export const updateFinancialEditRequestStatus = async (
     .single();
 
   if (updated.error) {
-    logOperationalError("financial_edit_request_review", updated.error, { id, status });
+    logOperationalError("financial_edit_request_review", updated.error, {
+      flow: "accounting",
+      id,
+      status,
+    });
     throw updated.error;
   }
 
@@ -398,12 +422,21 @@ export const updateFinancialEditRequestStatus = async (
 
     if (entryUpdate.error) {
       logOperationalError("financial_entry_apply_edit", entryUpdate.error, {
+        flow: "accounting",
         id,
         financialEntryId: updated.data.financial_entry_id,
       });
       throw entryUpdate.error;
     }
   }
+  const reviewedDealNumber = updated.data.deal_id
+    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === updated.data.deal_id)
+        ?.dealNumber || null
+    : null;
+  const targetEntryNumber =
+    (await loadFinancialEntries()).find((entry) => entry.id === updated.data.financial_entry_id)?.entryNumber ||
+    updated.data.financial_entry_id ||
+    id;
 
   await writeAuditLog({
     action: `financial_edit_request.${status}`,
@@ -415,8 +448,11 @@ export const updateFinancialEditRequestStatus = async (
       financial_entry_id: updated.data.financial_entry_id,
       deal_id: updated.data.deal_id,
       review_note: normalizedReviewNote,
-      summary: status === "approved" ? "طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ" : "طھظ… ط±ظپط¶ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ظ…ط§ظ„ظٹ",
-      entity_label: updated.data.financial_entry_id || id,
+      summary:
+        status === "approved"
+          ? `Financial edit request approved for ${targetEntryNumber}.`
+          : `Financial edit request rejected for ${targetEntryNumber}.`,
+      entity_label: targetEntryNumber,
     },
   });
 
@@ -425,16 +461,27 @@ export const updateFinancialEditRequestStatus = async (
     recipients.map((recipientId) => ({
       userId: recipientId,
       type: "financial_edit_request_review",
-      title: status === "approved" ? "طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„" : "طھظ… ط±ظپط¶ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„",
+      title: status === "approved" ? "Financial edit request approved" : "Financial edit request rejected",
       message:
         status === "approved"
-          ? `طھظ…طھ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط¹ظ„ظ‰ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط§ظ„ظ‚ظٹط¯ ${updated.data.financial_entry_id}.`
-          : `طھظ… ط±ظپط¶ ط·ظ„ط¨ طھط¹ط¯ظٹظ„ ط§ظ„ظ‚ظٹط¯ ${updated.data.financial_entry_id}.`,
-      link: updated.data.deal_id ? `/dashboard/edit-requests?deal=${updated.data.deal_id}` : "/dashboard/edit-requests",
+          ? reviewedDealNumber
+            ? `Entry ${targetEntryNumber} was approved for deal ${reviewedDealNumber}.`
+            : `Entry ${targetEntryNumber} was approved.`
+          : reviewedDealNumber
+            ? `Entry ${targetEntryNumber} was rejected for deal ${reviewedDealNumber}.`
+            : `Entry ${targetEntryNumber} was rejected.`,
+      link: reviewedDealNumber
+        ? `/dashboard/edit-requests?deal=${reviewedDealNumber}&entry=${targetEntryNumber}`
+        : `/dashboard/edit-requests?entry=${targetEntryNumber}`,
     })),
   );
 
-  trackEvent("financial_edit_request_reviewed", { status });
+  trackEvent("financial_edit_request_reviewed", {
+    flow: "accounting",
+    financialEntryId: updated.data.financial_entry_id || null,
+    dealId: updated.data.deal_id || null,
+    status,
+  });
 
   return updated.data;
 };

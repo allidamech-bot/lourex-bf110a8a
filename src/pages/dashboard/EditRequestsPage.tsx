@@ -98,7 +98,11 @@ export default function EditRequestsPage() {
 
     try {
       await updateFinancialEditRequestStatus(id, status, reviewNotes[id] || "");
-      toast.success(status === "approved" ? t("editRequests.toasts.approved") : t("editRequests.toasts.rejected"));
+      toast.success(
+        `${status === "approved" ? t("editRequests.toasts.approved") : t("editRequests.toasts.rejected")} ${
+          current.targetEntryNumber || current.financialEntryId
+        }`,
+      );
       setReviewNotes((currentNotes) => ({ ...currentNotes, [id]: "" }));
       await refresh();
     } catch (error: unknown) {
@@ -148,7 +152,7 @@ export default function EditRequestsPage() {
         },
       });
 
-      toast.success(t("editRequests.toasts.submitted"));
+      toast.success(`${t("editRequests.toasts.submitted")} ${entry.entryNumber}`);
       setRequester("");
       setEmail("");
       setReason("");

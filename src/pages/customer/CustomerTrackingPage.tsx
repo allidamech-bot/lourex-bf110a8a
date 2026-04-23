@@ -170,9 +170,7 @@ export default function CustomerTrackingPage() {
           </div>
 
           <div className="rounded-[1.25rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-            {lang === "ar"
-              ? "يعرض هذا القسم آخر مرحلة مؤكدة داخل المسار الرسمي للشحنة. إذا لم توجد ملاحظة عميل جديدة، فهذا لا يعني وجود مشكلة بل يعني فقط عدم نشر تحديث إضافي بعد."
-              : "This section shows the latest confirmed stage inside the official shipment flow. If there is no new customer note yet, it simply means no extra customer-facing update has been published."}
+            {t("tracking.trustDescription")}
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
@@ -198,9 +196,7 @@ export default function CustomerTrackingPage() {
             </div>
           ) : (
             <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
-              {lang === "ar"
-                ? "لا توجد ملاحظة عميل منشورة لهذه المرحلة حتى الآن. يمكنك الاعتماد على المرحلة الحالية وسجل التحديثات أدناه لمعرفة التقدم."
-                : "There is no customer note published for this stage yet. You can still rely on the current stage and update history below to follow progress."}
+              {t("tracking.noCustomerStageNote")}
             </div>
           )}
         </BentoCard>

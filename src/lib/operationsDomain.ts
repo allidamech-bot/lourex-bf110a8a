@@ -2,11 +2,18 @@ import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { isValidRole, type LourexAccountStatus, type LourexRole } from "@/features/auth/rbac";
+import {
+  canManageUsers,
+  isValidRole,
+  normalizePartnerTypeForRole,
+  type LourexAccountStatus,
+  type LourexRole,
+} from "@/features/auth/rbac";
 import { shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
+import { isAssignedPartnerForDeal } from "@/domain/operations/guards";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import type {
   AttachmentRecord,
@@ -1337,6 +1344,7 @@ export const convertRequestToDeal = async (
   );
 
   trackEvent("deal_converted", {
+    flow: "operations_domain",
     requestNumber: request.requestNumber,
     dealNumber,
     hasTracking: Boolean(trackingNumber),
@@ -1420,7 +1428,17 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
   const trackingMap = getTrackingMap(trackingUpdates);
   const profileMap = new Map<string, ProfileRow>((profileRows || []).map((row) => [row.id, row]));
 
-  const filteredDeals = deals || [];
+  const filteredDeals = (deals || []).filter((row) => {
+    if (profile?.role === "turkish_partner") {
+      return row.assigned_turkish_partner_id === profile.id;
+    }
+
+    if (profile?.role === "saudi_partner") {
+      return row.assigned_saudi_partner_id === profile.id;
+    }
+
+    return true;
+  });
 
   return filteredDeals.map((row) => {
     const customer = row.customer_id ? customerMap.get(row.customer_id) : null;
@@ -1683,6 +1701,24 @@ export const createTrackingUpdate = async (input: {
   const shipments = await safeStructuredSelect<ShipmentRow>("shipments");
   const shipment = shipments.find((row) => row.id === input.shipmentId);
   if (!shipment) throw new Error("تعذر العثور على الشحنة المطلوبة.");
+  const accessibleDeal = shipment.deal_id
+    ? (await loadDeals()).find((row) => row.id === shipment.deal_id)
+    : null;
+  const isPartnerRole = profile.role === "turkish_partner" || profile.role === "saudi_partner";
+  if (isPartnerRole && !accessibleDeal) {
+    throw new Error("لا يمكنك تحديث هذه الشحنة لأنها غير مرتبطة بصفقة مكلّف بها.");
+  }
+  if (
+    isPartnerRole &&
+    !isAssignedPartnerForDeal({
+      role: profile.role,
+      profileId: profile.id,
+      turkishPartnerId: accessibleDeal?.turkishPartnerId,
+      saudiPartnerId: accessibleDeal?.saudiPartnerId,
+    })
+  ) {
+    throw new Error("لا يمكنك تحديث هذه الشحنة لأنها ليست ضمن العمليات المعيّنة لك.");
+  }
   const currentStage = shipment.current_stage_code || mapShipmentStatusToStage(shipment.status);
   if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage: input.stageCode })) {
     throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
@@ -1729,7 +1765,7 @@ export const createTrackingUpdate = async (input: {
     },
   });
 
-  const deal = (await loadDeals()).find((row) => row.id === (input.dealId || shipment.deal_id || null));
+  const deal = accessibleDeal || (await loadDeals()).find((row) => row.id === (input.dealId || shipment.deal_id || null));
   const notificationRecipients = await getInternalNotificationRecipients([
     deal?.turkishPartnerId,
     deal?.saudiPartnerId,
@@ -1748,6 +1784,9 @@ export const createTrackingUpdate = async (input: {
   );
 
   trackEvent("tracking_update_created", {
+    flow: "operations_domain",
+    shipmentId: input.shipmentId,
+    dealId: input.dealId || null,
     stageCode: input.stageCode,
     visibility: input.visibility || (input.customerNote ? "customer_visible" : "internal"),
   });
@@ -1861,13 +1900,23 @@ export const updateOperationalUserProfile = async (
   userId: string,
   input: { role?: LourexRole; partnerType?: string | null; status?: LourexAccountStatus },
 ) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !canManageUsers(profile.role)) {
+    throw new Error("صلاحياتك الحالية لا تسمح بتحديث صلاحيات المستخدمين.");
+  }
+
   const currentUsers = await loadOperationalUsers();
   const current = currentUsers.find((user) => user.id === userId);
+  const nextRole = input.role || current?.role;
+  const nextPartnerType =
+    nextRole && isValidRole(nextRole)
+      ? normalizePartnerTypeForRole(nextRole, input.partnerType ?? current?.partnerType ?? null)
+      : null;
 
   const payload: Record<string, unknown> = {};
   if (input.role) payload.role = input.role;
-  if (Object.prototype.hasOwnProperty.call(input, "partnerType")) {
-    payload.partner_type = input.partnerType || null;
+  if (Object.prototype.hasOwnProperty.call(input, "partnerType") || input.role) {
+    payload.partner_type = nextPartnerType;
   }
   if (input.status) payload.status = input.status;
 
@@ -1887,7 +1936,7 @@ export const updateOperationalUserProfile = async (
       },
       newValues: {
         role: input.role || current?.role || "",
-        partner_type: input.partnerType ?? current?.partnerType ?? null,
+        partner_type: nextPartnerType,
         status: input.status || current?.status || "",
         summary: `تم تحديث صلاحيات المستخدم ${current?.fullName || userId}`,
         entity_label: current?.fullName || current?.email || userId,

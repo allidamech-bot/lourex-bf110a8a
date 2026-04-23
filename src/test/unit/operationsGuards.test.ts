@@ -4,6 +4,7 @@ import {
   canConvertPurchaseRequest,
   canTransitionPurchaseRequestStatus,
   getNextShipmentStageCode,
+  isAssignedPartnerForDeal,
 } from "@/domain/operations/guards";
 
 describe("operations guards", () => {
@@ -64,5 +65,45 @@ describe("operations guards", () => {
         nextStage: "product_preparation",
       }),
     ).toBe(false);
+  });
+
+  it("limits Turkish partner tracking updates to source-side stages", () => {
+    expect(
+      canAdvanceShipmentStage({
+        role: "turkish_partner",
+        currentStage: "deal_accepted",
+        nextStage: "product_preparation",
+      }),
+    ).toBe(true);
+    expect(
+      canAdvanceShipmentStage({
+        role: "turkish_partner",
+        currentStage: "left_origin_country",
+        nextStage: "transit_to_destination",
+      }),
+    ).toBe(false);
+  });
+
+  it("requires partner assignment before allowing partner-scoped deal access", () => {
+    expect(
+      isAssignedPartnerForDeal({
+        role: "turkish_partner",
+        profileId: "turkish-1",
+        turkishPartnerId: "turkish-1",
+      }),
+    ).toBe(true);
+    expect(
+      isAssignedPartnerForDeal({
+        role: "saudi_partner",
+        profileId: "saudi-1",
+        saudiPartnerId: "saudi-2",
+      }),
+    ).toBe(false);
+    expect(
+      isAssignedPartnerForDeal({
+        role: "operations_employee",
+        profileId: "ops-1",
+      }),
+    ).toBe(true);
   });
 });

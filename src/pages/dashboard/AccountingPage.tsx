@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { FilePenLine, Receipt, Route, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { createFinancialEntry, loadFinancialEntries } from "@/domain/accounting/service";
-import { summarizeFinancialEntries } from "@/domain/accounting/utils";
+import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
-import { useI18n } from "@/lib/i18n";
+import { pickText, useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildAccountingEntriesCsv, downloadCsv } from "@/lib/adminOperations";
 
@@ -34,9 +34,10 @@ export default function AccountingPage() {
   const [referenceLabel, setReferenceLabel] = useState("");
   const [note, setNote] = useState("");
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [loadError, setLoadError] = useState("");
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
@@ -50,12 +51,11 @@ export default function AccountingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     void refresh();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
   const focusedDeal = deals.find((row) => row.dealNumber === focusDeal) || null;
   const visibleEntries = entries.filter((row) => {
@@ -63,11 +63,11 @@ export default function AccountingPage() {
       return false;
     }
 
-    if (!search.trim()) {
+    if (!deferredSearch.trim()) {
       return true;
     }
 
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = deferredSearch.trim().toLowerCase();
     return [
       row.entryNumber,
       row.dealNumber,
@@ -79,7 +79,7 @@ export default function AccountingPage() {
     ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(normalizedSearch));
-  });
+  }, [deferredSearch, entries, focusDeal]);
   const dealEntries = visibleEntries.filter((row) => row.scope === "deal" || row.scope === "customer");
   const globalEntries = !focusDeal ? visibleEntries.filter((row) => row.scope === "global") : [];
 
@@ -102,6 +102,14 @@ export default function AccountingPage() {
       direction: variance >= 0 ? "positive" : "negative",
     };
   }, [focusedDeal, totals.net]);
+  const focusedDealEntries = useMemo(
+    () => visibleEntries.filter((row) => focusedDeal && row.dealId === focusedDeal.id),
+    [focusedDeal, visibleEntries],
+  );
+  const statementSummary = useMemo(
+    () => (focusedDeal ? buildDealStatementSummary(focusedDeal, focusedDealEntries) : null),
+    [focusedDeal, focusedDealEntries],
+  );
 
   const handleCreateEntry = async () => {
     if (submitting) return;
@@ -131,7 +139,11 @@ export default function AccountingPage() {
         referenceLabel,
       });
 
-      toast.success(t("accounting.toasts.created"));
+      toast.success(
+        focusDeal
+          ? `${t("accounting.toasts.created")} ${focusDeal}`
+          : t("accounting.toasts.created"),
+      );
       setAmount("");
       setCurrency("SAR");
       setEntryDate(new Date().toISOString().slice(0, 10));
@@ -178,7 +190,11 @@ export default function AccountingPage() {
       toast.error(message);
       return;
     }
-    toast.success(t("accounting.toasts.exportSuccess"));
+    toast.success(
+      focusDeal
+        ? `${t("accounting.toasts.exportSuccess")} ${focusDeal}`
+        : t("accounting.toasts.exportSuccess"),
+    );
   };
 
   if (loading) {
@@ -254,7 +270,63 @@ export default function AccountingPage() {
               ))}
             </div>
             {focusedDeal ? (
-              <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
+              <div className="space-y-4">
+                <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                        {pickText(locale === "ar-SA" ? "ar" : "en", "جاهزية البيان", "Statement readiness")}
+                      </p>
+                      <p className="mt-2 font-serif text-2xl font-semibold">
+                        {statementSummary?.ready
+                          ? pickText(locale === "ar-SA" ? "ar" : "en", "جاهز للمراجعة النهائية", "Ready for final review")
+                          : pickText(locale === "ar-SA" ? "ar" : "en", "يتطلب مراجعة قبل الإصدار", "Needs review before issue")}
+                      </p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      statementSummary?.ready
+                        ? "bg-emerald-500/15 text-emerald-300"
+                        : "bg-amber-500/15 text-amber-200"
+                    }`}>
+                      {statementSummary?.currencySummaries.length || 0}{" "}
+                      {pickText(locale === "ar-SA" ? "ar" : "en", "عملة/عملات", "currency group(s)")}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {statementSummary?.currencySummaries.length ? (
+                      statementSummary.currencySummaries.map((item) => (
+                        <div key={item.currency} className="rounded-[1.15rem] bg-background/65 p-4">
+                          <p className="text-xs text-muted-foreground">{item.currency}</p>
+                          <p className="mt-1 font-medium">
+                            {item.net.toLocaleString()} {item.currency}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {pickText(
+                              locale === "ar-SA" ? "ar" : "en",
+                              `${item.entriesCount} قيود مرتبطة`,
+                              `${item.entriesCount} linked entries`,
+                            )}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-[1.15rem] bg-background/65 p-4 text-sm text-muted-foreground">
+                        {pickText(
+                          locale === "ar-SA" ? "ar" : "en",
+                          "لا توجد قيود مرتبطة بعد لإنشاء بيان نهائي لهذه الصفقة.",
+                          "No linked entries are available yet to prepare a final statement for this deal.",
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {statementSummary && statementSummary.issues.length > 0 ? (
+                    <div className="mt-4 rounded-[1.15rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
+                      {statementSummary.issues[0]}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-primary/80">{t("accounting.dealSignal")}</p>
@@ -282,6 +354,7 @@ export default function AccountingPage() {
                   {totals.net >= 0 ? t("accounting.positiveSignal") : t("accounting.negativeSignal")}
                   {dealFinancialSignal ? ` ${dealFinancialSignal.variance.toLocaleString()} ${focusedDeal.currency}.` : ""}
                 </p>
+              </div>
               </div>
             ) : (
               <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">

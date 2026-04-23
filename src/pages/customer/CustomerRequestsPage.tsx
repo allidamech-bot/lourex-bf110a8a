@@ -306,13 +306,7 @@ export default function CustomerRequestsPage() {
               </div>
 
               <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
-                {selectedRow.convertedDealNumber
-                  ? locale === "ar"
-                    ? "تم إنشاء عملية تشغيلية لهذا الطلب. يمكنك الآن استخدام صفحة التتبع لمعرفة المرحلة الحالية وآخر التحديثات الآمنة للعميل."
-                    : "An active operation has been created for this request. You can now use the tracking page to see the current stage and latest customer-safe updates."
-                  : locale === "ar"
-                    ? "إذا لم يظهر رقم صفقة بعد، فهذا يعني أن الطلب ما زال في مرحلة المراجعة أو التحضير الداخلي قبل بدء التتبع."
-                    : "If no deal number is shown yet, the request is still in review or internal preparation before tracking begins."}
+                {selectedRow.convertedDealNumber ? t("requests.convertedHint") : t("requests.pendingConversionHint")}
               </div>
             </div>
           </BentoCard>

@@ -69,7 +69,7 @@ const CoreFeatures = () => {
           <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-muted-foreground">
             {lang === "ar"
               ? "Lourex تعطيك بيئة تنفيذ وتتبع ومحاسبة وتدقيق متكاملة، لا مجرد صفحات عرض أو تدفق سلة وشراء."
-              : "Lourex provides a connected execution, tracking, accounting, and audit environment, not a browsing-and-checkout experience."}
+              : "Lourex provides a connected execution, tracking, accounting, and audit environment, not a simple catalog-and-checkout experience."}
           </p>
         </motion.div>
 

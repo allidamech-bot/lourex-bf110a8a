@@ -107,6 +107,90 @@ export const summarizeFinancialEntries = (entries: FinancialEntry[]) => {
   };
 };
 
+export type StatementCurrencySummary = {
+  currency: string;
+  income: number;
+  expense: number;
+  net: number;
+  entriesCount: number;
+};
+
+export const summarizeFinancialEntriesByCurrency = (entries: FinancialEntry[]): StatementCurrencySummary[] => {
+  const currencyMap = new Map<string, StatementCurrencySummary>();
+
+  entries.forEach((entry) => {
+    const currency = normalizeFinancialCurrency(entry.currency || "") || "UNKNOWN";
+    const current = currencyMap.get(currency) || {
+      currency,
+      income: 0,
+      expense: 0,
+      net: 0,
+      entriesCount: 0,
+    };
+
+    if (entry.type === "income") {
+      current.income += entry.amount;
+    } else {
+      current.expense += entry.amount;
+    }
+
+    current.net = current.income - current.expense;
+    current.entriesCount += 1;
+    currencyMap.set(currency, current);
+  });
+
+  return [...currencyMap.values()].sort((a, b) => a.currency.localeCompare(b.currency));
+};
+
+export const assessStatementReadiness = (entries: FinancialEntry[]) => {
+  const issues: string[] = [];
+  const currencySummaries = summarizeFinancialEntriesByCurrency(entries);
+  const hasMixedCurrencies = currencySummaries.length > 1;
+
+  if (entries.length === 0) {
+    issues.push("No financial entries are linked yet.");
+  }
+
+  if (entries.some((entry) => !normalizeFinancialText(entry.entryNumber) || !normalizeFinancialText(entry.entryDate))) {
+    issues.push("Some financial entries are missing a reference number or entry date.");
+  }
+
+  if (entries.some((entry) => !isValidFinancialCurrency(entry.currency))) {
+    issues.push("Some financial entries use an invalid currency code.");
+  }
+
+  if (hasMixedCurrencies) {
+    issues.push("Entries span multiple currencies and should be split before issuing a final statement.");
+  }
+
+  return {
+    ready: issues.length === 0,
+    issues,
+    hasMixedCurrencies,
+    currencySummaries,
+  };
+};
+
+export const buildDealStatementSummary = (
+  deal: Pick<OperationsDeal, "dealNumber" | "customerName" | "currency" | "totalValue">,
+  entries: FinancialEntry[],
+) => {
+  const totals = summarizeFinancialEntries(entries);
+  const readiness = assessStatementReadiness(entries);
+
+  return {
+    dealNumber: deal.dealNumber,
+    customerName: deal.customerName,
+    quotedValue: deal.totalValue,
+    quotedCurrency: deal.currency,
+    entriesCount: totals.count,
+    income: totals.income,
+    expense: totals.expense,
+    net: totals.net,
+    ...readiness,
+  };
+};
+
 export const getCustomerScopedFinancialEntries = (
   customerId: string,
   deals: Array<Pick<OperationsDeal, "id" | "customerId">>,

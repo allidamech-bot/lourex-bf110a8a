@@ -20,7 +20,7 @@ import {
   getMetricDetails,
   type DashboardReportSnapshot,
 } from "@/lib/reportsDomain";
-import { useI18n } from "@/lib/i18n";
+import { pickText, useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv } from "@/lib/adminOperations";
 
@@ -40,7 +40,7 @@ const getRangeStart = (range: ReportRange, customStart?: string) => {
 };
 
 export default function ReportsPage() {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<ReportRange>("monthly");
   const [customStart, setCustomStart] = useState("");
@@ -90,7 +90,19 @@ export default function ReportsPage() {
     inTransit: 0,
     destination: 0,
     delivered: 0,
+    currencyGroups: 0,
   };
+  const statementExportHint = metrics.currencyGroups > 1
+    ? pickText(
+        lang,
+        "تتضمن هذه الفترة أكثر من عملة واحدة، لذلك يبقى التصدير هنا تقريراً تشغيلياً ويجب فصل البيانات بحسب العملة قبل إصدار بيان نهائي.",
+        "This range includes multiple currencies, so the export remains an operational report and should be split by currency before issuing a final statement.",
+      )
+    : pickText(
+        lang,
+        "يصلح هذا التصدير كمُلخص تشغيلي ومراجعة أولية للبيانات المالية قبل إعداد أي بيان أو فاتورة نهائية.",
+        "This export is suitable for operational review and draft statement preparation before any final statement or invoice is issued.",
+      );
 
   const handleDrillDown = async (metric: "active_deals" | "pending_requests" | "recent_expenses") => {
     setLoading(true);
@@ -193,6 +205,9 @@ export default function ReportsPage() {
             {loadError}
           </div>
         ) : null}
+        <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+          {statementExportHint}
+        </div>
       </BentoCard>
 
       <div className="grid gap-4 xl:grid-cols-4">
@@ -264,6 +279,7 @@ export default function ReportsPage() {
               { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
               { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries, icon: Receipt },
               { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests, icon: Receipt },
+              { label: pickText(lang, "مجموعات العملات", "Currency groups"), value: metrics.currencyGroups, icon: Receipt },
               { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR`, icon: Receipt },
               { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR`, icon: Receipt },

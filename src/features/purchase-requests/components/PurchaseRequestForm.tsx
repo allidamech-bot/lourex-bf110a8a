@@ -268,8 +268,10 @@ export const PurchaseRequestForm = () => {
 
       setSubmittedData({ requestNumber, trackingCode });
       trackEvent("purchase_request_submitted", {
+        flow: "purchase_request",
         authenticated: Boolean(profile),
         requestNumber,
+        trackingId: trackingCode,
         images: uploads.length,
         isFullSourcing: form.isFullSourcing,
       });
@@ -284,6 +286,7 @@ export const PurchaseRequestForm = () => {
           : t("requests.intake.errors.submitFailed");
 
       logOperationalError("purchase_request_submit", error, {
+        flow: "purchase_request",
         authenticated: Boolean(profile),
         images: uploads.length,
       });

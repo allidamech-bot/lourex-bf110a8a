@@ -13,7 +13,7 @@ import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { useI18n } from "@/lib/i18n";
+import { pickText, useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
 import { logOperationalError } from "@/lib/monitoring";
@@ -94,6 +94,11 @@ export default function CustomerPortal() {
     hasMixedCurrencies: false,
     dealsCount: customerData?.dealsCount || 0,
   });
+  const statementNotice = pickText(
+    lang,
+    "هذه الأرقام تمثل ملخصاً تشغيلياً للحركة المالية الحالية. يتم إعداد أي بيان نهائي لكل صفقة وبحسب العملة المرتبطة بها بعد اكتمال القيود المطلوبة.",
+    "These figures reflect a live operational financial summary. Any final statement is prepared per deal and per currency once the required entries are complete.",
+  );
 
   return (
     <>
@@ -165,6 +170,9 @@ export default function CustomerPortal() {
             <div className="space-y-4">
               <div className="rounded-[1.25rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
                 {financialSummaryCopy}
+              </div>
+              <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
+                {statementNotice}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.2rem] bg-secondary/15 p-5">

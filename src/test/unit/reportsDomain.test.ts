@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildFinancialSummaryReport } from "@/lib/reportsDomain";
+import { summarizeFinancialEntriesByCurrency } from "@/domain/accounting/utils";
 
 describe("reports domain", () => {
   it("builds consistent financial totals, daily rows, and monthly trends", () => {
@@ -65,5 +66,43 @@ describe("reports domain", () => {
       { month: "2026-04", income: 1000, expense: 200, net: 800 },
       { month: "2026-05", income: 300, expense: 0, net: 300 },
     ]);
+    expect(
+      summarizeFinancialEntriesByCurrency([
+        {
+          id: "1",
+          entryNumber: "FE-1",
+          scope: "deal",
+          relationType: "deal_linked",
+          type: "income",
+          amount: 1000,
+          currency: "SAR",
+          locked: true,
+          createdBy: "u1",
+          createdAt: "2026-04-20T10:00:00Z",
+          entryDate: "2026-04-20T10:00:00Z",
+          method: "Bank",
+          counterparty: "Customer",
+          category: "Payment",
+          note: "Deposit",
+        },
+        {
+          id: "2",
+          entryNumber: "FE-2",
+          scope: "deal",
+          relationType: "deal_linked",
+          type: "expense",
+          amount: 50,
+          currency: "USD",
+          locked: true,
+          createdBy: "u1",
+          createdAt: "2026-04-21T10:00:00Z",
+          entryDate: "2026-04-21T10:00:00Z",
+          method: "Cash",
+          counterparty: "Carrier",
+          category: "Shipping",
+          note: "Transit fee",
+        },
+      ]),
+    ).toHaveLength(2);
   });
 });

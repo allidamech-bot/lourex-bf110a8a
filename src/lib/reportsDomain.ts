@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
-import { summarizeFinancialEntries } from "@/domain/accounting/utils";
+import { summarizeFinancialEntries, summarizeFinancialEntriesByCurrency } from "@/domain/accounting/utils";
 import { loadDeals, loadPurchaseRequests, loadCustomerDashboards, loadShipments } from "./operationsDomain";
 import type { OperationsFinancialEntry as FinancialEntry } from "@/domain/operations/types";
 
@@ -60,6 +60,7 @@ export type ReportSummary = {
   inTransit: number;
   destination: number;
   delivered: number;
+  currencyGroups: number;
 };
 
 export type ExpenseCategory = {
@@ -221,6 +222,7 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
   const filteredShipments = shipments.filter((shipment) => isInRange(shipment.updatedAt, startDate, endDate));
   const filteredEditRequests = editRequests.filter((request) => isInRange(request.submittedAt, startDate, endDate));
   const financialSummary = buildFinancialSummaryReport(filteredEntries);
+  const currencyGroups = summarizeFinancialEntriesByCurrency(filteredEntries).length;
   const customerReport = await getCustomerReport();
 
   const categoryMap = new Map<string, number>();
@@ -266,6 +268,7 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
         ["arrived_destination", "destination_customs"].includes(shipment.stage),
       ).length,
       delivered: filteredShipments.filter((shipment) => shipment.stage === "delivered").length,
+      currencyGroups,
     },
     operations,
     financialSummary,

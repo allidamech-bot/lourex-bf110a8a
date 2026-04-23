@@ -98,7 +98,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
         if (error) throw error;
 
-        trackEvent("login_success", { mode: "password" });
+        trackEvent("login_success", { flow: "auth", mode: "password" });
         toast.success(t("auth.signInSuccess"));
       } else {
         const passwordError = validatePassword(password);
@@ -117,7 +117,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
         if (error) throw error;
 
-        trackEvent("signup_success", { requestedRole: "customer" });
+        trackEvent("signup_success", { flow: "auth", requestedRole: "customer" });
         toast.success(t("auth.signUpSuccess"));
         setIsLogin(true);
         setPassword("");
@@ -125,14 +125,17 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     } catch (err: unknown) {
       const error = err as Error & { status?: number };
       logOperationalError(isLogin ? "login_failure" : "signup_failure", error, {
+        flow: "auth",
         hasEmail: Boolean(email.trim()),
       });
       if (isLogin) {
         trackEvent("login_failure", {
+          flow: "auth",
           reason: error?.status || error?.message || "unknown",
         });
       } else {
         trackEvent("signup_failure", {
+          flow: "auth",
           reason: error?.status || error?.message || "unknown",
         });
       }

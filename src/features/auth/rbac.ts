@@ -51,6 +51,21 @@ export const dashboardRoutePermissions = {
 export const canAccessRole = (role: LourexRole | null | undefined, allowedRoles?: LourexRole[]) =>
   Boolean(role && (!allowedRoles || allowedRoles.includes(role)));
 
+export const getPartnerTypeForRole = (role: LourexRole): LourexPartnerType =>
+  role === "turkish_partner" ? "turkish" : role === "saudi_partner" ? "saudi" : null;
+
+export const normalizePartnerTypeForRole = (
+  role: LourexRole,
+  partnerType?: string | null,
+): LourexPartnerType => {
+  const enforcedPartnerType = getPartnerTypeForRole(role);
+  if (enforcedPartnerType) {
+    return enforcedPartnerType;
+  }
+
+  return null;
+};
+
 export const isValidRole = (role: string | null | undefined): role is LourexRole =>
   typeof role === "string" && LOUREX_ROLES.includes(role as LourexRole);
 

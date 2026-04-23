@@ -5,6 +5,8 @@ import {
   isValidRole, 
   canManageUsers, 
   canManageAccounting,
+  getPartnerTypeForRole,
+  normalizePartnerTypeForRole,
   INTERNAL_ROLES,
   ACCOUNTING_ROLES
 } from "@/features/auth/rbac";
@@ -67,6 +69,14 @@ describe("RBAC System", () => {
       });
       expect(canManageAccounting("turkish_partner")).toBe(false);
       expect(canManageAccounting("customer")).toBe(false);
+    });
+
+    it("normalizes partner type from the official active role model", () => {
+      expect(getPartnerTypeForRole("turkish_partner")).toBe("turkish");
+      expect(getPartnerTypeForRole("saudi_partner")).toBe("saudi");
+      expect(getPartnerTypeForRole("owner")).toBeNull();
+      expect(normalizePartnerTypeForRole("customer", "saudi")).toBeNull();
+      expect(normalizePartnerTypeForRole("turkish_partner", null)).toBe("turkish");
     });
   });
 });

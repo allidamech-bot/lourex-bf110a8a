@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   ArrowRightLeft,
   CheckCircle2,
@@ -67,6 +67,7 @@ export default function PurchaseRequestsPage() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
   const [internalNotesDraft, setInternalNotesDraft] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -143,7 +144,7 @@ export default function PurchaseRequestsPage() {
   }, [refresh]);
 
   const filteredRows = useMemo(() => {
-    const normalized = search.trim().toLowerCase();
+    const normalized = deferredSearch.trim().toLowerCase();
 
     return rows.filter((row) => {
       const matchesFilter = activeFilter === "all" ? true : row.status === activeFilter;
@@ -156,7 +157,7 @@ export default function PurchaseRequestsPage() {
 
       return matchesFilter && matchesSearch;
     });
-  }, [rows, search, activeFilter]);
+  }, [rows, deferredSearch, activeFilter]);
 
   const selectedRow = useMemo(() => {
     if (filteredRows.length === 0) {
@@ -212,7 +213,9 @@ export default function PurchaseRequestsPage() {
         throw error;
       }
 
-      toast.success(t("requests.toasts.statusUpdated"));
+      toast.success(
+        `${t("requests.toasts.statusUpdated")} ${current.requestNumber} → ${t(`statuses.${status}`)}`,
+      );
       await refresh();
       setSelectedRequest(requestId);
     } catch (error: unknown) {
@@ -237,7 +240,7 @@ export default function PurchaseRequestsPage() {
         throw error;
       }
 
-      toast.success(t("requests.toasts.notesSaved"));
+      toast.success(`${t("requests.toasts.notesSaved")} ${selectedRow.requestNumber}`);
       await refresh();
       setSelectedRequest(selectedRow.id);
     } catch (error: unknown) {
@@ -282,6 +285,8 @@ export default function PurchaseRequestsPage() {
           }),
       );
       trackEvent("deal_converted", {
+        flow: "request_review",
+        requestId: selectedRow.id,
         requestNumber: selectedRow.requestNumber,
         dealNumber: converted.dealNumber,
       });
@@ -289,7 +294,7 @@ export default function PurchaseRequestsPage() {
       await refresh();
       navigate(`/dashboard/deals?deal=${converted.dealNumber}`);
     } catch (error: unknown) {
-      logOperationalError("deal_convert", error, { requestId: selectedRow.id });
+      logOperationalError("deal_convert", error, { flow: "request_review", requestId: selectedRow.id });
       toast.error(getErrorMessage(error, t("requests.toasts.convertError")));
     } finally {
       setConvertingId(null);
