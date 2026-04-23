@@ -18,6 +18,7 @@ import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { filterFinancialEditRequests } from "@/lib/adminOperations";
 
 export default function EditRequestsPage() {
   const { locale, t } = useI18n();
@@ -36,12 +37,16 @@ export default function EditRequestsPage() {
   const [proposedCounterparty, setProposedCounterparty] = useState("");
   const [proposedCategory, setProposedCategory] = useState("");
   const [proposedNote, setProposedNote] = useState("");
-  const [reviewNote, setReviewNote] = useState("");
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [loadError, setLoadError] = useState("");
 
   const refresh = async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const [requestRows, entryRows, dealRows] = await Promise.all([
         loadFinancialEditRequests(),
@@ -53,6 +58,7 @@ export default function EditRequestsPage() {
       setDeals(dealRows);
     } catch (error) {
       logOperationalError("financial_edit_requests_load", error);
+      setLoadError(t("editRequests.toasts.updateError"));
       toast.error(t("editRequests.toasts.updateError"));
     } finally {
       setLoading(false);
@@ -65,7 +71,8 @@ export default function EditRequestsPage() {
 
   const entry = entries.find((row) => row.id === focusEntry || row.entryNumber === focusEntry) || null;
   const deal = deals.find((row) => row.dealNumber === focusDeal) || null;
-  const visibleRows = rows.filter((row) => (!focusDeal ? true : row.dealNumber === focusDeal));
+  const scopedRows = rows.filter((row) => (!focusDeal ? true : row.dealNumber === focusDeal));
+  const visibleRows = useMemo(() => filterFinancialEditRequests(scopedRows, search, statusFilter), [scopedRows, search, statusFilter]);
   const pendingCount = useMemo(() => visibleRows.filter((row) => row.status === "pending").length, [visibleRows]);
 
   useEffect(() => {
@@ -88,9 +95,9 @@ export default function EditRequestsPage() {
     setUpdatingId(id);
 
     try {
-      await updateFinancialEditRequestStatus(id, status, reviewNote);
+      await updateFinancialEditRequestStatus(id, status, reviewNotes[id] || "");
       toast.success(status === "approved" ? t("editRequests.toasts.approved") : t("editRequests.toasts.rejected"));
-      setReviewNote("");
+      setReviewNotes((currentNotes) => ({ ...currentNotes, [id]: "" }));
       await refresh();
     } catch (error: any) {
       logOperationalError("financial_edit_request_review", error, { id, status });
@@ -242,6 +249,31 @@ export default function EditRequestsPage() {
               {t("editRequests.pendingCount", { count: pendingCount })}
             </span>
           </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by requester, email, deal, entry, or reason"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as "all" | "pending" | "approved" | "rejected")}
+              className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <Button variant="outline" onClick={() => void refresh()}>
+              Refresh
+            </Button>
+          </div>
+          {loadError ? (
+            <div className="mt-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+              {loadError}
+            </div>
+          ) : null}
         </div>
         <div className="space-y-0">
           {loading ? (
@@ -324,8 +356,8 @@ export default function EditRequestsPage() {
                   <div className="mt-4 space-y-3">
                     <Textarea
                       rows={3}
-                      value={reviewNote}
-                      onChange={(event) => setReviewNote(event.target.value)}
+                      value={reviewNotes[row.id] || ""}
+                      onChange={(event) => setReviewNotes((currentNotes) => ({ ...currentNotes, [row.id]: event.target.value }))}
                       placeholder={t("editRequests.reviewPlaceholder")}
                     />
                     <div className="flex flex-wrap gap-3">

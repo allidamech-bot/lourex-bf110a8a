@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, PackageSearch, Route, Send, ShieldCheck } from "lucide-react";
+import { ArrowRightLeft, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
+import { filterShipments } from "@/lib/adminOperations";
 
 export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
@@ -24,6 +26,8 @@ export default function TrackingPage() {
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [search, setSearch] = useState("");
   const [internalNote, setInternalNote] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const selectedTracking = searchParams.get("tracking");
@@ -31,11 +35,14 @@ export default function TrackingPage() {
 
   const refresh = async () => {
     setLoading(true);
+    setLoadError("");
     try {
       setRows(await loadShipments());
     } catch (error) {
       logOperationalError("tracking_load", error);
-      toast.error(t("tracking.toasts.advanceError"));
+      const message = t("tracking.toasts.advanceError");
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -45,10 +52,11 @@ export default function TrackingPage() {
     void refresh();
   }, []);
 
+  const filteredRows = useMemo(() => filterShipments(rows, search), [rows, search]);
   const activeShipment =
-    rows.find((row) => (selectedTracking ? row.trackingId === selectedTracking : row.dealNumber === selectedDeal)) ||
-    rows.find((row) => row.trackingId === selectedTracking) ||
-    rows[0] ||
+    filteredRows.find((row) => (selectedTracking ? row.trackingId === selectedTracking : row.dealNumber === selectedDeal)) ||
+    filteredRows.find((row) => row.trackingId === selectedTracking) ||
+    filteredRows[0] ||
     null;
 
   useEffect(() => {
@@ -136,6 +144,28 @@ export default function TrackingPage() {
           {activeShipment.dealNumber ? <p className="mt-2 text-sm text-muted-foreground">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
         </div>
 
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <div className="relative">
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by tracking, deal, customer, destination, or stage"
+              className="ps-9"
+            />
+          </div>
+          <Button variant="outline" onClick={() => void refresh()}>
+            <RefreshCcw className="me-2 h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
+
+        {loadError ? (
+          <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+            {loadError}
+          </div>
+        ) : null}
+
         <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-5">
           <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{t("tracking.currentStage")}</p>
           <p className="mt-2 font-serif text-2xl font-semibold">{currentStage?.label || t("tracking.noStage")}</p>
@@ -172,6 +202,34 @@ export default function TrackingPage() {
               <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
             </div>
           ))}
+        </div>
+
+        <div className="space-y-3">
+          {filteredRows.length === 0 ? (
+            <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
+              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description="No shipments match the current search." />
+            </div>
+          ) : (
+            filteredRows.map((row) => (
+              <Link
+                key={row.id}
+                to={`/dashboard/tracking?deal=${row.dealNumber || ""}&tracking=${row.trackingId}`}
+                className={`block rounded-[1.3rem] border px-4 py-4 transition-colors ${
+                  activeShipment.id === row.id ? "border-primary/30 bg-primary/10" : "border-border/60 bg-secondary/10 hover:border-primary/20"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{row.trackingId}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{row.dealNumber || t("tracking.unlinked")}</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                    {getShipmentStageCopy(row.stage, lang)?.label || row.stage}
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
 
         {isInternal && nextStage ? (

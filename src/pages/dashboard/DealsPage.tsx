@@ -32,6 +32,7 @@ import { getShipmentStageCopy } from "@/lib/shipmentStages";
 import { useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
+import { filterDeals } from "@/lib/adminOperations";
 
 const HEADER_SEPARATOR = " | ";
 
@@ -47,6 +48,8 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [search, setSearch] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [turkishPartnerId, setTurkishPartnerId] = useState("");
   const [saudiPartnerId, setSaudiPartnerId] = useState("");
@@ -60,13 +63,16 @@ export default function DealsPage() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const [dealsData, usersData] = await Promise.all([fetchDeals(), fetchOperationalUsers()]);
       setRows(dealsData);
       setUsers(usersData);
     } catch (error) {
       logOperationalError("deals_load", error);
-      toast.error(t("deals.toasts.saveError"));
+      const message = t("deals.toasts.saveError");
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -76,7 +82,8 @@ export default function DealsPage() {
     void refresh();
   }, [refresh]);
 
-  const selectedDeal = rows.find((row) => row.dealNumber === selectedDealNumber) || rows[0] || null;
+  const filteredRows = useMemo(() => filterDeals(rows, search), [rows, search]);
+  const selectedDeal = filteredRows.find((row) => row.dealNumber === selectedDealNumber) || filteredRows[0] || null;
 
   useEffect(() => {
     if (!selectedDeal) return;
@@ -192,8 +199,29 @@ export default function DealsPage() {
           </p>
         </div>
 
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by deal, customer, request, tracking, or operation title"
+          />
+          <Button variant="outline" onClick={() => void refresh()}>
+            {t("common.refresh")}
+          </Button>
+        </div>
+
+        {loadError ? (
+          <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+            {loadError}
+          </div>
+        ) : null}
+
         <div className="space-y-3">
-          {rows.map((row) => (
+          {filteredRows.length === 0 ? (
+            <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
+              <EmptyState icon={Route} title={t("deals.emptyTitle")} description="No deals match the current search." />
+            </div>
+          ) : filteredRows.map((row) => (
             <button
               key={row.id}
               onClick={() => setSearchParams({ deal: row.dealNumber })}

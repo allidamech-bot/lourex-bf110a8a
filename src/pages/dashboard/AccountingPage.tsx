@@ -14,6 +14,7 @@ import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { buildAccountingEntriesCsv, downloadCsv } from "@/lib/adminOperations";
 
 export default function AccountingPage() {
   const { locale, t } = useI18n();
@@ -33,15 +34,18 @@ export default function AccountingPage() {
   const [referenceLabel, setReferenceLabel] = useState("");
   const [note, setNote] = useState("");
   const [search, setSearch] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const refresh = async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const [entriesData, dealsData] = await Promise.all([loadFinancialEntries(), loadDeals()]);
       setEntries(entriesData);
       setDeals(dealsData);
     } catch (error) {
       logOperationalError("accounting_load", error);
+      setLoadError(t("accounting.toasts.createError"));
       toast.error(t("accounting.toasts.createError"));
     } finally {
       setLoading(false);
@@ -145,6 +149,13 @@ export default function AccountingPage() {
     }
   };
 
+  const handleExport = () => {
+    const exported = downloadCsv(`lourex-accounting-${focusDeal || "all"}.csv`, buildAccountingEntriesCsv(visibleEntries));
+    if (!exported) {
+      setLoadError("CSV export is unavailable in this environment.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4">
@@ -186,6 +197,11 @@ export default function AccountingPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {focusDeal ? t("accounting.dealContext") : t("accounting.globalContext")}
           </p>
+          {loadError ? (
+            <div className="mt-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+              {loadError}
+            </div>
+          ) : null}
         </BentoCard>
       </div>
 
@@ -333,11 +349,19 @@ export default function AccountingPage() {
                 </span>
               </div>
               <div className="mt-4">
-                <Input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search by entry number, counterparty, category, customer, or note"
-                />
+                <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                  <Input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search by entry number, counterparty, category, customer, or note"
+                  />
+                  <Button variant="outline" onClick={() => void refresh()}>
+                    Refresh
+                  </Button>
+                  <Button variant="outline" onClick={handleExport}>
+                    Export CSV
+                  </Button>
+                </div>
               </div>
             </div>
           <div className="space-y-0">

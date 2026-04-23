@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   ClipboardList,
+  Download,
   PackageSearch,
+  Printer,
   Receipt,
   ShieldCheck,
   Truck,
@@ -19,6 +21,7 @@ import {
 } from "@/lib/reportsDomain";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { buildReportCsv, downloadCsv } from "@/lib/adminOperations";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 
@@ -100,6 +103,15 @@ export default function ReportsPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!snapshot) return;
+    const exported = downloadCsv(`lourex-report-${range}.csv`, buildReportCsv(snapshot));
+    if (!exported) {
+      logOperationalError("reports_export_unavailable", new Error("CSV export unavailable"));
+      setLoadError("CSV export is unavailable in this environment.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4 lg:grid-cols-2">
@@ -117,7 +129,7 @@ export default function ReportsPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("reports.window")}</p>
             <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-5">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
@@ -131,6 +143,12 @@ export default function ReportsPage() {
             </select>
             <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <button onClick={handleExport} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />Export CSV</span>
+            </button>
+            <button onClick={() => window.print()} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />Print</span>
+            </button>
           </div>
         </div>
         {loadError ? (
