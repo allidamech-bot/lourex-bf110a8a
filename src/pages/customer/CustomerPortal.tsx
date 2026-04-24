@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +18,12 @@ import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
 import { logOperationalError } from "@/lib/monitoring";
-import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@/lib/customerExperience";
+import {
+  getCustomerFinancialSummaryCopy,
+  getCustomerRequestStatusCopy,
+} from "@/lib/customerExperience";
+
+const CustomerPortal = () => {
   const { profile } = useAuthSession();
   const { locale, t } = useI18n();
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
@@ -27,9 +33,14 @@ import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@
 
   useEffect(() => {
     const loadData = async () => {
-      if (!profile?.id) return;
+      if (!profile?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setLoadError("");
+
       try {
         const [dashboard, requests] = await Promise.all([
           fetchCustomerDashboard(),
@@ -37,7 +48,10 @@ import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@
         ]);
 
         setCustomerData(dashboard);
-        const myRequests = requests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        const myRequests = [...requests].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
 
         setRecentRequests(myRequests.slice(0, 3));
       } catch (error) {
@@ -49,8 +63,7 @@ import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@
     };
 
     void loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [profile?.id, t]);
 
   const menuItems = [
     {
@@ -86,181 +99,222 @@ import { getCustomerFinancialSummaryCopy, getCustomerRequestStatusCopy } from "@
       bgColor: "bg-orange-500/10",
     },
   ];
+
   const lang = locale === "ar" ? "ar" : "en";
-  const recentRequestStatus = recentRequests[0] ? getCustomerRequestStatusCopy(recentRequests[0].status, lang) : null;
+  const recentRequestStatus = recentRequests[0]
+      ? getCustomerRequestStatusCopy(recentRequests[0].status, lang)
+      : null;
+
   const financialSummaryCopy = getCustomerFinancialSummaryCopy(lang, {
     hasMixedCurrencies: false,
     dealsCount: customerData?.dealsCount || 0,
   });
+
   const statementNotice = t("customerPortal.financial.statementNotice");
 
   return (
-    <>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
-          {t("customerPortal.eyebrow")}
-        </p>
-        <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">
-          {t("customerPortal.welcome")} <span className="text-gradient-gold">{profile?.fullName}</span>
-        </h1>
-        <p className="mt-3 text-muted-foreground">{t("customerPortal.description")}</p>
-      </motion.div>
+      <>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
+            {t("customerPortal.eyebrow")}
+          </p>
+          <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">
+            {t("customerPortal.welcome")}{" "}
+            <span className="text-gradient-gold">{profile?.fullName}</span>
+          </h1>
+          <p className="mt-3 text-muted-foreground">{t("customerPortal.description")}</p>
+        </motion.div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {menuItems.map((item, index) => {
-          let badge = null;
-          if (item.link === "/customer-portal/requests" && customerData) {
-            badge = customerData.requestsCount;
-          } else if (item.link === "/customer-portal/tracking" && customerData) {
-            badge = customerData.dealsCount;
-          }
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {menuItems.map((item, index) => {
+            let badge: number | null = null;
 
-          return (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Link to={item.link}>
-                <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-primary/30 hover:shadow-lg">
-                  <div
-                    className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
-                  >
-                    <item.icon className="h-6 w-6" />
+            if (item.link === "/customer-portal/requests" && customerData) {
+              badge = customerData.requestsCount;
+            } else if (item.link === "/customer-portal/tracking" && customerData) {
+              badge = customerData.dealsCount;
+            }
+
+            return (
+                <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                >
+                  <Link to={item.link}>
+                    <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-primary/30 hover:shadow-lg">
+                      <div
+                          className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
+                      >
+                        <item.icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="font-serif text-xl font-semibold transition-colors group-hover:text-primary">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        {item.description}
+                      </p>
+
+                      {badge !== null && badge > 0 ? (
+                          <div className="absolute right-4 top-4 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                            {badge}
+                          </div>
+                      ) : null}
+                    </BentoCard>
+                  </Link>
+                </motion.div>
+            );
+          })}
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+          <BentoCard className="flex flex-col justify-center p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-serif text-xl font-semibold">
+                {t("customerPortal.financial.title")}
+              </h3>
+            </div>
+
+            {loading ? (
+                <div className="space-y-4 py-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+            ) : customerData ? (
+                <div className="space-y-4">
+                  <div className="rounded-[1.25rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                    {financialSummaryCopy}
                   </div>
-                  <h3 className="font-serif text-xl font-semibold transition-colors group-hover:text-primary">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
+                    {statementNotice}
+                  </div>
 
-                  {badge !== null && badge > 0 ? (
-                    <div className="absolute right-4 top-4 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-                      {badge}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                      <p className="text-xs text-muted-foreground">
+                        {t("customerPortal.financial.balance")}
+                      </p>
+                      <p
+                          className={`mt-2 text-2xl font-bold ${
+                              customerData.financialBalance >= 0
+                                  ? "text-emerald-500"
+                                  : "text-rose-500"
+                          }`}
+                      >
+                        {customerData.financialBalance.toLocaleString(locale)} SAR
+                      </p>
                     </div>
-                  ) : null}
-                </BentoCard>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </div>
 
-      <div className="mt-12 grid gap-6 lg:grid-cols-2">
-        <BentoCard className="flex flex-col justify-center p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Wallet className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-serif text-xl font-semibold">{t("customerPortal.financial.title")}</h3>
-          </div>
+                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                      <p className="text-xs text-muted-foreground">
+                        {t("customerPortal.financial.operations")}
+                      </p>
+                      <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
+                    </div>
 
-          {loading ? (
-            <div className="space-y-4 py-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : customerData ? (
-            <div className="space-y-4">
-              <div className="rounded-[1.25rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-                {financialSummaryCopy}
-              </div>
-              <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
-                {statementNotice}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.balance")}</p>
-                  <p
-                    className={`mt-2 text-2xl font-bold ${
-                    customerData.financialBalance >= 0 ? "text-emerald-500" : "text-rose-500"
-                  }`}
-                >
-                  {customerData.financialBalance.toLocaleString(locale)} SAR
-                </p>
-                </div>
-                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.operations")}</p>
-                  <p className="mt-2 text-2xl font-bold">{customerData.dealsCount}</p>
-                </div>
-                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.incomeTracked")}</p>
-                  <p className="mt-2 text-2xl font-bold text-emerald-500">
-                    {customerData.financialIncome.toLocaleString(locale)} SAR
-                  </p>
-                </div>
-                <div className="rounded-[1.2rem] bg-secondary/15 p-5">
-                  <p className="text-xs text-muted-foreground">{t("customerPortal.financial.expenseTracked")}</p>
-                  <p className="mt-2 text-2xl font-bold text-rose-500">
-                    {customerData.financialExpense.toLocaleString(locale)} SAR
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="mb-4 rounded-full bg-secondary p-4">
-                <LayoutDashboard className="h-8 w-8 text-muted-foreground/40" />
-              </div>
-              <p className="text-sm text-muted-foreground">{t("customerPortal.financial.empty")}</p>
-            </div>
-          )}
-        </BentoCard>
+                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                      <p className="text-xs text-muted-foreground">
+                        {t("customerPortal.financial.incomeTracked")}
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-emerald-500">
+                        {customerData.financialIncome.toLocaleString(locale)} SAR
+                      </p>
+                    </div>
 
-        <BentoCard className="flex flex-col justify-center p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <ClipboardList className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-serif text-xl font-semibold">{t("customerPortal.recent.title")}</h3>
-          </div>
-
-          {loadError ? (
-            <div className="mb-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
-              {loadError}
-            </div>
-          ) : null}
-
-          {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-            </div>
-          ) : recentRequests.length > 0 ? (
-            <div className="space-y-3">
-              {recentRequestStatus ? (
-                <div className="rounded-[1.2rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-                  <p className="font-medium text-foreground">{recentRequestStatus.label}</p>
-                  <p className="mt-2">{recentRequestStatus.nextStep}</p>
-                </div>
-              ) : null}
-              {recentRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border/40 bg-secondary/5 p-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{request.requestNumber}</p>
-                    <p className="max-w-[220px] truncate text-xs text-muted-foreground">{request.productName}</p>
+                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                      <p className="text-xs text-muted-foreground">
+                        {t("customerPortal.financial.expenseTracked")}
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-rose-500">
+                        {customerData.financialExpense.toLocaleString(locale)} SAR
+                      </p>
+                    </div>
                   </div>
-                  <span className="w-fit rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-4 rounded-full bg-secondary p-4">
+                    <LayoutDashboard className="h-8 w-8 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t("customerPortal.financial.empty")}
+                  </p>
+                </div>
+            )}
+          </BentoCard>
+
+          <BentoCard className="flex flex-col justify-center p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <ClipboardList className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-serif text-xl font-semibold">
+                {t("customerPortal.recent.title")}
+              </h3>
+            </div>
+
+            {loadError ? (
+                <div className="mb-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+                  {loadError}
+                </div>
+            ) : null}
+
+            {loading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                </div>
+            ) : recentRequests.length > 0 ? (
+                <div className="space-y-3">
+                  {recentRequestStatus ? (
+                      <div className="rounded-[1.2rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                        <p className="font-medium text-foreground">{recentRequestStatus.label}</p>
+                        <p className="mt-2">{recentRequestStatus.nextStep}</p>
+                      </div>
+                  ) : null}
+
+                  {recentRequests.map((request) => (
+                      <div
+                          key={request.id}
+                          className="flex flex-col gap-3 rounded-xl border border-border/40 bg-secondary/5 p-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{request.requestNumber}</p>
+                          <p className="max-w-[220px] truncate text-xs text-muted-foreground">
+                            {request.productName}
+                          </p>
+                        </div>
+                        <span className="w-fit rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
                     {request.statusLabel || request.status}
                   </span>
+                      </div>
+                  ))}
+
+                  <Button variant="link" className="h-auto p-0 text-xs" asChild>
+                    <Link to="/customer-portal/requests">
+                      {t("customerPortal.recent.viewAll")}
+                    </Link>
+                  </Button>
                 </div>
-              ))}
-              <Button variant="link" className="h-auto p-0 text-xs" asChild>
-                <Link to="/customer-portal/requests">{t("customerPortal.recent.viewAll")}</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Button variant="outline" asChild>
-                <Link to="/request">{t("customerPortal.recent.firstRequest")}</Link>
-              </Button>
-            </div>
-          )}
-        </BentoCard>
-      </div>
-    </>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Button variant="outline" asChild>
+                    <Link to="/request">{t("customerPortal.recent.firstRequest")}</Link>
+                  </Button>
+                </div>
+            )}
+          </BentoCard>
+        </div>
+      </>
   );
-}
+};
+
+export default CustomerPortal;
