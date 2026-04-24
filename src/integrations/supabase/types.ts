@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      attachments: {
-        Row: {
-          bucket_name: string
-          category: string
-          created_at: string
-          entity_id: string
-          entity_type: string
-          file_name: string
-          file_url: string
-          id: string
-          storage_path: string
-          uploaded_by: string | null
-          visibility: string
-        }
-        Insert: {
-          bucket_name?: string
-          category?: string
-          created_at?: string
-          entity_id: string
-          entity_type: string
-          file_name?: string
-          file_url: string
-          id?: string
-          storage_path?: string
-          uploaded_by?: string | null
-          visibility?: string
-        }
-        Update: {
-          bucket_name?: string
-          category?: string
-          created_at?: string
-          entity_id?: string
-          entity_type?: string
-          file_name?: string
-          file_url?: string
-          id?: string
-          storage_path?: string
-          uploaded_by?: string | null
-          visibility?: string
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           action: string
@@ -268,78 +226,48 @@ export type Database = {
       }
       deals: {
         Row: {
-          accounting_reference: string | null
-          assigned_saudi_partner_id: string | null
-          assigned_turkish_partner_id: string | null
           broker_id: string | null
           client_id: string
-          closed_at: string | null
-          closed_by: string | null
           created_at: string
           currency: string | null
-          customer_id: string | null
           deal_number: string
           destination_country: string | null
           factory_id: string | null
           id: string
           notes: string | null
-          operation_title: string | null
-          operational_status: string
           origin_country: string | null
-          shipment_id: string | null
-          source_request_id: string | null
           status: string
           supplier_id: string | null
           total_value: number | null
           updated_at: string
         }
         Insert: {
-          accounting_reference?: string | null
-          assigned_saudi_partner_id?: string | null
-          assigned_turkish_partner_id?: string | null
           broker_id?: string | null
           client_id: string
-          closed_at?: string | null
-          closed_by?: string | null
           created_at?: string
           currency?: string | null
-          customer_id?: string | null
           deal_number: string
           destination_country?: string | null
           factory_id?: string | null
           id?: string
           notes?: string | null
-          operation_title?: string | null
-          operational_status?: string
           origin_country?: string | null
-          shipment_id?: string | null
-          source_request_id?: string | null
           status?: string
           supplier_id?: string | null
           total_value?: number | null
           updated_at?: string
         }
         Update: {
-          accounting_reference?: string | null
-          assigned_saudi_partner_id?: string | null
-          assigned_turkish_partner_id?: string | null
           broker_id?: string | null
           client_id?: string
-          closed_at?: string | null
-          closed_by?: string | null
           created_at?: string
           currency?: string | null
-          customer_id?: string | null
           deal_number?: string
           destination_country?: string | null
           factory_id?: string | null
           id?: string
           notes?: string | null
-          operation_title?: string | null
-          operational_status?: string
           origin_country?: string | null
-          shipment_id?: string | null
-          source_request_id?: string | null
           status?: string
           supplier_id?: string | null
           total_value?: number | null
@@ -347,45 +275,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "deals_assigned_saudi_partner_id_fkey"
-            columns: ["assigned_saudi_partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deals_assigned_turkish_partner_id_fkey"
-            columns: ["assigned_turkish_partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deals_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "lourex_customers"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "deals_factory_id_fkey"
             columns: ["factory_id"]
             isOneToOne: false
             referencedRelation: "factories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deals_shipment_id_fkey"
-            columns: ["shipment_id"]
-            isOneToOne: false
-            referencedRelation: "shipments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deals_source_request_id_fkey"
-            columns: ["source_request_id"]
-            isOneToOne: false
-            referencedRelation: "purchase_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -431,154 +324,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      financial_edit_requests: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          customer_id: string | null
-          deal_id: string | null
-          financial_entry_id: string | null
-          id: string
-          old_value: Json
-          proposed_value: Json
-          reason: string
-          reviewed_at: string | null
-          review_note: string
-          reviewer_id: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          customer_id?: string | null
-          deal_id?: string | null
-          financial_entry_id?: string | null
-          id?: string
-          old_value?: Json
-          proposed_value?: Json
-          reason?: string
-          reviewed_at?: string | null
-          review_note?: string
-          reviewer_id?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          customer_id?: string | null
-          deal_id?: string | null
-          financial_entry_id?: string | null
-          id?: string
-          old_value?: Json
-          proposed_value?: Json
-          reason?: string
-          reviewed_at?: string | null
-          review_note?: string
-          reviewer_id?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_edit_requests_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "lourex_customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_edit_requests_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_edit_requests_financial_entry_id_fkey"
-            columns: ["financial_entry_id"]
-            isOneToOne: false
-            referencedRelation: "financial_entries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      financial_entries: {
-        Row: {
-          amount: number
-          category: string
-          counterparty: string
-          created_at: string
-          created_by: string | null
-          currency: string
-          customer_id: string | null
-          deal_id: string | null
-          entry_date: string
-          entry_number: string
-          id: string
-          locked: boolean
-          method: string
-          note: string | null
-          reference_label: string
-          relation_type: string
-          scope: string
-          type: string
-        }
-        Insert: {
-          amount?: number
-          category?: string
-          counterparty?: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          customer_id?: string | null
-          deal_id?: string | null
-          entry_date?: string
-          entry_number: string
-          id?: string
-          locked?: boolean
-          method?: string
-          note?: string | null
-          reference_label?: string
-          relation_type?: string
-          scope: string
-          type: string
-        }
-        Update: {
-          amount?: number
-          category?: string
-          counterparty?: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          customer_id?: string | null
-          deal_id?: string | null
-          entry_date?: string
-          entry_number?: string
-          id?: string
-          locked?: boolean
-          method?: string
-          note?: string | null
-          reference_label?: string
-          relation_type?: string
-          scope?: string
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_entries_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "lourex_customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_entries_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       factory_applications: {
         Row: {
@@ -661,39 +406,6 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string | null
-        }
-        Relationships: []
-      }
-      lourex_customers: {
-        Row: {
-          city: string | null
-          country: string | null
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          email: string
-          full_name?: string
-          id?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          id?: string
-          phone?: string | null
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1206,141 +918,15 @@ export type Database = {
           },
         ]
       }
-      purchase_requests: {
-        Row: {
-          city: string | null
-          color: string | null
-          converted_deal_id: string | null
-          country: string | null
-          created_at: string
-          customer_id: string | null
-          delivery_notes: string | null
-          email: string
-          full_name: string
-          id: string
-          image_urls: string[]
-          internal_notes: string
-          last_reviewed_at: string | null
-          material: string | null
-          phone: string | null
-          preferred_shipping_method: string | null
-          product_description: string
-          product_name: string
-          quantity: number
-          reference_link: string | null
-          request_number: string
-          reviewed_by: string | null
-          size_dimensions: string | null
-          source_inquiry_id: string | null
-          status: string
-          submitted_at: string
-          technical_specs: string | null
-          updated_at: string
-        }
-        Insert: {
-          city?: string | null
-          color?: string | null
-          converted_deal_id?: string | null
-          country?: string | null
-          created_at?: string
-          customer_id?: string | null
-          delivery_notes?: string | null
-          email?: string
-          full_name?: string
-          id?: string
-          image_urls?: string[]
-          internal_notes?: string
-          last_reviewed_at?: string | null
-          material?: string | null
-          phone?: string | null
-          preferred_shipping_method?: string | null
-          product_description?: string
-          product_name?: string
-          quantity?: number
-          reference_link?: string | null
-          request_number: string
-          reviewed_by?: string | null
-          size_dimensions?: string | null
-          source_inquiry_id?: string | null
-          status?: string
-          submitted_at?: string
-          technical_specs?: string | null
-          updated_at?: string
-        }
-        Update: {
-          city?: string | null
-          color?: string | null
-          converted_deal_id?: string | null
-          country?: string | null
-          created_at?: string
-          customer_id?: string | null
-          delivery_notes?: string | null
-          email?: string
-          full_name?: string
-          id?: string
-          image_urls?: string[]
-          internal_notes?: string
-          last_reviewed_at?: string | null
-          material?: string | null
-          phone?: string | null
-          preferred_shipping_method?: string | null
-          product_description?: string
-          product_name?: string
-          quantity?: number
-          reference_link?: string | null
-          request_number?: string
-          reviewed_by?: string | null
-          size_dimensions?: string | null
-          source_inquiry_id?: string | null
-          status?: string
-          submitted_at?: string
-          technical_specs?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "purchase_requests_converted_deal_id_fkey"
-            columns: ["converted_deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_requests_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "lourex_customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_requests_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_requests_source_inquiry_id_fkey"
-            columns: ["source_inquiry_id"]
-            isOneToOne: false
-            referencedRelation: "inquiries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
           company_name: string | null
           country: string | null
           created_at: string
-          email: string | null
           full_name: string | null
           id: string
-          partner_type: string | null
           phone: string | null
-          role: string | null
-          status: string | null
           verification_status: string
           verified_at: string | null
         }
@@ -1349,13 +935,9 @@ export type Database = {
           company_name?: string | null
           country?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id: string
-          partner_type?: string | null
           phone?: string | null
-          role?: string | null
-          status?: string | null
           verification_status?: string
           verified_at?: string | null
         }
@@ -1364,13 +946,9 @@ export type Database = {
           company_name?: string | null
           country?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id?: string
-          partner_type?: string | null
           phone?: string | null
-          role?: string | null
-          status?: string | null
           verification_status?: string
           verified_at?: string | null
         }
@@ -1630,9 +1208,6 @@ export type Database = {
         Row: {
           client_name: string
           created_at: string
-          current_stage_code: string | null
-          customer_visible_note: string | null
-          deal_id: string | null
           destination: string
           id: string
           pallets: number
@@ -1645,9 +1220,6 @@ export type Database = {
         Insert: {
           client_name?: string
           created_at?: string
-          current_stage_code?: string | null
-          customer_visible_note?: string | null
-          deal_id?: string | null
           destination?: string
           id?: string
           pallets?: number
@@ -1660,9 +1232,6 @@ export type Database = {
         Update: {
           client_name?: string
           created_at?: string
-          current_stage_code?: string | null
-          customer_visible_note?: string | null
-          deal_id?: string | null
           destination?: string
           id?: string
           pallets?: number
@@ -1672,15 +1241,7 @@ export type Database = {
           user_id?: string | null
           weight?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "shipments_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       site_settings: {
         Row: {
@@ -1752,69 +1313,6 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tracking_updates: {
-        Row: {
-          created_at: string
-          customer_note: string
-          deal_id: string | null
-          id: string
-          note: string
-          occurred_at: string
-          previous_stage_code: string | null
-          shipment_id: string
-          stage_code: string
-          updated_at: string
-          updated_by: string | null
-          updated_by_role: string
-          visibility: string
-        }
-        Insert: {
-          created_at?: string
-          customer_note?: string
-          deal_id?: string | null
-          id?: string
-          note?: string
-          occurred_at?: string
-          previous_stage_code?: string | null
-          shipment_id: string
-          stage_code: string
-          updated_at?: string
-          updated_by?: string | null
-          updated_by_role?: string
-          visibility?: string
-        }
-        Update: {
-          created_at?: string
-          customer_note?: string
-          deal_id?: string | null
-          id?: string
-          note?: string
-          occurred_at?: string
-          previous_stage_code?: string | null
-          shipment_id?: string
-          stage_code?: string
-          updated_at?: string
-          updated_by?: string | null
-          updated_by_role?: string
-          visibility?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tracking_updates_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tracking_updates_shipment_id_fkey"
-            columns: ["shipment_id"]
-            isOneToOne: false
-            referencedRelation: "shipments"
             referencedColumns: ["id"]
           },
         ]
@@ -1952,11 +1450,14 @@ export type Database = {
     }
     Enums: {
       app_role:
-        | "owner"
-        | "turkish_partner"
-        | "saudi_partner"
-        | "operations_employee"
-        | "customer"
+        | "admin"
+        | "moderator"
+        | "user"
+        | "buyer"
+        | "factory"
+        | "broker"
+        | "seller"
+        | "manufacturer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2085,11 +1586,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: [
-        "owner",
-        "turkish_partner",
-        "saudi_partner",
-        "operations_employee",
-        "customer",
+        "admin",
+        "moderator",
+        "user",
+        "buyer",
+        "factory",
+        "broker",
+        "seller",
+        "manufacturer",
       ],
     },
   },
