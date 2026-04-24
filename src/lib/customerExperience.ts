@@ -7,12 +7,13 @@ type LocalizedCopy = {
   nextStep: string;
 };
 
-const requestStatusKeys: Record<PurchaseRequestStatus, string> = {
+const requestStatusKeys: Record<PurchaseRequestStatus | "cancelled", string> = {
   intake_submitted: "customerPortal.requestStatus.intake_submitted",
   under_review: "customerPortal.requestStatus.under_review",
   awaiting_clarification: "customerPortal.requestStatus.awaiting_clarification",
   ready_for_conversion: "customerPortal.requestStatus.ready_for_conversion",
   converted_to_deal: "customerPortal.requestStatus.converted_to_deal",
+  cancelled: "customerPortal.requestStatus.cancelled",
 };
 
 export const getCustomerRequestStatusCopy = (status: PurchaseRequestStatus, lang: Lang): LocalizedCopy => {

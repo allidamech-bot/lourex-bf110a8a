@@ -67,6 +67,11 @@ const translations: Record<Lang, TranslationTree> = {
       close: "Close",
       id: "ID",
       value: "Value",
+      fullName: "Full name",
+      customer: "Customer",
+      air: "Air",
+      sea: "Sea",
+      land: "Land",
     },
     search: {
       placeholder: "Search products, suppliers, orders, or pages...",
@@ -88,6 +93,9 @@ const translations: Record<Lang, TranslationTree> = {
       track: "Track",
       dashboard: "Dashboard",
       whyLourex: "Why Lourex",
+      privacy: "Privacy",
+      guidelines: "Guidelines",
+      profile: "Profile",
     },
     home: {
       charter: {
@@ -263,6 +271,7 @@ const translations: Record<Lang, TranslationTree> = {
       contextTitle: "Shipment control view",
       linkedDeal: "Linked deal {{deal}}",
       noStage: "No stage recorded",
+      unlinked: "Unlinked",
       owner: "Stage owner: {{value}}",
       searchPlaceholder: "Search by tracking, deal, customer, destination, or stage",
       noMatches: "No shipments match the current search.",
@@ -272,6 +281,7 @@ const translations: Record<Lang, TranslationTree> = {
       noUpdatesDescription: "Tracking updates will appear here once a stage change or note is recorded.",
       noInternalNote: "No internal note was recorded for this update.",
       customerNoteLabel: "Customer note",
+      noCustomerNote: "No customer note for this update.",
       nextStageSuggested: "The next recommended stage is {{stage}}.",
       internalPlaceholder: "Add an internal operations note for this stage change...",
       customerPlaceholder: "Add an optional customer-safe note...",
@@ -550,6 +560,11 @@ const translations: Record<Lang, TranslationTree> = {
           description: "This request is now an active operation, and progress can be followed in tracking.",
           nextStep: "Next step: use tracking to follow the stages and read the latest customer-safe update.",
         },
+        cancelled: {
+          label: "Cancelled",
+          description: "This request was cancelled and is no longer active.",
+          nextStep: "Next step: you can submit a new request if needed.",
+        },
       },
     },
     profile: {
@@ -583,6 +598,7 @@ const translations: Record<Lang, TranslationTree> = {
       active: "Active",
       inactive: "Inactive",
       converted: "Converted",
+      cancelled: "Cancelled",
     },
     contact: {
       eyebrow: "Contact",
@@ -749,6 +765,7 @@ const translations: Record<Lang, TranslationTree> = {
         sourcingType: "Sourcing Type",
         fullSourcing: "Full Sourcing",
         shippingOnly: "Shipping Only",
+        attachments: "Attachments",
       },
       filters: {
         all: "All Requests",
@@ -762,8 +779,20 @@ const translations: Record<Lang, TranslationTree> = {
         under_review: "Mark as Under Review",
         awaiting_clarification: "Request Clarification",
         ready_for_conversion: "Set as Ready for Conversion",
+        confirmCancel: "Are you sure you want to cancel request {{number}}?",
+      },
+      errors: {
+        cannotEdit: "This request can no longer be edited.",
+        cannotCancel: "This request can no longer be cancelled.",
       },
       genericRequest: "Purchase Request",
+      emptyTitle: "No requests yet",
+      emptyDescription: "Create your first purchase request and track it from your customer portal.",
+      inboxTitle: "Request inbox",
+      total: "Total",
+      review: "Review",
+      converted: "Converted",
+      searchPlaceholder: "Search by request number, product, or tracking code",
       convertedHint:
         "An active operation has been created for this request. You can now use the tracking page to see the current stage and latest customer-safe updates.",
       pendingConversionHint:
@@ -785,6 +814,7 @@ const translations: Record<Lang, TranslationTree> = {
       emptyFilteredDescription: "No purchase requests match your current search or filter criteria.",
       intake: {
         productTitle: "Product details",
+        type: "Request type",
         productDescription:
           "The more precise your product information is, the faster and more professional the review and sourcing process becomes.",
         productName: "Product name",
@@ -855,6 +885,13 @@ const translations: Record<Lang, TranslationTree> = {
         submitAnother: "Submit another request",
         errors: {
           missingFields: "Please complete all required fields before submitting the request.",
+          invalidEmail: "Please enter a valid email address.",
+          invalidQuantity: "Please enter a valid quantity greater than zero.",
+          quantityTooLarge: "Quantity is too large, please enter a smaller value.",
+          invalidUrl: "Please enter a valid link starting with http:// or https://.",
+          invalidDate: "Please choose today or a future date.",
+          maxImages: "You can upload up to 5 images.",
+          imageTooLarge: "Each image must be 8 MB or less.",
           invalidImages: "Please upload valid image files.",
           missingImages: "At least one product image is required to start the Lourex intake process.",
           submitFailed: "The request could not be submitted right now.",
@@ -1185,6 +1222,11 @@ const translations: Record<Lang, TranslationTree> = {
       close: "إغلاق",
       id: "المعرف",
       value: "القيمة",
+      fullName: "الاسم الكامل",
+      customer: "العميل",
+      air: "جوي",
+      sea: "بحري",
+      land: "بري",
     },
     search: {
       placeholder: "ابحث عن منتجات أو موردين أو طلبات أو صفحات...",
@@ -1206,6 +1248,9 @@ const translations: Record<Lang, TranslationTree> = {
       track: "التتبع",
       dashboard: "لوحة التحكم",
       whyLourex: "لماذا لوريكس",
+      privacy: "سياسة الخصوصية",
+      guidelines: "الإرشادات",
+      profile: "الملف الشخصي",
     },
     home: {
       charter: {
@@ -1371,6 +1416,12 @@ const translations: Record<Lang, TranslationTree> = {
       noTimelineDescription: "سيظهر جدول التتبع الزمني الرسمي هنا بمجرد تسجيل التحديث الأول.",
       trustDescription: "يعرض هذا القسم آخر مرحلة مؤكدة داخل المسار الرسمي للشحنة. وإذا لم تظهر ملاحظة جديدة للعميل بعد، فهذا يعني فقط أنه لم يتم نشر تحديث إضافي موجّه للعميل.",
       noCustomerStageNote: "لا توجد ملاحظة عميل منشورة لهذه المرحلة حتى الآن. يمكنك الاعتماد على المرحلة الحالية وسجل التحديثات أدناه لمتابعة التقدم.",
+      contextTitle: "تتبع الشحنات",
+      linkedDeal: "مرتبطة بالعملية {{deal}}",
+      noStage: "مرحلة غير محددة",
+      unlinked: "غير مرتبطة",
+      noCustomerNote: "لا توجد ملاحظة للعميل في هذا التحديث.",
+      noUpdatesDescription: "ستظهر التحديثات هنا عند إضافة ملاحظات تشغيلية من الإدارة.",
       updateTracking: "تحديث التتبع",
       newUpdate: "تحديث جديد",
       stage: "المرحلة الحالية",
@@ -1384,6 +1435,16 @@ const translations: Record<Lang, TranslationTree> = {
       partnerWorkspaceHintSaudi: "تعرض هذه الصفحة الشحنات المرتبطة بالصفقات المعيّنة لك في السعودية فقط، مع إبراز ما يمكن متابعته بعد وصول الشحنة إلى بلد العميل.",
       trackingRuleTextTurkey: "يمكنك تحديث مراحل المصدر فقط حتى مغادرة بلد المنشأ. المراحل الدولية ومراحل الوجهة تُدار لاحقاً من الجهة المناسبة.",
       searchAssignedPlaceholder: "ابحث برقم التتبع أو الصفقة أو العميل ضمن الشحنات المعيّنة لك",
+      labels: {
+        destination: "الوجهة",
+        deal: "رقم العملية",
+        lastUpdated: "آخر تحديث",
+        remainingStages: "المراحل المتبقية",
+        loggedUpdates: "التحديثات",
+        officialTimeline: "الخط الزمني الرسمي",
+        officialTimelineDescription: "مراحل الشحنة من بداية التشغيل حتى التسليم.",
+        updatesLog: "سجل التحديثات",
+      },
       stages: {
         deal_accepted: "تم قبول الصفقة",
         product_preparation: "المنتج قيد التجهيز",
@@ -1624,6 +1685,11 @@ const translations: Record<Lang, TranslationTree> = {
           description: "أصبح هذا الطلب الآن عملية نشطة ويمكن متابعة التقدم من خلال التتبع.",
           nextStep: "الخطوة التالية: استخدم التتبع لمتابعة المراحل وقراءة آخر تحديث آمن للعميل.",
         },
+        cancelled: {
+          label: "ملغي",
+          description: "تم إلغاء هذا الطلب ولم يعد نشطًا.",
+          nextStep: "الخطوة التالية: يمكنك إرسال طلب جديد إذا لزم الأمر.",
+        },
       },
     },
     profile: {
@@ -1657,6 +1723,7 @@ const translations: Record<Lang, TranslationTree> = {
       active: "نشط",
       inactive: "غير نشط",
       converted: "تم التحويل",
+      cancelled: "ملغي",
     },
     contact: {
       eyebrow: "تواصل معنا",
@@ -1823,6 +1890,7 @@ const translations: Record<Lang, TranslationTree> = {
         sourcingType: "نوع التوريد",
         fullSourcing: "توريد كامل",
         shippingOnly: "شحن فقط",
+        attachments: "المرفقات والصور",
       },
       filters: {
         all: "جميع الطلبات",
@@ -1836,8 +1904,20 @@ const translations: Record<Lang, TranslationTree> = {
         under_review: "تحديد كـ تحت المراجعة",
         awaiting_clarification: "طلب توضيح من العميل",
         ready_for_conversion: "تحديد كـ جاهز للتحويل",
+        confirmCancel: "هل أنت متأكد من إلغاء الطلب {{number}}؟",
+      },
+      errors: {
+        cannotEdit: "لا يمكن تعديل هذا الطلب بعد بدء المراجعة.",
+        cannotCancel: "لا يمكن إلغاء هذا الطلب بعد بدء المراجعة.",
       },
       genericRequest: "طلب شراء",
+      emptyTitle: "لا توجد طلبات بعد",
+      emptyDescription: "أنشئ أول طلب شراء وتابعه من لوحة العميل.",
+      inboxTitle: "صندوق الطلبات",
+      total: "الإجمالي",
+      review: "قيد المراجعة",
+      converted: "تم التحويل",
+      searchPlaceholder: "ابحث برقم الطلب أو المنتج أو كود التتبع",
       convertedHint:
         "تم إنشاء عملية نشطة لهذا الطلب. يمكنك الآن استخدام صفحة التتبع لمعرفة المرحلة الحالية وآخر التحديثات الآمنة للعميل.",
       pendingConversionHint:
@@ -1859,6 +1939,7 @@ const translations: Record<Lang, TranslationTree> = {
       emptyFilteredDescription: "لا توجد طلبات شراء تطابق معايير البحث أو التصفية الحالية.",
       intake: {
         productTitle: "بيانات المنتج",
+        type: "نوع الطلب",
         productDescription:
           "كلما كانت تفاصيل المنتج أوضح، كانت المراجعة والتنفيذ أسرع وأكثر احترافية.",
         productName: "اسم المنتج",
@@ -1929,6 +2010,13 @@ const translations: Record<Lang, TranslationTree> = {
         submitAnother: "إرسال طلب جديد",
         errors: {
           missingFields: "يرجى استكمال جميع الحقول المطلوبة قبل إرسال الطلب.",
+          invalidEmail: "يرجى إدخال بريد إلكتروني صحيح.",
+          invalidQuantity: "يرجى إدخال كمية صحيحة أكبر من صفر.",
+          quantityTooLarge: "الكمية كبيرة جداً، يرجى إدخال قيمة أقل.",
+          invalidUrl: "يرجى إدخال رابط صحيح يبدأ بـ http:// أو https://.",
+          invalidDate: "يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي.",
+          maxImages: "يمكنك رفع 5 صور كحد أقصى.",
+          imageTooLarge: "يجب ألا يتجاوز حجم كل صورة 8MB.",
           invalidImages: "يرجى رفع ملفات صور صالحة.",
           missingImages: "يجب رفع صورة واحدة على الأقل لبدء مسار Lourex.",
           submitFailed: "تعذّر إرسال الطلب حاليًا.",

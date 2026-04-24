@@ -427,6 +427,7 @@ export const requestStatusMeta: Record<PurchaseRequestStatus, { label: string; t
   awaiting_clarification: { label: "بانتظار الإيضاح", tone: "bg-rose-500/15 text-rose-300" },
   ready_for_conversion: { label: "جاهز للتحويل", tone: "bg-emerald-500/15 text-emerald-300" },
   converted_to_deal: { label: "تم التحويل", tone: "bg-primary/15 text-primary" },
+  cancelled: { label: "ملغي", tone: "bg-zinc-500/15 text-zinc-300" },
 };
 
 export const operationalStatusMeta: Record<DealOperationalStatus, { label: string; tone: string }> = {
@@ -538,6 +539,38 @@ export const getCurrentUserContext = async () => {
     .maybeSingle();
 
   return { user, profile };
+};
+
+const getCurrentCustomerRecord = async () => {
+  const { user } = await getCurrentUserContext();
+
+  if (!user) {
+    return null;
+  }
+
+  const userEmail = user.email?.trim().toLowerCase() || "";
+
+  const byAuthUser = await db
+    .from<CustomerRow & { auth_user_id?: string | null }>("lourex_customers")
+    .select("*")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (byAuthUser.data) {
+    return byAuthUser.data;
+  }
+
+  if (!userEmail) {
+    return null;
+  }
+
+  const byEmail = await db
+    .from<CustomerRow & { auth_user_id?: string | null }>("lourex_customers")
+    .select("*")
+    .eq("email", userEmail)
+    .maybeSingle();
+
+  return byEmail.data || null;
 };
 
 // writeAuditLog moved to @/domain/audit/service
@@ -833,13 +866,48 @@ export const loadPurchaseRequests = async (
     includeLegacy: true,
   },
 ): Promise<OperationalPurchaseRequest[]> => {
-  const { profile } = await getCurrentUserContext();
+  const { user, profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
+  const currentCustomer = isCustomer ? await getCurrentCustomerRecord() : null;
+  const currentCustomerId = currentCustomer?.id || null;
+  const currentUserEmail = user?.email?.trim().toLowerCase() || profile?.email?.trim().toLowerCase() || "";
+
+  let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
+
+  if (isCustomer) {
+    const byCustomerIdPromise = currentCustomerId
+      ? safeStructuredSelectWhereEq<PurchaseRequestRow>(
+          "purchase_requests",
+          "customer_id",
+          currentCustomerId,
+        )
+      : Promise.resolve([] as PurchaseRequestRow[]);
+
+    const byEmailPromise = currentUserEmail
+      ? safeStructuredSelectWhereEq<PurchaseRequestRow>(
+          "purchase_requests",
+          "email",
+          currentUserEmail,
+        )
+      : Promise.resolve([] as PurchaseRequestRow[]);
+
+    explicitRowsPromise = Promise.all([byCustomerIdPromise, byEmailPromise]).then(
+      ([byCustomerId, byEmail]) => {
+        const map = new Map<string, PurchaseRequestRow>();
+
+        [...byCustomerId, ...byEmail].forEach((row) => {
+          map.set(row.id, row);
+        });
+
+        return Array.from(map.values());
+      },
+    );
+  } else {
+    explicitRowsPromise = safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
+  }
 
   const [explicitRows, attachmentRows, legacyResult, { data: conversions }] = await Promise.all([
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<PurchaseRequestRow>("purchase_requests", "customer_id", profile.id)
-      : safeStructuredSelect<PurchaseRequestRow>("purchase_requests"),
+    explicitRowsPromise,
     options.includeAttachments ? safeStructuredSelect<AttachmentRow>("attachments") : Promise.resolve([] as AttachmentRow[]),
     !options.includeLegacy || isCustomer
       ? Promise.resolve({ data: [] as InquiryRow[] | null, error: null })
@@ -1366,8 +1434,16 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
   const { profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
 
-  const deals = isCustomer && profile?.id
-    ? await safeStructuredSelectWhereEq<DealRow>("deals", "customer_id", profile.id)
+  let customerId = profile?.id;
+  if (isCustomer) {
+    const customerRecord = await getCurrentCustomerRecord();
+    if (customerRecord) {
+      customerId = customerRecord.id;
+    }
+  }
+
+  const deals = isCustomer && customerId
+    ? await safeStructuredSelectWhereEq<DealRow>("deals", "customer_id", customerId)
     : await safeStructuredSelect<DealRow>("deals");
 
   const dealIds = deals.map((row) => row.id);
@@ -1390,9 +1466,9 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
           requestIds,
           "id, request_number, converted_deal_id",
         )
-        : safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_id"),
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+      : safeStructuredSelect<PurchaseRequestRow>("purchase_requests", "id, request_number, converted_deal_id"),
+    isCustomer && customerId
+      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", customerId)
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
     isCustomer
       ? safeStructuredSelectWhereIn<ShipmentRow>("shipments", "deal_id", dealIds)
@@ -1659,8 +1735,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
   // RLS handles visibility, but we double-check customer ownership if needed.
   const filteredShipments = shipments.filter((row) => {
     if (!isCustomer) return true;
-    const deal = row.deal_id ? dealMap.get(row.deal_id) : null;
-    return deal?.customerId === profile?.id;
+    return row.deal_id ? dealMap.has(row.deal_id) : false;
   });
 
   return filteredShipments.map((row) => {
@@ -1810,13 +1885,25 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
 
   // Optimization: Pre-fetch all data once and pass to sub-loaders where possible
   const deals = await loadDeals();
-  const [customers, requests, entries, editRequests] = await Promise.all([
+  const customerRowsForProfile =
     isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+      ? await safeStructuredSelectWhereEq<CustomerRow & { auth_user_id?: string | null }>(
+          "lourex_customers",
+          "auth_user_id",
+          profile.id,
+        )
+      : [];
+  const [customers, requests, entries, editRequests] = await Promise.all([
+    isCustomer
+      ? Promise.resolve(customerRowsForProfile as CustomerRow[])
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
     loadPurchaseRequests({ includeAttachments: false, includeLegacy: !isCustomer }),
-    loadFinancialEntries({ deals }),
-    loadFinancialEditRequests(),
+    isCustomer
+      ? Promise.resolve([] as FinancialEntry[])
+      : loadFinancialEntries({ deals }),
+    isCustomer
+      ? Promise.resolve([] as FinancialEditRequest[])
+      : loadFinancialEditRequests(),
   ]);
 
   const auditCounts = new Map<string, number>();
@@ -1901,7 +1988,7 @@ export const updateOperationalUserProfile = async (
   input: { role?: LourexRole; partnerType?: string | null; status?: LourexAccountStatus },
 ) => {
   const { user, profile } = await getCurrentUserContext();
-  if (!user || !profile || !canManageUsers(profile.role)) {
+  if (!user || !profile || !isValidRole(profile.role) || !canManageUsers(profile.role)) {
     throw new Error("صلاحياتك الحالية لا تسمح بتحديث صلاحيات المستخدمين.");
   }
 
@@ -2050,22 +2137,33 @@ export const deletePurchaseRequestRecord = async (requestId: string) => {
     // Permission check for management actions
   }
 
-  // Delete attachments
-  await db.from("attachments").delete().eq("entity_id", requestId).eq("entity_type", "purchase_request");
+  const now = new Date().toISOString();
+  const cancellationPayload: Record<string, unknown> = {
+    status: "cancelled",
+    status_label: "Cancelled",
+    cancellation_reason: "Soft cancellation requested through deletePurchaseRequestRecord.",
+    cancelled_at: now,
+    updated_at: now,
+  };
 
-  // Delete record
-  const deleted = await db.from("purchase_requests").delete().eq("id", requestId);
-  
-  if (deleted.error) throw deleted.error;
+  // Soft cancellation only. Do not hard-delete operational purchase request history.
+  const updated = await safeStructuredMutation(() =>
+    db
+      .from("purchase_requests")
+      .update(cancellationPayload)
+      .eq("id", requestId),
+  );
+
+  if (updated.error) throw updated.error;
 
   await writeAuditLog({
-    action: "purchase_request.deleted_on_failure",
+    action: "purchase_request.cancelled_on_failure",
     tableName: "purchase_requests",
     recordId: requestId,
-    newValues: { reason: "Rollback due to submission flow failure" },
+    newValues: cancellationPayload,
   });
 
-  return deleted;
+  return updated;
 };
 
 export const deleteStorageFolder = async (bucket: keyof typeof STORAGE_BUCKETS, folderPath: string) => {

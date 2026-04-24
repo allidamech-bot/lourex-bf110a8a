@@ -42,7 +42,7 @@ describe("admin operations helpers", () => {
       outstandingBalance: "Outstanding Balance"
     };
     const reportCsv = buildReportCsv({
-      summary: { requests: 1, deals: 2, shipments: 3, customers: 4, audits: 5, linkedEntries: 6, lockedEntries: 7, pendingEditRequests: 8, income: 100, expense: 40, averageOperationValue: 50, inTransit: 1, destination: 1, delivered: 1 },
+      summary: { requests: 1, deals: 2, shipments: 3, customers: 4, audits: 5, linkedEntries: 6, lockedEntries: 7, pendingEditRequests: 8, income: 100, expense: 40, averageOperationValue: 50, inTransit: 1, destination: 1, delivered: 1, currencyGroups: 1 },
       operations: { activeDeals: 2, dealsByStage: {}, averageProcessingTimeDays: 5 },
       financialSummary: { totalIncome: 100, totalExpense: 40, netProfit: 60, trends: [], byDate: [] },
       topCustomers: [{ fullName: "Acme", outstandingBalance: 200, pendingEditRequests: 1 }] as never[],

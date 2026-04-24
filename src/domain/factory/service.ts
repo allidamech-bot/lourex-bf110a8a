@@ -14,7 +14,7 @@ import {
 type FactoryRow = Tables<"factories">;
 type OrderRow = Tables<"orders">;
 type ProductRow = Tables<"products">;
-type StaffRow = Pick<Tables<"profiles">, "id" | "email" | "full_name" | "role" | "status" | "created_at">;
+type StaffRow = { id: string; email: string; full_name: string; role: string; status: string; created_at: string };
 type UserRoleRow = Pick<Tables<"user_roles">, "role">;
 
 const ADVANCEABLE_STATUSES = ["confirmed", "in_production", "quality_check", "shipped", "delivered"] as const;
@@ -101,7 +101,7 @@ const normalizeProduct = (product: ProductRow): FactoryCommandCenterProduct => (
   isActive: normalizeBoolean(product.is_active),
 });
 
-const normalizeStaffMember = (member: Pick<StaffRow, "id" | "email" | "full_name" | "role" | "status" | "created_at">): StaffMember => ({
+const normalizeStaffMember = (member: StaffRow): StaffMember => ({
   id: String(member.id),
   email: normalizeText(member.email).toLowerCase(),
   fullName: normalizeText(member.full_name),
@@ -201,7 +201,8 @@ export const fetchFactoryCommandCenter = async (
 
   try {
     const [profileRes, roleRes, factory] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", normalizedUserId).maybeSingle(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("profiles").select("*").eq("id", normalizedUserId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", normalizedUserId),
       findOwnedOrAssignedFactory(normalizedUserId, email),
     ]);
@@ -356,7 +357,8 @@ import { LourexRole, INTERNAL_ROLES } from "@/features/auth/rbac";
 
 export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember[]>> => {
   try {
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .select("id, email, full_name, role, status, created_at")
       .in("role", INTERNAL_ROLES)
@@ -366,7 +368,8 @@ export const fetchOrganizationStaff = async (): Promise<DomainResult<StaffMember
       throw error;
     }
 
-    return success((data ?? []).map((row) => normalizeStaffMember(row)));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return success((data ?? []).map((row: any) => normalizeStaffMember(row)));
   } catch (error) {
     return {
       data: null,
@@ -387,12 +390,13 @@ export const addOrganizationStaff = async (
   }
 
   try {
-    const { error } = await supabase.from("profiles").upsert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("profiles").upsert({
       email,
       full_name: fullName,
       role: role as never,
       status: "active",
-    } as never, { onConflict: "email" });
+    }, { onConflict: "email" });
 
     if (error) {
       throw error;
@@ -414,7 +418,8 @@ export const removeOrganizationStaff = async (id: string): Promise<DomainResult<
   }
 
   try {
-    const { error } = await supabase.from("profiles").update({ role: "customer" }).eq("id", normalizedId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("profiles").update({ role: "customer" }).eq("id", normalizedId);
 
     if (error) {
       throw error;

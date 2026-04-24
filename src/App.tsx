@@ -75,6 +75,7 @@ const App = () => (
                                     <Route path="/about" element={<PageWithAI component={<AboutPage />} />} />
                                     <Route path="/privacy" element={<PageWithAI component={<PrivacyPage />} />} />
                                     <Route path="/terms" element={<PageWithAI component={<TermsPage />} />} />
+                                    <Route path="/guidelines" element={<PageWithAI component={<TermsPage />} />} />
                                     <Route path="/why-lourex" element={<PageWithAI component={<WhyLourexPage />} />} />
                                     <Route path="/contact" element={<PageWithAI component={<ContactPage />} />} />
 

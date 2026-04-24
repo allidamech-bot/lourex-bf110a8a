@@ -9,8 +9,16 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+
 import { supabase } from "@/integrations/supabase/client";
-import { isValidRole, type LourexProfile } from "@/features/auth/rbac";
+import {
+  type LourexProfile,
+  type LourexRole,
+  type LourexAccountStatus,
+  type LourexPartnerType,
+  isValidRole,
+  getPartnerTypeForRole,
+} from "@/features/auth/rbac";
 
 type AuthContextValue = {
   session: Session | null;
@@ -23,23 +31,82 @@ type AuthContextValue = {
 
 const AuthSessionContext = createContext<AuthContextValue | undefined>(undefined);
 
-const mapProfileRow = (row: Record<string, unknown>): LourexProfile | null => {
-  if (typeof row?.role !== "string" || !isValidRole(row.role)) {
-    return null;
+const safeString = (value: unknown, fallback = "") => {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
   }
 
+  return fallback;
+};
+
+const getFallbackName = (user: User) =>
+    safeString(user.user_metadata?.full_name) ||
+    safeString(user.user_metadata?.name) ||
+    safeString(user.email?.split("@")[0]) ||
+    "Customer";
+
+const buildFallbackProfile = (user: User): LourexProfile => {
+  const now = new Date().toISOString();
+
   return {
-    id: String(row.id),
-    email: String(row.email || ""),
-    fullName: String(row.full_name || ""),
-    role: row.role as LourexProfile["role"],
-    partnerType: (row.partner_type as LourexProfile["partnerType"]) || null,
-    status: row.status as LourexProfile["status"],
-    phone: typeof row.phone === "string" ? row.phone : undefined,
-    country: typeof row.country === "string" ? row.country : undefined,
+    id: user.id,
+    email: user.email || "",
+    fullName: getFallbackName(user),
+    role: "customer",
+    partnerType: null,
+    status: "active",
+    phone: undefined,
+    country: undefined,
     city: undefined,
-    createdAt: String(row.created_at),
-    updatedAt: typeof row.updated_at === "string" ? row.updated_at : String(row.created_at),
+    createdAt: now,
+    updatedAt: now,
+  };
+};
+
+const toRecord = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return {};
+};
+
+const mapProfileRow = (rawRow: unknown, user: User): LourexProfile => {
+  const row = toRecord(rawRow);
+  const fallback = buildFallbackProfile(user);
+  const createdAt = safeString(row.created_at, fallback.createdAt);
+
+  const rawRole = safeString(row.role) || safeString(row.role_name);
+  const role: LourexRole = isValidRole(rawRole) ? rawRole : "customer";
+
+  const rawStatus = safeString(row.status);
+  const status: LourexAccountStatus =
+    rawStatus === "active" || rawStatus === "inactive" || rawStatus === "pending"
+      ? rawStatus
+      : "active";
+
+  const rawPartnerType = safeString(row.partner_type) || safeString(row.partnerType);
+  const partnerType: LourexPartnerType =
+    rawPartnerType === "turkish" || rawPartnerType === "saudi"
+      ? rawPartnerType
+      : getPartnerTypeForRole(role);
+
+  return {
+    id: safeString(row.id, user.id),
+    email: user.email || "",
+    fullName:
+      safeString(row.full_name) ||
+      safeString(row.fullName) ||
+      safeString(row.name) ||
+      fallback.fullName,
+    role,
+    partnerType,
+    status,
+    phone: safeString(row.phone) || undefined,
+    country: safeString(row.country) || undefined,
+    city: safeString(row.city) || undefined,
+    createdAt,
+    updatedAt: safeString(row.updated_at, createdAt),
   };
 };
 
@@ -47,12 +114,6 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<LourexProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const clearInvalidSession = useCallback(async () => {
-    setSession(null);
-    setProfile(null);
-    await supabase.auth.signOut();
-  }, []);
 
   const loadSessionState = useCallback(async (nextSession: Session | null) => {
     setLoading(true);
@@ -67,34 +128,27 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     const user = nextSession.user;
 
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, role, partner_type, status, phone, country, created_at")
-      .eq("id", user.id)
-      .maybeSingle();
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
     if (error) {
-      setProfile(null);
+      console.warn("Profile fetch error:", error);
+      setProfile(buildFallbackProfile(user));
       setLoading(false);
       return;
     }
 
     if (data) {
-      const mappedProfile = mapProfileRow(data);
-
-      if (!mappedProfile) {
-        await clearInvalidSession();
-        setLoading(false);
-        return;
-      }
-
-      setProfile(mappedProfile);
+      setProfile(mapProfileRow(data, user));
       setLoading(false);
       return;
     }
 
-    setProfile(null);
+    setProfile(buildFallbackProfile(user));
     setLoading(false);
-  }, [clearInvalidSession]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -109,7 +163,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    bootstrap();
+    void bootstrap();
 
     const {
       data: { subscription },
@@ -127,26 +181,33 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession();
+
     await loadSessionState(currentSession);
   }, [loadSessionState]);
 
   const signOut = useCallback(async () => {
+    setSession(null);
+    setProfile(null);
     await supabase.auth.signOut();
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({
-      session,
-      user: session?.user ?? null,
-      profile,
-      loading,
-      refreshProfile,
-      signOut,
-    }),
-    [session, profile, loading, refreshProfile, signOut],
+      () => ({
+        session,
+        user: session?.user ?? null,
+        profile,
+        loading,
+        refreshProfile,
+        signOut,
+      }),
+      [session, profile, loading, refreshProfile, signOut],
   );
 
-  return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
+  return (
+      <AuthSessionContext.Provider value={value}>
+        {children}
+      </AuthSessionContext.Provider>
+  );
 };
 
 export const useAuthSession = () => {

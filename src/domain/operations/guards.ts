@@ -3,11 +3,12 @@ import type { LourexRole } from "@/features/auth/rbac";
 import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
 
 const REQUEST_STATUS_TRANSITIONS: Record<PurchaseRequestStatus, PurchaseRequestStatus[]> = {
-  intake_submitted: ["under_review", "awaiting_clarification"],
-  under_review: ["awaiting_clarification", "ready_for_conversion"],
-  awaiting_clarification: ["under_review", "ready_for_conversion"],
+  intake_submitted: ["under_review", "awaiting_clarification", "cancelled"],
+  under_review: ["awaiting_clarification", "ready_for_conversion", "cancelled"],
+  awaiting_clarification: ["under_review", "ready_for_conversion", "cancelled"],
   ready_for_conversion: ["under_review", "converted_to_deal"],
   converted_to_deal: [],
+  cancelled: [],
 };
 
 export const canTransitionPurchaseRequestStatus = (

@@ -38,7 +38,8 @@ type ActiveFinancialEditRequestInsert = {
 };
 
 const insertActiveFinancialEditRequest = async (payload: ActiveFinancialEditRequestInsert) =>
-  supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (supabase as any)
     .from("financial_edit_requests")
     .insert(payload as never)
     .select("*")
@@ -155,7 +156,8 @@ export const createFinancialEntry = async (input: {
   const relationType =
     input.scope === "deal_linked" ? "deal_linked" : input.scope === "customer_linked" ? "customer_linked" : "general";
 
-  const inserted = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inserted = await (supabase as any)
     .from("financial_entries")
     .insert({
       entry_number: entryNumber,
@@ -198,7 +200,7 @@ export const createFinancialEntry = async (input: {
       amount: input.amount,
       currency: normalizedCurrency,
       type: input.type,
-      summary: `ط¥ظ†ط´ط§ط، ظ‚ظٹط¯ ظ…ط§ظ„ظٹ ${entryNumber}`,
+      summary: `إنشاء قيد مالي ${entryNumber}`,
       entity_label: entryNumber,
     },
   });
@@ -265,8 +267,8 @@ export const createFinancialEditRequest = async (input: {
   proposedValue: Record<string, unknown>;
 }) => {
   const { user } = await assertAccountingActor();
-  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
-  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
+  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
+  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
   const normalizedRequester = input.requester.trim();
   const normalizedEmail = input.email.trim();
@@ -274,7 +276,7 @@ export const createFinancialEditRequest = async (input: {
   const sanitizedProposal = sanitizeFinancialEditProposal(input.proposedValue);
 
   if (!input.financialEntryId || !normalizedRequester || !normalizedEmail || !normalizedReason) {
-    throw new Error("ظٹط¬ط¨ ط§ط³طھظƒظ…ط§ظ„ ط¨ظٹط§ظ†ط§طھ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط§ظ„ظٹ.");
+    throw new Error("يجب استكمال بيانات طلب التعديل المالي.");
   }
 
   if (normalizedReason.length < 10) {
@@ -375,13 +377,13 @@ export const updateFinancialEditRequestStatus = async (
   reviewNote?: string,
 ) => {
   const { user } = await assertAccountingActor();
-  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
-  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
+  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
+  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
   const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
   const current = currentRows.find((row) => row.id === id);
-  if (!current) throw new Error("طھط¹ط°ط± ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ط·ظ„ط¨ ط§ظ„طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط§ظ„ظٹ.");
-  if (current.status !== "pending") throw new Error("ظ„ط§ ظٹظ…ظƒظ† ظ…ط±ط§ط¬ط¹ط© ط·ظ„ط¨ طھظ…طھ ظ…ط¹ط§ظ„ط¬طھظ‡ ظ…ط³ط¨ظ‚ط§ظ‹.");
+  if (!current) throw new Error("تعذر العثور على طلب التعديل المالي.");
+  if (current.status !== "pending") throw new Error("لا يمكن مراجعة طلب تمت معالجته مسبقاً.");
 
   const normalizedReviewNote = reviewNote?.trim() || "";
   const sanitizedProposal = sanitizeFinancialEditProposal((current.proposed_value as Record<string, unknown>) || {});
@@ -389,7 +391,8 @@ export const updateFinancialEditRequestStatus = async (
     throw new Error("This edit request no longer contains a valid financial change to approve.");
   }
 
-  const updated = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updated = await (supabase as any)
     .from("financial_edit_requests")
     .update({
       status,
@@ -411,7 +414,8 @@ export const updateFinancialEditRequestStatus = async (
   }
 
   if (status === "approved" && updated.data.financial_entry_id) {
-    const entryUpdate = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const entryUpdate = await (supabase as any)
       .from("financial_entries")
       .update({
         ...(sanitizedProposal as Record<string, unknown>),

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Trash2, Shield, Briefcase, Headset, Truck, UserCheck } from "lucide-react";
+import { Users, Plus, Trash2, Shield, Briefcase, Truck, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import BentoCard from "@/components/BentoCard";
 
-import { LourexRole, LOUREX_ROLES, INTERNAL_ROLES } from "@/features/auth/rbac";
+import { LourexRole, INTERNAL_ROLES } from "@/features/auth/rbac";
 
 interface StaffMember {
   id: string;
@@ -35,7 +35,8 @@ export const TeamManagement = () => {
 
   const fetchStaff = async () => {
     setLoading(true);
-    const { data } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
       .from("profiles")
       .select("*")
       .in("role", INTERNAL_ROLES)
@@ -54,14 +55,13 @@ export const TeamManagement = () => {
     }
     setSubmitting(true);
     
-    // Note: In a real system, we might invite the user or create a profile.
-    // For this UI, we update or insert into profiles.
-    const { error } = await supabase.from("profiles").upsert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("profiles").upsert({
       email: form.email,
       full_name: form.full_name,
       role: form.role,
       status: "active",
-    } as never, { onConflict: "email" });
+    }, { onConflict: "email" });
 
     if (error) {
       toast.error(error.message);
@@ -75,8 +75,8 @@ export const TeamManagement = () => {
   };
 
   const handleRemove = async (id: string) => {
-    // Instead of deleting the user (which might be dangerous), we reset their role to customer
-    const { error } = await supabase.from("profiles").update({ role: "customer" }).eq("id", id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("profiles").update({ role: "customer" }).eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Staff access removed (reverted to customer)"); await fetchStaff(); }
   };

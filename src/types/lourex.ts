@@ -10,7 +10,8 @@ export type PurchaseRequestStatus =
   | "under_review"
   | "awaiting_clarification"
   | "ready_for_conversion"
-  | "converted_to_deal";
+  | "converted_to_deal"
+  | "cancelled";
 
 export type DealOperationalStatus =
   | "awaiting_assignment"

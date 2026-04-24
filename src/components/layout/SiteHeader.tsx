@@ -23,44 +23,53 @@ export const SiteHeader = () => {
   const { user, profile, signOut } = useAuthSession();
   const navigate = useNavigate();
 
+  const isAuthenticated = Boolean(user || profile);
   const userEmail = profile?.email || user?.email || "";
+  const customerLabel = getSafeLabel(t("common.customer"), "Customer");
   const userName =
       profile?.fullName ||
       String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim() ||
-      userEmail.split("@")[0] ||
-      getSafeLabel(t("common.customer"), "Customer");
+      userEmail ||
+      customerLabel;
+  const portalLabel = getSafeLabel(t("nav.customerPortal"), "Customer Portal");
+  const requestLabel = getSafeLabel(t("nav.purchaseRequest"), "Purchase Request");
+  const myRequestsLabel = getSafeLabel(t("customerPortal.actions.requests.title"), "My Requests");
+  const trackingLabel = getSafeLabel(t("customerPortal.actions.tracking.title"), getSafeLabel(t("nav.trackShipment"), "Track Shipment"));
+  const profileLabel = getSafeLabel(t("nav.profile"), "Profile");
+  const signInLabel = getSafeLabel(t("nav.signIn"), "Sign in");
+  const signOutLabel = getSafeLabel(t("nav.signOut"), "Sign out");
 
   const publicLinks = useMemo(
       () => [
         { to: "/", label: getSafeLabel(t("nav.home"), "Home") },
-        {
-          to: profile?.role === "customer" ? "/customer-portal/requests" : profile ? "/dashboard/requests" : "/request",
-          label: getSafeLabel(t("nav.purchaseRequest"), "Purchase Request"),
-        },
-        {
-          to: profile?.role === "customer" ? "/customer-portal/tracking" : profile ? "/dashboard/tracking" : "/track",
-          label: getSafeLabel(t("nav.trackShipment"), "Track Shipment"),
-        },
+        { to: "/request", label: requestLabel },
+        ...(isAuthenticated
+            ? [
+              { to: "/customer-portal", label: portalLabel },
+              { to: "/customer-portal/requests", label: myRequestsLabel },
+              { to: "/customer-portal/tracking", label: trackingLabel },
+            ]
+            : []),
         { to: "/privacy", label: getSafeLabel(t("nav.privacy"), "Privacy Policy") },
-        { to: "/terms", label: getSafeLabel(t("nav.guidelines"), "Guidelines") },
+        { to: "/guidelines", label: getSafeLabel(t("nav.guidelines"), "Guidelines") },
         { to: "/contact", label: getSafeLabel(t("nav.contact"), "Contact") },
       ],
-      [profile, t],
+      [isAuthenticated, myRequestsLabel, portalLabel, requestLabel, t, trackingLabel],
   );
 
   const workspaceLink = profile ? getDefaultRouteForRole(profile.role) : user ? "/profile" : "/auth";
   const workspaceLabel = profile
       ? getWorkspaceTitle(profile, t)
       : user
-          ? getSafeLabel(t("nav.profile"), "Profile")
-          : getSafeLabel(t("nav.signIn"), "Sign in");
+          ? profileLabel
+          : signInLabel;
 
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
 
   const handleLogout = async () => {
     setIsOpen(false);
     await signOut();
-    toast.success(getSafeLabel(t("nav.signOut"), "Signed out"));
+    toast.success(signOutLabel);
     navigate("/");
   };
 
@@ -91,7 +100,7 @@ export const SiteHeader = () => {
                 </NavLink>
             ))}
 
-            {user ? (
+            {isAuthenticated ? (
                 <NavLink
                     to={workspaceLink}
                     className={({ isActive }) =>
@@ -121,10 +130,10 @@ export const SiteHeader = () => {
                 </Button>
             ) : null}
 
-            {user ? (
+            {isAuthenticated ? (
                 <>
                   <Link
-                      to={workspaceLink}
+                      to="/customer-portal"
                       className="hidden max-w-[260px] items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-2 transition-colors hover:border-primary/30 hover:bg-secondary/40 lg:flex"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
@@ -138,20 +147,26 @@ export const SiteHeader = () => {
                   </Link>
 
                   <Button variant="outline" asChild className="hidden lg:inline-flex">
-                    <Link to={workspaceLink}>
+                    <Link to="/customer-portal">
+                      {portalLabel}
+                    </Link>
+                  </Button>
+
+                  <Button variant="outline" asChild className="hidden lg:inline-flex">
+                    <Link to="/profile">
                       <UserCircle2 className="me-2 h-4 w-4" />
-                      {workspaceLabel}
+                      {profileLabel}
                     </Link>
                   </Button>
 
                   <Button variant="ghost" onClick={handleLogout} className="hidden lg:inline-flex">
                     <LogOut className="me-2 h-4 w-4" />
-                    {getSafeLabel(t("nav.signOut"), "Sign out")}
+                    {signOutLabel}
                   </Button>
                 </>
             ) : (
                 <Button variant="gold" asChild className="hidden lg:inline-flex">
-                  <Link to="/auth">{getSafeLabel(t("nav.signIn"), "Sign in")}</Link>
+                  <Link to="/auth">{signInLabel}</Link>
                 </Button>
             )}
 
@@ -169,7 +184,7 @@ export const SiteHeader = () => {
         {isOpen ? (
             <div className="border-t border-border/60 bg-background lg:hidden">
               <div className="container mx-auto flex flex-col gap-1 px-4 py-4">
-                {user ? (
+                {isAuthenticated ? (
                     <div className="mb-3 rounded-2xl border border-border/60 bg-card px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
@@ -201,7 +216,7 @@ export const SiteHeader = () => {
                     </NavLink>
                 ))}
 
-                {user ? (
+                {isAuthenticated ? (
                     <>
                       {profile?.role === "owner" ? (
                           <NavLink
@@ -226,7 +241,7 @@ export const SiteHeader = () => {
                           onClick={() => setIsOpen(false)}
                           className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       >
-                        {getSafeLabel(t("nav.profile"), "Profile")}
+                        {profileLabel}
                       </NavLink>
 
                       <button
@@ -234,13 +249,13 @@ export const SiteHeader = () => {
                           onClick={() => void handleLogout()}
                           className="rounded-lg px-3 py-2 text-start text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       >
-                        {getSafeLabel(t("nav.signOut"), "Sign out")}
+                        {signOutLabel}
                       </button>
                     </>
                 ) : (
                     <Button variant="gold" asChild className="mt-2">
                       <Link to="/auth" onClick={() => setIsOpen(false)}>
-                        {getSafeLabel(t("nav.signIn"), "Sign in")}
+                        {signInLabel}
                       </Link>
                     </Button>
                 )}

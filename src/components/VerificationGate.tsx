@@ -28,7 +28,8 @@ const VerificationGate = ({ children }: VerificationGateProps) => {
       if (!user) { setStatus("no_auth"); return; }
       setUserId(user.id);
 
-      const { data: profile } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile } = await (supabase as any)
         .from("profiles")
         .select("role, verification_status")
         .eq("id", user.id)

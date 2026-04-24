@@ -10,8 +10,6 @@ import {
   loadShipments,
   updateDealOperation,
   updatePurchaseRequestImages,
-  deletePurchaseRequestRecord,
-  deleteStorageFolder,
 } from "@/lib/operationsDomain";
 import type {
   AuditPreviewRow,
@@ -38,8 +36,17 @@ import {
   success,
 } from "@/domain/shared/utils";
 import { logOperationalError } from "@/lib/monitoring";
+import {
+  STORAGE_PATHS,
+  uploadFile,
+} from "@/lib/storage";
 
 const MAX_PURCHASE_REQUEST_IMAGES = 5;
+
+const REQUEST_STATUSES_ALLOWED_TO_CANCEL = new Set([
+  "intake_submitted",
+  "awaiting_clarification",
+]);
 
 const asDomainJsonObject = (value: Json | null | undefined): DomainJsonObject | null => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -61,6 +68,7 @@ const normalizeRequest = (request: OperationsRequest): OperationsRequest => ({
   },
   productName: normalizeText(request.productName),
   productDescription: normalizeText(request.productDescription),
+  quantity: normalizeNumber(request.quantity),
   sizeDimensions: normalizeText(request.sizeDimensions),
   color: normalizeText(request.color),
   material: normalizeText(request.material),
@@ -70,6 +78,14 @@ const normalizeRequest = (request: OperationsRequest): OperationsRequest => ({
   deliveryNotes: normalizeText(request.deliveryNotes),
   statusLabel: normalizeText(request.statusLabel),
   internalNotes: normalizeText(request.internalNotes),
+  weight: normalizeText(request.weight),
+  manufacturingCountry: normalizeText(request.manufacturingCountry),
+  brand: normalizeText(request.brand),
+  qualityLevel: normalizeText(request.qualityLevel),
+  expectedSupplyDate: normalizeText(request.expectedSupplyDate),
+  destination: normalizeText(request.destination),
+  deliveryAddress: normalizeText(request.deliveryAddress),
+  trackingCode: normalizeText(request.trackingCode),
 });
 
 const normalizeDeal = (deal: OperationsDeal): OperationsDeal => ({
@@ -111,7 +127,60 @@ const normalizeEntry = (entry: OperationsFinancialEntry): OperationsFinancialEnt
 });
 
 const normalizeImageFiles = (files: File[]) =>
-  files.filter((file) => file.type.startsWith("image/")).slice(0, MAX_PURCHASE_REQUEST_IMAGES);
+    files.filter((file) => file.type.startsWith("image/")).slice(0, MAX_PURCHASE_REQUEST_IMAGES);
+
+const getPurchaseRequestById = async (requestId: string) => {
+  const requests = await loadPurchaseRequests();
+  return requests.find((request) => request.id === requestId) ?? null;
+};
+
+const isRequestCancellable = (request: OperationsRequest) =>
+    REQUEST_STATUSES_ALLOWED_TO_CANCEL.has(request.status);
+
+const updatePurchaseRequestAsCancelled = async (
+    requestId: string,
+    reason?: string,
+): Promise<void> => {
+  const cancellationPayload: Record<string, unknown> = {
+    status: "cancelled",
+  };
+
+  if (reason) {
+    cancellationPayload.internal_notes = `[Cancelled] ${reason}`;
+  }
+
+  const { error } = await (
+      supabase as unknown as {
+        from: (relation: string) => {
+          update: (values: Record<string, unknown>) => {
+            eq: (column: string, value: string) => Promise<{ error: unknown }>;
+          };
+        };
+      }
+  )
+      .from("purchase_requests")
+      .update(cancellationPayload)
+      .eq("id", requestId);
+
+  if (error) {
+    const { error: retryError } = await (
+        supabase as unknown as {
+          from: (relation: string) => {
+            update: (values: Record<string, unknown>) => {
+              eq: (column: string, value: string) => Promise<{ error: unknown }>;
+            };
+          };
+        }
+    )
+        .from("purchase_requests")
+        .update({ status: "cancelled" })
+        .eq("id", requestId);
+
+    if (retryError) {
+      throw retryError;
+    }
+  }
+};
 
 export const fetchCustomers = async (): Promise<OperationsCustomer[]> => {
   const customers = await loadCustomerDashboards();
@@ -148,7 +217,9 @@ export const fetchShipments = async (): Promise<OperationsShipment[]> => loadShi
 export const fetchOperationalUsers = async (): Promise<OperationsUser[]> => loadOperationalUsers();
 
 export const fetchAuditCount = async (): Promise<number> => {
-  const { count, error } = await supabase.from("audit_logs").select("id", { count: "exact", head: true });
+  const { count, error } = await supabase
+      .from("audit_logs")
+      .select("id", { count: "exact", head: true });
 
   if (error) {
     throw error;
@@ -159,11 +230,12 @@ export const fetchAuditCount = async (): Promise<number> => {
 
 export const fetchAuditPreviewRows = async (limit = 120): Promise<AuditPreviewRow[]> => {
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 250) : 120;
+
   const { data, error } = await supabase
-    .from("audit_logs")
-    .select("id, action, created_at, new_values")
-    .order("created_at", { ascending: false })
-    .limit(safeLimit);
+      .from("audit_logs")
+      .select("id, action, created_at, new_values")
+      .order("created_at", { ascending: false })
+      .limit(safeLimit);
 
   if (error) {
     throw error;
@@ -177,23 +249,18 @@ export const fetchAuditPreviewRows = async (limit = 120): Promise<AuditPreviewRo
   }));
 };
 
-import {
-  STORAGE_BUCKETS,
-  STORAGE_PATHS,
-  uploadFile,
-  deleteFolder,
-} from "@/lib/storage";
-
 export const uploadPurchaseRequestImages = async (
-  requestId: string,
-  uploads: PurchaseRequestImageUpload[],
+    requestId: string,
+    uploads: PurchaseRequestImageUpload[],
 ): Promise<DomainResult<string[]>> => {
   const normalizedId = normalizeText(requestId);
+
   if (!normalizedId) {
     return failure("A valid ID is required before uploading images.");
   }
 
   const files = normalizeImageFiles(uploads.map((upload) => upload.file));
+
   if (files.length === 0) {
     return failure("At least one valid product image is required.");
   }
@@ -209,7 +276,10 @@ export const uploadPurchaseRequestImages = async (
 
     return success(uploadedUrls);
   } catch (error) {
-    logOperationalError("purchase_request_image_upload", error, { requestId: normalizedId });
+    logOperationalError("purchase_request_image_upload", error, {
+      requestId: normalizedId,
+    });
+
     return {
       data: null,
       error: createDomainError(error, "Unable to upload the purchase request images."),
@@ -218,7 +288,7 @@ export const uploadPurchaseRequestImages = async (
 };
 
 export const createRequest = async (
-  input: CreateRequestInput,
+    input: CreateRequestInput,
 ): Promise<DomainResult<OperationsRequest>> => {
   const normalizedInput: CreateRequestInput = {
     ...input,
@@ -239,17 +309,16 @@ export const createRequest = async (
     preferredShippingMethod: normalizeText(input.preferredShippingMethod),
     deliveryNotes: normalizeText(input.deliveryNotes),
     imageUrls: input.imageUrls.filter((url) => normalizeText(url).length > 0),
-    // Phase 4 expansion
     weight: normalizeText(input.weight),
     manufacturingCountry: normalizeText(input.manufacturingCountry),
     brand: normalizeText(input.brand),
     qualityLevel: normalizeText(input.qualityLevel),
-    isReadyMade: !!input.isReadyMade,
-    hasPreviousSample: !!input.hasPreviousSample,
+    isReadyMade: Boolean(input.isReadyMade),
+    hasPreviousSample: Boolean(input.hasPreviousSample),
     expectedSupplyDate: normalizeText(input.expectedSupplyDate),
     destination: normalizeText(input.destination),
     deliveryAddress: normalizeText(input.deliveryAddress),
-    isFullSourcing: !!input.isFullSourcing,
+    isFullSourcing: Boolean(input.isFullSourcing),
     trackingCode: normalizeText(input.trackingCode),
   } satisfies CreateRequestInput;
 
@@ -279,16 +348,61 @@ export const createRequest = async (
       };
     }
 
-    const requests = await loadPurchaseRequests();
-    const createdRequest = requests.find((request) => request.id === data.id) ?? null;
+    const createdRequest = await getPurchaseRequestById(data.id);
 
-    if (!createdRequest) {
-      return failure("The purchase request was created but could not be loaded back into the domain model.");
+    if (createdRequest) {
+      return success(normalizeRequest(createdRequest));
     }
 
-    return success(normalizeRequest(createdRequest));
+    return success({
+      id: data.id,
+      requestNumber: normalizedInput.requestNumber,
+      status: "intake_submitted",
+      statusLabel: "تم الاستلام",
+      customer: {
+        id: data.id,
+        fullName: normalizedInput.fullName,
+        phone: normalizedInput.phone,
+        email: normalizedInput.email,
+        country: normalizedInput.country,
+        city: normalizedInput.city,
+      },
+      productName: normalizedInput.productName,
+      productDescription: normalizedInput.productDescription,
+      quantity: normalizedInput.quantity,
+      sizeDimensions: normalizedInput.sizeDimensions,
+      color: normalizedInput.color,
+      material: normalizedInput.material,
+      technicalSpecs: normalizedInput.technicalSpecs,
+      referenceLink: normalizedInput.referenceLink,
+      preferredShippingMethod: normalizedInput.preferredShippingMethod,
+      deliveryNotes: normalizedInput.deliveryNotes,
+      imageUrls: [],
+      createdAt: new Date().toISOString(),
+      weight: normalizedInput.weight,
+      manufacturingCountry: normalizedInput.manufacturingCountry,
+      brand: normalizedInput.brand,
+      qualityLevel: normalizedInput.qualityLevel,
+      isReadyMade: normalizedInput.isReadyMade,
+      hasPreviousSample: normalizedInput.hasPreviousSample,
+      expectedSupplyDate: normalizedInput.expectedSupplyDate,
+      destination: normalizedInput.destination,
+      deliveryAddress: normalizedInput.deliveryAddress,
+      isFullSourcing: normalizedInput.isFullSourcing,
+      trackingCode: normalizedInput.trackingCode,
+      sourceInquiryId: null,
+      convertedDealId: null,
+      convertedDealNumber: null,
+      isLegacyFallback: false,
+      internalNotes: "",
+      reviewedAt: null,
+      attachments: [],
+    });
   } catch (error) {
-    logOperationalError("purchase_request_create", error, { requestNumber: normalizedInput.requestNumber });
+    logOperationalError("purchase_request_create", error, {
+      requestNumber: normalizedInput.requestNumber,
+    });
+
     return {
       data: null,
       error: createDomainError(error, "Unable to create the purchase request."),
@@ -297,13 +411,12 @@ export const createRequest = async (
 };
 
 export const createPurchaseRequestWithAttachments = async (
-  input: CreateRequestInput,
-  uploads: PurchaseRequestImageUpload[],
+    input: CreateRequestInput,
+    uploads: PurchaseRequestImageUpload[],
 ): Promise<DomainResult<OperationsRequest>> => {
-  // 1. Create the DB record first (without images)
   const creationResult = await createRequest({
     ...input,
-    imageUrls: [], // Images come later
+    imageUrls: [],
   });
 
   if (creationResult.error || !creationResult.data) {
@@ -313,28 +426,35 @@ export const createPurchaseRequestWithAttachments = async (
   const requestId = creationResult.data.id;
 
   try {
-    // 2. Upload images using the stable DB record ID for the path
-    // USE requestId instead of requestNumber for storage folder to be stable
     const uploadResult = await uploadPurchaseRequestImages(requestId, uploads);
-    
+
     if (uploadResult.error || !uploadResult.data) {
       throw new Error(uploadResult.error?.message || "Unable to upload images.");
     }
 
-    // 3. Update the record with image URLs and create attachments
     const updateResult = await updateRequestWithImages(requestId, uploadResult.data);
+
     if (updateResult.error || !updateResult.data) {
       throw new Error(updateResult.error?.message || "Unable to update request with images.");
     }
 
     return success(updateResult.data);
   } catch (error: unknown) {
-    // Cleanup on failure
-    const cleanupResult = await deleteRequest(requestId);
+    logOperationalError("purchase_request_submit_with_attachments", error, {
+      requestId,
+    });
+
+    const cleanupResult = await deleteRequest(
+        requestId,
+        "Automatic cancellation because image upload or image-link update failed.",
+    );
+
     if (cleanupResult.error) {
-      logOperationalError("purchase_request_cleanup", cleanupResult.error, { requestId });
+      logOperationalError("purchase_request_cleanup", cleanupResult.error, {
+        requestId,
+      });
     }
-    logOperationalError("purchase_request_submit_with_attachments", error, { requestId });
+
     return {
       data: null,
       error: createDomainError(error, "Failed to complete purchase request submission."),
@@ -342,52 +462,139 @@ export const createPurchaseRequestWithAttachments = async (
   }
 };
 
-export const deleteRequest = async (requestId: string): Promise<DomainResult<void>> => {
-  try {
-    // Delete attachments from DB
-    await supabase.from("attachments").delete().eq("entity_id", requestId).eq("entity_type", "purchase_request");
-    
-    // Delete record from DB
-    const { error: dbError } = await supabase.from("purchase_requests").delete().eq("id", requestId);
-    if (dbError) throw dbError;
+export const deleteRequest = async (
+    requestId: string,
+    reason?: string,
+): Promise<DomainResult<void>> => {
+  const normalizedRequestId = normalizeText(requestId);
 
-    // Delete folder from storage
-    try {
-      await deleteFolder("PRODUCT_IMAGES", STORAGE_PATHS.PURCHASE_REQUESTS(requestId));
-    } catch (e) {
-      console.warn("Could not delete associated storage folder, it may be empty or already gone.", e);
+  if (!normalizedRequestId) {
+    return failure("A valid request id is required.");
+  }
+
+  try {
+    const request = await getPurchaseRequestById(normalizedRequestId);
+
+    if (!request) {
+      return failure("The request could not be found.");
     }
+
+    if (!isRequestCancellable(request)) {
+      return failure("This request can no longer be cancelled.");
+    }
+
+    await updatePurchaseRequestAsCancelled(normalizedRequestId, reason);
+
     return success(undefined);
   } catch (error) {
-    return { data: null, error: createDomainError(error, "Failed to cleanup request data.") };
+    logOperationalError("purchase_request_cancel", error, {
+      requestId: normalizedRequestId,
+    });
+
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to cancel the request."),
+    };
   }
 };
 
 export const updateRequestWithImages = async (
-  requestId: string,
-  imageUrls: string[],
+    requestId: string,
+    imageUrls: string[],
 ): Promise<DomainResult<OperationsRequest>> => {
+  const normalizedRequestId = normalizeText(requestId);
+
+  if (!normalizedRequestId) {
+    return failure("A valid request id is required.");
+  }
+
   try {
-    const updated = await updatePurchaseRequestImages(requestId, imageUrls);
-    if (!updated) throw new Error("Update returned no data.");
-    
-    // We use loadPurchaseRequests to get the full mapped model
-    const requests = await loadPurchaseRequests();
-    const result = requests.find((r) => r.id === requestId);
-    
-    if (!result) throw new Error("Could not reload updated request.");
-    return success(result as OperationsRequest);
+    const updated = await updatePurchaseRequestImages(normalizedRequestId, imageUrls);
+
+    if (!updated) {
+      throw new Error("Update returned no data.");
+    }
+
+    const result = await getPurchaseRequestById(normalizedRequestId);
+
+    if (result) {
+      return success(normalizeRequest(result));
+    }
+
+    const updatedRecord = updated as unknown as Record<string, unknown>;
+    const createdAt = new Date().toISOString();
+
+    return success({
+      id: normalizedRequestId,
+      requestNumber: String(updatedRecord.request_number || updatedRecord.requestNumber || ""),
+      status: String(updatedRecord.status || "intake_submitted") as OperationsRequest["status"],
+      statusLabel: "تم الاستلام",
+      customer: {
+        id: String(updatedRecord.customer_id || normalizedRequestId),
+        fullName: String(updatedRecord.full_name || ""),
+        phone: String(updatedRecord.phone || ""),
+        email: String(updatedRecord.email || ""),
+        country: String(updatedRecord.country || ""),
+        city: String(updatedRecord.city || ""),
+      },
+      productName: String(updatedRecord.product_name || ""),
+      productDescription: String(updatedRecord.product_description || ""),
+      quantity: Number(updatedRecord.quantity || 0),
+      sizeDimensions: String(updatedRecord.size_dimensions || ""),
+      color: String(updatedRecord.color || ""),
+      material: String(updatedRecord.material || ""),
+      technicalSpecs: String(updatedRecord.technical_specs || ""),
+      referenceLink: String(updatedRecord.reference_link || ""),
+      preferredShippingMethod: String(updatedRecord.preferred_shipping_method || ""),
+      deliveryNotes: String(updatedRecord.delivery_notes || ""),
+      imageUrls,
+      createdAt: String(updatedRecord.created_at || createdAt),
+      weight: String(updatedRecord.weight || ""),
+      manufacturingCountry: String(updatedRecord.manufacturing_country || ""),
+      brand: String(updatedRecord.brand || ""),
+      qualityLevel: String(updatedRecord.quality_level || ""),
+      isReadyMade: Boolean(updatedRecord.is_ready_made),
+      hasPreviousSample: Boolean(updatedRecord.has_previous_sample),
+      expectedSupplyDate: String(updatedRecord.expected_supply_date || ""),
+      destination: String(updatedRecord.destination || ""),
+      deliveryAddress: String(updatedRecord.delivery_address || ""),
+      isFullSourcing: Boolean(updatedRecord.is_full_sourcing ?? true),
+      trackingCode: String(updatedRecord.tracking_code || ""),
+      sourceInquiryId: null,
+      convertedDealId: null,
+      convertedDealNumber: null,
+      isLegacyFallback: false,
+      internalNotes: String(updatedRecord.internal_notes || ""),
+      reviewedAt: null,
+      attachments: imageUrls.map((url, index) => ({
+        id: `${normalizedRequestId}-${index}`,
+        entityType: "purchase_request",
+        entityId: normalizedRequestId,
+        category: "product_image",
+        fileName: `image-${index + 1}`,
+        fileUrl: url,
+        visibility: "internal",
+        createdAt,
+      })),
+    });
   } catch (error) {
-    logOperationalError("purchase_request_image_update", error, { requestId });
-    return { data: null, error: createDomainError(error, "Failed to update request with images.") };
+    logOperationalError("purchase_request_image_update", error, {
+      requestId: normalizedRequestId,
+    });
+
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to update request with images."),
+    };
   }
 };
 
 export const updateDealStatus = async (
-  dealId: string,
-  input: UpdateDealStatusInput,
+    dealId: string,
+    input: UpdateDealStatusInput,
 ): Promise<DomainResult<OperationsDeal>> => {
   const normalizedDealId = normalizeText(dealId);
+
   if (!normalizedDealId) {
     return failure("A valid deal id is required.");
   }
@@ -416,7 +623,10 @@ export const updateDealStatus = async (
 
     return success(normalizeDeal(updatedDeal));
   } catch (error) {
-    logOperationalError("deal_status_update", error, { dealId: normalizedDealId });
+    logOperationalError("deal_status_update", error, {
+      dealId: normalizedDealId,
+    });
+
     return {
       data: null,
       error: createDomainError(error, "Unable to update the deal status."),
