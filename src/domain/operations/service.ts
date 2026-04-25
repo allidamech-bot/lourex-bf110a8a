@@ -129,58 +129,42 @@ const normalizeEntry = (entry: OperationsFinancialEntry): OperationsFinancialEnt
 const normalizeImageFiles = (files: File[]) =>
     files.filter((file) => file.type.startsWith("image/")).slice(0, MAX_PURCHASE_REQUEST_IMAGES);
 
-const getPurchaseRequestById = async (requestId: string) => {
-  const requests = await loadPurchaseRequests();
-  return requests.find((request) => request.id === requestId) ?? null;
+const getPurchaseRequestById = async (id: string): Promise<OperationsRequest | null> => {
+  const requests = await fetchRequests();
+  return requests.find((r) => r.id === id) || null;
 };
 
-const isRequestCancellable = (request: OperationsRequest) =>
-    REQUEST_STATUSES_ALLOWED_TO_CANCEL.has(request.status);
+/**
+ * Internal helper to handle rollback of purchase requests that failed during
+ * the submission process (e.g. image upload failure).
+ */
+const rollbackIncompleteRequest = async (requestId: string): Promise<void> => {
+  const normalizedId = normalizeText(requestId);
+  if (!normalizedId) return;
 
-const updatePurchaseRequestAsCancelled = async (
-    requestId: string,
-    reason?: string,
-): Promise<void> => {
-  const cancellationPayload: Record<string, unknown> = {
-    status: "cancelled",
-  };
+  try {
+    const rpcClient = supabase as unknown as {
+      rpc: (
+        fn: "cancel_purchase_request",
+        args: { p_request_id: string; p_reason?: string | null },
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    };
 
-  if (reason) {
-    cancellationPayload.internal_notes = `[Cancelled] ${reason}`;
-  }
+    const { error } = await rpcClient.rpc("cancel_purchase_request", {
+      p_request_id: normalizedId,
+      p_reason: "System Rollback: Creation failed during image upload.",
+    });
 
-  const { error } = await (
-      supabase as unknown as {
-        from: (relation: string) => {
-          update: (values: Record<string, unknown>) => {
-            eq: (column: string, value: string) => Promise<{ error: unknown }>;
-          };
-        };
-      }
-  )
-      .from("purchase_requests")
-      .update(cancellationPayload)
-      .eq("id", requestId);
-
-  if (error) {
-    const { error: retryError } = await (
-        supabase as unknown as {
-          from: (relation: string) => {
-            update: (values: Record<string, unknown>) => {
-              eq: (column: string, value: string) => Promise<{ error: unknown }>;
-            };
-          };
-        }
-    )
-        .from("purchase_requests")
-        .update({ status: "cancelled" })
-        .eq("id", requestId);
-
-    if (retryError) {
-      throw retryError;
+    if (error) {
+      throw error;
     }
+  } catch (error) {
+    logOperationalError("purchase_request_rollback", error, { requestId: normalizedId });
   }
 };
+
+// Removed updatePurchaseRequestAsCancelled and related private helpers
+// in favor of the cancel_purchase_request RPC.
 
 export const fetchCustomers = async (): Promise<OperationsCustomer[]> => {
   const customers = await loadCustomerDashboards();
@@ -444,16 +428,9 @@ export const createPurchaseRequestWithAttachments = async (
       requestId,
     });
 
-    const cleanupResult = await deleteRequest(
-        requestId,
-        "Automatic cancellation because image upload or image-link update failed.",
-    );
+    await rollbackIncompleteRequest(requestId);
 
-    if (cleanupResult.error) {
-      logOperationalError("purchase_request_cleanup", cleanupResult.error, {
-        requestId,
-      });
-    }
+    // We don't report the cleanup result to the user, just the original failure
 
     return {
       data: null,
@@ -462,7 +439,7 @@ export const createPurchaseRequestWithAttachments = async (
   }
 };
 
-export const deleteRequest = async (
+export const cancelPurchaseRequest = async (
     requestId: string,
     reason?: string,
 ): Promise<DomainResult<void>> => {
@@ -473,17 +450,24 @@ export const deleteRequest = async (
   }
 
   try {
-    const request = await getPurchaseRequestById(normalizedRequestId);
+    const rpcClient = supabase as unknown as {
+      rpc: (
+        fn: "cancel_purchase_request",
+        args: { p_request_id: string; p_reason?: string | null },
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    };
 
-    if (!request) {
-      return failure("The request could not be found.");
+    const { error } = await rpcClient.rpc("cancel_purchase_request", {
+      p_request_id: normalizedRequestId,
+      p_reason: reason || "",
+    });
+
+    if (error) {
+      if (error.message.includes("not found or cannot be cancelled")) {
+        return failure("This request can no longer be cancelled.");
+      }
+      throw error;
     }
-
-    if (!isRequestCancellable(request)) {
-      return failure("This request can no longer be cancelled.");
-    }
-
-    await updatePurchaseRequestAsCancelled(normalizedRequestId, reason);
 
     return success(undefined);
   } catch (error) {

@@ -780,7 +780,13 @@ const translations: Record<Lang, TranslationTree> = {
         awaiting_clarification: "Request Clarification",
         ready_for_conversion: "Set as Ready for Conversion",
         confirmCancel: "Are you sure you want to cancel request {{number}}?",
+        cancel: "Cancel request",
       },
+      cancel: {
+        success: "Request cancelled successfully.",
+        failed: "Failed to cancel request.",
+      },
+      inboxDescription: "Track purchase requests, images, tracking codes, and review status in one place.",
       errors: {
         cannotEdit: "This request can no longer be edited.",
         cannotCancel: "This request can no longer be cancelled.",
@@ -1905,7 +1911,13 @@ const translations: Record<Lang, TranslationTree> = {
         awaiting_clarification: "طلب توضيح من العميل",
         ready_for_conversion: "تحديد كـ جاهز للتحويل",
         confirmCancel: "هل أنت متأكد من إلغاء الطلب {{number}}؟",
+        cancel: "إلغاء الطلب",
       },
+      cancel: {
+        success: "تم إلغاء الطلب بنجاح.",
+        failed: "تعذر إلغاء الطلب.",
+      },
+      inboxDescription: "تابع طلبات الشراء، الصور، كود التتبع، وحالة المراجعة من مكان واحد.",
       errors: {
         cannotEdit: "لا يمكن تعديل هذا الطلب بعد بدء المراجعة.",
         cannotCancel: "لا يمكن إلغاء هذا الطلب بعد بدء المراجعة.",

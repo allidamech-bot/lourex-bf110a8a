@@ -12,10 +12,7 @@ import { getDefaultRouteForRole } from "@/features/auth/rbac";
 import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
-const getSafeLabel = (value: string, fallback: string) => {
-  if (!value || value.includes(".")) return fallback;
-  return value;
-};
+// Removed getSafeLabel as t() should handle missing keys or fallbacks gracefully via i18n.tsx
 
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,51 +22,47 @@ export const SiteHeader = () => {
 
   const isAuthenticated = Boolean(user || profile);
   const userEmail = profile?.email || user?.email || "";
-  const customerLabel = getSafeLabel(t("common.customer"), "Customer");
+  const profileLabel = t("nav.profile");
+  const signInLabel = t("nav.signIn");
+  const signOutLabel = t("nav.signOut");
+
   const userName =
       profile?.fullName ||
       String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim() ||
       userEmail ||
-      customerLabel;
-  const portalLabel = getSafeLabel(t("nav.customerPortal"), "Customer Portal");
-  const requestLabel = getSafeLabel(t("nav.purchaseRequest"), "Purchase Request");
-  const myRequestsLabel = getSafeLabel(t("customerPortal.actions.requests.title"), "My Requests");
-  const trackingLabel = getSafeLabel(t("customerPortal.actions.tracking.title"), getSafeLabel(t("nav.trackShipment"), "Track Shipment"));
-  const profileLabel = getSafeLabel(t("nav.profile"), "Profile");
-  const signInLabel = getSafeLabel(t("nav.signIn"), "Sign in");
-  const signOutLabel = getSafeLabel(t("nav.signOut"), "Sign out");
+      t("common.customer");
 
   const publicLinks = useMemo(
       () => [
-        { to: "/", label: getSafeLabel(t("nav.home"), "Home") },
-        { to: "/request", label: requestLabel },
-        ...(isAuthenticated
+        { to: "/", label: t("nav.home") },
+        { to: "/request", label: t("nav.purchaseRequest") },
+        ...(profile?.role === "customer"
             ? [
-              { to: "/customer-portal", label: portalLabel },
-              { to: "/customer-portal/requests", label: myRequestsLabel },
-              { to: "/customer-portal/tracking", label: trackingLabel },
+              { to: "/customer-portal", label: t("nav.customerPortal") },
+              { to: "/customer-portal/requests", label: t("customerPortal.actions.requests.title") },
+              { to: "/customer-portal/tracking", label: t("customerPortal.actions.tracking.title") },
             ]
             : []),
-        { to: "/privacy", label: getSafeLabel(t("nav.privacy"), "Privacy Policy") },
-        { to: "/guidelines", label: getSafeLabel(t("nav.guidelines"), "Guidelines") },
-        { to: "/contact", label: getSafeLabel(t("nav.contact"), "Contact") },
+        { to: "/privacy", label: t("nav.privacy") },
+        { to: "/guidelines", label: t("nav.guidelines") },
+        { to: "/contact", label: t("nav.contact") },
       ],
-      [isAuthenticated, myRequestsLabel, portalLabel, requestLabel, t, trackingLabel],
+      [profile?.role, t],
   );
 
   const workspaceLink = profile ? getDefaultRouteForRole(profile.role) : user ? "/profile" : "/auth";
   const workspaceLabel = profile
       ? getWorkspaceTitle(profile, t)
       : user
-          ? profileLabel
-          : signInLabel;
+          ? t("nav.profile")
+          : t("nav.signIn");
 
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
 
   const handleLogout = async () => {
     setIsOpen(false);
     await signOut();
-    toast.success(signOutLabel);
+    toast.success(t("nav.signOut"));
     navigate("/");
   };
 
@@ -125,7 +118,7 @@ export const SiteHeader = () => {
                 <Button variant="outline" asChild className="hidden lg:inline-flex">
                   <Link to="/admin">
                     <Shield className="me-2 h-4 w-4" />
-                    {getSafeLabel(t("nav.admin"), "Admin")}
+                    {t("nav.admin")}
                   </Link>
                 </Button>
             ) : null}
@@ -147,26 +140,20 @@ export const SiteHeader = () => {
                   </Link>
 
                   <Button variant="outline" asChild className="hidden lg:inline-flex">
-                    <Link to="/customer-portal">
-                      {portalLabel}
-                    </Link>
-                  </Button>
-
-                  <Button variant="outline" asChild className="hidden lg:inline-flex">
                     <Link to="/profile">
                       <UserCircle2 className="me-2 h-4 w-4" />
-                      {profileLabel}
+                      {t("nav.profile")}
                     </Link>
                   </Button>
 
                   <Button variant="ghost" onClick={handleLogout} className="hidden lg:inline-flex">
                     <LogOut className="me-2 h-4 w-4" />
-                    {signOutLabel}
+                    {t("nav.signOut")}
                   </Button>
                 </>
             ) : (
                 <Button variant="gold" asChild className="hidden lg:inline-flex">
-                  <Link to="/auth">{signInLabel}</Link>
+                  <Link to="/auth">{t("nav.signIn")}</Link>
                 </Button>
             )}
 
@@ -224,7 +211,7 @@ export const SiteHeader = () => {
                               onClick={() => setIsOpen(false)}
                               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                           >
-                            {getSafeLabel(t("nav.admin"), "Admin")}
+                            {t("nav.admin")}
                           </NavLink>
                       ) : null}
 

@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { deleteRequest as cancelRequest } from "@/domain/operations/service";
+import { cancelPurchaseRequest as cancelRequest } from "@/domain/operations/service";
 import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
@@ -185,7 +185,7 @@ export default function CustomerRequestsPage() {
   const getStatusMeta = (status: PurchaseRequestStatus | "cancelled") => {
     if (status === "cancelled") {
       return {
-        label: locale === "ar" ? "ملغي" : "Cancelled",
+        label: t("statuses.cancelled"),
         tone: "bg-zinc-500/15 text-zinc-300",
       };
     }
@@ -236,45 +236,30 @@ export default function CustomerRequestsPage() {
   }, [normalizedProfileEmail]);
 
   const requestFilters: Array<{ key: CustomerRequestFilter; label: string }> = [
-    { key: "all", label: getSafeLabel(t("requests.filters.all"), locale === "ar" ? "الكل" : "All") },
+    { key: "all", label: t("common.all") },
     {
       key: "intake_submitted",
-      label: getSafeLabel(
-          t("requests.filters.intake_submitted"),
-          locale === "ar" ? "مُرسل" : "Submitted",
-      ),
+      label: t("requests.filters.intake_submitted"),
     },
     {
       key: "under_review",
-      label: getSafeLabel(
-          t("requests.filters.under_review"),
-          locale === "ar" ? "قيد المراجعة" : "Under review",
-      ),
+      label: t("requests.filters.under_review"),
     },
     {
       key: "awaiting_clarification",
-      label: getSafeLabel(
-          t("requests.filters.awaiting_clarification"),
-          locale === "ar" ? "بحاجة لتوضيح" : "Needs clarification",
-      ),
+      label: t("requests.filters.awaiting_clarification"),
     },
     {
       key: "ready_for_conversion",
-      label: getSafeLabel(
-          t("requests.filters.ready_for_conversion"),
-          locale === "ar" ? "جاهز" : "Ready",
-      ),
+      label: t("requests.filters.ready_for_conversion"),
     },
     {
       key: "converted_to_deal",
-      label: getSafeLabel(
-          t("requests.filters.converted_to_deal"),
-          locale === "ar" ? "تم التحويل" : "Converted",
-      ),
+      label: t("requests.filters.converted_to_deal"),
     },
     {
       key: "cancelled",
-      label: getSafeLabel(t("statuses.cancelled"), locale === "ar" ? "ملغاة" : "Cancelled"),
+      label: t("statuses.cancelled"),
     },
   ];
 
@@ -379,7 +364,7 @@ export default function CustomerRequestsPage() {
         throw new Error(result.error.message);
       }
 
-      toast.success(t("requests.intake.errors.success"));
+      toast.success(t("requests.cancel.success"));
 
       setRows((currentRows) =>
           currentRows.map((row) =>
@@ -425,17 +410,9 @@ export default function CustomerRequestsPage() {
     return (
         <EmptyState
             icon={ClipboardList}
-            title={getSafeLabel(t("requests.emptyTitle"), locale === "ar" ? "لا توجد طلبات بعد" : "No requests yet")}
-            description={getSafeLabel(
-                t("requests.emptyDescription"),
-                locale === "ar"
-                    ? "أنشئ أول طلب شراء وتابعه من لوحة العميل."
-                    : "Create your first purchase request and track it from your customer portal.",
-            )}
-            actionLabel={getSafeLabel(
-                t("customerPortal.actions.newRequest.title"),
-                locale === "ar" ? "إنشاء طلب" : "Create request",
-            )}
+            title={t("requests.emptyTitle")}
+            description={t("requests.emptyDescription")}
+            actionLabel={t("customerPortal.actions.newRequest.title")}
             onAction={() => navigate("/request")}
         />
     );
@@ -446,30 +423,21 @@ export default function CustomerRequestsPage() {
         <BentoCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              {getSafeLabel(
-                  t("customerPortal.actions.requests.title"),
-                  locale === "ar" ? "طلباتي" : "My requests",
-              )}
+              {t("customerPortal.actions.requests.title")}
             </p>
             <h1 className="mt-2 font-serif text-3xl font-semibold">
-              {getSafeLabel(t("requests.inboxTitle"), locale === "ar" ? "صندوق الطلبات" : "Request inbox")}
+              {t("requests.inboxTitle")}
             </h1>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {locale === "ar"
-                  ? "تابع طلبات الشراء، الصور، كود التتبع، وحالة المراجعة من مكان واحد."
-                  : "Track purchase requests, images, tracking codes, and review status in one place."}
+              {t("requests.inboxDescription")}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void loadRows("refresh")} disabled={refreshing}>
               {refreshing
-                  ? locale === "ar"
-                      ? "جارٍ التحديث..."
-                      : "Refreshing..."
-                  : locale === "ar"
-                      ? "تحديث"
-                      : "Refresh"}
+                  ? t("common.loading")
+                  : t("common.refresh")}
             </Button>
             <Button variant="gold" onClick={() => navigate("/request")}>
               <Plus className="me-2 h-4 w-4" />
@@ -482,10 +450,10 @@ export default function CustomerRequestsPage() {
           <BentoCard className="space-y-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-2">
               {[
-                { label: getSafeLabel(t("requests.total"), locale === "ar" ? "الإجمالي" : "Total"), value: requestMetrics.total },
-                { label: locale === "ar" ? "مُرسلة" : "Submitted", value: requestMetrics.submitted },
-                { label: getSafeLabel(t("requests.review"), locale === "ar" ? "مراجعة" : "Review"), value: requestMetrics.review },
-                { label: getSafeLabel(t("requests.converted"), locale === "ar" ? "محولة" : "Converted"), value: requestMetrics.converted },
+                { label: t("requests.total"), value: requestMetrics.total },
+                { label: t("requests.filters.intake_submitted"), value: requestMetrics.submitted },
+                { label: t("requests.review"), value: requestMetrics.review },
+                { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
                   <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4 text-center">
                     <p className="text-2xl font-bold">{formatQuantity(item.value, locale)}</p>
@@ -499,12 +467,7 @@ export default function CustomerRequestsPage() {
               <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder={getSafeLabel(
-                      t("requests.searchPlaceholder"),
-                      locale === "ar"
-                          ? "ابحث برقم الطلب أو المنتج أو كود التتبع"
-                          : "Search by request number, product, or tracking code",
-                  )}
+                  placeholder={t("requests.searchPlaceholder")}
                   className="ps-9"
               />
             </div>
@@ -532,10 +495,7 @@ export default function CustomerRequestsPage() {
             <div className="space-y-3">
               {filteredRows.length === 0 ? (
                   <div className="rounded-[1.4rem] border border-border/60 bg-secondary/15 p-5 text-sm text-muted-foreground">
-                    {getSafeLabel(
-                        t("requests.emptyFilteredDescription"),
-                        locale === "ar" ? "لا توجد طلبات مطابقة للبحث أو الفلتر الحالي." : "No requests match the current filter.",
-                    )}
+                    {t("requests.emptyFilteredDescription")}
                   </div>
               ) : null}
 
@@ -563,16 +523,12 @@ export default function CustomerRequestsPage() {
                             <span>{row.requestNumber}</span>
                           </p>
                           <p className="mt-2 break-words font-medium">
-                            {row.productName ||
-                                getSafeLabel(
-                                    t("requests.genericRequest"),
-                                    locale === "ar" ? "طلب شراء" : "Purchase request",
-                                )}
+                            {row.productName || t("requests.genericRequest")}
                           </p>
                         </div>
 
                         <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
-                      {row.status === "cancelled" ? statusMeta.label : getSafeLabel(t(`statuses.${row.status}`), statusMeta.label)}
+                      {t(`statuses.${row.status}`)}
                     </span>
                       </div>
 
@@ -587,18 +543,17 @@ export default function CustomerRequestsPage() {
                     </span>
                         <span className="flex items-center gap-2 sm:col-span-2">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                          {locale === "ar" ? "كود التتبع: " : "Tracking: "}
-                          {trackingCode}
+                          {t("requests.labels.trackingCode")}: {trackingCode}
                     </span>
                       </div>
 
                       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/50 pt-3 text-xs">
                     <span className="text-muted-foreground">
-                      {locale === "ar" ? "اضغط لعرض التفاصيل" : "Click to view details"}
+                      {t("common.open")}
                     </span>
                         <span className="inline-flex items-center gap-1 font-medium text-primary">
                       <Eye className="h-3.5 w-3.5" />
-                          {locale === "ar" ? "التفاصيل" : "Details"}
+                          {t("requests.labels.details")}
                     </span>
                       </div>
                     </button>
@@ -615,8 +570,7 @@ export default function CustomerRequestsPage() {
                       {selectedRow.requestNumber}
                     </p>
                     <h2 className="mt-2 break-words font-serif text-3xl font-semibold">
-                      {selectedRow.productName ||
-                          getSafeLabel(t("requests.genericRequest"), locale === "ar" ? "طلب شراء" : "Purchase request")}
+                      {selectedRow.productName || t("requests.genericRequest")}
                     </h2>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {formatDateTime(selectedRow.createdAt, locale)}
@@ -629,19 +583,14 @@ export default function CustomerRequestsPage() {
                         selectedStatusMeta?.tone || "bg-secondary text-muted-foreground"
                     }`}
                 >
-                  {selectedRow.status === "cancelled"
-                      ? selectedStatusMeta?.label
-                      : getSafeLabel(t(`statuses.${selectedRow.status}`), selectedStatusMeta?.label || selectedRow.status)}
+                  {t(`statuses.${selectedRow.status}`)}
                 </span>
 
                     {selectedRow.convertedDealNumber ? (
                         <Button variant="outline" asChild>
                           <Link to={`/customer-portal/tracking?deal=${selectedRow.convertedDealNumber}`}>
                             <Eye className="me-2 h-4 w-4" />
-                            {getSafeLabel(
-                                t("customerPortal.actions.tracking.title"),
-                                locale === "ar" ? "التتبع" : "Tracking",
-                            )}
+                            {t("customerPortal.actions.tracking.title")}
                           </Link>
                         </Button>
                     ) : null}
@@ -656,12 +605,8 @@ export default function CustomerRequestsPage() {
                         >
                           <Trash2 className="me-2 h-4 w-4" />
                           {actionLoadingId === selectedRow.id
-                              ? locale === "ar"
-                                  ? "جارٍ الإلغاء..."
-                                  : "Cancelling..."
-                              : locale === "ar"
-                                  ? "إلغاء الطلب"
-                                  : "Cancel request"}
+                              ? t("common.saving")
+                              : t("requests.actions.cancel")}
                         </Button>
                     ) : null}
                   </div>
@@ -684,91 +629,84 @@ export default function CustomerRequestsPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <RequestInfoTile
                       icon={<Hash className="h-4 w-4" />}
-                      label={locale === "ar" ? "كود التتبع" : "Tracking code"}
+                      label={t("requests.labels.trackingCode")}
                       value={getTrackingCode(selectedRow)}
                   />
                   <RequestInfoTile
                       icon={<Package className="h-4 w-4" />}
-                      label={getSafeLabel(t("requests.labels.quantity"), locale === "ar" ? "الكمية" : "Quantity")}
+                      label={t("requests.labels.quantity")}
                       value={formatQuantity(selectedRow.quantity, locale)}
                   />
                   <RequestInfoTile
                       icon={<Truck className="h-4 w-4" />}
-                      label={getSafeLabel(t("requests.labels.shipping"), locale === "ar" ? "الشحن" : "Shipping")}
+                      label={t("requests.labels.shipping")}
                       value={getShippingLabel(selectedRow.preferredShippingMethod, t)}
                   />
                   <RequestInfoTile
                       icon={<ShieldCheck className="h-4 w-4" />}
-                      label={locale === "ar" ? "نوع الخدمة" : "Service type"}
+                      label={t("requests.labels.sourcingType")}
                       value={getRequestTypeLabel(selectedRow.isFullSourcing, t)}
                   />
                   <RequestInfoTile
                       icon={<CalendarDays className="h-4 w-4" />}
-                      label={getSafeLabel(t("requests.labels.expectedDate"), locale === "ar" ? "تاريخ التوريد المتوقع" : "Expected date")}
-                      value={selectedRow.expectedSupplyDate || getSafeLabel(t("common.notAvailable"), "N/A")}
+                      label={t("requests.labels.expectedDate")}
+                      value={selectedRow.expectedSupplyDate || t("common.notAvailable")}
                   />
                   <RequestInfoTile
                       icon={<Package className="h-4 w-4" />}
-                      label={getSafeLabel(t("requests.labels.destination"), locale === "ar" ? "الوجهة" : "Destination")}
-                      value={selectedRow.destination || getSafeLabel(t("common.notAvailable"), "N/A")}
+                      label={t("requests.labels.destination")}
+                      value={selectedRow.destination || t("common.notAvailable")}
                   />
                 </div>
 
                 <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
                   <p className="font-medium">
-                    {locale === "ar" ? "وصف المنتج" : "Product description"}
+                    {t("requests.labels.product")}
                   </p>
                   <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
-                    {selectedRow.productDescription ||
-                        getSafeLabel(
-                            t("requests.noDescription"),
-                            locale === "ar" ? "لا يوجد وصف." : "No description provided.",
-                        )}
+                    {selectedRow.productDescription || t("requests.noDescription")}
                   </p>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   {[
                     {
-                      label: locale === "ar" ? "الأبعاد" : "Dimensions",
+                      label: t("requests.intake.dimensions"),
                       value: selectedRow.sizeDimensions,
                     },
                     {
-                      label: locale === "ar" ? "اللون" : "Color",
+                      label: t("requests.intake.color"),
                       value: selectedRow.color,
                     },
                     {
-                      label: locale === "ar" ? "المادة" : "Material",
+                      label: t("requests.intake.material"),
                       value: selectedRow.material,
                     },
                     {
-                      label: getSafeLabel(t("requests.labels.weight"), locale === "ar" ? "الوزن" : "Weight"),
+                      label: t("requests.labels.weight"),
                       value: selectedRow.weight,
                     },
                     {
-                      label: getSafeLabel(t("requests.labels.brand"), locale === "ar" ? "العلامة التجارية" : "Brand"),
+                      label: t("requests.labels.brand"),
                       value: selectedRow.brand,
                     },
                     {
-                      label: getSafeLabel(t("requests.labels.qualityLevel"), locale === "ar" ? "مستوى الجودة" : "Quality level"),
+                      label: t("requests.labels.qualityLevel"),
                       value: selectedRow.qualityLevel,
                     },
                     {
-                      label: getSafeLabel(
-                          t("requests.labels.manufacturingCountry"),
-                          locale === "ar" ? "بلد التصنيع" : "Manufacturing country",
-                      ),
+                      label: t("requests.labels.manufacturingCountry"),
                       value: selectedRow.manufacturingCountry,
                     },
                     {
-                      label: locale === "ar" ? "العنوان" : "Delivery address",
+                      label: t("requests.intake.deliveryAddress"),
                       value: selectedRow.deliveryAddress,
                     },
                   ].map((item) => (
                       <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 px-4 py-3">
                         <p className="text-xs text-muted-foreground">{item.label}</p>
                         <p className="mt-1 break-words text-sm font-medium">
-                          {item.value || getSafeLabel(t("common.notAvailable"), "N/A")}
+                          {item.value || t("common.notAvailable")}
                         </p>
                       </div>
                   ))}
@@ -777,7 +715,7 @@ export default function CustomerRequestsPage() {
                 {selectedRow.technicalSpecs ? (
                     <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
                       <p className="font-medium">
-                        {locale === "ar" ? "المواصفات الفنية" : "Technical specs"}
+                        {t("requests.intake.technicalSpecs")}
                       </p>
                       <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">
                         {selectedRow.technicalSpecs}
@@ -788,14 +726,14 @@ export default function CustomerRequestsPage() {
                 {selectedRow.deliveryNotes || selectedRow.referenceLink ? (
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                        <p className="font-medium">{locale === "ar" ? "ملاحظات التسليم" : "Delivery notes"}</p>
+                        <p className="font-medium">{t("requests.intake.deliveryNotes")}</p>
                         <p className="mt-2 break-words text-sm leading-7 text-muted-foreground">
-                          {selectedRow.deliveryNotes || getSafeLabel(t("common.notAvailable"), "N/A")}
+                          {selectedRow.deliveryNotes || t("common.notAvailable")}
                         </p>
                       </div>
 
                       <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                        <p className="font-medium">{locale === "ar" ? "رابط مرجعي" : "Reference link"}</p>
+                        <p className="font-medium">{t("requests.intake.referenceLink")}</p>
                         {selectedRow.referenceLink ? (
                             <a
                                 href={selectedRow.referenceLink}
