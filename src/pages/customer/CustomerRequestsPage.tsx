@@ -286,6 +286,7 @@ export default function CustomerRequestsPage() {
       ? getCustomerRequestStatusCopy(selectedRow.status, locale === "ar" ? "ar" : "en")
       : null;
   const selectedStatusMeta = selectedRow ? getStatusMeta(selectedRow.status) : null;
+  const removeActionLabel = locale === "ar" ? "حذف من قائمتي" : "Remove from my list";
 
   useEffect(() => {
     if (!filteredRows.length) {
@@ -603,12 +604,14 @@ export default function CustomerRequestsPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8 rounded-full text-rose-400 hover:bg-rose-500/10"
+                                aria-label={removeActionLabel}
+                                title={removeActionLabel}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleRemoveRequest(row);
                                 }}
                               >
-                                <Archive className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>

@@ -139,6 +139,14 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
           reason: error?.status || error?.message || "unknown",
         });
       }
+      const fallbackMessage =
+        error?.message === "CONFIG_ERROR"
+          ? t("auth.authError")
+          : isLogin
+            ? t("auth.invalidCredentials")
+            : error?.message || t("auth.authError");
+
+      toast.error(fallbackMessage);
     }
   };
 
