@@ -16,9 +16,10 @@ import { useI18n } from "@/lib/i18n";
 
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const { user, profile, signOut } = useAuthSession();
   const navigate = useNavigate();
+  const isRtl = lang === "ar";
 
   const isAuthenticated = Boolean(user || profile);
   const userEmail = profile?.email || user?.email || "";
@@ -68,21 +69,23 @@ export const SiteHeader = () => {
 
   return (
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur">
-        <div className="container mx-auto flex h-20 items-center justify-between gap-4 px-4 md:px-8">
-          <Link to="/" className="flex shrink-0 items-center gap-3" onClick={() => setIsOpen(false)}>
-            <img src="/logo.png" alt="Lourex" className="h-11 w-11 rounded-2xl object-contain" />
-            <div className="flex items-center">
-              <p className="font-serif text-xl font-bold tracking-wide text-foreground">LOUREX</p>
-            </div>
+        <div className={`container mx-auto flex h-[72px] items-center justify-between gap-4 px-4 md:px-8 ${isRtl ? "flex-row-reverse" : ""}`}>
+          <Link
+              to="/"
+              className={`flex shrink-0 items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}
+              onClick={() => setIsOpen(false)}
+          >
+            <img src="/logo.png" alt="Lourex" className="h-10 w-10 rounded-xl object-contain" />
+            <p className="font-serif text-xl font-bold tracking-wide text-foreground">LOUREX</p>
           </Link>
 
-          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+          <nav className={`hidden flex-1 items-center justify-center gap-2 lg:flex ${isRtl ? "flex-row-reverse" : ""}`}>
             {publicLinks.map((link) => (
                 <NavLink
                     key={`${link.to}-${link.label}`}
                     to={link.to}
                     className={({ isActive }) =>
-                        `rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                        `rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                             isActive
                                 ? "bg-secondary text-foreground"
                                 : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
@@ -97,7 +100,7 @@ export const SiteHeader = () => {
                 <NavLink
                     to={workspaceLink}
                     className={({ isActive }) =>
-                        `rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                        `rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                             isActive
                                 ? "bg-secondary text-foreground"
                                 : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
@@ -109,13 +112,15 @@ export const SiteHeader = () => {
             ) : null}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2 lg:gap-3">
-            {user ? <NotificationBell userId={user.id} /> : null}
-            <ThemeToggle />
-            <LanguageSwitcher />
+          <div className={`flex shrink-0 items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+            <div className={`flex items-center gap-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
+              {user ? <NotificationBell userId={user.id} /> : null}
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
 
             {profile?.role === "owner" ? (
-                <Button variant="outline" asChild className="hidden lg:inline-flex">
+                <Button variant="outline" asChild className="hidden h-9 px-3 lg:inline-flex">
                   <Link to="/admin">
                     <Shield className="me-2 h-4 w-4" />
                     {t("nav.admin")}
@@ -127,32 +132,32 @@ export const SiteHeader = () => {
                 <>
                   <Link
                       to="/customer-portal"
-                      className="hidden max-w-[260px] items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-2 transition-colors hover:border-primary/30 hover:bg-secondary/40 lg:flex"
+                      className={`hidden max-w-[210px] items-center gap-2.5 rounded-xl border border-border/60 bg-card px-3 py-1.5 transition-colors hover:border-primary/30 hover:bg-secondary/40 lg:flex ${isRtl ? "flex-row-reverse" : ""}`}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                       {userName.slice(0, 1).toUpperCase()}
                     </div>
 
-                    <div className="min-w-0 text-start">
+                    <div className={`min-w-0 ${isRtl ? "text-right" : "text-left"}`}>
                       <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
                       <p className="truncate text-xs text-muted-foreground">{userEmail || roleLabel || workspaceLabel}</p>
                     </div>
                   </Link>
 
-                  <Button variant="outline" asChild className="hidden lg:inline-flex">
+                  <Button variant="outline" asChild className="hidden h-9 px-3 lg:inline-flex">
                     <Link to="/profile">
                       <UserCircle2 className="me-2 h-4 w-4" />
                       {t("nav.profile")}
                     </Link>
                   </Button>
 
-                  <Button variant="ghost" onClick={handleLogout} className="hidden lg:inline-flex">
+                  <Button variant="ghost" onClick={handleLogout} className="hidden h-9 px-3 lg:inline-flex">
                     <LogOut className="me-2 h-4 w-4" />
                     {t("nav.signOut")}
                   </Button>
                 </>
             ) : (
-                <Button variant="gold" asChild className="hidden lg:inline-flex">
+                <Button variant="gold" asChild className="hidden h-9 px-4 lg:inline-flex">
                   <Link to="/auth">{t("nav.signIn")}</Link>
                 </Button>
             )}
