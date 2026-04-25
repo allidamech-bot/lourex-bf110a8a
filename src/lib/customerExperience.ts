@@ -12,7 +12,10 @@ const requestStatusKeys: Record<PurchaseRequestStatus | "cancelled", string> = {
   under_review: "customerPortal.requestStatus.under_review",
   awaiting_clarification: "customerPortal.requestStatus.awaiting_clarification",
   ready_for_conversion: "customerPortal.requestStatus.ready_for_conversion",
-  converted_to_deal: "customerPortal.requestStatus.converted_to_deal",
+  transfer_proof_pending: "customerPortal.requestStatus.transfer_proof_pending",
+  transfer_proof_rejected: "customerPortal.requestStatus.transfer_proof_rejected",
+  in_progress: "customerPortal.requestStatus.in_progress",
+  completed: "customerPortal.requestStatus.completed",
   cancelled: "customerPortal.requestStatus.cancelled",
 };
 

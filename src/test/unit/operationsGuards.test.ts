@@ -11,7 +11,7 @@ describe("operations guards", () => {
   it("allows only safe purchase request review transitions", () => {
     expect(canTransitionPurchaseRequestStatus("intake_submitted", "under_review")).toBe(true);
     expect(canTransitionPurchaseRequestStatus("under_review", "ready_for_conversion")).toBe(true);
-    expect(canTransitionPurchaseRequestStatus("converted_to_deal", "under_review")).toBe(false);
+    expect(canTransitionPurchaseRequestStatus("in_progress", "under_review")).toBe(false);
   });
 
   it("requires a management role and ready status before conversion", () => {

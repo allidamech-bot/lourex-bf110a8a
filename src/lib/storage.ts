@@ -14,6 +14,7 @@ export const STORAGE_BUCKETS = {
 export const STORAGE_PATHS = {
   PURCHASE_REQUESTS: (id: string) => `purchase-requests/${sanitizePathSegment(id)}`,
   DEAL_ATTACHMENTS: (dealNumber: string) => `deal-attachments/${sanitizePathSegment(dealNumber)}`,
+  TRANSFER_PROOFS: (requestId: string) => `transfer-proofs/${sanitizePathSegment(requestId)}`,
 } as const;
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024;
@@ -164,6 +165,27 @@ export const uploadFile = async (
   }
 
   return data.publicUrl;
+};
+
+/**
+ * Generates a signed URL for secure, temporary access to private files.
+ */
+export const getSignedUrl = async (
+    bucket: keyof typeof STORAGE_BUCKETS,
+    storagePath: string,
+    expiresInSeconds = 3600,
+) => {
+  const bucketName = STORAGE_BUCKETS[bucket];
+  
+  const { data, error } = await supabase.storage
+      .from(bucketName)
+      .createSignedUrl(storagePath, expiresInSeconds);
+
+  if (error) {
+    throw error;
+  }
+
+  return data.signedUrl;
 };
 
 /**

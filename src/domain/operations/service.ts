@@ -10,6 +10,9 @@ import {
   loadShipments,
   updateDealOperation,
   updatePurchaseRequestImages,
+  uploadTransferProof as dbUploadTransferProof,
+  acceptTransferProof as dbAcceptTransferProof,
+  rejectTransferProof as dbRejectTransferProof,
 } from "@/lib/operationsDomain";
 import type {
   AuditPreviewRow,
@@ -42,6 +45,8 @@ import {
 } from "@/lib/storage";
 
 const MAX_PURCHASE_REQUEST_IMAGES = 5;
+
+type UpdatePurchaseRequestInput = Omit<CreateRequestInput, "requestNumber" | "trackingCode" | "imageUrls">;
 
 const REQUEST_STATUSES_ALLOWED_TO_CANCEL = new Set([
   "intake_submitted",
@@ -86,6 +91,13 @@ const normalizeRequest = (request: OperationsRequest): OperationsRequest => ({
   destination: normalizeText(request.destination),
   deliveryAddress: normalizeText(request.deliveryAddress),
   trackingCode: normalizeText(request.trackingCode),
+  transferProofUrl: normalizeOptionalText(request.transferProofUrl),
+  transferProofName: normalizeOptionalText(request.transferProofName),
+  transferProofUploadedAt: normalizeOptionalText(request.transferProofUploadedAt),
+  transferProofStatus: request.transferProofStatus,
+  transferAcceptedAt: normalizeOptionalText(request.transferAcceptedAt),
+  transferAcceptedBy: normalizeOptionalText(request.transferAcceptedBy),
+  transferRejectionReason: normalizeOptionalText(request.transferRejectionReason),
 });
 
 const normalizeDeal = (deal: OperationsDeal): OperationsDeal => ({
@@ -439,6 +451,125 @@ export const createPurchaseRequestWithAttachments = async (
   }
 };
 
+export const updatePurchaseRequestWithAttachments = async (
+    requestId: string,
+    input: UpdatePurchaseRequestInput,
+    uploads: PurchaseRequestImageUpload[],
+): Promise<DomainResult<OperationsRequest>> => {
+  const normalizedRequestId = normalizeText(requestId);
+
+  if (!normalizedRequestId) {
+    return failure("A valid request id is required.");
+  }
+
+  try {
+    const current = await getPurchaseRequestById(normalizedRequestId);
+
+    if (!current) {
+      return failure("The request could not be found.");
+    }
+
+    if (!REQUEST_STATUSES_ALLOWED_TO_CANCEL.has(current.status)) {
+      return failure("This request can no longer be edited.");
+    }
+
+    const existingImageUrls = Array.from(
+        new Set([
+          ...(current.imageUrls || []),
+          ...(current.attachments || []).map((attachment) => attachment.fileUrl),
+        ].filter(Boolean)),
+    );
+
+    const uploadResult = uploads.length > 0
+        ? await uploadPurchaseRequestImages(normalizedRequestId, uploads)
+        : success([] as string[]);
+
+    if (uploadResult.error || !uploadResult.data) {
+      throw new Error(uploadResult.error?.message || "Unable to upload images.");
+    }
+
+    const newImageUrls = uploadResult.data;
+    const nextImageUrls = Array.from(new Set([...existingImageUrls, ...newImageUrls]));
+
+    const payload = {
+      full_name: normalizeText(input.fullName),
+      phone: normalizeText(input.phone),
+      email: normalizeText(input.email).toLowerCase(),
+      country: normalizeText(input.country),
+      city: normalizeText(input.city),
+      product_name: normalizeText(input.productName),
+      product_description: normalizeText(input.productDescription),
+      quantity: normalizeNumber(input.quantity),
+      size_dimensions: normalizeText(input.sizeDimensions),
+      color: normalizeText(input.color),
+      material: normalizeText(input.material),
+      technical_specs: normalizeText(input.technicalSpecs),
+      reference_link: normalizeText(input.referenceLink),
+      preferred_shipping_method: normalizeText(input.preferredShippingMethod),
+      delivery_notes: normalizeText(input.deliveryNotes),
+      image_urls: nextImageUrls,
+      weight: normalizeText(input.weight),
+      manufacturing_country: normalizeText(input.manufacturingCountry),
+      brand: normalizeText(input.brand),
+      quality_level: normalizeText(input.qualityLevel),
+      is_ready_made: Boolean(input.isReadyMade),
+      has_previous_sample: Boolean(input.hasPreviousSample),
+      expected_supply_date: normalizeText(input.expectedSupplyDate),
+      destination: normalizeText(input.destination),
+      delivery_address: normalizeText(input.deliveryAddress),
+      is_full_sourcing: Boolean(input.isFullSourcing),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("purchase_requests")
+        .update(payload)
+        .eq("id", normalizedRequestId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    if (newImageUrls.length > 0) {
+      const attachments = newImageUrls.map((url, index) => ({
+        entity_type: "purchase_request",
+        entity_id: normalizedRequestId,
+        category: "product_image",
+        file_name: uploads[index]?.name || `image-${existingImageUrls.length + index + 1}`,
+        file_url: url,
+        visibility: "internal",
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: attachmentError } = await (supabase as any)
+          .from("attachments")
+          .insert(attachments);
+
+      if (attachmentError) {
+        throw attachmentError;
+      }
+    }
+
+    const updated = await getPurchaseRequestById(normalizedRequestId);
+
+    if (!updated) {
+      return failure("The request was updated but could not be loaded.");
+    }
+
+    return success(normalizeRequest(updated));
+  } catch (error) {
+    logOperationalError("purchase_request_update", error, {
+      requestId: normalizedRequestId,
+      images: uploads.length,
+    });
+
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to update the request."),
+    };
+  }
+};
+
 export const cancelPurchaseRequest = async (
     requestId: string,
     reason?: string,
@@ -614,6 +745,137 @@ export const updateDealStatus = async (
     return {
       data: null,
       error: createDomainError(error, "Unable to update the deal status."),
+    };
+  }
+};
+
+export const resubmitPurchaseRequest = async (
+    requestId: string,
+): Promise<DomainResult<OperationsRequest>> => {
+  const normalizedId = normalizeText(requestId);
+  if (!normalizedId) return failure("Valid request ID required.");
+
+  try {
+    const original = await getPurchaseRequestById(normalizedId);
+    if (!original) return failure("Original request not found.");
+
+    const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase()}-${Math.random()
+        .toString(36)
+        .slice(2, 6)
+        .toUpperCase()}`;
+    const trackingCode = `TRX-${Date.now().toString(36).toUpperCase()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)
+        .toUpperCase()}`;
+
+    const input: CreateRequestInput = {
+      requestNumber,
+      trackingCode,
+      fullName: original.customer.fullName,
+      phone: original.customer.phone,
+      email: original.customer.email,
+      country: original.customer.country,
+      city: original.customer.city,
+      productName: original.productName,
+      productDescription: original.productDescription,
+      quantity: original.quantity,
+      sizeDimensions: original.sizeDimensions,
+      color: original.color,
+      material: original.material,
+      technicalSpecs: original.technicalSpecs,
+      referenceLink: original.referenceLink,
+      preferredShippingMethod: original.preferredShippingMethod,
+      deliveryNotes: original.deliveryNotes,
+      imageUrls: original.attachments.map(a => a.fileUrl),
+      weight: original.weight,
+      manufacturingCountry: original.manufacturingCountry,
+      brand: original.brand,
+      qualityLevel: original.qualityLevel,
+      isReadyMade: original.isReadyMade,
+      hasPreviousSample: original.hasPreviousSample,
+      expectedSupplyDate: original.expectedSupplyDate,
+      destination: original.destination,
+      deliveryAddress: original.deliveryAddress,
+      isFullSourcing: original.isFullSourcing,
+    };
+
+    return await createRequest(input);
+  } catch (error) {
+    logOperationalError("purchase_request_resubmit", error, { requestId: normalizedId });
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to resubmit request."),
+    };
+  }
+};
+
+export const archivePurchaseRequestFromPortal = async (
+    requestId: string,
+): Promise<DomainResult<void>> => {
+  const normalizedId = normalizeText(requestId);
+  if (!normalizedId) return failure("Valid request ID required.");
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+        .from("purchase_requests")
+        .update({ customer_hidden_at: new Date().toISOString() })
+        .eq("id", normalizedId);
+
+    if (error) throw error;
+    return success(undefined);
+  } catch (error) {
+    logOperationalError("purchase_request_archive", error, { requestId: normalizedId });
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to remove request from list."),
+    };
+  }
+};
+
+export const uploadTransferProof = async (
+    requestId: string,
+    file: File,
+): Promise<DomainResult<void>> => {
+  try {
+    await dbUploadTransferProof(requestId, file);
+    return success(undefined);
+  } catch (error) {
+    logOperationalError("purchase_request_transfer_proof_upload", error, { requestId });
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to upload transfer proof."),
+    };
+  }
+};
+
+export const acceptTransferProof = async (
+    requestId: string,
+): Promise<DomainResult<void>> => {
+  try {
+    await dbAcceptTransferProof(requestId);
+    return success(undefined);
+  } catch (error) {
+    logOperationalError("purchase_request_transfer_proof_accept", error, { requestId });
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to accept transfer proof."),
+    };
+  }
+};
+
+export const rejectTransferProof = async (
+    requestId: string,
+    reason: string,
+): Promise<DomainResult<void>> => {
+  try {
+    await dbRejectTransferProof(requestId, reason);
+    return success(undefined);
+  } catch (error) {
+    logOperationalError("purchase_request_transfer_proof_reject", error, { requestId });
+    return {
+      data: null,
+      error: createDomainError(error, "Failed to reject transfer proof."),
     };
   }
 };

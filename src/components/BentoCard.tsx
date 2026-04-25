@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import React, { forwardRef } from "react";
 
 interface BentoCardProps {
   children: React.ReactNode;
@@ -9,7 +10,7 @@ interface BentoCardProps {
   onClick?: React.MouseEventHandler;
 }
 
-const BentoCard = ({ children, className, delay = 0, span = "1", onClick }: BentoCardProps) => {
+const BentoCard = forwardRef<HTMLDivElement, BentoCardProps>(({ children, className, delay = 0, span = "1", onClick }, ref) => {
   const spanClasses = {
     "1": "",
     "2": "md:col-span-2",
@@ -18,6 +19,7 @@ const BentoCard = ({ children, className, delay = 0, span = "1", onClick }: Bent
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: "easeOut" }}
@@ -32,6 +34,8 @@ const BentoCard = ({ children, className, delay = 0, span = "1", onClick }: Bent
       {children}
     </motion.div>
   );
-};
+});
+
+BentoCard.displayName = "BentoCard";
 
 export default BentoCard;

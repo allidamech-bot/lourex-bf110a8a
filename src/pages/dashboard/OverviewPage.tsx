@@ -71,7 +71,7 @@ export default function OverviewPage() {
     () => ({
       review: recentRequests.filter((item) => item.status === "under_review").length,
       ready: recentRequests.filter((item) => item.status === "ready_for_conversion").length,
-      converted: recentRequests.filter((item) => item.status === "converted_to_deal").length,
+      converted: recentRequests.filter((item) => item.status === "in_progress" || item.status === "completed").length,
     }),
     [recentRequests],
   );

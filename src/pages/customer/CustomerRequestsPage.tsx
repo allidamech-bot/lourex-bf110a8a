@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
+  Archive,
   CalendarDays,
   ClipboardList,
   Eye,
@@ -9,6 +11,7 @@ import {
   ImageIcon,
   Package,
   Plus,
+  RotateCcw,
   Search,
   ShieldCheck,
   Trash2,
@@ -23,7 +26,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { cancelPurchaseRequest as cancelRequest } from "@/domain/operations/service";
+import { 
+  cancelPurchaseRequest as cancelRequest,
+  resubmitPurchaseRequest,
+  archivePurchaseRequestFromPortal,
+  uploadTransferProof,
+} from "@/domain/operations/service";
 import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
@@ -49,6 +57,9 @@ const canEditRequest = (status: PurchaseRequestStatus | "cancelled") =>
 
 const canCancelRequest = (status: PurchaseRequestStatus | "cancelled") =>
     status === "intake_submitted" || status === "awaiting_clarification";
+
+const canResubmitRequest = (status: PurchaseRequestStatus | "cancelled") =>
+    status === "cancelled" || status === "awaiting_clarification";
 
 const getShippingLabel = (method: string, t: (key: string) => string) => {
   const normalized = (method || "").toLowerCase();
@@ -104,47 +115,16 @@ const formatDateTime = (value: string | undefined, locale: string) => {
   }).format(date);
 };
 
-const formatQuantity = (value: number | string | undefined, locale: string) => {
-  const numberValue = Number(value);
-
-  if (!Number.isFinite(numberValue)) {
-    return value ? String(value) : "-";
-  }
-
-  return new Intl.NumberFormat(locale === "ar" ? "ar" : "en").format(numberValue);
-};
-
-const normalizeSearchValue = (value: string) =>
-    value
-        .trim()
-        .toLowerCase()
-        .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-        .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
-
 const getTrackingCode = (row: CustomerRequestRow) => {
-  const requestWithTracking = row as CustomerRequestRow & {
-    trackingCode?: string;
-    tracking_code?: string;
-  };
-
-  return requestWithTracking.trackingCode || requestWithTracking.tracking_code || "-";
+  return row.trackingCode || "-";
 };
 
 const getCustomerEmail = (row: CustomerRequestRow) => {
-  const requestWithCustomer = row as CustomerRequestRow & {
-    customer?: {
-      email?: string;
-    };
-    customerEmail?: string;
-    email?: string;
-  };
+  return row.customer?.email || "";
+};
 
-  return (
-      requestWithCustomer.customer?.email ||
-      requestWithCustomer.customerEmail ||
-      requestWithCustomer.email ||
-      ""
-  );
+const normalizeSearchValue = (value: string | undefined | null) => {
+  return (value || "").trim().toLowerCase();
 };
 
 const RequestInfoTile = ({
@@ -178,6 +158,7 @@ export default function CustomerRequestsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<CustomerRequestFilter>("all");
+  const [uploadingProof, setUploadingProof] = useState(false);
 
   const selectedRequestId = searchParams.get("request");
   const normalizedProfileEmail = profile?.email?.trim().toLowerCase() || "";
@@ -210,7 +191,7 @@ export default function CustomerRequestsPage() {
 
       const customerRows = normalizedProfileEmail
           ? loadedRows.filter((row) => {
-            const rowEmail = getCustomerEmail(row).trim().toLowerCase();
+            const rowEmail = getCustomerEmail(row as any).trim().toLowerCase();
 
             if (!rowEmail) {
               return true;
@@ -220,7 +201,7 @@ export default function CustomerRequestsPage() {
           })
           : loadedRows;
 
-      setRows(customerRows);
+      setRows(customerRows as any);
     } catch (loadError) {
       logOperationalError("customer_requests_load", loadError);
       setError(t("common.error"));
@@ -254,8 +235,12 @@ export default function CustomerRequestsPage() {
       label: t("requests.filters.ready_for_conversion"),
     },
     {
-      key: "converted_to_deal",
-      label: t("requests.filters.converted_to_deal"),
+      key: "transfer_proof_pending",
+      label: t("requests.filters.transfer_proof_pending"),
+    },
+    {
+      key: "in_progress",
+      label: t("requests.filters.in_progress"),
     },
     {
       key: "cancelled",
@@ -309,36 +294,35 @@ export default function CustomerRequestsPage() {
 
     const existsInFiltered = filteredRows.some((row) => row.id === selectedRequestId);
 
-    if (!existsInFiltered) {
+    if (!existsInFiltered && selectedRequestId) {
       const nextParams = new URLSearchParams(searchParams);
-      nextParams.set("request", filteredRows[0].id);
+      nextParams.delete("request");
       setSearchParams(nextParams, { replace: true });
     }
   }, [filteredRows, searchParams, selectedRequestId, setSearchParams]);
+
+  const detailsRef = useRef<HTMLDivElement>(null);
 
   const requestMetrics = useMemo(
       () => ({
         total: rows.length,
         submitted: rows.filter((row) => row.status === "intake_submitted").length,
-        review: rows.filter((row) => row.status === "under_review").length,
-        converted: rows.filter((row) => row.status === "converted_to_deal").length,
+        review: rows.filter((row) => row.status === "under_review" || row.status === "ready_for_conversion" || row.status === "transfer_proof_pending").length,
+        converted: rows.filter((row) => row.status === "in_progress" || row.status === "completed").length,
       }),
       [rows],
   );
+
+  useEffect(() => {
+    if (selectedRequestId && detailsRef.current && window.innerWidth < 1280) {
+      detailsRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedRequestId]);
 
   const setSelectedRequest = (requestId: string) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("request", requestId);
     setSearchParams(nextParams);
-  };
-
-  const handleEditRequest = (request: CustomerRequestRow) => {
-    if (!canEditRequest(request.status)) {
-      toast.error(t("requests.errors.cannotEdit"));
-      return;
-    }
-
-    navigate(`/request?edit=${request.id}`);
   };
 
   const handleCancelRequest = async (request: CustomerRequestRow) => {
@@ -394,448 +378,544 @@ export default function CustomerRequestsPage() {
     }
   };
 
+  const handleEditRequest = (request: CustomerRequestRow) => {
+    if (!canEditRequest(request.status)) {
+      toast.error(t("requests.errors.editBlocked"));
+      return;
+    }
+
+    navigate(`/request?edit=${request.id}`);
+  };
+
+  const handleResubmitRequest = async (request: CustomerRequestRow) => {
+    if (!canResubmitRequest(request.status)) {
+      return;
+    }
+
+    setActionLoadingId(request.id);
+
+    try {
+      const result = await resubmitPurchaseRequest(request.id);
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      toast.success(t("requests.resubmit.success"));
+      void loadRows("refresh");
+      
+      if (result.data) {
+        setSelectedRequest(result.data.id);
+      }
+    } catch (error) {
+      logOperationalError("customer_request_resubmit", error, { requestId: request.id });
+      toast.error(t("requests.resubmit.failed"));
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleUploadProof = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedRow) return;
+
+    setUploadingProof(true);
+    const { error } = await uploadTransferProof(selectedRow.id, file);
+    setUploadingProof(false);
+
+    if (error) {
+      toast.error(error.message || t("transferProof.error"));
+    } else {
+      toast.success(t("transferProof.success"));
+      void loadRows("refresh");
+    }
+  };
+
+  const handleRemoveRequest = async (request: CustomerRequestRow) => {
+    const confirmed = window.confirm(
+        t("requests.actions.remove") + "?",
+    );
+
+    if (!confirmed) return;
+
+    setActionLoadingId(request.id);
+    const { error } = await archivePurchaseRequestFromPortal(request.id);
+    setActionLoadingId(null);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("requests.actions.removeSuccess") || "Removed from list.");
+      void loadRows("refresh");
+    }
+  };
+
   if (loading) {
     return (
-        <div className="space-y-4">
-          <Skeleton className="h-36 w-full rounded-[2rem]" />
-          <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-            <Skeleton className="h-[34rem] w-full rounded-[2rem]" />
-            <Skeleton className="h-[34rem] w-full rounded-[2rem]" />
-          </div>
+        <div className="grid gap-4 lg:grid-cols-[400px_1fr]">
+          <Skeleton className="h-[600px] rounded-[2rem]" />
+          <Skeleton className="h-[600px] rounded-[2rem]" />
         </div>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-        <EmptyState
-            icon={ClipboardList}
-            title={t("requests.emptyTitle")}
-            description={t("requests.emptyDescription")}
-            actionLabel={t("customerPortal.actions.newRequest.title")}
-            onAction={() => navigate("/request")}
-        />
     );
   }
 
   return (
       <div className="space-y-4">
-        <BentoCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              {t("customerPortal.actions.requests.title")}
-            </p>
-            <h1 className="mt-2 font-serif text-3xl font-semibold">
-              {t("requests.inboxTitle")}
-            </h1>
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {t("requests.inboxDescription")}
-            </p>
-          </div>
+        <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+          <BentoCard className="flex flex-col gap-4 overflow-hidden">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {t("customerPortal.eyebrow")}
+                </p>
+                <h1 className="mt-2 font-serif text-2xl font-semibold">{t("customerPortal.title")}</h1>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void loadRows("refresh")} disabled={refreshing}>
-              {refreshing
-                  ? t("common.loading")
-                  : t("common.refresh")}
-            </Button>
-            <Button variant="gold" onClick={() => navigate("/request")}>
-              <Plus className="me-2 h-4 w-4" />
-              {t("customerPortal.actions.newRequest.title")}
-            </Button>
-          </div>
-        </BentoCard>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing}>
+                  <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                </Button>
+                <Button variant="gold" size="sm" asChild>
+                  <Link to="/request">
+                    <Plus className="me-2 h-4 w-4" />
+                    {t("requests.new")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
 
-        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <BentoCard className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-2">
+            <div className="grid shrink-0 grid-cols-4 gap-2">
               {[
                 { label: t("requests.total"), value: requestMetrics.total },
-                { label: t("requests.filters.intake_submitted"), value: requestMetrics.submitted },
+                { label: t("requests.submitted"), value: requestMetrics.submitted },
                 { label: t("requests.review"), value: requestMetrics.review },
                 { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
-                  <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4 text-center">
-                    <p className="text-2xl font-bold">{formatQuantity(item.value, locale)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+                  <div key={item.label} className="rounded-2xl bg-secondary/20 p-3 text-center">
+                    <p className="text-xl font-bold">{item.value}</p>
+                    <p className="mt-1 truncate text-[10px] text-muted-foreground">{item.label}</p>
                   </div>
               ))}
             </div>
 
-            <div className="relative">
-              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={t("requests.searchPlaceholder")}
-                  className="ps-9"
-              />
-            </div>
+            <div className="shrink-0 space-y-3">
+              <div className="relative">
+                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t("requests.searchPlaceholder")}
+                    className="ps-9"
+                />
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              {requestFilters.map((filter) => (
-                  <Button
-                      key={filter.key}
-                      variant={activeFilter === filter.key ? "gold" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter(filter.key)}
-                  >
-                    {filter.label}
-                  </Button>
-              ))}
-            </div>
-
-            {error ? (
-                <div className="flex items-start gap-3 rounded-[1.25rem] border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-            ) : null}
-
-            <div className="space-y-3">
-              {filteredRows.length === 0 ? (
-                  <div className="rounded-[1.4rem] border border-border/60 bg-secondary/15 p-5 text-sm text-muted-foreground">
-                    {t("requests.emptyFilteredDescription")}
-                  </div>
-              ) : null}
-
-              {filteredRows.map((row) => {
-                const statusMeta = getStatusMeta(row.status);
-
-                const isSelected = selectedRow?.id === row.id;
-                const trackingCode = getTrackingCode(row);
-
-                return (
-                    <button
-                        key={row.id}
-                        type="button"
-                        onClick={() => setSelectedRequest(row.id)}
-                        className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
-                            isSelected
-                                ? "border-primary/35 bg-primary/10"
-                                : "border-border/60 bg-secondary/15 hover:border-primary/25 hover:bg-secondary/25"
-                        }`}
+              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                {requestFilters.map((filter) => (
+                    <Button
+                        key={filter.key}
+                        variant={activeFilter === filter.key ? "gold" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveFilter(filter.key)}
+                        className="whitespace-nowrap"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                            <Hash className="h-3.5 w-3.5" />
-                            <span>{row.requestNumber}</span>
-                          </p>
-                          <p className="mt-2 break-words font-medium">
-                            {row.productName || t("requests.genericRequest")}
-                          </p>
+                      {filter.label}
+                    </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+              {filteredRows.length === 0 ? (
+                  <EmptyState
+                      icon={ClipboardList}
+                      title={t("requests.emptyTitle")}
+                      description={t("requests.emptyDescription")}
+                  />
+              ) : (
+                  filteredRows.map((row) => {
+                    const statusMeta = getStatusMeta(row.status);
+                    const isSelected = selectedRow?.id === row.id;
+
+                    return (
+                        <div
+                            key={row.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedRequest(row.id)}
+                            onKeyDown={(event) => {
+                              if (event.target !== event.currentTarget) {
+                                return;
+                              }
+
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setSelectedRequest(row.id);
+                              }
+                            }}
+                            className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+                                isSelected
+                                    ? "border-primary/35 bg-primary/10"
+                                    : "border-border/60 bg-secondary/15 hover:border-primary/25"
+                            }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="break-words text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                {row.requestNumber}
+                              </p>
+                              <p className="mt-2 break-words font-medium">
+                                {row.productName || t("requests.genericRequest")}
+                              </p>
+                            </div>
+
+                            <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                          {t(`statuses.${row.status}`)}
+                        </span>
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                {formatDate(row.createdAt, locale)}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <FileImage className="h-3.5 w-3.5" />
+                                {row.attachments.length}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              {canEditRequest(row.status) && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 rounded-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditRequest(row);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4 rotate-45" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-full text-rose-400 hover:bg-rose-500/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveRequest(row);
+                                }}
+                              >
+                                <Archive className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-
-                        <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
-                      {t(`statuses.${row.status}`)}
-                    </span>
-                      </div>
-
-                      <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                    <span className="flex items-center gap-2">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      {formatDate(row.createdAt, locale)}
-                    </span>
-                        <span className="flex items-center gap-2">
-                      <Truck className="h-3.5 w-3.5" />
-                          {getShippingLabel(row.preferredShippingMethod, t)}
-                    </span>
-                        <span className="flex items-center gap-2 sm:col-span-2">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                          {t("requests.labels.trackingCode")}: {trackingCode}
-                    </span>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/50 pt-3 text-xs">
-                    <span className="text-muted-foreground">
-                      {t("common.open")}
-                    </span>
-                        <span className="inline-flex items-center gap-1 font-medium text-primary">
-                      <Eye className="h-3.5 w-3.5" />
-                          {t("requests.labels.details")}
-                    </span>
-                      </div>
-                    </button>
-                );
-              })}
+                    );
+                  })
+              )}
             </div>
           </BentoCard>
 
-          {selectedRow ? (
-              <BentoCard className="space-y-5">
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/50 pb-5">
-                  <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      {selectedRow.requestNumber}
-                    </p>
-                    <h2 className="mt-2 break-words font-serif text-3xl font-semibold">
-                      {selectedRow.productName || t("requests.genericRequest")}
-                    </h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {formatDateTime(selectedRow.createdAt, locale)}
-                    </p>
+          <div ref={detailsRef} className="min-w-0">
+            {selectedRow ? (
+                <BentoCard className="flex flex-col gap-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-primary" />
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          {selectedRow.requestNumber}
+                        </p>
+                      </div>
+                      <h2 className="mt-2 break-words font-serif text-3xl font-semibold">
+                        {selectedRow.productName || t("requests.genericRequest")}
+                      </h2>
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {canResubmitRequest(selectedRow.status) && (
+                          <Button
+                              variant="gold"
+                              disabled={actionLoadingId === selectedRow.id}
+                              onClick={() => handleResubmitRequest(selectedRow)}
+                          >
+                            {actionLoadingId === selectedRow.id ? (
+                                <RotateCcw className="me-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <RotateCcw className="me-2 h-4 w-4" />
+                            )}
+                            {t("requests.actions.resubmit")}
+                          </Button>
+                      )}
+
+                      {canEditRequest(selectedRow.status) && (
+                          <Button variant="outline" onClick={() => handleEditRequest(selectedRow)}>
+                            {t("requests.actions.edit")}
+                          </Button>
+                      )}
+
+                      {canCancelRequest(selectedRow.status) && (
+                          <Button
+                              variant="outline"
+                              disabled={actionLoadingId === selectedRow.id}
+                              onClick={() => handleCancelRequest(selectedRow)}
+                              className="border-rose-500/30 text-rose-500 hover:bg-rose-500/5"
+                          >
+                            {t("requests.actions.cancel")}
+                          </Button>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        selectedStatusMeta?.tone || "bg-secondary text-muted-foreground"
-                    }`}
-                >
+                  <div className="flex flex-wrap items-center gap-3">
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${selectedStatusMeta?.tone}`}>
                   {t(`statuses.${selectedRow.status}`)}
                 </span>
-
-                    {selectedRow.convertedDealNumber ? (
-                        <Button variant="outline" asChild>
-                          <Link to={`/customer-portal/tracking?deal=${selectedRow.convertedDealNumber}`}>
-                            <Eye className="me-2 h-4 w-4" />
-                            {t("customerPortal.actions.tracking.title")}
-                          </Link>
-                        </Button>
-                    ) : null}
-
-                    {/* TODO: Re-enable after request edit screen is implemented. */}
-
-                    {canCancelRequest(selectedRow.status) ? (
-                        <Button
-                            variant="destructive"
-                            onClick={() => void handleCancelRequest(selectedRow)}
-                            disabled={actionLoadingId === selectedRow.id}
-                        >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          {actionLoadingId === selectedRow.id
-                              ? t("common.saving")
-                              : t("requests.actions.cancel")}
-                        </Button>
-                    ) : null}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {t("requests.submittedAt", { value: formatDateTime(selectedRow.createdAt, locale) })}
+                    </div>
                   </div>
-                </div>
 
-                {selectedStatusCopy ? (
-                    <div className="rounded-[1.35rem] border border-primary/15 bg-primary/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-primary">
-                        {selectedStatusCopy.label}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {selectedStatusCopy.description}
-                      </p>
-                      <p className="mt-3 text-sm font-medium text-foreground">
-                        {selectedStatusCopy.nextStep}
-                      </p>
-                    </div>
-                ) : null}
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <RequestInfoTile
-                      icon={<Hash className="h-4 w-4" />}
-                      label={t("requests.labels.trackingCode")}
-                      value={getTrackingCode(selectedRow)}
-                  />
-                  <RequestInfoTile
-                      icon={<Package className="h-4 w-4" />}
-                      label={t("requests.labels.quantity")}
-                      value={formatQuantity(selectedRow.quantity, locale)}
-                  />
-                  <RequestInfoTile
-                      icon={<Truck className="h-4 w-4" />}
-                      label={t("requests.labels.shipping")}
-                      value={getShippingLabel(selectedRow.preferredShippingMethod, t)}
-                  />
-                  <RequestInfoTile
-                      icon={<ShieldCheck className="h-4 w-4" />}
-                      label={t("requests.labels.sourcingType")}
-                      value={getRequestTypeLabel(selectedRow.isFullSourcing, t)}
-                  />
-                  <RequestInfoTile
-                      icon={<CalendarDays className="h-4 w-4" />}
-                      label={t("requests.labels.expectedDate")}
-                      value={selectedRow.expectedSupplyDate || t("common.notAvailable")}
-                  />
-                  <RequestInfoTile
-                      icon={<Package className="h-4 w-4" />}
-                      label={t("requests.labels.destination")}
-                      value={selectedRow.destination || t("common.notAvailable")}
-                  />
-                </div>
-
-                <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
-                  <p className="font-medium">
-                    {t("requests.labels.product")}
-                  </p>
-                  <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
-                    {selectedRow.productDescription || t("requests.noDescription")}
-                  </p>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {[
-                    {
-                      label: t("requests.intake.dimensions"),
-                      value: selectedRow.sizeDimensions,
-                    },
-                    {
-                      label: t("requests.intake.color"),
-                      value: selectedRow.color,
-                    },
-                    {
-                      label: t("requests.intake.material"),
-                      value: selectedRow.material,
-                    },
-                    {
-                      label: t("requests.labels.weight"),
-                      value: selectedRow.weight,
-                    },
-                    {
-                      label: t("requests.labels.brand"),
-                      value: selectedRow.brand,
-                    },
-                    {
-                      label: t("requests.labels.qualityLevel"),
-                      value: selectedRow.qualityLevel,
-                    },
-                    {
-                      label: t("requests.labels.manufacturingCountry"),
-                      value: selectedRow.manufacturingCountry,
-                    },
-                    {
-                      label: t("requests.intake.deliveryAddress"),
-                      value: selectedRow.deliveryAddress,
-                    },
-                  ].map((item) => (
-                      <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 px-4 py-3">
-                        <p className="text-xs text-muted-foreground">{item.label}</p>
-                        <p className="mt-1 break-words text-sm font-medium">
-                          {item.value || t("common.notAvailable")}
-                        </p>
+                  {selectedStatusCopy && (
+                      <div className="rounded-[1.35rem] border border-primary/20 bg-primary/10 p-5 leading-7">
+                        <div className="flex items-center gap-3">
+                          <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
+                          <p className="font-medium text-foreground">{selectedStatusCopy.label}</p>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
                       </div>
-                  ))}
-                </div>
+                  )}
 
-                {selectedRow.technicalSpecs ? (
-                    <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
-                      <p className="font-medium">
-                        {t("requests.intake.technicalSpecs")}
-                      </p>
-                      <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">
-                        {selectedRow.technicalSpecs}
-                      </p>
-                    </div>
-                ) : null}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <RequestInfoTile
+                        icon={<Truck className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.shipping")}
+                        value={getShippingLabel(selectedRow.preferredShippingMethod, t)}
+                    />
+                    <RequestInfoTile
+                        icon={<Archive className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.destination")}
+                        value={selectedRow.destination}
+                    />
+                    <RequestInfoTile
+                        icon={<Plus className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.sourcingType")}
+                        value={getRequestTypeLabel(selectedRow.isFullSourcing, t)}
+                    />
+                    <RequestInfoTile
+                        icon={<Hash className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.quantity")}
+                        value={String(selectedRow.quantity)}
+                    />
+                    <RequestInfoTile
+                        icon={<CalendarDays className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.expectedDate")}
+                        value={selectedRow.expectedSupplyDate || "-"}
+                    />
+                    <RequestInfoTile
+                        icon={<Hash className="h-3.5 w-3.5" />}
+                        label={t("requests.labels.trackingCode")}
+                        value={getTrackingCode(selectedRow)}
+                    />
+                  </div>
 
-                {selectedRow.deliveryNotes || selectedRow.referenceLink ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                        <p className="font-medium">{t("requests.intake.deliveryNotes")}</p>
-                        <p className="mt-2 break-words text-sm leading-7 text-muted-foreground">
-                          {selectedRow.deliveryNotes || t("common.notAvailable")}
-                        </p>
-                      </div>
-
-                      <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                        <p className="font-medium">{t("requests.intake.referenceLink")}</p>
-                        {selectedRow.referenceLink ? (
-                            <a
-                                href={selectedRow.referenceLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-2 block break-words text-sm leading-7 text-primary underline-offset-4 hover:underline"
-                            >
-                              {selectedRow.referenceLink}
-                            </a>
-                        ) : (
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {getSafeLabel(t("common.notAvailable"), "N/A")}
+                  <div className="grid gap-6 lg:grid-cols-1">
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                      {[
+                        {
+                          label: t("requests.intake.productName"),
+                          value: selectedRow.productName,
+                        },
+                        {
+                          label: t("requests.intake.sizeDimensions"),
+                          value: selectedRow.sizeDimensions,
+                        },
+                        {
+                          label: t("requests.intake.color"),
+                          value: selectedRow.color,
+                        },
+                        {
+                          label: t("requests.intake.material"),
+                          value: selectedRow.material,
+                        },
+                        {
+                          label: t("requests.labels.weight"),
+                          value: selectedRow.weight,
+                        },
+                        {
+                          label: t("requests.labels.brand"),
+                          value: selectedRow.brand,
+                        },
+                        {
+                          label: t("requests.labels.qualityLevel"),
+                          value: selectedRow.qualityLevel,
+                        },
+                        {
+                          label: t("requests.labels.manufacturingCountry"),
+                          value: selectedRow.manufacturingCountry,
+                        },
+                        {
+                          label: t("requests.intake.deliveryAddress"),
+                          value: selectedRow.deliveryAddress,
+                        },
+                      ].map((item) => (
+                          <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 px-4 py-3">
+                            <p className="text-xs text-muted-foreground">{item.label}</p>
+                            <p className="mt-1 break-words text-sm font-medium">
+                              {item.value || t("common.notAvailable")}
                             </p>
-                        )}
-                      </div>
+                          </div>
+                      ))}
                     </div>
-                ) : null}
 
-                {!canEditRequest(selectedRow.status) ? (
-                    <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-700 dark:text-amber-100">
-                      {locale === "ar"
-                          ? "لا يمكن تعديل هذا الطلب بعد بدء المراجعة أو تحويله إلى عملية تشغيلية."
-                          : "This request cannot be edited after review starts or after it is converted into an operation."}
-                    </div>
-                ) : null}
+                    {selectedRow.technicalSpecs ? (
+                        <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                          <p className="font-medium">
+                            {t("requests.intake.technicalSpecs")}
+                          </p>
+                          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">
+                            {selectedRow.technicalSpecs}
+                          </p>
+                        </div>
+                    ) : null}
 
-                <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
-                  <div className="flex items-center gap-3">
-                    <FileImage className="h-4 w-4 text-primary" />
-                    <p className="font-medium">
-                      {getSafeLabel(t("requests.labels.attachments"), locale === "ar" ? "المرفقات والصور" : "Attachments")}
-                    </p>
-                  </div>
+                    {selectedRow.deliveryNotes || selectedRow.referenceLink ? (
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
+                            <p className="font-medium">{t("requests.intake.deliveryNotes")}</p>
+                            <p className="mt-2 break-words text-sm leading-7 text-muted-foreground">
+                              {selectedRow.deliveryNotes || t("common.notAvailable")}
+                            </p>
+                          </div>
 
-                  {selectedRow.attachments.length === 0 ? (
-                      <p className="mt-3 text-sm text-muted-foreground">
-                        {getSafeLabel(
-                            t("requests.noAttachments"),
-                            locale === "ar" ? "لا توجد مرفقات مرفوعة." : "No attachments uploaded.",
-                        )}
-                      </p>
-                  ) : (
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        {selectedRow.attachments.map((attachment) => (
-                            <a
-                                key={attachment.id}
-                                href={attachment.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="group overflow-hidden rounded-[1.2rem] border border-border/60 bg-card transition-colors hover:border-primary/25"
+                          <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
+                            <p className="font-medium">{t("requests.intake.referenceLink")}</p>
+                            {selectedRow.referenceLink ? (
+                                <a
+                                    href={selectedRow.referenceLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-2 block break-words text-sm leading-7 text-primary underline-offset-4 hover:underline"
+                                >
+                                  {selectedRow.referenceLink}
+                                </a>
+                            ) : (
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                  {getSafeLabel(t("common.notAvailable"), "N/A")}
+                                </p>
+                            )}
+                          </div>
+                        </div>
+                    ) : null}
+
+                    {selectedRow.status === "ready_for_conversion" || selectedRow.status === "transfer_proof_rejected" ? (
+                        <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-6">
+                          <div className="flex items-center gap-3">
+                            <Plus className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold">{t("transferProof.title")}</h3>
+                          </div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {t("transferProof.description")}
+                          </p>
+                          
+                          {selectedRow.status === "transfer_proof_rejected" && selectedRow.transferRejectionReason && (
+                            <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+                              <p className="font-bold">{t("transferProof.rejectionReason")}</p>
+                              <p className="mt-1">{selectedRow.transferRejectionReason}</p>
+                            </div>
+                          )}
+
+                          <div className="mt-6">
+                            <input
+                                type="file"
+                                id="proof-upload"
+                                className="hidden"
+                                onChange={handleUploadProof}
+                                disabled={uploadingProof}
+                            />
+                            <Button
+                                asChild
+                                disabled={uploadingProof}
+                                className="h-12 px-8"
                             >
-                              <div className="flex h-36 items-center justify-center overflow-hidden bg-secondary/25">
-                                {attachment.fileUrl ? (
-                                    <img
-                                        src={attachment.fileUrl}
-                                        alt={attachment.fileName}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div className="px-4 py-3">
-                                <p className="break-words text-sm font-medium">{attachment.fileName}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{attachment.category}</p>
-                              </div>
-                            </a>
-                        ))}
-                      </div>
-                  )}
-                </div>
+                              <label htmlFor="proof-upload" className="cursor-pointer">
+                                {uploadingProof ? t("transferProof.uploading") : t("transferProof.uploadButton")}
+                              </label>
+                            </Button>
+                          </div>
+                        </div>
+                    ) : null}
 
-                <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
-                  {selectedRow.convertedDealNumber
-                      ? getSafeLabel(
-                          t("requests.convertedHint"),
-                          locale === "ar"
-                              ? "تم تحويل هذا الطلب إلى عملية تشغيلية نشطة ويمكنك متابعة الشحنة من صفحة التتبع."
-                              : "This request has been converted into an active operation.",
-                      )
-                      : getSafeLabel(
-                          t("requests.pendingConversionHint"),
-                          locale === "ar"
-                              ? "هذا الطلب ما زال بانتظار المراجعة أو التحويل التشغيلي."
-                              : "This request is still pending operational conversion.",
+                    {selectedRow.status === "transfer_proof_pending" ? (
+                        <div className="rounded-[1.35rem] border border-indigo-500/20 bg-indigo-500/10 p-6 text-indigo-100">
+                          <div className="flex items-center gap-3">
+                            <RotateCcw className="h-5 w-5 animate-spin text-indigo-400" />
+                            <p className="font-medium">{t("transferProof.statusPending")}</p>
+                          </div>
+                        </div>
+                    ) : null}
+
+                    {!canEditRequest(selectedRow.status) && selectedRow.status !== "ready_for_conversion" && selectedRow.status !== "transfer_proof_rejected" ? (
+                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-700 dark:text-amber-100">
+                          {locale === "ar"
+                              ? "لا يمكن تعديل هذا الطلب بعد بدء المراجعة أو تحويله إلى عملية تشغيلية."
+                              : "This request cannot be edited after review starts or after it is converted into an operation."}
+                        </div>
+                    ) : null}
+
+                    <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                      <div className="flex items-center gap-3">
+                        <FileImage className="h-4 w-4 text-primary" />
+                        <p className="font-medium">
+                          {getSafeLabel(t("requests.labels.attachments"), locale === "ar" ? "المرفقات والصور" : "Attachments")}
+                        </p>
+                      </div>
+
+                      {selectedRow.attachments.length === 0 ? (
+                          <p className="mt-3 text-sm text-muted-foreground">
+                            {getSafeLabel(
+                                t("requests.noAttachments"),
+                                locale === "ar" ? "لا توجد مرفقات مرفوعة." : "No attachments uploaded.",
+                            )}
+                          </p>
+                      ) : (
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            {selectedRow.attachments.map((attachment) => (
+                                <a
+                                    key={attachment.id}
+                                    href={attachment.fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="group flex items-center justify-between rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate font-medium group-hover:text-primary">
+                                      {attachment.fileName}
+                                    </p>
+                                    <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                      {attachment.category}
+                                    </p>
+                                  </div>
+                                  <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary" />
+                                </a>
+                            ))}
+                          </div>
                       )}
-                </div>
-              </BentoCard>
-          ) : (
-              <EmptyState
-                  icon={ClipboardList}
-                  title={getSafeLabel(
-                      t("requests.emptyFilteredTitle"),
-                      locale === "ar" ? "لا توجد طلبات مطابقة" : "No matching requests",
-                  )}
-                  description={getSafeLabel(
-                      t("requests.emptyFilteredDescription"),
-                      locale === "ar" ? "لا توجد طلبات مطابقة للبحث أو الفلتر الحالي." : "No requests match the current filter.",
-                  )}
-              />
-          )}
+                    </div>
+                  </div>
+                </BentoCard>
+            ) : (
+                <EmptyState
+                    icon={ClipboardList}
+                    title={t("requests.emptyFilteredTitle")}
+                    description={t("requests.emptyFilteredDescription")}
+                />
+            )}
+          </div>
         </div>
       </div>
   );

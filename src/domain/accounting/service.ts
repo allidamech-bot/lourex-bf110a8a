@@ -50,11 +50,11 @@ const assertAccountingActor = async (allowCustomerRead = false) => {
   const role = context.profile?.role;
 
   if (!context.user || !context.profile || !isValidRole(role)) {
-    throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
+    throw new Error("Authentication required.");
   }
 
   if (!allowCustomerRead && !canManageAccounting(role)) {
-    throw new Error("طµظ„ط§ط­ظٹط§طھظƒ ط§ظ„ط­ط§ظ„ظٹط© ظ„ط§ طھط³ظ…ط­ ط¨ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط­ط§ط³ط¨ط©.");
+    throw new Error("Your current role does not permit accounting management.");
   }
 
   return context;
@@ -124,8 +124,8 @@ export const createFinancialEntry = async (input: {
   referenceLabel?: string;
 }) => {
   const { user } = await assertAccountingActor();
-  if (!user) throw new Error("ظٹط¬ط¨ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط£ظˆظ„ط§ظ‹.");
-  if (!(await getLourexDomainAvailability())) throw new Error("ظٹط¬ط¨ طھظپط¹ظٹظ„ ظ…ط®ط·ط· Lourex ط§ظ„ط¬ط¯ظٹط¯ ط£ظˆظ„ط§ظ‹ ظپظٹ Supabase.");
+  if (!user) throw new Error("Authentication required.");
+  if (!(await getLourexDomainAvailability())) throw new Error("The Lourex domain must be activated in Supabase first.");
 
   const validationError = validateFinancialEntryInput(input);
   if (validationError) {

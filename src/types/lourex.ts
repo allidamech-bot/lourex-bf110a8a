@@ -10,7 +10,10 @@ export type PurchaseRequestStatus =
   | "under_review"
   | "awaiting_clarification"
   | "ready_for_conversion"
-  | "converted_to_deal"
+  | "transfer_proof_pending"
+  | "transfer_proof_rejected"
+  | "in_progress"
+  | "completed"
   | "cancelled";
 
 export type DealOperationalStatus =
@@ -117,6 +120,14 @@ export interface PurchaseRequest {
   deliveryAddress?: string;
   isFullSourcing: boolean;
   trackingCode: string;
+  // Transfer proof fields
+  transferProofUrl?: string | null;
+  transferProofName?: string | null;
+  transferProofUploadedAt?: string | null;
+  transferProofStatus?: "pending" | "accepted" | "rejected" | null;
+  transferAcceptedAt?: string | null;
+  transferAcceptedBy?: string | null;
+  transferRejectionReason?: string | null;
 }
 
 export interface DealOperation {

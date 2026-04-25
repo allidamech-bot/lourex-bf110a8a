@@ -6,8 +6,11 @@ const REQUEST_STATUS_TRANSITIONS: Record<PurchaseRequestStatus, PurchaseRequestS
   intake_submitted: ["under_review", "awaiting_clarification", "cancelled"],
   under_review: ["awaiting_clarification", "ready_for_conversion", "cancelled"],
   awaiting_clarification: ["under_review", "ready_for_conversion", "cancelled"],
-  ready_for_conversion: ["under_review", "converted_to_deal"],
-  converted_to_deal: [],
+  ready_for_conversion: ["under_review", "transfer_proof_pending", "cancelled"],
+  transfer_proof_pending: ["in_progress", "transfer_proof_rejected", "cancelled"],
+  transfer_proof_rejected: ["transfer_proof_pending", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: [],
   cancelled: [],
 };
 

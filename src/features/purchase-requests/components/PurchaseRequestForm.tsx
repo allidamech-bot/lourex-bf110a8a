@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -27,8 +28,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import {
   createPurchaseRequestWithAttachments,
+  updatePurchaseRequestWithAttachments,
 } from "@/domain/operations/service";
-import type { PurchaseRequestImageUpload } from "@/domain/operations/types";
+import type { OperationsRequest, PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
@@ -84,6 +86,38 @@ const initialState: PurchaseRequestFormState = {
   destination: "",
   deliveryAddress: "",
   isFullSourcing: true,
+};
+
+const buildInitialStateFromRequest = (request?: OperationsRequest | null): PurchaseRequestFormState => {
+  if (!request) {
+    return initialState;
+  }
+
+  return {
+    fullName: request.customer.fullName || "",
+    email: request.customer.email || "",
+    phone: request.customer.phone || "",
+    productName: request.productName || "",
+    productDescription: request.productDescription || "",
+    quantity: request.quantity ? String(request.quantity) : "",
+    sizeDimensions: request.sizeDimensions || "",
+    color: request.color || "",
+    material: request.material || "",
+    technicalSpecs: request.technicalSpecs || "",
+    referenceLink: request.referenceLink || "",
+    preferredShippingMethod: request.preferredShippingMethod || "sea",
+    deliveryNotes: request.deliveryNotes || "",
+    weight: request.weight || "",
+    manufacturingCountry: request.manufacturingCountry || "",
+    brand: request.brand || "",
+    qualityLevel: request.qualityLevel || "",
+    isReadyMade: Boolean(request.isReadyMade),
+    hasPreviousSample: Boolean(request.hasPreviousSample),
+    expectedSupplyDate: request.expectedSupplyDate || "",
+    destination: request.destination || "",
+    deliveryAddress: request.deliveryAddress || "",
+    isFullSourcing: request.isFullSourcing ?? true,
+  };
 };
 
 const MAX_UPLOADS = 5;
@@ -177,14 +211,27 @@ const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
   sizeLabel:
       file.size >= 1024 * 1024
           ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
-          : `${Math.max(1, Math.round(file.size / 1024))} KB`,
+      : `${Math.max(1, Math.round(file.size / 1024))} KB`,
 });
 
-export const PurchaseRequestForm = () => {
+type PurchaseRequestFormProps = {
+  mode?: "create" | "edit";
+  requestId?: string;
+  initialRequest?: OperationsRequest | null;
+  onEditSuccess?: (request: OperationsRequest) => void;
+};
+
+export const PurchaseRequestForm = ({
+  mode = "create",
+  requestId,
+  initialRequest,
+  onEditSuccess,
+}: PurchaseRequestFormProps) => {
   const { t } = useI18n();
   const { profile } = useAuthSession();
+  const isEditMode = mode === "edit";
 
-  const [form, setForm] = useState<PurchaseRequestFormState>(initialState);
+  const [form, setForm] = useState<PurchaseRequestFormState>(() => buildInitialStateFromRequest(initialRequest));
   const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -196,6 +243,40 @@ export const PurchaseRequestForm = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const existingImages = useMemo(
+      () =>
+          initialRequest
+              ? Array.from(
+                  new Map(
+                      [
+                        ...(initialRequest.attachments || []).map((attachment) => [
+                          attachment.fileUrl,
+                          {
+                            id: attachment.id,
+                            name: attachment.fileName,
+                            url: attachment.fileUrl,
+                          },
+                        ] as const),
+                        ...(initialRequest.imageUrls || []).map((url, index) => [
+                          url,
+                          {
+                            id: `${initialRequest.id}-image-${index}`,
+                            name: `image-${index + 1}`,
+                            url,
+                          },
+                        ] as const),
+                      ].filter(([url]) => Boolean(url)),
+                  ).values(),
+              )
+              : [],
+      [initialRequest],
+  );
+
+  useEffect(() => {
+    setForm(buildInitialStateFromRequest(initialRequest));
+    setFieldErrors({});
+    setErrorMessage("");
+  }, [initialRequest]);
 
   const successSteps = useMemo(
       () => [
@@ -208,13 +289,13 @@ export const PurchaseRequestForm = () => {
 
   const effectiveContact = useMemo(
       () => ({
-        fullName: trimPayload(profile?.fullName || form.fullName),
-        email: trimPayload(profile?.email || form.email),
-        phone: trimPayload(profile?.phone || form.phone),
-        country: trimPayload(profile?.country || ""),
-        city: trimPayload(profile?.city || ""),
+        fullName: trimPayload(isEditMode ? form.fullName : profile?.fullName || form.fullName),
+        email: trimPayload(isEditMode ? form.email : profile?.email || form.email),
+        phone: trimPayload(isEditMode ? form.phone : profile?.phone || form.phone),
+        country: trimPayload(isEditMode ? initialRequest?.customer.country || profile?.country || "" : profile?.country || ""),
+        city: trimPayload(isEditMode ? initialRequest?.customer.city || profile?.city || "" : profile?.city || ""),
       }),
-      [form.email, form.fullName, form.phone, profile],
+      [form.email, form.fullName, form.phone, initialRequest, isEditMode, profile],
   );
 
   const updateField = (field: keyof PurchaseRequestFormState, value: string | boolean) => {
@@ -312,14 +393,14 @@ export const PurchaseRequestForm = () => {
     if (form.expectedSupplyDate) {
       const today = getTodayDateString();
 
-      if (form.expectedSupplyDate < today) {
+      if (form.expectedSupplyDate < today && (!isEditMode || form.expectedSupplyDate !== initialRequest?.expectedSupplyDate)) {
         nextErrors.expectedSupplyDate =
             t("requests.intake.errors.invalidDate") ||
             "Please choose today or a future date.";
       }
     }
 
-    if (uploads.length === 0) {
+    if (uploads.length + existingImages.length === 0) {
       nextErrors.uploads = t("requests.intake.errors.missingImages");
     }
 
@@ -328,7 +409,7 @@ export const PurchaseRequestForm = () => {
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
-    const remainingSlots = Math.max(0, MAX_UPLOADS - uploads.length);
+    const remainingSlots = Math.max(0, MAX_UPLOADS - existingImages.length - uploads.length);
 
     if (selectedFiles.length === 0) {
       event.target.value = "";
@@ -432,6 +513,57 @@ export const PurchaseRequestForm = () => {
           .toUpperCase()}`;
 
       const parsedQuantity = Number(normalizeNumberInput(form.quantity));
+
+      if (isEditMode) {
+        const updateResult = await updatePurchaseRequestWithAttachments(
+            requestId || initialRequest?.id || "",
+            {
+              fullName: effectiveContact.fullName,
+              phone: effectiveContact.phone,
+              email: effectiveContact.email,
+              country: effectiveContact.country,
+              city: effectiveContact.city,
+              productName: trimPayload(form.productName),
+              productDescription: trimPayload(form.productDescription),
+              quantity: parsedQuantity,
+              sizeDimensions: trimPayload(form.sizeDimensions),
+              color: trimPayload(form.color),
+              material: trimPayload(form.material),
+              technicalSpecs: trimPayload(form.technicalSpecs),
+              referenceLink: trimPayload(form.referenceLink),
+              preferredShippingMethod: trimPayload(form.preferredShippingMethod),
+              deliveryNotes: trimPayload(form.deliveryNotes),
+              weight: trimPayload(form.weight),
+              manufacturingCountry: trimPayload(form.manufacturingCountry),
+              brand: trimPayload(form.brand),
+              qualityLevel: trimPayload(form.qualityLevel),
+              isReadyMade: form.isReadyMade,
+              hasPreviousSample: form.hasPreviousSample,
+              expectedSupplyDate: trimPayload(form.expectedSupplyDate),
+              destination: trimPayload(form.destination),
+              deliveryAddress: trimPayload(form.deliveryAddress),
+              isFullSourcing: form.isFullSourcing,
+            },
+            uploads,
+        );
+
+        if (updateResult.error || !updateResult.data) {
+          throw new Error(updateResult.error?.message || t("requests.intake.errors.updateFailed"));
+        }
+
+        trackEvent("purchase_request_updated", {
+          flow: "purchase_request",
+          requestId: updateResult.data.id,
+          requestNumber: updateResult.data.requestNumber,
+          images: uploads.length,
+        });
+
+        clearUploads(uploads);
+        setUploads([]);
+        toast.success(t("requests.intake.updateSuccess") || "Request updated successfully.");
+        onEditSuccess?.(updateResult.data);
+        return;
+      }
 
       const creationResult = await createPurchaseRequestWithAttachments(
           {
@@ -707,7 +839,7 @@ export const PurchaseRequestForm = () => {
                 placeholder={t("requests.intake.quantityPlaceholder")}
                 aria-invalid={Boolean(fieldErrors.quantity)}
             />
-            <FieldHint text="يدعم الأرقام العربية والإنجليزية: ١٢٣ / 123" />
+            <FieldHint text={t("requests.intake.quantityArabicDigitsHint")} />
             <FieldError text={fieldErrors.quantity} />
           </div>
 
@@ -848,14 +980,14 @@ export const PurchaseRequestForm = () => {
             <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={submitting || uploads.length >= MAX_UPLOADS}
+                disabled={submitting || uploads.length + existingImages.length >= MAX_UPLOADS}
                 className="mt-2 flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-[1.8rem] border-2 border-dashed border-primary/20 bg-[linear-gradient(180deg,hsla(var(--secondary)/0.45),hsla(var(--secondary)/0.25))] px-6 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             >
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Upload className="h-6 w-6" />
               </div>
               <span className="text-sm font-medium">
-              {uploads.length >= MAX_UPLOADS
+              {uploads.length + existingImages.length >= MAX_UPLOADS
                   ? t("requests.intake.errors.maxImages") ||
                   `Maximum ${MAX_UPLOADS} images uploaded`
                   : t("requests.intake.imagesCta")}
@@ -867,8 +999,26 @@ export const PurchaseRequestForm = () => {
 
             <FieldError text={fieldErrors.uploads} />
 
-            {uploads.length > 0 ? (
+            {existingImages.length > 0 || uploads.length > 0 ? (
                 <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+                  {existingImages.map((image) => (
+                      <div
+                          key={image.id}
+                          className="relative overflow-hidden rounded-[1.4rem] border border-border bg-card"
+                      >
+                        <img
+                            src={image.url}
+                            alt={image.name}
+                            className="h-28 w-full object-cover"
+                        />
+                        <div className="p-3">
+                          <p className="truncate text-xs font-medium">{image.name}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {t("requests.intake.existingImage") || "Already attached"}
+                          </p>
+                        </div>
+                      </div>
+                  ))}
                   {uploads.map((upload) => (
                       <div
                           key={upload.id}
@@ -928,7 +1078,7 @@ export const PurchaseRequestForm = () => {
                           }
                       />
                       <span className="text-xs font-semibold capitalize">
-                    {method}
+                    {method === "air" ? t("common.air") : method === "sea" ? t("common.sea") : t("common.land")}
                   </span>
                     </Label>
                   </div>
@@ -1040,12 +1190,16 @@ export const PurchaseRequestForm = () => {
               {submitting ? (
                   <>
                     <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    {t("requests.intake.submitting")}
+                    {isEditMode
+                        ? t("requests.intake.submittingUpdate") || "Saving update..."
+                        : t("requests.intake.submitting")}
                   </>
               ) : (
                   <>
                     <ImagePlus className="me-2 h-4 w-4" />
-                    {t("requests.intake.submit")}
+                    {isEditMode
+                        ? t("requests.intake.submitUpdate") || "Save and Send Update"
+                        : t("requests.intake.submit")}
                   </>
               )}
             </Button>

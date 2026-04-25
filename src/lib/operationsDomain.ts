@@ -146,6 +146,14 @@ export type PurchaseRequestRow = {
   delivery_address?: string | null;
   is_full_sourcing?: boolean | null;
   tracking_code?: string | null;
+  customer_hidden_at?: string | null;
+  transfer_proof_url?: string | null;
+  transfer_proof_name?: string | null;
+  transfer_proof_uploaded_at?: string | null;
+  transfer_proof_status?: string | null;
+  transfer_accepted_at?: string | null;
+  transfer_accepted_by?: string | null;
+  transfer_rejection_reason?: string | null;
 };
 
 export type AttachmentRow = {
@@ -426,7 +434,10 @@ export const requestStatusMeta: Record<PurchaseRequestStatus, { label: string; t
   under_review: { label: "قيد المراجعة", tone: "bg-amber-500/15 text-amber-300" },
   awaiting_clarification: { label: "بانتظار الإيضاح", tone: "bg-rose-500/15 text-rose-300" },
   ready_for_conversion: { label: "جاهز للتحويل", tone: "bg-emerald-500/15 text-emerald-300" },
-  converted_to_deal: { label: "تم التحويل", tone: "bg-primary/15 text-primary" },
+  transfer_proof_pending: { label: "بانتظار مراجعة التحويل", tone: "bg-indigo-500/15 text-indigo-300" },
+  transfer_proof_rejected: { label: "تم رفض التحويل", tone: "bg-rose-500/15 text-rose-300" },
+  in_progress: { label: "قيد التنفيذ", tone: "bg-primary/15 text-primary" },
+  completed: { label: "مكتمل", tone: "bg-emerald-500/25 text-emerald-400" },
   cancelled: { label: "ملغي", tone: "bg-zinc-500/15 text-zinc-300" },
 };
 
@@ -494,6 +505,7 @@ export type OperationalShipment = {
   destination: string;
   dealId?: string | null;
   dealNumber?: string;
+  requestNumber?: string;
   stage: ShipmentStageCode;
   updatedAt: string;
   customerVisibleNote: string;
@@ -858,6 +870,13 @@ const mapExplicitRequest = (
   internalNotes: row.internal_notes || "",
   reviewedAt: row.last_reviewed_at || null,
   attachments: attachmentsMap.get(`purchase_request:${row.id}`) || [],
+  transferProofUrl: row.transfer_proof_url,
+  transferProofName: row.transfer_proof_name,
+  transferProofUploadedAt: row.transfer_proof_uploaded_at,
+  transferProofStatus: row.transfer_proof_status as any,
+  transferAcceptedAt: row.transfer_accepted_at,
+  transferAcceptedBy: row.transfer_accepted_by,
+  transferRejectionReason: row.transfer_rejection_reason,
 });
 
 export const loadPurchaseRequests = async (
@@ -896,7 +915,9 @@ export const loadPurchaseRequests = async (
         const map = new Map<string, PurchaseRequestRow>();
 
         [...byCustomerId, ...byEmail].forEach((row) => {
-          map.set(row.id, row);
+          if (!row.customer_hidden_at) {
+            map.set(row.id, row);
+          }
         });
 
         return Array.from(map.values());
@@ -921,7 +942,7 @@ export const loadPurchaseRequests = async (
       : supabase
           .from("audit_logs")
           .select("record_id, new_values")
-          .eq("action", "purchase_request.converted_to_deal")
+          .eq("action", "purchase_request.in_progress")
           .order("created_at", { ascending: false }),
   ]);
 
@@ -956,7 +977,7 @@ export const loadPurchaseRequests = async (
       const payload = parsePurchaseRequestMessage(row.message);
       const conversion = conversionMap.get(row.id);
       const [country = "", city = ""] = (row.company || "").split(" - ").map((item: string) => item.trim());
-      const status = (conversion?.dealNumber ? "converted_to_deal" : "under_review") as PurchaseRequestStatus;
+      const status = (conversion?.dealNumber ? "in_progress" : "under_review") as PurchaseRequestStatus;
 
       return {
         id: row.id,
@@ -1202,7 +1223,7 @@ export const convertRequestToDeal = async (
     if (legacyInsert.error) throw legacyInsert.error;
 
     await writeAuditLog({
-      action: "purchase_request.converted_to_deal",
+      action: "purchase_request.in_progress",
       tableName: "inquiries",
       recordId: request.sourceInquiryId || request.id,
       newValues: {
@@ -1329,7 +1350,7 @@ export const convertRequestToDeal = async (
   await db
     .from<PurchaseRequestRow>("purchase_requests")
     .update({
-      status: "converted_to_deal",
+      status: "in_progress",
       customer_id: customer.id,
       converted_deal_id: insertedDeal.data.id,
     })
@@ -1364,11 +1385,12 @@ export const convertRequestToDeal = async (
   });
 
   await writeAuditLog({
-    action: "purchase_request.converted_to_deal",
+    action: "purchase_request.in_progress",
     tableName: "purchase_requests",
     recordId: requestId,
     oldValues: { status: request.status },
     newValues: {
+      status: "in_progress",
       request_number: request.requestNumber,
       request_id: requestId,
       deal_id: insertedDeal.data.id,
@@ -1753,6 +1775,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       destination: row.destination,
       dealId: row.deal_id,
       dealNumber: deal?.dealNumber,
+      requestNumber: deal?.requestNumber,
       stage: row.current_stage_code || mapShipmentStatusToStage(row.status),
       updatedAt: row.updated_at,
       customerVisibleNote: row.customer_visible_note || "",
@@ -2222,3 +2245,112 @@ export const getDomainActivationStatus = async () => {
 
 export const formatTrackingVisibility = (visibility: TrackingUpdateRecord["visibility"]) =>
   trackingVisibilityLabel[visibility];
+
+export const uploadTransferProof = async (requestId: string, file: File) => {
+  const { user } = await getCurrentUserContext();
+  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
+
+  const fileName = `${Date.now()}-${file.name}`;
+  const storagePath = STORAGE_PATHS.TRANSFER_PROOFS(requestId);
+  const fullPath = `${storagePath}/${fileName}`;
+
+  // Upload to private bucket
+  const fileUrl = await uploadFile("DOCUMENTS", fullPath, file);
+
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
+    .update({
+      transfer_proof_url: fullPath, // Store path instead of public URL for private access
+      transfer_proof_name: file.name,
+      transfer_proof_uploaded_at: new Date().toISOString(),
+      transfer_proof_status: "pending",
+      status: "transfer_proof_pending",
+    })
+    .eq("id", requestId);
+
+  if (error) throw error;
+
+  await writeAuditLog({
+    action: "purchase_request.transfer_proof_uploaded",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    newValues: {
+      request_id: requestId,
+      file_name: file.name,
+      status: "transfer_proof_pending",
+    },
+  });
+
+  return { success: true };
+};
+
+export const acceptTransferProof = async (requestId: string) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("صلاحياتك لا تسمح بقبول التحويلات.");
+  }
+
+  const { data: request } = await (supabase as any)
+    .from("purchase_requests")
+    .select("*")
+    .eq("id", requestId)
+    .single();
+
+  if (!request) throw new Error("الطلب غير موجود.");
+
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
+    .update({
+      transfer_proof_status: "accepted",
+      transfer_accepted_at: new Date().toISOString(),
+      transfer_accepted_by: user.id,
+      status: "in_progress",
+    })
+    .eq("id", requestId);
+
+  if (error) throw error;
+
+  await writeAuditLog({
+    action: "purchase_request.transfer_proof_accepted",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    newValues: {
+      status: "in_progress",
+      accepted_by: user.id,
+    },
+  });
+
+  return { success: true };
+};
+
+export const rejectTransferProof = async (requestId: string, reason: string) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("صلاحياتك لا تسمح برفض التحويلات.");
+  }
+
+  if (!reason) throw new Error("يجب تحديد سبب الرفض.");
+
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
+    .update({
+      transfer_proof_status: "rejected",
+      transfer_rejection_reason: reason,
+      status: "transfer_proof_rejected",
+    })
+    .eq("id", requestId);
+
+  if (error) throw error;
+
+  await writeAuditLog({
+    action: "purchase_request.transfer_proof_rejected",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    newValues: {
+      status: "transfer_proof_rejected",
+      rejection_reason: reason,
+    },
+  });
+
+  return { success: true, error: null };
+};

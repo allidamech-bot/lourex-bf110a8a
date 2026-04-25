@@ -19,10 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { loadShipments } from "@/lib/operationsDomain";
+import { loadShipments, loadPurchaseRequests } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { toast } from "sonner";
 
 type CustomerShipmentRows = Awaited<ReturnType<typeof loadShipments>>;
 type CustomerShipmentRow = CustomerShipmentRows[number];
@@ -45,15 +46,9 @@ const getSafeLabel = (value: string, fallback: string) => {
   return value;
 };
 
-const normalizeSearchValue = (value: string) =>
-    value
-        .trim()
-        .toLowerCase()
-        .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-        .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
-
-const formatNumber = (value: number, locale: string) =>
-    new Intl.NumberFormat(locale === "ar" ? "ar" : "en").format(value || 0);
+const normalizeSearchValue = (value: string | undefined | null) => {
+  return (value || "").trim().toLowerCase();
+};
 
 const formatDateTime = (value: string | undefined, locale: string) => {
   if (!value) {
@@ -75,49 +70,16 @@ const formatDateTime = (value: string | undefined, locale: string) => {
   }).format(date);
 };
 
-const getRemainingStages = (stage: string) => {
-  const activeStageIndex = shipmentStages.findIndex((item) => item.code === stage);
-
-  if (activeStageIndex < 0) {
-    return shipmentStages.length;
-  }
-
-  return Math.max(0, shipmentStages.length - activeStageIndex - 1);
+const formatNumber = (value: number, locale: string) => {
+  return new Intl.NumberFormat(locale === "ar" ? "ar" : "en").format(value);
 };
 
-const getShipmentCustomerId = (row: CustomerShipmentRow) => {
-  const withOwnership = row as CustomerShipmentRow & ShipmentOwnershipFields;
+const getRemainingStages = (currentStage: string) => {
+  const index = shipmentStages.findIndex((s) => s.code === currentStage);
 
-  return withOwnership.customerId || withOwnership.customer_id || withOwnership.customer?.id || "";
-};
+  if (index === -1) return 0;
 
-const getShipmentCustomerEmail = (row: CustomerShipmentRow) => {
-  const withOwnership = row as CustomerShipmentRow & ShipmentOwnershipFields;
-
-  return withOwnership.customerEmail || withOwnership.customer_email || withOwnership.customer?.email || "";
-};
-
-const filterRowsForProfile = (
-  rows: CustomerShipmentRows,
-  profileId: string,
-  profileEmail: string,
-) => {
-  const hasOwnershipFields = rows.some((row) => getShipmentCustomerId(row) || getShipmentCustomerEmail(row));
-
-  if (!hasOwnershipFields) {
-    return rows;
-  }
-
-  return rows.filter((row) => {
-    const customerId = getShipmentCustomerId(row);
-    const customerEmail = getShipmentCustomerEmail(row).trim().toLowerCase();
-
-    if (profileId && customerId && customerId === profileId) {
-      return true;
-    }
-
-    return Boolean(profileEmail && customerEmail && customerEmail === profileEmail);
-  });
+  return Math.max(0, shipmentStages.length - 1 - index);
 };
 
 const ShipmentMetricCard = ({
@@ -127,40 +89,35 @@ const ShipmentMetricCard = ({
                             }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: string | number;
 }) => (
-    <div className="rounded-[1.2rem] bg-secondary/20 p-4 text-center">
-      <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+    <div className="rounded-[1.25rem] bg-secondary/15 p-4 text-center">
+      <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
         {icon}
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="mt-3 text-2xl font-bold">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
 );
 
-const ShipmentInfoTile = ({
-                            label,
-                            value,
-                          }: {
-  label: string;
-  value: string;
-}) => (
-    <div className="rounded-[1.2rem] bg-secondary/25 p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words font-medium">{value || "-"}</p>
+const ShipmentInfoTile = ({ label, value }: { label: string; value: string }) => (
+    <div className="rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words text-sm font-medium">{value}</p>
     </div>
 );
 
 export default function CustomerTrackingPage() {
-  const { lang, locale, t } = useI18n();
+  const { locale, t, lang } = useI18n();
   const { profile } = useAuthSession();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [rows, setRows] = useState<CustomerShipmentRows>([]);
+  const [rows, setRows] = useState<CustomerShipmentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [trackInput, setTrackInput] = useState("");
 
   const selectedTracking = searchParams.get("tracking");
   const selectedDeal = searchParams.get("deal");
@@ -176,11 +133,31 @@ export default function CustomerTrackingPage() {
     setError("");
 
     try {
-      const loadedRows = await loadShipments();
-      setRows(filterRowsForProfile(loadedRows, profile?.id || "", normalizedProfileEmail));
-    } catch (loadError) {
-      logOperationalError("customer_tracking_load", loadError);
-      setError(t("common.error"));
+      const data = await loadShipments();
+
+      const customerShipments = normalizedProfileEmail
+          ? data.filter((row: CustomerShipmentRow & ShipmentOwnershipFields) => {
+            const rowEmail = (
+                row.customerEmail ||
+                row.customer_email ||
+                row.customer?.email ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+            if (!rowEmail) {
+              return true;
+            }
+
+            return rowEmail === normalizedProfileEmail;
+          })
+          : data;
+
+      setRows(customerShipments);
+    } catch (err) {
+      logOperationalError("customer_tracking_load", err);
+      setError(getSafeLabel(t("common.error"), "Error loading shipments"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -190,79 +167,39 @@ export default function CustomerTrackingPage() {
   useEffect(() => {
     void refresh("initial");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id, normalizedProfileEmail]);
+  }, [normalizedProfileEmail]);
 
   const filteredRows = useMemo(() => {
     const normalized = normalizeSearchValue(search);
 
-    if (!normalized) {
-      return rows;
-    }
-
     return rows.filter((row) => {
-      const source = normalizeSearchValue(
-          [
-            row.trackingId,
-            row.dealNumber,
-            row.destination,
-            row.stage,
-            row.customerVisibleNote,
-          ]
-              .filter(Boolean)
-              .join(" "),
+      const searchSource = normalizeSearchValue(
+          `${row.trackingId} ${row.dealNumber || ""} ${row.destination} ${row.requestNumber || ""}`,
       );
 
-      return source.includes(normalized);
+      return !normalized || searchSource.includes(normalized);
     });
   }, [rows, search]);
 
-  const activeShipment = useMemo<CustomerShipmentRow | null>(() => {
-    if (!filteredRows.length) {
-      return null;
-    }
+  const activeShipment = useMemo(() => {
+    if (!filteredRows.length) return null;
 
     if (selectedTracking) {
-      const matchByTracking = filteredRows.find((row) => row.trackingId === selectedTracking);
-
-      if (matchByTracking) {
-        return matchByTracking;
-      }
+      return filteredRows.find((r) => r.trackingId === selectedTracking) || null;
     }
 
     if (selectedDeal) {
-      const matchByDeal = filteredRows.find((row) => row.dealNumber === selectedDeal);
-
-      if (matchByDeal) {
-        return matchByDeal;
-      }
+      return filteredRows.find((r) => r.dealNumber === selectedDeal) || null;
     }
 
-    if (filteredRows.length > 0) {
-      return filteredRows[0];
-    }
-
-    return null;
+    return filteredRows[0];
   }, [filteredRows, selectedDeal, selectedTracking]);
 
   useEffect(() => {
-    if (!rows.length || !activeShipment) {
-      return;
-    }
-
-    const hasValidTracking =
-        selectedTracking &&
-        filteredRows.some((row) => row.trackingId === selectedTracking);
-
-    const hasValidDeal =
-        selectedDeal &&
-        filteredRows.some((row) => row.dealNumber === selectedDeal);
-
-    if (hasValidTracking || hasValidDeal) {
-      return;
-    }
+    if (activeShipment || !rows.length || !searchParams.toString()) return;
 
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("tracking", activeShipment.trackingId);
+    nextParams.delete("tracking");
     nextParams.delete("deal");
     setSearchParams(nextParams, { replace: true });
   }, [activeShipment, filteredRows, rows.length, searchParams, selectedDeal, selectedTracking, setSearchParams]);
@@ -277,6 +214,44 @@ export default function CustomerTrackingPage() {
     nextParams.set("tracking", trackingId);
     nextParams.delete("deal");
     setSearchParams(nextParams);
+  };
+
+  const handleTrackSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    const normalized = trackInput.trim().toLowerCase();
+    if (!normalized) {
+      toast.error(t("tracking.searchInputPlaceholder"));
+      return;
+    }
+
+    setSearch(trackInput);
+    
+    const match = rows.find(r => 
+      normalizeSearchValue(r.trackingId) === normalized ||
+      normalizeSearchValue(r.dealNumber || "") === normalized ||
+      normalizeSearchValue(r.requestNumber || "") === normalized
+    );
+
+    if (match) {
+      setSelectedTracking(match.trackingId);
+    } else {
+      try {
+        const allRequests = await loadPurchaseRequests();
+        const requestMatch = allRequests.find(r => 
+          normalizeSearchValue(r.requestNumber) === normalized ||
+          normalizeSearchValue(r.trackingCode || "") === normalized
+        );
+
+        if (requestMatch) {
+          toast.info(t("tracking.notYetApproved"));
+        } else {
+          toast.error(t("tracking.noShipmentFound"));
+        }
+      } catch {
+        toast.error(t("tracking.noShipmentFound"));
+      }
+    }
   };
 
   const shipmentMetrics = useMemo(
@@ -304,40 +279,50 @@ export default function CustomerTrackingPage() {
   if (!rows.length) {
     return (
         <div className="space-y-4">
-          <BentoCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                {getSafeLabel(
-                    t("customerPortal.actions.tracking.title"),
-                    locale === "ar" ? "التتبع" : "Tracking",
-                )}
-              </p>
-              <h1 className="mt-2 font-serif text-3xl font-semibold">
-                {getSafeLabel(
-                    t("tracking.contextTitle"),
-                    locale === "ar" ? "تتبع الشحنات" : "Shipment tracking",
-                )}
-              </h1>
+          <BentoCard className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {t("customerPortal.actions.tracking.title")}
+                </p>
+                <h1 className="mt-2 font-serif text-3xl font-semibold">
+                  {t("tracking.contextTitle")}
+                </h1>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  {t("customerPortal.actions.tracking.description")}
+                </p>
+              </div>
+
+              <Button
+                  variant="outline"
+                  onClick={() => void refresh("refresh")}
+                  disabled={refreshing}
+              >
+                <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                {t("common.refresh")}
+              </Button>
             </div>
 
-            <Button
-                variant="outline"
-                onClick={() => void refresh("refresh")}
-                disabled={refreshing}
-            >
-              <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing
-                  ? t("common.saving").replace("Saving...", "Refreshing...")
-                  : t("common.refresh")}
-            </Button>
+            <div className="pt-2">
+              <form 
+                onSubmit={handleTrackSubmit}
+                className="flex flex-col gap-3 sm:flex-row sm:items-center"
+              >
+                <div className="relative flex-1">
+                  <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                      value={trackInput}
+                      onChange={(e) => setTrackInput(e.target.value)}
+                      placeholder={t("tracking.searchInputPlaceholder")}
+                      className="h-12 ps-9"
+                  />
+                </div>
+                <Button type="submit" size="lg" className="h-12 px-8">
+                  {t("tracking.trackButton")}
+                </Button>
+              </form>
+            </div>
           </BentoCard>
-
-          {error ? (
-              <div className="flex items-start gap-3 rounded-[1.25rem] border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-          ) : null}
 
           <EmptyState
               icon={Route}
@@ -354,40 +339,51 @@ export default function CustomerTrackingPage() {
 
   return (
       <div className="space-y-4">
-        <BentoCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              {getSafeLabel(
-                  t("customerPortal.actions.tracking.title"),
-                  locale === "ar" ? "التتبع" : "Tracking",
-              )}
-            </p>
-            <h1 className="mt-2 font-serif text-3xl font-semibold">
-              {getSafeLabel(
-                  t("tracking.contextTitle"),
-                  locale === "ar" ? "تتبع الشحنات" : "Shipment tracking",
-              )}
-            </h1>
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {getSafeLabel(
-                  t("customerPortal.actions.tracking.description"),
-                  locale === "ar"
-                      ? "تابع مراحل الشحنة والتحديثات المرتبطة بالعملية."
-                      : "Follow shipment stages and operation updates.",
-              )}
-            </p>
+        <BentoCard className="space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                {t("customerPortal.actions.tracking.title")}
+              </p>
+              <h1 className="mt-2 font-serif text-3xl font-semibold">
+                {t("tracking.contextTitle")}
+              </h1>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                {t("customerPortal.actions.tracking.description")}
+              </p>
+            </div>
+
+            <Button
+                variant="outline"
+                onClick={() => void refresh("refresh")}
+                disabled={refreshing}
+            >
+              <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing
+                  ? t("common.saving")
+                  : t("common.refresh")}
+            </Button>
           </div>
 
-          <Button
-              variant="outline"
-              onClick={() => void refresh("refresh")}
-              disabled={refreshing}
-          >
-            <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing
-                ? t("common.saving").replace("Saving...", "Refreshing...")
-                : t("common.refresh")}
-          </Button>
+          <div className="pt-2">
+            <form 
+              onSubmit={handleTrackSubmit}
+              className="flex flex-col gap-3 sm:flex-row sm:items-center"
+            >
+              <div className="relative flex-1">
+                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                    value={trackInput}
+                    onChange={(e) => setTrackInput(e.target.value)}
+                    placeholder={t("tracking.searchInputPlaceholder")}
+                    className="h-12 ps-9"
+                />
+              </div>
+              <Button type="submit" size="lg" className="h-12 px-8">
+                {t("tracking.trackButton")}
+              </Button>
+            </form>
+          </div>
         </BentoCard>
 
         <div className="grid gap-4 lg:grid-cols-[0.84fr_1.16fr]">
@@ -396,22 +392,22 @@ export default function CustomerTrackingPage() {
               <ShipmentMetricCard
                   icon={<Route className="h-4 w-4" />}
                   label={getSafeLabel(t("common.all"), locale === "ar" ? "الكل" : "All")}
-                  value={formatNumber(shipmentMetrics.total, locale)}
-              />
-              <ShipmentMetricCard
-                  icon={<CheckCircle2 className="h-4 w-4" />}
-                  label={getSafeLabel(t("statuses.delivered"), locale === "ar" ? "تم التسليم" : "Delivered")}
-                  value={formatNumber(shipmentMetrics.completed, locale)}
-              />
-              <ShipmentMetricCard
-                  icon={<Truck className="h-4 w-4" />}
-                  label={getSafeLabel(t("common.active"), locale === "ar" ? "نشطة" : "Active")}
-                  value={formatNumber(shipmentMetrics.active, locale)}
+                  value={shipmentMetrics.total}
               />
               <ShipmentMetricCard
                   icon={<Clock3 className="h-4 w-4" />}
-                  label={getSafeLabel(t("tracking.labels.loggedUpdates"), locale === "ar" ? "التحديثات" : "Updates")}
-                  value={formatNumber(shipmentMetrics.updates, locale)}
+                  label={getSafeLabel(t("common.active"), locale === "ar" ? "نشط" : "Active")}
+                  value={shipmentMetrics.active}
+              />
+              <ShipmentMetricCard
+                  icon={<CheckCircle2 className="h-4 w-4" />}
+                  label={getSafeLabel(t("common.completed"), locale === "ar" ? "مكتمل" : "Completed")}
+                  value={shipmentMetrics.completed}
+              />
+              <ShipmentMetricCard
+                  icon={<PackageSearch className="h-4 w-4" />}
+                  label={getSafeLabel(t("common.updates"), locale === "ar" ? "تحديثات" : "Updates")}
+                  value={shipmentMetrics.updates}
               />
             </div>
 
@@ -419,40 +415,19 @@ export default function CustomerTrackingPage() {
               <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder={getSafeLabel(
-                    t("tracking.searchPlaceholder"),
-                    locale === "ar"
-                        ? "ابحث بكود التتبع أو رقم العملية أو الوجهة"
-                        : "Search by tracking code, deal number, or destination"
+                      t("common.search"),
+                      locale === "ar" ? "بحث في الشحنات..." : "Search shipments...",
                   )}
                   className="ps-9"
               />
             </div>
 
-            {error ? (
-                <div className="flex items-start gap-3 rounded-[1.25rem] border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-            ) : null}
-
             <div className="space-y-3">
-              {filteredRows.length === 0 ? (
-                  <EmptyState
-                      icon={Route}
-                      title={getSafeLabel(t("tracking.noMatches"), locale === "ar" ? "لا توجد شحنة مطابقة" : "No matching shipment")}
-                      description={
-                        locale === "ar"
-                            ? "لا توجد شحنات مطابقة للبحث الحالي."
-                            : "No shipments match the current search."
-                      }
-                  />
-              ) : null}
-
               {filteredRows.map((row) => {
+                const isSelected = activeShipment?.trackingId === row.trackingId;
                 const stageCopy = getShipmentStageCopy(row.stage, lang);
-                const isSelected = activeShipment?.id === row.id;
 
                 return (
                     <button
@@ -562,109 +537,24 @@ export default function CustomerTrackingPage() {
               )}
             </BentoCard>
 
-            <BentoCard className="p-6">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <PackageSearch className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-2xl font-semibold">
+            <BentoCard>
+              <ShipmentTimeline
+                  currentStage={activeShipment.stage}
+              />
+            </BentoCard>
+            </>
+            ) : (
+                <div className="rounded-[2rem] border border-dashed border-border/60 bg-secondary/5 py-32 text-center">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/5 text-primary/30">
+                    <PackageSearch className="h-8 w-8" />
+                  </div>
+                  <p className="mt-4 font-medium text-muted-foreground">
                     {getSafeLabel(
-                        t("tracking.labels.officialTimeline"),
-                        locale === "ar" ? "الخط الزمني الرسمي" : "Official timeline",
-                    )}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {getSafeLabel(
-                        t("tracking.labels.officialTimelineDescription"),
-                        locale === "ar"
-                            ? "مراحل الشحنة من بداية التشغيل حتى التسليم."
-                            : "Shipment stages from operation start to delivery.",
+                        t("tracking.selectToTrack"),
+                        locale === "ar" ? "اختر شحنة لعرض التفاصيل" : "Select a shipment to track",
                     )}
                   </p>
                 </div>
-              </div>
-
-              <ShipmentTimeline currentStage={activeShipment.stage} />
-            </BentoCard>
-
-            <BentoCard className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Route className="h-5 w-5 text-primary" />
-                <h2 className="font-serif text-2xl font-semibold">
-                  {getSafeLabel(
-                      t("tracking.labels.updatesLog"),
-                      locale === "ar" ? "سجل التحديثات" : "Updates log",
-                  )}
-                </h2>
-              </div>
-
-              {(activeShipment.timeline || []).length === 0 ? (
-                  <EmptyState
-                      icon={Route}
-                      title={getSafeLabel(t("tracking.noUpdatesTitle"), locale === "ar" ? "لا توجد تحديثات بعد" : "No updates yet")}
-                      description={getSafeLabel(
-                          t("tracking.noUpdatesDescription"),
-                          locale === "ar"
-                              ? "ستظهر التحديثات هنا عند إضافة ملاحظات تشغيلية من الإدارة."
-                              : "Updates will appear here when the management team adds operation notes.",
-                      )}
-                  />
-              ) : (
-                  <div className="space-y-3">
-                    {(activeShipment.timeline || [])
-                        .slice()
-                        .reverse()
-                        .map((event) => {
-                          const eventStageCopy = getShipmentStageCopy(event.stageCode, lang);
-
-                          return (
-                              <div
-                                  key={event.id}
-                                  className="rounded-[1.3rem] border border-border/60 bg-secondary/10 p-4"
-                              >
-                                <div>
-                                  <p className="font-medium">
-                                    {eventStageCopy?.label || event.stageCode}
-                                  </p>
-                                  <p className="mt-1 text-xs text-muted-foreground">
-                                    {formatDateTime(event.occurredAt, locale)}
-                                  </p>
-                                </div>
-
-                                {event.customerNote ? (
-                                    <div className="mt-3 rounded-[1rem] border border-primary/15 bg-primary/10 px-4 py-3 text-sm text-muted-foreground">
-                                      {event.customerNote}
-                                    </div>
-                                ) : (
-                                    <p className="mt-3 text-sm italic text-muted-foreground">
-                                      {getSafeLabel(
-                                          t("tracking.noCustomerNote"),
-                                          locale === "ar"
-                                              ? "لا توجد ملاحظة للعميل في هذا التحديث."
-                                              : "No customer note for this update.",
-                                      )}
-                                    </p>
-                                )}
-                              </div>
-                          );
-                        })}
-                  </div>
-              )}
-            </BentoCard>
-              </>
-            ) : (
-                <BentoCard className="p-8">
-                  <EmptyState
-                      icon={Route}
-                      title={getSafeLabel(t("publicTracking.errorNotFound"), locale === "ar" ? "لا توجد شحنة مطابقة" : "No matching shipment")}
-                      description={
-                        locale === "ar"
-                            ? "لم نتمكن من العثور على شحنة مطابقة للبحث أو الرابط الحالي."
-                            : "We could not find a shipment matching the current search or link."
-                      }
-                  />
-                </BentoCard>
             )}
           </div>
         </div>
