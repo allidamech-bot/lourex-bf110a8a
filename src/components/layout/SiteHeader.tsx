@@ -60,7 +60,33 @@ export const SiteHeader = () => {
 
   return (
       <header className="sticky top-0 z-50 border-b border-border/80 bg-background/95 shadow-[0_1px_0_rgba(212,175,55,0.12)] backdrop-blur" dir={isRtl ? "rtl" : "ltr"}>
-        <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6" dir="ltr">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 xl:hidden" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="flex w-full items-center justify-between gap-3">
+            <div className="flex shrink-0 items-center">
+              <Link
+                  to="/"
+                  className="flex shrink-0 items-center gap-3"
+                  onClick={() => setIsOpen(false)}
+              >
+                <img src="/logo.png" alt="Lourex" className="h-10 w-10 rounded-xl object-contain" />
+                <p className="font-serif text-xl font-bold tracking-wide text-foreground">LOUREX</p>
+              </Link>
+            </div>
+
+            <div className="flex shrink-0 items-center">
+              <button
+                  type="button"
+                  className="rounded-lg border border-border/80 bg-card p-2 text-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                  onClick={() => setIsOpen((value) => !value)}
+                  aria-label="Toggle navigation menu"
+              >
+                {isOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6 xl:grid" dir="ltr">
           <Link
               to="/"
               className="flex shrink-0 items-center gap-3"
@@ -135,14 +161,6 @@ export const SiteHeader = () => {
               )}
             </div>
 
-            <button
-                type="button"
-                className="rounded-lg border border-border/80 bg-card p-2 text-foreground transition-colors hover:border-primary/50 hover:text-primary xl:hidden"
-                onClick={() => setIsOpen((value) => !value)}
-                aria-label="Toggle navigation menu"
-            >
-              {isOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
           </div>
         </div>
 
