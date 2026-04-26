@@ -32,6 +32,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
     () => notifications.filter((notification) => !notification.isRead).length,
     [notifications],
   );
+  const latestNotifications = useMemo(() => notifications.slice(0, 5), [notifications]);
 
   const logDevIssue = useCallback((message: string, details?: unknown) => {
     if (!import.meta.env.DEV) {
@@ -313,7 +314,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 {t("notifications.empty")}
               </div>
             ) : (
-              notifications.map((notification) => (
+              latestNotifications.map((notification) => (
                 <button
                   key={notification.id}
                   onClick={() => void handleClick(notification)}
@@ -338,6 +339,17 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 </button>
               ))
             )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                navigate("/profile");
+              }}
+              className="w-full px-4 py-3 text-center text-xs font-medium text-primary transition-colors hover:bg-secondary/30"
+            >
+              {locale === "ar" ? "عرض كل الإشعارات" : "View all notifications"}
+            </button>
           </motion.div>
         ) : null}
       </AnimatePresence>
