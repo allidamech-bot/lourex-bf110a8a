@@ -18,7 +18,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -342,6 +342,36 @@ const FieldError = ({ text }: { text?: string }) => {
   );
 };
 
+const LoginRequiredCard = ({ lang }: { lang: "en" | "ar" }) => (
+  <div className="rounded-[1.8rem] border border-primary/25 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,#111111,#080808)] p-5 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.78)]">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 text-primary">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="font-semibold text-foreground">
+            {lang === "ar"
+              ? "يجب تسجيل الدخول حتى تتمكن من إرسال طلب الشراء."
+              : "You must sign in before submitting a purchase request."}
+          </p>
+          <p className="mt-1 text-sm leading-7 text-muted-foreground">
+            {lang === "ar"
+              ? "يمكنك متابعة تعبئة الطلب واستخدام التحليل، ثم تسجيل الدخول للإرسال."
+              : "You can keep preparing the request and use the analyzer, then sign in to submit."}
+          </p>
+        </div>
+      </div>
+
+      <Button variant="gold" asChild className="shrink-0">
+        <Link to="/auth">
+          {lang === "ar" ? "تسجيل الدخول / إنشاء حساب" : "Sign in / Create account"}
+        </Link>
+      </Button>
+    </div>
+  </div>
+);
+
 const createUploadPreview = (file: File): PurchaseRequestImageUpload => ({
   id: `${file.name}-${file.size}-${file.lastModified}-${getSafeId()}`,
   file,
@@ -367,9 +397,14 @@ export const PurchaseRequestForm = ({
   onEditSuccess,
 }: PurchaseRequestFormProps) => {
   const { t, lang, locale } = useI18n();
-  const { profile } = useAuthSession();
+  const { profile, user, loading: authLoading } = useAuthSession();
   const location = useLocation();
   const isEditMode = mode === "edit";
+  const isAuthenticated = Boolean(user || profile);
+  const loginRequiredMessage =
+    lang === "ar"
+      ? "يجب تسجيل الدخول حتى تتمكن من إرسال طلب الشراء."
+      : "You must sign in before submitting a purchase request.";
 
   const [form, setForm] = useState<PurchaseRequestFormState>(() => buildInitialStateFromRequest(initialRequest));
   const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
@@ -710,6 +745,17 @@ export const PurchaseRequestForm = ({
       return;
     }
 
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setErrorMessage(loginRequiredMessage);
+      toast.error(loginRequiredMessage);
+      scrollToErrorSummary();
+      return;
+    }
+
     const nextErrors = validateForm();
 
     if (Object.keys(nextErrors).length > 0) {
@@ -845,7 +891,9 @@ export const PurchaseRequestForm = ({
       toast.success(t("requests.intake.errors.success"));
     } catch (error: unknown) {
       const message =
-          error instanceof Error && error.message
+          !isAuthenticated
+              ? loginRequiredMessage
+          : error instanceof Error && error.message
               ? error.message
               : t("requests.intake.errors.submitFailed");
 
@@ -934,6 +982,14 @@ export const PurchaseRequestForm = ({
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
+        ) : null}
+
+        {authLoading ? (
+            <div className="rounded-[1.5rem] border border-border/70 bg-card/80 px-5 py-4 text-sm text-muted-foreground">
+              {lang === "ar" ? "جار التحقق من حالة تسجيل الدخول..." : "Checking sign-in status..."}
+            </div>
+        ) : !isAuthenticated ? (
+            <LoginRequiredCard lang={lang} />
         ) : null}
 
         {!profile && (
@@ -1544,6 +1600,11 @@ export const PurchaseRequestForm = ({
                 <p className="mt-1 text-sm leading-7 text-muted-foreground">
                   {t("requests.intake.summaryDescription")}
                 </p>
+                {!authLoading && !isAuthenticated ? (
+                  <p className="mt-2 text-sm font-semibold leading-7 text-primary">
+                    {loginRequiredMessage}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -1551,7 +1612,7 @@ export const PurchaseRequestForm = ({
                 variant="gold"
                 size="lg"
                 onClick={() => void handleSubmit()}
-                disabled={submitting}
+                disabled={submitting || authLoading || !isAuthenticated}
             >
               {submitting ? (
                   <>
@@ -1559,6 +1620,16 @@ export const PurchaseRequestForm = ({
                     {isEditMode
                         ? t("requests.intake.submittingUpdate") || "Saving update..."
                         : t("requests.intake.submitting")}
+                  </>
+              ) : authLoading ? (
+                  <>
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    {lang === "ar" ? "جار التحقق..." : "Checking..."}
+                  </>
+              ) : !isAuthenticated ? (
+                  <>
+                    <ShieldCheck className="me-2 h-4 w-4" />
+                    {lang === "ar" ? "سجل الدخول للإرسال" : "Sign in to submit"}
                   </>
               ) : (
                   <>
