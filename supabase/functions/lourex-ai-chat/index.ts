@@ -73,6 +73,8 @@ serve(async (req) => {
       route = "unknown",
       locale = "en-US",
       userRole: clientUserRole,
+      analysisMode,
+      formDraft,
     } = requestBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -114,6 +116,7 @@ serve(async (req) => {
     const normalizedContext = typeof pageContext === "string" ? pageContext : "unknown";
     const normalizedRoute = typeof route === "string" ? route : "unknown";
     const normalizedLocale = typeof locale === "string" ? locale : "en-US";
+    const isPurchaseRequestAnalyzer = analysisMode === "purchase_request_analyzer";
 
     const systemPrompt = `You are LOUREX AI Copilot, a premium bilingual Arabic/English trade operations assistant for LOUREX.
 
@@ -127,6 +130,7 @@ USER CONTEXT
 - Locale: ${normalizedLocale}
 - Current route: ${normalizedRoute}
 - Page context: ${normalizedContext}
+- Analysis mode: ${isPurchaseRequestAnalyzer ? "purchase_request_analyzer" : "general_chat"}
 - Context guidance: ${pageContextGuide[normalizedContext] || pageContextGuide.unknown}
 
 ROLE-SPECIFIC BEHAVIOR
@@ -157,6 +161,53 @@ STYLE
 - Make clear when text is a draft, estimate, or recommendation.
 - Suggest human LOUREX team review for operational decisions.`;
 
+    const analyzerPrompt = `You are LOUREX AI Request Analyzer.
+
+Analyze the current purchase request draft before submission. Return ONLY compact valid JSON with this exact shape:
+{
+  "readiness_score": number,
+  "product_category": string,
+  "missing_fields": string[],
+  "compliance_flags": string[],
+  "suggested_questions": string[],
+  "summary_ar": string,
+  "summary_en": string
+}
+
+Scoring guidance:
+- 90-100: Excellent / جاهز جدا
+- 70-89: Good / جيد
+- 40-69: Needs details / يحتاج تفاصيل
+- 0-39: Too vague / غير كاف
+
+Analyze these quality factors:
+- product name/title
+- product description
+- quantity
+- destination country/city
+- budget/target price if present
+- product link if present
+- uploaded images count
+- packaging requirements if present
+- specifications such as material, size, color, model, brand, grade
+- intended market/use if present
+
+Compliance flags are advisory only:
+- Food may require SFDA/Halal/import documentation.
+- Cosmetics may require ingredient list, label artwork, SFDA-related review.
+- Chemicals may require MSDS/TDS and safety classification.
+- Electronics may require conformity/electrical specs.
+- Textiles may require material composition, sizes, colors, labels.
+- Packaging may require dimensions, material, thickness, print specs.
+
+Safety:
+- Do not promise exact sourcing success, exact prices, or exact delivery dates.
+- Mark compliance as advisory.
+- Mention in summaries that Lourex team performs final review.
+
+Purchase request draft:
+${JSON.stringify(formDraft || {})}`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -165,7 +216,12 @@ STYLE
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: systemPrompt }, ...normalizedMessages],
+        messages: isPurchaseRequestAnalyzer
+          ? [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: analyzerPrompt },
+            ]
+          : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
       }),
     });
 
@@ -190,7 +246,7 @@ STYLE
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "I couldn't generate a response.";
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify(isPurchaseRequestAnalyzer ? { reply, analysis: reply } : { reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

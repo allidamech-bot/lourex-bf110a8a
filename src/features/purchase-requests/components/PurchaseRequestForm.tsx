@@ -13,10 +13,12 @@ import {
   ImagePlus,
   Loader2,
   ShieldCheck,
+  Sparkles,
   Truck,
   Upload,
   X,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,7 @@ import {
 import type { OperationsRequest, PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
+import { supabase } from "@/integrations/supabase/client";
 
 type PurchaseRequestFormState = {
   fullName: string;
@@ -61,6 +64,17 @@ type PurchaseRequestFormState = {
 };
 
 type PurchaseRequestFieldErrors = Partial<Record<keyof PurchaseRequestFormState | "uploads", string>>;
+
+type RequestAnalysisResult = {
+  readiness_score: number;
+  product_category: string;
+  missing_fields: string[];
+  compliance_flags: string[];
+  suggested_questions: string[];
+  summary_ar: string;
+  summary_en: string;
+  fallbackText?: string;
+};
 
 const initialState: PurchaseRequestFormState = {
   fullName: "",
@@ -170,6 +184,131 @@ const getTodayDateString = () => {
 
 const trimPayload = (value: string) => normalizeArabicDigits(value).trim();
 
+const clampScore = (value: unknown) => {
+  const numeric = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+};
+
+const toStringArray = (value: unknown) =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+
+const parseAnalyzerResponse = (raw: unknown): RequestAnalysisResult | null => {
+  if (!raw) {
+    return null;
+  }
+
+  const text = typeof raw === "string" ? raw : JSON.stringify(raw);
+  const cleaned = text
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  const match = cleaned.match(/\{[\s\S]*\}/);
+
+  try {
+    const parsed = JSON.parse(match ? match[0] : cleaned) as Record<string, unknown>;
+
+    return {
+      readiness_score: clampScore(parsed.readiness_score),
+      product_category: typeof parsed.product_category === "string" ? parsed.product_category : "General sourcing",
+      missing_fields: toStringArray(parsed.missing_fields),
+      compliance_flags: toStringArray(parsed.compliance_flags),
+      suggested_questions: toStringArray(parsed.suggested_questions),
+      summary_ar: typeof parsed.summary_ar === "string" ? parsed.summary_ar : "",
+      summary_en: typeof parsed.summary_en === "string" ? parsed.summary_en : "",
+    };
+  } catch {
+    return {
+      readiness_score: 0,
+      product_category: "Advisory response",
+      missing_fields: [],
+      compliance_flags: [],
+      suggested_questions: [],
+      summary_ar: "",
+      summary_en: "",
+      fallbackText: text,
+    };
+  }
+};
+
+const getScoreLabel = (score: number, lang: "en" | "ar") => {
+  if (score >= 90) return lang === "ar" ? "جاهز جدا" : "Excellent";
+  if (score >= 70) return lang === "ar" ? "جيد" : "Good";
+  if (score >= 40) return lang === "ar" ? "يحتاج تفاصيل" : "Needs details";
+  return lang === "ar" ? "غير كاف" : "Too vague";
+};
+
+const inferLocalCategory = (form: PurchaseRequestFormState) => {
+  const combined = `${form.productName} ${form.productDescription} ${form.technicalSpecs}`.toLowerCase();
+
+  if (/food|snack|beverage|halal|dates|coffee|sauce|طعام|غذاء|قهوة|تمر/.test(combined)) return "Food / FMCG";
+  if (/cosmetic|cream|shampoo|perfume|makeup|lotion|تجميل|عطر|كريم/.test(combined)) return "Cosmetics";
+  if (/chemical|detergent|solvent|paint|msds|منظف|كيميائ/.test(combined)) return "Chemicals";
+  if (/electronic|battery|charger|lamp|cable|electric|إلكترون|بطارية|كابل/.test(combined)) return "Electronics";
+  if (/textile|shirt|fabric|cotton|polyester|clothes|قماش|ملابس|قطن/.test(combined)) return "Textiles";
+  if (/packaging|box|carton|bottle|label|bag|تغليف|كرتون|عبوة/.test(combined)) return "Packaging";
+
+  return "General sourcing";
+};
+
+const buildLocalAnalysis = (
+  form: PurchaseRequestFormState,
+  imageCount: number,
+  lang: "en" | "ar",
+): RequestAnalysisResult => {
+  const checks: Array<{ filled: boolean; missingEn: string; missingAr: string; points: number }> = [
+    { filled: Boolean(trimPayload(form.productName)), missingEn: "Product name/title", missingAr: "اسم المنتج", points: 12 },
+    { filled: trimPayload(form.productDescription).length >= 30, missingEn: "Detailed product description", missingAr: "وصف تفصيلي للمنتج", points: 16 },
+    { filled: Boolean(trimPayload(form.quantity)), missingEn: "Quantity", missingAr: "الكمية", points: 10 },
+    { filled: Boolean(trimPayload(form.destination)), missingEn: "Destination country/city", missingAr: "مدينة أو دولة الوجهة", points: 10 },
+    { filled: Boolean(trimPayload(form.sizeDimensions)), missingEn: "Size or dimensions", missingAr: "المقاسات أو الأبعاد", points: 8 },
+    { filled: Boolean(trimPayload(form.material)), missingEn: "Material", missingAr: "الخامة", points: 8 },
+    { filled: Boolean(trimPayload(form.color)), missingEn: "Color", missingAr: "اللون", points: 6 },
+    { filled: trimPayload(form.technicalSpecs).length >= 20, missingEn: "Technical specifications", missingAr: "المواصفات الفنية", points: 12 },
+    { filled: imageCount > 0, missingEn: "Product images", missingAr: "صور المنتج", points: 10 },
+    { filled: Boolean(trimPayload(form.referenceLink) || trimPayload(form.brand) || trimPayload(form.qualityLevel)), missingEn: "Reference link, brand, or target quality", missingAr: "رابط مرجعي أو علامة تجارية أو مستوى جودة", points: 8 },
+  ];
+
+  const readinessScore = checks.reduce((total, item) => total + (item.filled ? item.points : 0), 0);
+  const missingFields = checks.filter((item) => !item.filled).map((item) => (lang === "ar" ? item.missingAr : item.missingEn));
+  const category = inferLocalCategory(form);
+  const complianceFlags =
+    category === "Food / FMCG"
+      ? ["Food may require SFDA, Halal, and import documentation review."]
+      : category === "Cosmetics"
+        ? ["Cosmetics may require ingredient list, label artwork, and SFDA-related review."]
+        : category === "Chemicals"
+          ? ["Chemicals may require MSDS/TDS and safety classification."]
+          : category === "Electronics"
+            ? ["Electronics may require conformity and electrical specifications."]
+            : category === "Textiles"
+              ? ["Textiles may require material composition, sizes, colors, and label details."]
+              : category === "Packaging"
+                ? ["Packaging may require dimensions, material, thickness, and print specifications."]
+                : ["Compliance review is advisory and depends on final product details."];
+
+  return {
+    readiness_score: readinessScore,
+    product_category: category,
+    missing_fields: missingFields,
+    compliance_flags: complianceFlags,
+    suggested_questions: [
+      lang === "ar" ? "ما الاستخدام النهائي أو السوق المستهدف للمنتج؟" : "What is the final use or target market for this product?",
+      lang === "ar" ? "هل توجد مواصفات تعبئة أو ملصقات مطلوبة؟" : "Are there required packaging or label specifications?",
+      lang === "ar" ? "هل توجد عينة أو رابط مرجعي يمكن مطابقته؟" : "Is there a sample or reference link to match?",
+    ],
+    summary_ar: "هذا تحليل إرشادي محلي لأن خدمة الذكاء الاصطناعي غير متاحة حاليا. يمكن إرسال الطلب يدويا وسيجري فريق لوركس المراجعة النهائية.",
+    summary_en: "This is a local advisory analysis because LOUREX AI is currently unavailable. You can still submit manually and the Lourex team will perform the final review.",
+  };
+};
+
 const SectionCard = ({
                        title,
                        description,
@@ -227,13 +366,17 @@ export const PurchaseRequestForm = ({
   initialRequest,
   onEditSuccess,
 }: PurchaseRequestFormProps) => {
-  const { t } = useI18n();
+  const { t, lang, locale } = useI18n();
   const { profile } = useAuthSession();
+  const location = useLocation();
   const isEditMode = mode === "edit";
 
   const [form, setForm] = useState<PurchaseRequestFormState>(() => buildInitialStateFromRequest(initialRequest));
   const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [analyzingRequest, setAnalyzingRequest] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<RequestAnalysisResult | null>(null);
+  const [analysisError, setAnalysisError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<PurchaseRequestFieldErrors>({});
   const [submittedData, setSubmittedData] = useState<{
@@ -276,6 +419,8 @@ export const PurchaseRequestForm = ({
     setForm(buildInitialStateFromRequest(initialRequest));
     setFieldErrors({});
     setErrorMessage("");
+    setAnalysisResult(null);
+    setAnalysisError("");
   }, [initialRequest]);
 
   const successSteps = useMemo(
@@ -480,6 +625,84 @@ export const PurchaseRequestForm = ({
 
       return current.filter((upload) => upload.id !== id);
     });
+  };
+
+  const buildAnalyzerDraft = () => ({
+    productName: trimPayload(form.productName),
+    productDescription: trimPayload(form.productDescription),
+    quantity: trimPayload(form.quantity),
+    sizeDimensions: trimPayload(form.sizeDimensions),
+    color: trimPayload(form.color),
+    material: trimPayload(form.material),
+    technicalSpecs: trimPayload(form.technicalSpecs),
+    referenceLink: trimPayload(form.referenceLink),
+    preferredShippingMethod: trimPayload(form.preferredShippingMethod),
+    deliveryNotes: trimPayload(form.deliveryNotes),
+    weight: trimPayload(form.weight),
+    manufacturingCountry: trimPayload(form.manufacturingCountry),
+    brand: trimPayload(form.brand),
+    qualityLevel: trimPayload(form.qualityLevel),
+    isReadyMade: form.isReadyMade,
+    hasPreviousSample: form.hasPreviousSample,
+    expectedSupplyDate: trimPayload(form.expectedSupplyDate),
+    destination: trimPayload(form.destination),
+    deliveryAddress: trimPayload(form.deliveryAddress),
+    isFullSourcing: form.isFullSourcing,
+    uploadedImagesCount: uploads.length + existingImages.length,
+  });
+
+  const analyzeRequestDraft = async () => {
+    if (analyzingRequest) {
+      return;
+    }
+
+    setAnalyzingRequest(true);
+    setAnalysisError("");
+    setAnalysisResult(null);
+
+    const formDraft = buildAnalyzerDraft();
+
+    try {
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message: "Analyze this purchase request draft and return only the requested JSON.",
+          messages: [
+            {
+              role: "user",
+              content: `Analyze this purchase request draft for readiness. Draft: ${JSON.stringify(formDraft)}`,
+            },
+          ],
+          pageContext: "public_request",
+          route: location.pathname,
+          locale,
+          userRole: profile?.role ?? "guest",
+          analysisMode: "purchase_request_analyzer",
+          formDraft,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const rawReply = data?.analysis || data?.reply || data;
+      const parsed = parseAnalyzerResponse(rawReply);
+
+      if (!parsed) {
+        throw new Error("Analysis response was empty.");
+      }
+
+      setAnalysisResult(parsed);
+    } catch {
+      setAnalysisError(
+        lang === "ar"
+          ? "مساعد LOUREX AI غير متاح الآن. يمكنك متابعة إرسال طلبك يدويا."
+          : "LOUREX AI is unavailable right now. You can continue submitting your request manually.",
+      );
+      setAnalysisResult(buildLocalAnalysis(form, uploads.length + existingImages.length, lang));
+    } finally {
+      setAnalyzingRequest(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -960,6 +1183,149 @@ export const PurchaseRequestForm = ({
             <FieldError text={fieldErrors.referenceLink} />
           </div>
         </SectionCard>
+
+        <section className="rounded-[1.8rem] border border-primary/25 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,#111111,#080808)] p-6 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.78)]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-serif text-2xl font-semibold text-foreground">
+                  {lang === "ar" ? "محلل طلبات LOUREX AI" : "LOUREX AI Request Analyzer"}
+                </p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  {lang === "ar"
+                    ? "حلل مسودة الطلب اختياريا قبل الإرسال لاكتشاف التفاصيل الناقصة والأسئلة المقترحة."
+                    : "Optionally analyze this draft before submission to spot missing details and suggested clarification questions."}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="gold"
+              onClick={() => void analyzeRequestDraft()}
+              disabled={analyzingRequest}
+              className="shrink-0"
+            >
+              {analyzingRequest ? (
+                <>
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                  {lang === "ar" ? "جار التحليل..." : "Analyzing..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="me-2 h-4 w-4" />
+                  {lang === "ar" ? "حلل الطلب بالذكاء الاصطناعي" : "Analyze request with LOUREX AI"}
+                </>
+              )}
+            </Button>
+          </div>
+
+          {analysisError ? (
+            <div className="mt-5 flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground">
+              <AlertCircle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
+              <span>{analysisError}</span>
+            </div>
+          ) : null}
+
+          {analysisResult ? (
+            <div className="mt-6 grid gap-4">
+              {analysisResult.fallbackText ? (
+                <div className="rounded-2xl border border-primary/20 bg-card/85 p-4">
+                  <p className="text-xs font-semibold uppercase text-primary">
+                    {lang === "ar" ? "رد استشاري" : "Advisory response"}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+                    {analysisResult.fallbackText}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-3 md:grid-cols-[0.7fr_1.3fr]">
+                    <div className="rounded-2xl border border-primary/25 bg-primary/10 p-5">
+                      <p className="text-xs font-semibold uppercase text-primary">
+                        {lang === "ar" ? "جاهزية الطلب" : "Readiness score"}
+                      </p>
+                      <div className="mt-3 flex items-end gap-2">
+                        <span className="text-5xl font-bold text-primary">{analysisResult.readiness_score}</span>
+                        <span className="pb-2 text-sm text-muted-foreground">/100</span>
+                      </div>
+                      <p className="mt-2 text-sm font-semibold text-foreground">
+                        {getScoreLabel(analysisResult.readiness_score, lang)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-card/85 p-5">
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">
+                        {lang === "ar" ? "تصنيف المنتج" : "Product category"}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">
+                        {analysisResult.product_category || (lang === "ar" ? "غير محدد" : "Not specified")}
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                        {lang === "ar"
+                          ? analysisResult.summary_ar || analysisResult.summary_en
+                          : analysisResult.summary_en || analysisResult.summary_ar}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div className="rounded-2xl border border-border/70 bg-card/85 p-4">
+                      <p className="text-sm font-semibold text-foreground">
+                        {lang === "ar" ? "تفاصيل ناقصة" : "Missing details"}
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                        {(analysisResult.missing_fields.length ? analysisResult.missing_fields : [lang === "ar" ? "لا توجد فجوات واضحة." : "No clear gaps found."]).map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-card/85 p-4">
+                      <p className="text-sm font-semibold text-foreground">
+                        {lang === "ar" ? "ملاحظات امتثال" : "Compliance flags"}
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                        {(analysisResult.compliance_flags.length ? analysisResult.compliance_flags : [lang === "ar" ? "لا توجد ملاحظات امتثال محددة." : "No specific compliance flags."]).map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-card/85 p-4">
+                      <p className="text-sm font-semibold text-foreground">
+                        {lang === "ar" ? "أسئلة مقترحة" : "Suggested questions"}
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                        {(analysisResult.suggested_questions.length ? analysisResult.suggested_questions : [lang === "ar" ? "لا توجد أسئلة إضافية حاليا." : "No extra questions right now."]).map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          <p className="mt-5 text-xs leading-6 text-muted-foreground">
+            {lang === "ar"
+              ? "تحليل الذكاء الاصطناعي إرشادي فقط. المراجعة النهائية تتم بواسطة فريق لوركس."
+              : "AI analysis is advisory. Final review is performed by the Lourex team."}
+          </p>
+        </section>
 
         <SectionCard
             title={t("requests.intake.shippingTitle")}
