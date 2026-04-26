@@ -732,11 +732,18 @@ export const createPurchaseRequestRecord = async (input: {
   isFullSourcing: boolean;
   trackingCode: string;
 }) => {
-  const { user, profile } = await getCurrentUserContext();
-  let customerId: string | null = null;
+  const { user } = await getCurrentUserContext();
 
-  if (user && profile?.role === "customer") {
-    const upsertedCustomer = await db
+  if (!user) {
+    return {
+      data: null,
+      error: {
+        message: "يجب تسجيل الدخول قبل إرسال طلب الشراء.",
+      },
+    };
+  }
+
+  const upsertedCustomer = await db
       .rpc<CurrentCustomerUpsertRow>("upsert_current_customer_record", {
         p_full_name: input.fullName,
         p_email: input.email,
@@ -746,56 +753,55 @@ export const createPurchaseRequestRecord = async (input: {
       })
       .maybeSingle();
 
-    if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
-      return {
-        data: null,
-        error: upsertedCustomer.error || {
-          message: "تعذر تهيئة سجل العميل المرتبط بطلب الشراء.",
-        },
-      };
-    }
-
-    customerId = upsertedCustomer.data.customer_id;
+  if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+    return {
+      data: null,
+      error: upsertedCustomer.error || {
+        message: "تعذر تهيئة سجل العميل المرتبط بطلب الشراء.",
+      },
+    };
   }
 
+  const customerId = upsertedCustomer.data.customer_id;
+
   const inserted = await safeStructuredMutation<PurchaseRequestRow>(() =>
-    db
-      .from<PurchaseRequestRow>("purchase_requests")
-      .insert({
-        request_number: input.requestNumber,
-        status: "intake_submitted",
-        customer_id: customerId,
-        full_name: input.fullName,
-        phone: input.phone,
-        email: input.email,
-        country: input.country,
-        city: input.city,
-        product_name: input.productName,
-        product_description: input.productDescription,
-        quantity: input.quantity,
-        size_dimensions: input.sizeDimensions,
-        color: input.color,
-        material: input.material,
-        technical_specs: input.technicalSpecs,
-        reference_link: input.referenceLink,
-        preferred_shipping_method: input.preferredShippingMethod,
-        delivery_notes: input.deliveryNotes,
-        image_urls: input.imageUrls,
-        // Phase 4 expansion mapping
-        weight: input.weight,
-        manufacturing_country: input.manufacturingCountry,
-        brand: input.brand,
-        quality_level: input.qualityLevel,
-        is_ready_made: input.isReadyMade,
-        has_previous_sample: input.hasPreviousSample,
-        expected_supply_date: input.expectedSupplyDate,
-        destination: input.destination,
-        delivery_address: input.deliveryAddress,
-        is_full_sourcing: input.isFullSourcing,
-        tracking_code: input.trackingCode,
-      })
-      .select("*")
-      .single(),
+      db
+          .from<PurchaseRequestRow>("purchase_requests")
+          .insert({
+            request_number: input.requestNumber,
+            status: "intake_submitted",
+            customer_id: customerId,
+            full_name: input.fullName,
+            phone: input.phone,
+            email: input.email,
+            country: input.country,
+            city: input.city,
+            product_name: input.productName,
+            product_description: input.productDescription,
+            quantity: input.quantity,
+            size_dimensions: input.sizeDimensions,
+            color: input.color,
+            material: input.material,
+            technical_specs: input.technicalSpecs,
+            reference_link: input.referenceLink,
+            preferred_shipping_method: input.preferredShippingMethod,
+            delivery_notes: input.deliveryNotes,
+            image_urls: input.imageUrls,
+            // Phase 4 expansion mapping
+            weight: input.weight,
+            manufacturing_country: input.manufacturingCountry,
+            brand: input.brand,
+            quality_level: input.qualityLevel,
+            is_ready_made: input.isReadyMade,
+            has_previous_sample: input.hasPreviousSample,
+            expected_supply_date: input.expectedSupplyDate,
+            destination: input.destination,
+            delivery_address: input.deliveryAddress,
+            is_full_sourcing: input.isFullSourcing,
+            tracking_code: input.trackingCode,
+          })
+          .select("*")
+          .single(),
   );
 
   if (inserted.error || !inserted.data) {
@@ -813,11 +819,11 @@ export const createPurchaseRequestRecord = async (input: {
     file_name: buildAttachmentLabel(url, `image-${index + 1}`),
     file_url: url,
     visibility: "internal",
-    uploaded_by: user?.id || null,
+    uploaded_by: user.id,
   }));
 
   const { error: attachmentError } = await safeStructuredMutation(() =>
-    db.from("attachments").insert(attachments),
+      db.from("attachments").insert(attachments),
   );
 
   return { data: inserted.data, error: attachmentError || null };
