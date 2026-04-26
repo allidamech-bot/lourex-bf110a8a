@@ -59,80 +59,8 @@ export const SiteHeader = () => {
   };
 
   return (
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur" dir={isRtl ? "rtl" : "ltr"}>
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-6 px-6">
-          <div className={`flex min-w-0 flex-1 items-center gap-3 ${isRtl ? "justify-start" : "justify-end"}`}>
-            <div className="hidden items-center gap-3 lg:flex">
-              {user ? <NotificationBell userId={user.id} /> : null}
-              <LanguageSwitcher />
-              <ThemeToggle />
-            </div>
-
-            {profile?.role === "owner" ? (
-                <Button variant="outline" asChild className="hidden h-9 px-3 lg:inline-flex">
-                  <Link to="/admin">
-                    <Shield className="me-2 h-4 w-4" />
-                    {t("nav.admin")}
-                  </Link>
-                </Button>
-            ) : null}
-
-            {isAuthenticated ? (
-                <>
-                  <Link
-                      to="/profile"
-                      className="hidden max-w-[220px] items-center gap-2.5 rounded-xl border border-border/60 bg-card px-3 py-1.5 transition-colors hover:border-primary/30 hover:bg-secondary/40 lg:flex"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                      {userName.slice(0, 1).toUpperCase()}
-                    </div>
-
-                    <div className="min-w-0 text-start">
-                      <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                      <p className="truncate text-xs text-muted-foreground">{userEmail || roleLabel || workspaceLabel}</p>
-                    </div>
-                  </Link>
-
-                  <Button variant="ghost" onClick={handleLogout} className="hidden h-9 px-3 lg:inline-flex">
-                    <LogOut className="me-2 h-4 w-4" />
-                    {t("nav.signOut")}
-                  </Button>
-                </>
-            ) : (
-                <Button variant="gold" asChild className="hidden h-9 px-4 lg:inline-flex">
-                  <Link to="/auth">{t("nav.signIn")}</Link>
-                </Button>
-            )}
-
-            <button
-                type="button"
-                className="rounded-lg p-2 text-foreground lg:hidden"
-                onClick={() => setIsOpen((value) => !value)}
-                aria-label="Toggle navigation menu"
-            >
-              {isOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
-
-          <nav className="hidden flex-none items-center justify-center gap-6 lg:flex">
-            {publicLinks.map((link) => (
-                <NavLink
-                    key={`${link.to}-${link.label}`}
-                    to={link.to}
-                    className={({ isActive }) =>
-                        `text-sm transition-colors ${
-                            isActive
-                                ? "font-bold text-foreground"
-                                : "font-medium text-muted-foreground opacity-70 hover:opacity-100"
-                        }`
-                    }
-                >
-                  {link.label}
-                </NavLink>
-            ))}
-          </nav>
-
-          <div className={`flex min-w-0 flex-1 items-center ${isRtl ? "justify-end" : "justify-start"}`}>
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/95 shadow-[0_1px_0_rgba(212,175,55,0.12)] backdrop-blur" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6" dir="ltr">
           <Link
               to="/"
               className="flex shrink-0 items-center gap-3"
@@ -141,17 +69,91 @@ export const SiteHeader = () => {
             <img src="/logo.png" alt="Lourex" className="h-10 w-10 rounded-xl object-contain" />
             <p className="font-serif text-xl font-bold tracking-wide text-foreground">LOUREX</p>
           </Link>
+
+          <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex 2xl:gap-2" dir={isRtl ? "rtl" : "ltr"}>
+            {publicLinks.map((link) => (
+                <NavLink
+                    key={`${link.to}-${link.label}`}
+                    to={link.to}
+                    className={({ isActive }) =>
+                        `whitespace-nowrap rounded-full px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3 2xl:text-sm ${
+                            isActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                        }`
+                    }
+                >
+                  {link.label}
+                </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex shrink-0 items-center justify-end gap-2" dir={isRtl ? "rtl" : "ltr"}>
+            <div className="hidden shrink-0 items-center gap-2 xl:flex">
+              {isAuthenticated ? (
+                  <>
+                    <Link
+                        to="/profile"
+                        className="flex min-w-0 max-w-[160px] items-center gap-2 rounded-lg border border-border/80 bg-card px-2.5 py-1.5 transition-colors hover:border-primary/50 hover:bg-secondary/70 2xl:max-w-[230px] 2xl:px-3"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                        {userName.slice(0, 1).toUpperCase()}
+                      </div>
+
+                      <div className="min-w-0 text-start">
+                        <p className="truncate text-sm font-semibold leading-5 text-foreground">{userName}</p>
+                        <p className="truncate text-xs leading-4 text-muted-foreground">{userEmail || roleLabel || workspaceLabel}</p>
+                      </div>
+                    </Link>
+
+                    {profile?.role === "owner" ? (
+                        <Button variant="gold-outline" asChild className="h-9 w-9 px-0 2xl:w-auto 2xl:px-3">
+                          <Link to="/admin" aria-label={t("nav.admin")}>
+                            <Shield className="h-4 w-4 2xl:me-2" />
+                            <span className="hidden 2xl:inline">{t("nav.admin")}</span>
+                          </Link>
+                        </Button>
+                    ) : null}
+
+                    {user ? <NotificationBell userId={user.id} /> : null}
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+
+                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-muted-foreground hover:bg-secondary/80 hover:text-primary 2xl:w-auto 2xl:px-3">
+                      <LogOut className="h-4 w-4 2xl:me-2" />
+                      <span className="hidden whitespace-nowrap 2xl:inline">{t("nav.signOut")}</span>
+                    </Button>
+                  </>
+              ) : (
+                  <>
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+                    <Button variant="gold" asChild className="h-9 px-4">
+                      <Link to="/auth">{t("nav.signIn")}</Link>
+                    </Button>
+                  </>
+              )}
+            </div>
+
+            <button
+                type="button"
+                className="rounded-lg border border-border/80 bg-card p-2 text-foreground transition-colors hover:border-primary/50 hover:text-primary xl:hidden"
+                onClick={() => setIsOpen((value) => !value)}
+                aria-label="Toggle navigation menu"
+            >
+              {isOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </div>
 
         {isOpen ? (
-            <div className="border-t border-border/60 bg-background lg:hidden">
+            <div className="border-t border-border/80 bg-background xl:hidden">
               <div className="container mx-auto flex flex-col gap-1 px-4 py-4" dir={isRtl ? "rtl" : "ltr"}>
                 {isAuthenticated ? (
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="mb-3 block rounded-2xl border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/30 hover:bg-secondary/40"
+                        className="mb-3 block rounded-2xl border border-border/80 bg-card px-4 py-4 transition-colors hover:border-primary/50 hover:bg-secondary/70"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
@@ -165,14 +167,14 @@ export const SiteHeader = () => {
                       </div>
 
                       {roleLabel ? (
-                          <p className="mt-3 rounded-xl bg-secondary/50 px-3 py-2 text-xs text-muted-foreground">
+                          <p className="mt-3 rounded-xl bg-secondary px-3 py-2 text-xs text-muted-foreground">
                             {roleLabel}
                           </p>
                       ) : null}
                     </Link>
                 ) : null}
 
-                <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-2">
+                <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/80 bg-card px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                   <ThemeToggle />
@@ -183,7 +185,7 @@ export const SiteHeader = () => {
                         key={`${link.to}-${link.label}`}
                         to={link.to}
                         onClick={() => setIsOpen(false)}
-                        className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        className="rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
                       {link.label}
                     </NavLink>
@@ -195,7 +197,7 @@ export const SiteHeader = () => {
                           <NavLink
                               to="/admin"
                               onClick={() => setIsOpen(false)}
-                              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                              className="rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                           >
                             {t("nav.admin")}
                           </NavLink>
@@ -204,7 +206,7 @@ export const SiteHeader = () => {
                       <button
                           type="button"
                           onClick={() => void handleLogout()}
-                          className="rounded-lg px-3 py-2 text-start text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          className="rounded-lg px-3 py-2 text-start text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
                       >
                         {signOutLabel}
                       </button>

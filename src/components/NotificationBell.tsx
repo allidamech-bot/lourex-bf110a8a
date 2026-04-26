@@ -275,10 +275,10 @@ const NotificationBell = ({ userId }: { userId: string }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-card text-muted-foreground transition-colors hover:border-primary/50 hover:bg-secondary hover:text-primary"
         aria-label={t("notifications.title")}
         aria-expanded={open}
       >

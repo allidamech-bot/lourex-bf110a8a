@@ -9,12 +9,12 @@ const LanguageSwitcher = () => {
   const { lang, setLang } = useI18n();
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-border/50 bg-secondary/50 p-0.5">
+    <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-secondary p-0.5">
       {langs.map((l) => (
         <button
           key={l.code}
           onClick={() => setLang(l.code)}
-          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-all ${
             lang === l.code
               ? "bg-gold text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
