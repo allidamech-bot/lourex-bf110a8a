@@ -76,6 +76,16 @@ export default function PurchaseRequestsPage() {
     const [loadError, setLoadError] = useState("");
 
     const selectedRequestId = searchParams.get("request");
+    const getRequestStatusMeta = (status: PurchaseRequestStatus | string | null | undefined) => {
+        if (status && status in requestStatusMeta) {
+            return requestStatusMeta[status as PurchaseRequestStatus];
+        }
+
+        return {
+            label: status || t("common.unknown"),
+            tone: "bg-zinc-500/15 text-zinc-300",
+        };
+    };
 
     const statusActions: Array<{ value: PurchaseRequestStatus; label: string }> = [
         { value: "under_review", label: t("requests.actions.under_review") },
@@ -452,7 +462,7 @@ export default function PurchaseRequestsPage() {
                     ) : (
                         <div className="space-y-3">
                             {filteredRows.map((row) => {
-                                const statusMeta = requestStatusMeta[row.status];
+                                const statusMeta = getRequestStatusMeta(row.status);
 
                                 return (
                                     <button
@@ -548,13 +558,15 @@ export default function PurchaseRequestsPage() {
                             </div>
 
                             <div className="mt-4 flex flex-wrap gap-2">
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        requestStatusMeta[selectedRow.status].tone
-                    }`}
-                >
-                  {t(`statuses.${selectedRow.status}`)}
-                </span>
+                                {(() => {
+                                    const statusMeta = getRequestStatusMeta(selectedRow.status);
+
+                                    return (
+                                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusMeta.tone}`}>
+            {t(`statuses.${selectedRow.status}`)}
+        </span>
+                                    );
+                                })()}
 
                                 {selectedRow.convertedDealNumber ? (
                                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">

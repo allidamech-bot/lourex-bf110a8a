@@ -1,20 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
+
 import type { Database } from "./types";
 
-// تم وضع القيم يدوياً لتجاوز قيود Lovable Cloud واستخدام المشروع الجديد مباشرة
-const SUPABASE_URL = "https://gxmqchznfolerliorpkz.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4bXFjaHpuZm9sZXJsaW9ycGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTczNDksImV4cCI6MjA5MjI5MzM0OX0.t23ESmTe2en1wHnp1c38BNoP7epbBXzi9KDY4joTukk";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error("Supabase credentials are required.");
+if (!SUPABASE_URL) {
+  throw new Error("Missing VITE_SUPABASE_URL. Check your .env file and deployment env variables.");
 }
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error("Missing VITE_SUPABASE_PUBLISHABLE_KEY. Check your .env file and deployment env variables.");
+}
 
-console.log("Connected to Custom Supabase Project: gxmqchznfolerliorpkz");
+export const supabase = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    },
+);
