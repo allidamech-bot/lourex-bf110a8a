@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { BarChart3, ClipboardList, FilePenLine, PackageSearch, Receipt, Truck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { BarChart3, ClipboardList, FilePenLine, Loader2, PackageSearch, Receipt, RefreshCw, Sparkles, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
@@ -13,6 +13,10 @@ import {
   fetchShipments,
 } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { isInternalRole } from "@/features/auth/rbac";
+import { supabase } from "@/integrations/supabase/client";
+import { logOperationalError } from "@/lib/monitoring";
 
 interface OverviewMetrics {
   requests: number;
@@ -29,13 +33,142 @@ interface MetricCard {
 
 const loadingCards = Array.from({ length: 4 }, (_, index) => index);
 
+type DashboardRequests = Awaited<ReturnType<typeof fetchRequests>>;
+type DashboardShipments = Awaited<ReturnType<typeof fetchShipments>>;
+type DashboardEditRequests = Awaited<ReturnType<typeof fetchFinancialEditRequests>>;
+
+const buildDashboardContext = (
+  requests: DashboardRequests,
+  shipments: DashboardShipments,
+  editRequests: DashboardEditRequests,
+  metrics: OverviewMetrics,
+) => {
+  const countByStatus = (status: string) => requests.filter((item) => item.status === status).length;
+  const activeShipments = shipments.filter((item) => item.stage !== "delivered").length;
+  const deliveredShipments = shipments.filter((item) => item.stage === "delivered").length;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    totals: {
+      purchaseRequests: metrics.requests,
+      deals: metrics.deals,
+      shipments: metrics.shipments,
+      audits: metrics.audits,
+    },
+    purchaseRequests: {
+      intakeSubmitted: countByStatus("intake_submitted"),
+      underReview: countByStatus("under_review"),
+      awaitingClarification: countByStatus("awaiting_clarification"),
+      readyForConversion: countByStatus("ready_for_conversion"),
+      convertedOrInProgress: requests.filter((item) => item.status === "in_progress" || item.status === "completed").length,
+      transferProofPending: countByStatus("transfer_proof_pending"),
+    },
+    shipments: {
+      active: activeShipments,
+      delivered: deliveredShipments,
+      riskCount: shipments.filter((item) => item.stage !== "delivered" && item.timeline.length === 0).length,
+    },
+    accounting: {
+      pendingEditRequests: editRequests.filter((item) => item.status === "pending").length,
+    },
+    recentRequests: requests.slice(0, 5).map((item) => ({
+      requestNumber: item.requestNumber,
+      status: item.status,
+      productName: item.productName,
+      destination: item.destination,
+      createdAt: item.createdAt,
+    })),
+  };
+};
+
+const buildLocalDailyBriefing = (dashboardContext: ReturnType<typeof buildDashboardContext>, lang: string) => {
+  const isArabic = lang === "ar";
+  const priorities: string[] = [];
+  const requests = dashboardContext.purchaseRequests;
+
+  const add = (condition: boolean, en: string, ar: string) => {
+    if (condition) priorities.push(isArabic ? ar : en);
+  };
+
+  add(
+    requests.readyForConversion > 0,
+    `Review ${requests.readyForConversion} ready purchase request(s) and convert qualified ones to deals.`,
+    `راجع ${requests.readyForConversion} طلب/طلبات جاهزة للتحويل وحوّل المؤهل منها إلى صفقات.`,
+  );
+  add(
+    requests.awaitingClarification > 0,
+    `Follow up on ${requests.awaitingClarification} request(s) awaiting customer clarification.`,
+    `تابع ${requests.awaitingClarification} طلب/طلبات بانتظار توضيح من العميل.`,
+  );
+  add(
+    requests.transferProofPending > 0,
+    `Review ${requests.transferProofPending} pending transfer proof(s).`,
+    `راجع ${requests.transferProofPending} إثبات/إثباتات تحويل معلقة.`,
+  );
+  add(
+    requests.intakeSubmitted > 0,
+    `Start initial review of ${requests.intakeSubmitted} newly submitted request(s).`,
+    `ابدأ المراجعة الأولية لـ ${requests.intakeSubmitted} طلب/طلبات جديدة.`,
+  );
+  add(
+    dashboardContext.accounting.pendingEditRequests > 0,
+    `Check ${dashboardContext.accounting.pendingEditRequests} pending financial edit request(s).`,
+    `راجع ${dashboardContext.accounting.pendingEditRequests} طلب/طلبات تعديل مالي معلقة.`,
+  );
+  add(
+    dashboardContext.shipments.riskCount > 0,
+    `Inspect ${dashboardContext.shipments.riskCount} active shipment(s) with limited timeline activity.`,
+    `افحص ${dashboardContext.shipments.riskCount} شحنة/شحنات نشطة ذات نشاط محدود في السجل الزمني.`,
+  );
+
+  if (priorities.length === 0) {
+    priorities.push(
+      isArabic
+        ? "لا توجد عوائق تشغيلية عاجلة ظاهرة من بيانات لوحة التحكم الحالية."
+        : "No urgent operational blockers detected from current dashboard data.",
+    );
+  }
+
+  return isArabic
+    ? [
+        "## الملخص التنفيذي",
+        `يوجد حالياً ${dashboardContext.totals.purchaseRequests} طلب شراء، و${dashboardContext.totals.deals} صفقة، و${dashboardContext.shipments.active} شحنة نشطة.`,
+        "",
+        "## الأولويات التشغيلية",
+        ...priorities.map((item) => `- ${item}`),
+        "",
+        "## الإجراءات المقترحة",
+        "- ابدأ بالطلبات الجاهزة للتحويل ثم الطلبات التي تنتظر توضيحات من العملاء.",
+        "- راجع إثباتات التحويل المعلقة قبل أي تقدم تشغيلي.",
+        "- راقب الشحنات النشطة وطلبات التعديل المالي حسب الأولوية.",
+      ].join("\n")
+    : [
+        "## Executive summary",
+        `Current dashboard data shows ${dashboardContext.totals.purchaseRequests} purchase requests, ${dashboardContext.totals.deals} deals, and ${dashboardContext.shipments.active} active shipments.`,
+        "",
+        "## Operational priorities",
+        ...priorities.map((item) => `- ${item}`),
+        "",
+        "## Suggested next actions",
+        "- Start with ready-for-conversion requests, then customer clarification follow-ups.",
+        "- Review pending transfer proofs before any operational progression.",
+        "- Monitor active shipments and pending financial edit requests by urgency.",
+      ].join("\n");
+};
+
 export default function OverviewPage() {
-  const { locale, t } = useI18n();
+  const { locale, t, lang } = useI18n();
+  const { profile } = useAuthSession();
+  const isInternal = isInternalRole(profile?.role);
   const [metrics, setMetrics] = useState<OverviewMetrics>({ requests: 0, deals: 0, shipments: 0, audits: 0 });
+  const [requests, setRequests] = useState<DashboardRequests>([]);
   const [recentRequests, setRecentRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
   const [shipments, setShipments] = useState<Awaited<ReturnType<typeof fetchShipments>>>([]);
   const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof fetchFinancialEditRequests>>>([]);
   const [loading, setLoading] = useState(true);
+  const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingText, setBriefingText] = useState("");
+  const [briefingUsedFallback, setBriefingUsedFallback] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -56,6 +189,7 @@ export default function OverviewPage() {
           shipments: shipmentsDomain.length,
           audits: auditCount,
         });
+        setRequests(requestsDomain);
         setRecentRequests(requestsDomain.slice(0, 4));
         setShipments(shipmentsDomain);
         setEditRequests(editsDomain);
@@ -76,6 +210,11 @@ export default function OverviewPage() {
     [recentRequests],
   );
 
+  const dashboardContext = useMemo(
+    () => buildDashboardContext(requests, shipments, editRequests, metrics),
+    [requests, shipments, editRequests, metrics],
+  );
+
   const deliverySummary = useMemo(
     () => ({
       active: shipments.filter((item) => item.stage !== "delivered").length,
@@ -85,6 +224,52 @@ export default function OverviewPage() {
   );
 
   const pendingEditRequests = editRequests.filter((item) => item.status === "pending").length;
+  const prepareDailyBriefing = useCallback(async () => {
+    if (!isInternal || loading) {
+      return;
+    }
+
+    setBriefingLoading(true);
+    setBriefingUsedFallback(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message: "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview.",
+          pageContext: "dashboard_home",
+          route: window.location.pathname,
+          locale,
+          userRole: profile?.role,
+          analysisMode: "dashboard_daily_briefing",
+          dashboardContext,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!reply) {
+        throw new Error("Empty daily briefing response");
+      }
+
+      setBriefingText(reply);
+    } catch (error: unknown) {
+      logOperationalError("dashboard_ai_daily_briefing", error, { role: profile?.role });
+      setBriefingUsedFallback(true);
+      setBriefingText(buildLocalDailyBriefing(dashboardContext, lang));
+    } finally {
+      setBriefingLoading(false);
+    }
+  }, [dashboardContext, isInternal, lang, loading, locale, profile?.role]);
+
+  useEffect(() => {
+    if (!loading && isInternal && !briefingText && !briefingLoading) {
+      void prepareDailyBriefing();
+    }
+  }, [briefingLoading, briefingText, isInternal, loading, prepareDailyBriefing]);
+
   const metricCards: MetricCard[] = [
     { label: t("overview.metrics.requests"), value: metrics.requests, icon: ClipboardList },
     { label: t("overview.metrics.deals"), value: metrics.deals, icon: PackageSearch },
@@ -135,6 +320,70 @@ export default function OverviewPage() {
           </BentoCard>
         ))}
       </div>
+
+      {isInternal ? (
+        <BentoCard span="full" className="border-primary/25 bg-[#080808] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.35)] md:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 text-primary">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.22em] text-primary">
+                    {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
+                  </p>
+                  <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                    {lang === "ar"
+                      ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق لوركس."
+                      : "AI output is advisory. Final decisions remain with the Lourex team."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0 border-primary/25 bg-[#111111] hover:border-primary/45 hover:bg-primary/10"
+              disabled={briefingLoading || loading}
+              onClick={() => void prepareDailyBriefing()}
+            >
+              {briefingLoading ? (
+                <Loader2 className="me-2 h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <RefreshCw className="me-2 h-4 w-4 text-primary" />
+              )}
+              {lang === "ar" ? "تحديث الموجز" : "Refresh briefing"}
+            </Button>
+          </div>
+
+          {briefingUsedFallback ? (
+            <div className="mt-5 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+              {lang === "ar"
+                ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء موجز تشغيلي محلي بدلاً من ذلك."
+                : "LOUREX AI is unavailable right now. A local operational briefing was generated instead."}
+            </div>
+          ) : null}
+
+          <div className="mt-5 rounded-[1.25rem] border border-primary/20 bg-[#111111] p-5">
+            {briefingLoading ? (
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                {lang === "ar" ? "جارٍ تجهيز الموجز اليومي..." : "Preparing daily briefing..."}
+              </div>
+            ) : briefingText ? (
+              <pre className="max-h-[28rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-foreground">{briefingText}</pre>
+            ) : (
+              <div className="text-sm leading-7 text-muted-foreground">
+                {lang === "ar"
+                  ? "سيظهر الموجز اليومي بعد تحميل بيانات لوحة التحكم."
+                  : "The daily briefing will appear after dashboard data finishes loading."}
+              </div>
+            )}
+          </div>
+        </BentoCard>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <BentoCard className="space-y-4">

@@ -57,6 +57,11 @@ const purchaseRequestAssistantModes: Record<string, string> = {
     "Draft advisory compliance notes only. Mention possible category-specific documents and final Lourex team review.",
 };
 
+const dashboardAssistantModes: Record<string, string> = {
+  dashboard_daily_briefing:
+    "Generate a concise internal daily operations briefing with executive summary, priorities, request review needs, conversion readiness, clarification follow-ups, shipment risks, financial review items, and suggested next actions.",
+};
+
 const normalizeMessages = (messages: unknown, message: unknown): ChatMessage[] => {
   if (Array.isArray(messages) && messages.length > 0) {
     return messages
@@ -94,6 +99,7 @@ serve(async (req) => {
       analysisMode,
       formDraft,
       requestContext,
+      dashboardContext,
     } = requestBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -143,11 +149,14 @@ serve(async (req) => {
     const isPurchaseRequestAnalyzer = analysisMode === "purchase_request_analyzer";
     const normalizedAnalysisMode = typeof analysisMode === "string" ? analysisMode : "general_chat";
     const isPurchaseRequestAssistantMode = normalizedAnalysisMode in purchaseRequestAssistantModes;
+    const isDashboardAssistantMode = normalizedAnalysisMode in dashboardAssistantModes;
     const analysisModeLabel = isPurchaseRequestAnalyzer
       ? "purchase_request_analyzer"
       : isPurchaseRequestAssistantMode
         ? normalizedAnalysisMode
-        : "general_chat";
+        : isDashboardAssistantMode
+          ? normalizedAnalysisMode
+          : "general_chat";
 
     const systemPrompt = `You are LOUREX AI Copilot, a premium bilingual Arabic/English trade operations assistant for LOUREX.
 
@@ -258,6 +267,34 @@ Rules:
 - Use the user's locale/language when clear: ${normalizedLocale}. If Arabic is appropriate, use clear Modern Standard Arabic.
 - Keep the output compact and operational.`;
 
+    const dashboardAssistantPrompt = `You are LOUREX AI Daily Briefing assistant for the internal LOUREX dashboard home page.
+
+Return concise markdown/plain text for the dashboard_daily_briefing mode.
+
+Action mode:
+- ${normalizedAnalysisMode}: ${dashboardAssistantModes[normalizedAnalysisMode] || "General dashboard briefing."}
+
+Safe aggregated dashboard context:
+${JSON.stringify(dashboardContext || {})}
+
+Required sections:
+- Executive summary
+- Operational priorities
+- Requests needing review
+- Requests ready for conversion
+- Requests awaiting clarification
+- Shipment/tracking risks if available
+- Financial review items if available
+- Suggested next actions
+
+Rules:
+- Output is advisory only and final decisions remain with the Lourex team.
+- Do not claim that a database record, ticket, request, status, deal, message, email, financial entry, lock, or shipment stage was created, changed, approved, rejected, sent, or updated.
+- Do not promise exact prices, exact availability, delivery dates, customs outcomes, or operational outcomes.
+- Use only the aggregated/safe context provided. Do not infer or expose private data beyond the context.
+- Use the user's locale/language when clear: ${normalizedLocale}. If Arabic is appropriate, use clear Modern Standard Arabic.
+- Keep the output compact and focused on today's operational priorities.`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -276,7 +313,12 @@ Rules:
                 { role: "system", content: systemPrompt },
                 { role: "user", content: purchaseRequestAssistantPrompt },
               ]
-            : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
+            : isDashboardAssistantMode
+              ? [
+                  { role: "system", content: systemPrompt },
+                  { role: "user", content: dashboardAssistantPrompt },
+                ]
+              : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
       }),
     });
 
