@@ -89,9 +89,16 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
+    if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const {
       message = "",
-      messages = [],
+      messages,
       pageContext = "unknown",
       route = "unknown",
       locale = "en-US",
@@ -101,6 +108,14 @@ serve(async (req) => {
       requestContext,
       dashboardContext,
     } = requestBody;
+    const safeMessages = Array.isArray(messages) ? messages : [];
+
+    if (!Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: "messages must be an array" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -142,7 +157,7 @@ serve(async (req) => {
       }
     }
 
-    const normalizedMessages = normalizeMessages(messages, message);
+    const normalizedMessages = normalizeMessages(safeMessages, message);
     const normalizedContext = typeof pageContext === "string" ? pageContext : "unknown";
     const normalizedRoute = typeof route === "string" ? route : "unknown";
     const normalizedLocale = typeof locale === "string" ? locale : "en-US";

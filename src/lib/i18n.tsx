@@ -482,8 +482,8 @@ const translations: Record<Lang, TranslationTree> = {
           description: "Platform oversight, operational visibility, and reporting live here.",
         },
         saudi_partner: {
-          title: "Partner Workspace",
-          description: "Destination execution, arrival handling, and local follow-up stay organized here.",
+          title: "General Management",
+          description: "Platform oversight, operational visibility, and reporting live here.",
         },
         operations_employee: {
           title: "Operations Room",
@@ -1679,8 +1679,8 @@ const translations: Record<Lang, TranslationTree> = {
           description: "هنا تظهر المتابعة الشاملة للمنصة والرؤية التشغيلية والتقارير.",
         },
         saudi_partner: {
-          title: "مساحة الشريك",
-          description: "هنا يتم تنظيم تنفيذ الوصول والتعامل المحلي والمتابعة داخل المملكة.",
+          title: "الإدارة العامة",
+          description: "هنا تظهر المتابعة الشاملة للمنصة والرؤية التشغيلية والتقارير.",
         },
         operations_employee: {
           title: "غرفة العمليات",

@@ -236,6 +236,7 @@ export default function OverviewPage() {
       const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
         body: {
           message: "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview.",
+          messages: [],
           pageContext: "dashboard_home",
           route: window.location.pathname,
           locale,

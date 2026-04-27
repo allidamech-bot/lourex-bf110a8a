@@ -35,17 +35,22 @@ export const INTERNAL_ROLES: LourexRole[] = [
 export const OWNER_ONLY_ROLES: LourexRole[] = ["owner"];
 export const ACCOUNTING_ROLES: LourexRole[] = ["owner", "operations_employee"];
 export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
+export const OWNER_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "saudi_partner"];
+export const ACCOUNTING_DASHBOARD_UI_ROLES: LourexRole[] = [
+  ...ACCOUNTING_ROLES,
+  "saudi_partner",
+];
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
   requests: INTERNAL_ROLES,
-  customers: ["owner", "operations_employee"] as LourexRole[],
+  customers: [...OWNER_DASHBOARD_UI_ROLES, "operations_employee"] as LourexRole[],
   deals: INTERNAL_ROLES,
   tracking: INTERNAL_ROLES,
-  accounting: ACCOUNTING_ROLES,
-  editRequests: ACCOUNTING_ROLES,
+  accounting: ACCOUNTING_DASHBOARD_UI_ROLES,
+  editRequests: ACCOUNTING_DASHBOARD_UI_ROLES,
   audit: INTERNAL_ROLES,
-  reports: ["owner", "operations_employee"] as LourexRole[],
+  reports: [...OWNER_DASHBOARD_UI_ROLES, "operations_employee"] as LourexRole[],
 } as const;
 
 export const canAccessRole = (role: LourexRole | null | undefined, allowedRoles?: LourexRole[]) =>

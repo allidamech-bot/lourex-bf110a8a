@@ -422,6 +422,7 @@ export default function PurchaseRequestsPage() {
             const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
                 body: {
                     message: `${outputTitle} for internal purchase request ${selectedRow.requestNumber}`,
+                    messages: [],
                     pageContext: "dashboard_purchase_requests",
                     route: window.location.pathname,
                     locale,
