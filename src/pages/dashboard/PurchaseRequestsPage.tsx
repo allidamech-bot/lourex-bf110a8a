@@ -3,6 +3,7 @@ import {
     ArrowRightLeft,
     CheckCircle2,
     ClipboardList,
+    Copy,
     Eye,
     FileImage,
     Filter,
@@ -10,6 +11,7 @@ import {
     MessageSquareWarning,
     Search,
     ShieldCheck,
+    Sparkles,
     StickyNote,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -36,6 +38,207 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getSignedUrl } from "@/lib/storage";
+import { supabase } from "@/integrations/supabase/client";
+
+type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
+type PurchaseRequestRow = PurchaseRequests[number];
+type PurchaseRequestAiMode =
+    | "purchase_request_summary"
+    | "purchase_request_missing_info"
+    | "purchase_request_customer_reply"
+    | "purchase_request_supplier_brief"
+    | "purchase_request_compliance_notes";
+
+const purchaseRequestAiActions: Array<{
+    mode: PurchaseRequestAiMode;
+    label: string;
+    labelAr: string;
+}> = [
+    { mode: "purchase_request_summary", label: "AI Summary", labelAr: "ملخص ذكي" },
+    { mode: "purchase_request_missing_info", label: "Missing Info", labelAr: "المعلومات الناقصة" },
+    { mode: "purchase_request_customer_reply", label: "Generate Customer Reply", labelAr: "صياغة رد للعميل" },
+    { mode: "purchase_request_supplier_brief", label: "Supplier Brief", labelAr: "مسودة للمورد" },
+    { mode: "purchase_request_compliance_notes", label: "Compliance Notes", labelAr: "ملاحظات الامتثال" },
+];
+
+const getAiActionLabel = (mode: PurchaseRequestAiMode, lang: string) =>
+    purchaseRequestAiActions.find((action) => action.mode === mode)?.[lang === "ar" ? "labelAr" : "label"] ||
+    purchaseRequestAiActions[0].label;
+
+const valueOrDash = (value: unknown) => {
+    if (typeof value === "string") return value.trim() || "-";
+    if (typeof value === "number") return value > 0 ? String(value) : "-";
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    return "-";
+};
+
+const buildSafeAiRequestContext = (row: PurchaseRequestRow) => ({
+    id: row.id,
+    requestNumber: row.requestNumber,
+    status: row.status,
+    createdAt: row.createdAt,
+    productName: row.productName,
+    productDescription: row.productDescription,
+    quantity: row.quantity,
+    destination: row.destination,
+    preferredShippingMethod: row.preferredShippingMethod,
+    expectedSupplyDate: row.expectedSupplyDate,
+    weight: row.weight,
+    brand: row.brand,
+    qualityLevel: row.qualityLevel,
+    manufacturingCountry: row.manufacturingCountry,
+    isFullSourcing: row.isFullSourcing,
+    isReadyMade: row.isReadyMade,
+    hasPreviousSample: row.hasPreviousSample,
+    sizeDimensions: row.sizeDimensions,
+    material: row.material,
+    color: row.color,
+    referenceLink: row.referenceLink,
+    technicalSpecs: row.technicalSpecs,
+    attachmentCount: row.attachments.length,
+    customer: {
+        name: row.customer.fullName,
+        email: row.customer.email,
+        phone: row.customer.phone,
+        country: row.customer.country,
+        city: row.customer.city,
+    },
+});
+
+const findMissingRequestInfo = (row: PurchaseRequestRow, lang: string) => {
+    const checks: Array<[boolean, string, string]> = [
+        [Boolean(row.productName?.trim()), "Product name/title", "اسم المنتج"],
+        [Boolean(row.productDescription?.trim() && row.productDescription.trim().length >= 30), "Detailed product description", "وصف تفصيلي للمنتج"],
+        [Boolean(row.quantity && row.quantity > 0), "Quantity", "الكمية"],
+        [Boolean(row.destination?.trim()), "Destination country/city", "بلد أو مدينة الوجهة"],
+        [Boolean(row.technicalSpecs?.trim()), "Technical specifications", "المواصفات الفنية"],
+        [Boolean(row.referenceLink?.trim()), "Reference/product link", "رابط مرجعي للمنتج"],
+        [row.attachments.length > 0, "Images or attachments", "صور أو مرفقات"],
+        [Boolean(row.material?.trim() || row.sizeDimensions?.trim() || row.color?.trim() || row.brand?.trim()), "Material, size, color, brand, or model details", "تفاصيل المادة أو المقاس أو اللون أو العلامة"],
+    ];
+
+    return checks.filter(([isPresent]) => !isPresent).map(([, en, ar]) => (lang === "ar" ? ar : en));
+};
+
+const inferComplianceNotes = (row: PurchaseRequestRow, lang: string) => {
+    const text = `${row.productName} ${row.productDescription} ${row.technicalSpecs}`.toLowerCase();
+    const notes: string[] = [];
+
+    const add = (en: string, ar: string) => notes.push(lang === "ar" ? ar : en);
+
+    if (/(food|snack|drink|beverage|halal|meat|coffee|chocolate|غذاء|غذائي|مشروب|حلال|قهوة)/i.test(text)) {
+        add("Food items may require SFDA, Halal, ingredient, and import documentation review.", "المنتجات الغذائية قد تحتاج إلى مراجعة وثائق SFDA والحلال والمكونات والاستيراد.");
+    }
+    if (/(cosmetic|cream|makeup|perfume|shampoo|skin|beauty|تجميل|كريم|عطر|شامبو)/i.test(text)) {
+        add("Cosmetics may require ingredient lists, label artwork, and SFDA-related review.", "مستحضرات التجميل قد تحتاج إلى قائمة مكونات وتصميم الملصق ومراجعة مرتبطة بـ SFDA.");
+    }
+    if (/(chemical|paint|solvent|resin|adhesive|msds|tds|كيما|دهان|لاصق)/i.test(text)) {
+        add("Chemicals may require MSDS/TDS documents and safety classification review.", "المواد الكيميائية قد تحتاج إلى MSDS/TDS ومراجعة تصنيف السلامة.");
+    }
+    if (/(electronic|battery|charger|led|appliance|voltage|power|إلكترون|بطارية|شاحن|كهرب)/i.test(text)) {
+        add("Electronics may require conformity documents, electrical specifications, and safety checks.", "الإلكترونيات قد تحتاج إلى وثائق مطابقة ومواصفات كهربائية وفحوصات سلامة.");
+    }
+    if (/(textile|fabric|clothing|garment|cotton|polyester|نسيج|قماش|ملابس|قطن)/i.test(text)) {
+        add("Textiles may require material composition, size, color, label, and care details.", "المنسوجات قد تحتاج إلى تركيب المادة والمقاسات والألوان وبيانات الملصق والعناية.");
+    }
+
+    if (notes.length === 0) {
+        add(
+            "No category-specific flag was inferred. Final documentation and import requirements should still be reviewed by the Lourex team.",
+            "لم يتم استنتاج ملاحظة امتثال محددة حسب الفئة. يجب أن يراجع فريق لوركس المتطلبات النهائية للوثائق والاستيراد.",
+        );
+    }
+
+    return notes;
+};
+
+const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow, lang: string) => {
+    const missing = findMissingRequestInfo(row, lang);
+    const compliance = inferComplianceNotes(row, lang);
+    const isArabic = lang === "ar";
+
+    if (mode === "purchase_request_summary") {
+        return isArabic
+            ? [
+                  `ملخص تشغيلي للطلب ${row.requestNumber}`,
+                  `- المنتج: ${valueOrDash(row.productName)}`,
+                  `- العميل: ${valueOrDash(row.customer.fullName)} (${valueOrDash(row.customer.country)} / ${valueOrDash(row.customer.city)})`,
+                  `- الحاجة: ${valueOrDash(row.productDescription)}`,
+                  `- الكمية: ${valueOrDash(row.quantity)}`,
+                  `- الوجهة: ${valueOrDash(row.destination)}`,
+                  `- الحالة الحالية: ${valueOrDash(row.status)}`,
+                  `- الإجراء المقترح: مراجعة التفاصيل الناقصة ثم إعداد أسئلة توضيحية أو brief للمورد حسب جاهزية البيانات.`,
+              ].join("\n")
+            : [
+                  `Operational summary for ${row.requestNumber}`,
+                  `- Product: ${valueOrDash(row.productName)}`,
+                  `- Customer: ${valueOrDash(row.customer.fullName)} (${valueOrDash(row.customer.country)} / ${valueOrDash(row.customer.city)})`,
+                  `- Need: ${valueOrDash(row.productDescription)}`,
+                  `- Quantity: ${valueOrDash(row.quantity)}`,
+                  `- Destination: ${valueOrDash(row.destination)}`,
+                  `- Current status: ${valueOrDash(row.status)}`,
+                  `- Recommended next action: review missing details, then prepare customer clarification questions or a supplier brief depending on readiness.`,
+              ].join("\n");
+    }
+
+    if (mode === "purchase_request_missing_info") {
+        const list = missing.length ? missing : [isArabic ? "لا توجد فجوات واضحة، لكن يفضل تأكيد المواصفات النهائية مع العميل." : "No obvious gaps, but final specifications should still be confirmed with the customer."];
+        return isArabic
+            ? [`المعلومات الناقصة أو الضعيفة:`, ...list.map((item) => `- ${item}`), `\nأسئلة مقترحة:`, `- هل توجد مواصفات فنية أو معيار جودة محدد؟`, `- هل توجد متطلبات تغليف أو شهادات مطلوبة؟`, `- هل لدى العميل سعر مستهدف أو موعد توريد مفضل؟`].join("\n")
+            : [`Missing or weak information:`, ...list.map((item) => `- ${item}`), `\nSuggested questions:`, `- Are there technical specifications or a target quality standard?`, `- Are packaging requirements or certificates required?`, `- Does the customer have a target price or preferred supply date?`].join("\n");
+    }
+
+    if (mode === "purchase_request_customer_reply") {
+        const missingText = missing.length ? missing.join(", ") : isArabic ? "تأكيد المواصفات النهائية" : "final specification confirmation";
+        return isArabic
+            ? [
+                  `عميلنا العزيز،`,
+                  `شكراً لإرسال طلب الشراء رقم ${row.requestNumber}. بدأ فريق لوركس مراجعة الطلب بشكل مبدئي.`,
+                  `حتى نتمكن من توجيه الطلب للموردين المناسبين بدقة، نحتاج إلى توضيح: ${missingText}.`,
+                  `يرجى مشاركة أي صور أو روابط أو مواصفات إضافية متاحة. هذا الرد لا يتضمن وعداً بسعر نهائي أو موعد توريد نهائي، وسيقوم فريق لوركس بالمراجعة النهائية قبل أي التزام تشغيلي.`,
+              ].join("\n\n")
+            : [
+                  `Dear ${row.customer.fullName || "Customer"},`,
+                  `Thank you for submitting purchase request ${row.requestNumber}. The Lourex team has started the initial review.`,
+                  `To route this request accurately to suitable suppliers, please clarify: ${missingText}.`,
+                  `Please share any available images, links, or additional specifications. This draft does not promise a final price or delivery date; the Lourex team will complete the final review before any operational commitment.`,
+              ].join("\n\n");
+    }
+
+    if (mode === "purchase_request_supplier_brief") {
+        return isArabic
+            ? [
+                  `مسودة brief للمورد`,
+                  `- المنتج: ${valueOrDash(row.productName)}`,
+                  `- الوصف: ${valueOrDash(row.productDescription)}`,
+                  `- المواصفات: ${valueOrDash(row.technicalSpecs)}`,
+                  `- الكمية: ${valueOrDash(row.quantity)}`,
+                  `- الوجهة: ${valueOrDash(row.destination)}`,
+                  `- الشحن المفضل: ${valueOrDash(row.preferredShippingMethod)}`,
+                  `- المادة/المقاس/اللون: ${valueOrDash(row.material)} / ${valueOrDash(row.sizeDimensions)} / ${valueOrDash(row.color)}`,
+                  `- العلامة أو مستوى الجودة: ${valueOrDash(row.brand)} / ${valueOrDash(row.qualityLevel)}`,
+                  `- مرفقات العميل: ${row.attachments.length}`,
+                  `- أسئلة للمورد: تأكيد MOQ، مدة الإنتاج التقديرية، التغليف، الشهادات المطلوبة، وإمكانية توفير عينة إن لزم.`,
+              ].join("\n")
+            : [
+                  `Supplier sourcing brief`,
+                  `- Product: ${valueOrDash(row.productName)}`,
+                  `- Description: ${valueOrDash(row.productDescription)}`,
+                  `- Specifications: ${valueOrDash(row.technicalSpecs)}`,
+                  `- Quantity: ${valueOrDash(row.quantity)}`,
+                  `- Destination: ${valueOrDash(row.destination)}`,
+                  `- Preferred shipping: ${valueOrDash(row.preferredShippingMethod)}`,
+                  `- Material/size/color: ${valueOrDash(row.material)} / ${valueOrDash(row.sizeDimensions)} / ${valueOrDash(row.color)}`,
+                  `- Brand or quality level: ${valueOrDash(row.brand)} / ${valueOrDash(row.qualityLevel)}`,
+                  `- Customer attachments: ${row.attachments.length}`,
+                  `- Supplier questions: confirm MOQ, estimated production lead time, packaging, required certificates, and sample availability if needed.`,
+              ].join("\n");
+    }
+
+    return isArabic
+        ? [`ملاحظات امتثال إرشادية:`, ...compliance.map((item) => `- ${item}`), `\nهذه الملاحظات إرشادية فقط. المراجعة النهائية للوثائق والمتطلبات التنظيمية تتم بواسطة فريق لوركس.`].join("\n")
+        : [`Advisory compliance notes:`, ...compliance.map((item) => `- ${item}`), `\nThese notes are advisory only. Final documentation and regulatory review must be performed by the Lourex team.`].join("\n");
+};
 
 function getErrorMessage(error: unknown, fallback: string): string {
     if (error instanceof Error && error.message.trim()) {
@@ -56,7 +259,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 export default function PurchaseRequestsPage() {
-    const { locale, t } = useI18n();
+    const { locale, t, lang } = useI18n();
     const { profile } = useAuthSession();
     const isInternal = isInternalRole(profile?.role);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -74,6 +277,10 @@ export default function PurchaseRequestsPage() {
     const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
     const [internalNotesDraft, setInternalNotesDraft] = useState("");
     const [loadError, setLoadError] = useState("");
+    const [aiActionLoading, setAiActionLoading] = useState<PurchaseRequestAiMode | null>(null);
+    const [aiOutput, setAiOutput] = useState("");
+    const [aiOutputTitle, setAiOutputTitle] = useState("");
+    const [aiUsedFallback, setAiUsedFallback] = useState(false);
 
     const selectedRequestId = searchParams.get("request");
     const getRequestStatusMeta = (status: PurchaseRequestStatus | string | null | undefined) => {
@@ -180,6 +387,11 @@ export default function PurchaseRequestsPage() {
     }, [filteredRows, selectedRequestId]);
 
     useEffect(() => {
+        setAiActionLoading(null);
+        setAiOutput("");
+        setAiOutputTitle("");
+        setAiUsedFallback(false);
+
         if (!selectedRow) {
             setInternalNotesDraft("");
             setProofSignedUrl(null);
@@ -194,6 +406,67 @@ export default function PurchaseRequestsPage() {
             setProofSignedUrl(null);
         }
     }, [selectedRow]);
+
+    const handleAiAction = async (mode: PurchaseRequestAiMode) => {
+        if (!selectedRow || aiActionLoading) {
+            return;
+        }
+
+        const outputTitle = getAiActionLabel(mode, lang);
+        setAiActionLoading(mode);
+        setAiOutputTitle(outputTitle);
+        setAiOutput("");
+        setAiUsedFallback(false);
+
+        try {
+            const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+                body: {
+                    message: `${outputTitle} for internal purchase request ${selectedRow.requestNumber}`,
+                    pageContext: "dashboard_purchase_requests",
+                    route: window.location.pathname,
+                    locale,
+                    userRole: profile?.role,
+                    analysisMode: mode,
+                    requestContext: buildSafeAiRequestContext(selectedRow),
+                },
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+            if (!reply) {
+                throw new Error("Empty AI response");
+            }
+
+            setAiOutput(reply);
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_ai_review", error, {
+                requestId: selectedRow.id,
+                requestNumber: selectedRow.requestNumber,
+                mode,
+            });
+            setAiUsedFallback(true);
+            setAiOutput(buildLocalAiOutput(mode, selectedRow, lang));
+        } finally {
+            setAiActionLoading(null);
+        }
+    };
+
+    const handleCopyAiOutput = async () => {
+        if (!aiOutput) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(aiOutput);
+            toast.success(lang === "ar" ? "تم نسخ مخرجات الذكاء الاصطناعي." : "AI output copied.");
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_ai_copy", error, { requestId: selectedRow?.id });
+            toast.error(lang === "ar" ? "تعذر نسخ النص." : "Could not copy AI output.");
+        }
+    };
 
     useEffect(() => {
         if (filteredRows.length === 0) {
@@ -737,6 +1010,84 @@ export default function PurchaseRequestsPage() {
 
                                         <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
                                             {t("requests.reviewPanel")}
+                                        </div>
+
+                                        <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+                                                            <Sparkles className="h-4 w-4" />
+                                                        </span>
+                                                        <div>
+                                                            <p className="text-xs uppercase tracking-[0.18em] text-primary">
+                                                                {lang === "ar"
+                                                                    ? "مساعد LOUREX AI لمراجعة الطلب"
+                                                                    : "LOUREX AI Review Assistant"}
+                                                            </p>
+                                                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                                                                {lang === "ar"
+                                                                    ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والمراجعة النهائية تتم بواسطة فريق لوركس."
+                                                                    : "AI output is advisory. Final review must be performed by the Lourex team."}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {aiOutput ? (
+                                                    <Button variant="outline" size="sm" onClick={() => void handleCopyAiOutput()}>
+                                                        <Copy className="me-2 h-4 w-4" />
+                                                        {lang === "ar" ? "نسخ" : "Copy"}
+                                                    </Button>
+                                                ) : null}
+                                            </div>
+
+                                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                                {purchaseRequestAiActions.map((action) => {
+                                                    const isLoading = aiActionLoading === action.mode;
+
+                                                    return (
+                                                        <Button
+                                                            key={action.mode}
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="justify-start border-primary/25 bg-[#111111] text-start text-foreground hover:border-primary/45 hover:bg-primary/10"
+                                                            disabled={Boolean(aiActionLoading)}
+                                                            onClick={() => void handleAiAction(action.mode)}
+                                                        >
+                                                            {isLoading ? (
+                                                                <Loader2 className="me-2 h-4 w-4 shrink-0 animate-spin text-primary" />
+                                                            ) : (
+                                                                <Sparkles className="me-2 h-4 w-4 shrink-0 text-primary" />
+                                                            )}
+                                                            <span className="truncate">
+                                                                {lang === "ar" ? action.labelAr : action.label}
+                                                            </span>
+                                                        </Button>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {aiUsedFallback ? (
+                                                <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+                                                    {lang === "ar"
+                                                        ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء مسودة إرشادية محلية بدلاً من ذلك."
+                                                        : "LOUREX AI is unavailable right now. A local advisory draft was generated instead."}
+                                                </div>
+                                            ) : null}
+
+                                            {aiOutput ? (
+                                                <div className="mt-4 rounded-[1rem] border border-primary/20 bg-[#111111] p-4">
+                                                    <div className="mb-3 flex items-center justify-between gap-3">
+                                                        <p className="text-sm font-semibold text-primary">{aiOutputTitle}</p>
+                                                        <span className="rounded-full border border-primary/20 px-2.5 py-1 text-[11px] text-muted-foreground">
+                                                            {lang === "ar" ? "إرشادي" : "Advisory"}
+                                                        </span>
+                                                    </div>
+                                                    <pre className="max-h-[24rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-foreground">{aiOutput}</pre>
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">

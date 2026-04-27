@@ -44,6 +44,19 @@ const pageContextGuide: Record<string, string> = {
   unknown: "Unknown page. Ask a focused clarifying question and provide general LOUREX operations guidance.",
 };
 
+const purchaseRequestAssistantModes: Record<string, string> = {
+  purchase_request_summary:
+    "Generate a short operational summary with product/category guess, customer need, current status, and recommended next action.",
+  purchase_request_missing_info:
+    "Identify missing or weak request details, clarification questions for the customer, and optional low/medium/high severity notes.",
+  purchase_request_customer_reply:
+    "Draft a professional customer-facing reply that asks for missing details without promising exact price, delivery date, approval, or completion.",
+  purchase_request_supplier_brief:
+    "Draft a structured supplier sourcing brief with product, specs, quantity, destination, packaging/certificate questions, and notes.",
+  purchase_request_compliance_notes:
+    "Draft advisory compliance notes only. Mention possible category-specific documents and final Lourex team review.",
+};
+
 const normalizeMessages = (messages: unknown, message: unknown): ChatMessage[] => {
   if (Array.isArray(messages) && messages.length > 0) {
     return messages
@@ -80,10 +93,16 @@ serve(async (req) => {
       userRole: clientUserRole,
       analysisMode,
       formDraft,
+      requestContext,
     } = requestBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("AI service not configured");
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "AI provider is not configured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const authHeader = req.headers.get("Authorization");
     let userEmail: string | null = null;
@@ -122,6 +141,13 @@ serve(async (req) => {
     const normalizedRoute = typeof route === "string" ? route : "unknown";
     const normalizedLocale = typeof locale === "string" ? locale : "en-US";
     const isPurchaseRequestAnalyzer = analysisMode === "purchase_request_analyzer";
+    const normalizedAnalysisMode = typeof analysisMode === "string" ? analysisMode : "general_chat";
+    const isPurchaseRequestAssistantMode = normalizedAnalysisMode in purchaseRequestAssistantModes;
+    const analysisModeLabel = isPurchaseRequestAnalyzer
+      ? "purchase_request_analyzer"
+      : isPurchaseRequestAssistantMode
+        ? normalizedAnalysisMode
+        : "general_chat";
 
     const systemPrompt = `You are LOUREX AI Copilot, a premium bilingual Arabic/English trade operations assistant for LOUREX.
 
@@ -135,7 +161,7 @@ USER CONTEXT
 - Locale: ${normalizedLocale}
 - Current route: ${normalizedRoute}
 - Page context: ${normalizedContext}
-- Analysis mode: ${isPurchaseRequestAnalyzer ? "purchase_request_analyzer" : "general_chat"}
+- Analysis mode: ${analysisModeLabel}
 - Context guidance: ${pageContextGuide[normalizedContext] || pageContextGuide.unknown}
 
 ROLE-SPECIFIC BEHAVIOR
@@ -213,6 +239,25 @@ Safety:
 Purchase request draft:
 ${JSON.stringify(formDraft || {})}`;
 
+    const purchaseRequestAssistantPrompt = `You are LOUREX AI Review Assistant for an internal dashboard purchase request detail page.
+
+Return concise markdown/plain text for the selected action only.
+
+Action mode:
+- ${normalizedAnalysisMode}: ${purchaseRequestAssistantModes[normalizedAnalysisMode] || "General advisory review."}
+
+Safe selected request context:
+${JSON.stringify(requestContext || {})}
+
+Rules:
+- Output is advisory only and must require final human review by the Lourex team.
+- Do not claim that a database record, status, note, deal, message, email, financial entry, or shipment stage was created, changed, approved, rejected, sent, or updated.
+- Do not promise exact prices, exact availability, exact delivery dates, exact customs outcomes, or regulatory approval.
+- For customer replies, use a professional draft tone and never say the request is approved unless the provided status explicitly says so.
+- For compliance notes, mention possible documentation review, not legal certainty.
+- Use the user's locale/language when clear: ${normalizedLocale}. If Arabic is appropriate, use clear Modern Standard Arabic.
+- Keep the output compact and operational.`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -226,7 +271,12 @@ ${JSON.stringify(formDraft || {})}`;
               { role: "system", content: systemPrompt },
               { role: "user", content: analyzerPrompt },
             ]
-          : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
+          : isPurchaseRequestAssistantMode
+            ? [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: purchaseRequestAssistantPrompt },
+              ]
+            : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
       }),
     });
 
