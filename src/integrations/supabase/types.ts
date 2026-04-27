@@ -924,9 +924,13 @@ export type Database = {
           company_name: string | null
           country: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          partner_type: string | null
           phone: string | null
+          role: string
+          status: string
           verification_status: string
           verified_at: string | null
         }
@@ -935,9 +939,13 @@ export type Database = {
           company_name?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
+          partner_type?: string | null
           phone?: string | null
+          role?: string
+          status?: string
           verification_status?: string
           verified_at?: string | null
         }
@@ -946,9 +954,13 @@ export type Database = {
           company_name?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          partner_type?: string | null
           phone?: string | null
+          role?: string
+          status?: string
           verification_status?: string
           verified_at?: string | null
         }
