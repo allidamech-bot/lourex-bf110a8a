@@ -272,15 +272,25 @@ const isMissingSchemaError = (error: unknown) => {
     return false;
   }
 
-  const domainError = error as DomainError;
+  const domainError = error as DomainError & { status?: number; details?: string; hint?: string };
   const message = String(domainError.message || "").toLowerCase();
+  const details = String(domainError.details || "").toLowerCase();
+  const hint = String(domainError.hint || "").toLowerCase();
+
   return (
-    domainError.code === "42P01" ||
-    domainError.code === "42703" ||
-    message.includes("does not exist") ||
-    message.includes("could not find the table") ||
-    message.includes("relation") ||
-    message.includes("column")
+      domainError.status === 404 ||
+      domainError.code === "42P01" ||
+      domainError.code === "42703" ||
+      domainError.code === "PGRST205" ||
+      domainError.code === "PGRST204" ||
+      message.includes("does not exist") ||
+      message.includes("could not find the table") ||
+      message.includes("could not find") ||
+      message.includes("relation") ||
+      message.includes("column") ||
+      details.includes("does not exist") ||
+      details.includes("could not find") ||
+      hint.includes("could not find")
   );
 };
 
@@ -293,8 +303,9 @@ export const getLourexDomainAvailability = async () => {
 };
 
 export const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
-  const available = await getLourexDomainAvailability();
-  if (!available) return [] as T[];
+  if (table === "purchase_requests" && !(await getLourexDomainAvailability())) {
+    return [] as T[];
+  }
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder;
@@ -309,8 +320,9 @@ export const safeStructuredSelectWhereEq = async <T extends Record<string, unkno
   value: unknown,
   query?: string,
 ) => {
-  const available = await getLourexDomainAvailability();
-  if (!available) return [] as T[];
+  if (table === "purchase_requests" && !(await getLourexDomainAvailability())) {
+    return [] as T[];
+  }
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.eq(column, value);
@@ -325,8 +337,9 @@ const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
   values: unknown[],
   query?: string,
 ) => {
-  const available = await getLourexDomainAvailability();
-  if (!available || values.length === 0) return [] as T[];
+  if (values.length === 0 || (table === "purchase_requests" && !(await getLourexDomainAvailability()))) {
+    return [] as T[];
+  }
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.in(column, values);
