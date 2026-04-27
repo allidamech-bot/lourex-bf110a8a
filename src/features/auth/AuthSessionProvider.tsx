@@ -129,7 +129,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
 
     const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, email, full_name, role, partner_type, status, phone, country, city, created_at")
         .eq("id", user.id)
         .maybeSingle();
 

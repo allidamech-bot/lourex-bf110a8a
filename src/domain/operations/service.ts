@@ -8,6 +8,7 @@ import {
   loadOperationalUsers,
   loadPurchaseRequests,
   loadShipments,
+  isMissingSchemaError,
   updateDealOperation,
   updatePurchaseRequestImages,
   uploadTransferProof as dbUploadTransferProof,
@@ -218,6 +219,10 @@ export const fetchAuditCount = async (): Promise<number> => {
       .select("id", { count: "exact", head: true });
 
   if (error) {
+    if (isMissingSchemaError(error)) {
+      return 0;
+    }
+
     throw error;
   }
 
@@ -234,6 +239,10 @@ export const fetchAuditPreviewRows = async (limit = 120): Promise<AuditPreviewRo
       .limit(safeLimit);
 
   if (error) {
+    if (isMissingSchemaError(error)) {
+      return [];
+    }
+
     throw error;
   }
 

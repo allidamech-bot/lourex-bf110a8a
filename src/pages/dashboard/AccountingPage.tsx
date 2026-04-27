@@ -15,9 +15,13 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildAccountingEntriesCsv, downloadCsv } from "@/lib/adminOperations";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { canManageAccounting } from "@/features/auth/rbac";
 
 export default function AccountingPage() {
   const { locale, t } = useI18n();
+  const { profile } = useAuthSession();
+  const canCreateAccountingEntries = profile?.role ? canManageAccounting(profile.role) : false;
   const [searchParams] = useSearchParams();
   const focusDeal = searchParams.get("deal");
   const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
@@ -113,6 +117,10 @@ export default function AccountingPage() {
 
   const handleCreateEntry = async () => {
     if (submitting) return;
+    if (!canCreateAccountingEntries) {
+      toast.error(t("accounting.toasts.createError"));
+      return;
+    }
 
     const parsedAmount = Number(amount);
     if (!parsedAmount || !note.trim() || !method.trim() || !counterparty.trim() || !category.trim()) {
@@ -405,7 +413,7 @@ export default function AccountingPage() {
               <Label>{t("accounting.descriptionLabel")}</Label>
               <Textarea rows={5} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("accounting.descriptionPlaceholder")} />
             </div>
-            <Button variant="gold" onClick={handleCreateEntry} disabled={submitting}>
+            <Button variant="gold" onClick={handleCreateEntry} disabled={submitting || !canCreateAccountingEntries}>
               {submitting ? t("accounting.creating") : t("accounting.createLocked")}
             </Button>
             <div className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4 text-sm leading-7 text-muted-foreground">

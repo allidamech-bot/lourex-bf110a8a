@@ -14,7 +14,7 @@ import {
 } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { isInternalRole } from "@/features/auth/rbac";
+import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
 import { supabase } from "@/integrations/supabase/client";
 import { logOperationalError } from "@/lib/monitoring";
 
@@ -175,12 +175,13 @@ export default function OverviewPage() {
       setLoading(true);
 
       try {
+        const canReadAccountingManagement = profile?.role ? canManageAccounting(profile.role) : false;
         const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain] = await Promise.all([
           fetchRequests(),
           fetchDeals(),
           fetchShipments(),
           fetchAuditCount(),
-          fetchFinancialEditRequests(),
+          canReadAccountingManagement ? fetchFinancialEditRequests() : Promise.resolve([]),
         ]);
 
         setMetrics({
@@ -193,13 +194,20 @@ export default function OverviewPage() {
         setRecentRequests(requestsDomain.slice(0, 4));
         setShipments(shipmentsDomain);
         setEditRequests(editsDomain);
+      } catch (error) {
+        logOperationalError("dashboard_overview_load", error, { role: profile?.role });
+        setMetrics({ requests: 0, deals: 0, shipments: 0, audits: 0 });
+        setRequests([]);
+        setRecentRequests([]);
+        setShipments([]);
+        setEditRequests([]);
       } finally {
         setLoading(false);
       }
     };
 
     void load();
-  }, []);
+  }, [profile?.role]);
 
   const requestSummary = useMemo(
     () => ({

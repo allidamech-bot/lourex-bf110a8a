@@ -267,7 +267,7 @@ const db = supabase as unknown as LooseDomainClient;
 
 let lourexDomainAvailable: boolean | null = null;
 
-const isMissingSchemaError = (error: unknown) => {
+export const isMissingSchemaError = (error: unknown) => {
   if (!error || typeof error !== "object") {
     return false;
   }
@@ -2007,7 +2007,7 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
 export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
   const rows = await safeStructuredSelect<ProfileRow>(
     "profiles",
-    "id, email, full_name, role, partner_type, status, created_at, updated_at",
+    "id, email, full_name, role, partner_type, status, created_at",
   );
 
   return (rows || [])
@@ -2020,7 +2020,7 @@ export const loadOperationalUsers = async (): Promise<OperationalUser[]> => {
       partnerType: row.partner_type || null,
       status: (row.status || "pending") as LourexAccountStatus,
       createdAt: row.created_at,
-      updatedAt: row.updated_at || row.created_at,
+      updatedAt: row.created_at,
     }))
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 };

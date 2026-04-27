@@ -19,9 +19,13 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterFinancialEditRequests } from "@/lib/adminOperations";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { canManageAccounting } from "@/features/auth/rbac";
 
 export default function EditRequestsPage() {
   const { locale, t } = useI18n();
+  const { profile } = useAuthSession();
+  const canManageFinancialEditRequests = profile?.role ? canManageAccounting(profile.role) : false;
   const [searchParams] = useSearchParams();
   const focusDeal = searchParams.get("deal") || "";
   const focusEntry = searchParams.get("entry") || "";
@@ -49,7 +53,7 @@ export default function EditRequestsPage() {
     setLoadError("");
     try {
       const [requestRows, entryRows, dealRows] = await Promise.all([
-        loadFinancialEditRequests(),
+        canManageFinancialEditRequests ? loadFinancialEditRequests() : Promise.resolve([]),
         loadFinancialEntries(),
         loadDeals(),
       ]);
@@ -88,6 +92,11 @@ export default function EditRequestsPage() {
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
     if (updatingId) return;
+    if (!canManageFinancialEditRequests) {
+      toast.error(t("editRequests.toasts.updateError"));
+      return;
+    }
+
     const current = rows.find((row) => row.id === id);
     if (!current || current.status !== "pending") {
       toast.error(t("editRequests.toasts.updateError"));
@@ -115,6 +124,10 @@ export default function EditRequestsPage() {
 
   const submit = async () => {
     if (submitting) return;
+    if (!canManageFinancialEditRequests) {
+      toast.error(t("editRequests.toasts.submitError"));
+      return;
+    }
 
     if (!requester.trim() || !email.trim() || !reason.trim() || !entry) {
       toast.error(t("editRequests.validation"));
@@ -236,7 +249,7 @@ export default function EditRequestsPage() {
           <Textarea rows={6} value={reason} onChange={(event) => setReason(event.target.value)} />
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="gold" onClick={submit} disabled={submitting || !entry}>
+          <Button variant="gold" onClick={submit} disabled={submitting || !entry || !canManageFinancialEditRequests}>
             {submitting ? t("editRequests.submitting") : t("editRequests.submit")}
           </Button>
           {focusDeal ? (
@@ -358,7 +371,7 @@ export default function EditRequestsPage() {
                     {row.reviewNote ? ` • ${row.reviewNote}` : ""}
                   </p>
                 ) : null}
-                {row.status === "pending" ? (
+                {row.status === "pending" && canManageFinancialEditRequests ? (
                   <div className="mt-4 space-y-3">
                     <Textarea
                       rows={3}
