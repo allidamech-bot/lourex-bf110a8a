@@ -50,6 +50,7 @@ export const SiteHeader = () => {
           : t("nav.signIn");
 
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
+  const canSeeDashboardMenu = profile?.role === "owner" || profile?.role === "saudi_partner";
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -97,6 +98,21 @@ export const SiteHeader = () => {
           </Link>
 
           <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex 2xl:gap-2" dir={isRtl ? "rtl" : "ltr"}>
+            {canSeeDashboardMenu ? (
+                <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) =>
+                        `whitespace-nowrap rounded-full px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3 2xl:text-sm ${
+                            isActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                        }`
+                    }
+                >
+                  {t("nav.dashboard")}
+                </NavLink>
+            ) : null}
+
             {publicLinks.map((link) => (
                 <NavLink
                     key={`${link.to}-${link.label}`}
@@ -211,6 +227,16 @@ export const SiteHeader = () => {
 
                 {isAuthenticated ? (
                     <>
+                      {canSeeDashboardMenu ? (
+                          <NavLink
+                              to="/dashboard"
+                              onClick={() => setIsOpen(false)}
+                              className="rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          >
+                            {t("nav.dashboard")}
+                          </NavLink>
+                      ) : null}
+
                       {profile?.role === "owner" ? (
                           <NavLink
                               to="/admin"
