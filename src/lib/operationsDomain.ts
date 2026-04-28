@@ -2171,7 +2171,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 export const deletePurchaseRequestRecord = async (requestId: string) => {
   const { profile } = await getCurrentUserContext();
   if (!profile || !assertManagementUser(profile.role)) {
-    // Permission check for management actions
+    throw new Error("You do not have permission to cancel this request.");
   }
 
   const now = new Date().toISOString();
@@ -2264,6 +2264,17 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const { user } = await getCurrentUserContext();
   if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
 
+  const { data: request, error: requestError } = await (supabase as any)
+    .from("purchase_requests")
+    .select("id, status")
+    .eq("id", requestId)
+    .single();
+
+  if (requestError || !request) throw requestError || new Error("الطلب غير موجود.");
+  if (!["ready_for_conversion", "transfer_proof_rejected"].includes(request.status)) {
+    throw new Error("Transfer proof can only be uploaded for requests awaiting payment proof.");
+  }
+
   const fileName = `${Date.now()}-${file.name}`;
   const storagePath = STORAGE_PATHS.TRANSFER_PROOFS(requestId);
   const fullPath = `${storagePath}/${fileName}`;
@@ -2311,6 +2322,12 @@ export const acceptTransferProof = async (requestId: string) => {
     .single();
 
   if (!request) throw new Error("الطلب غير موجود.");
+  if (
+    request.status !== "transfer_proof_pending" ||
+    (request.transfer_proof_status && request.transfer_proof_status !== "pending")
+  ) {
+    throw new Error("Only pending transfer proofs can be accepted.");
+  }
 
   const { error } = await (supabase as any)
     .from("purchase_requests")
@@ -2344,6 +2361,20 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
   }
 
   if (!reason) throw new Error("يجب تحديد سبب الرفض.");
+
+  const { data: request } = await (supabase as any)
+    .from("purchase_requests")
+    .select("*")
+    .eq("id", requestId)
+    .single();
+
+  if (!request) throw new Error("الطلب غير موجود.");
+  if (
+    request.status !== "transfer_proof_pending" ||
+    (request.transfer_proof_status && request.transfer_proof_status !== "pending")
+  ) {
+    throw new Error("Only pending transfer proofs can be rejected.");
+  }
 
   const { error } = await (supabase as any)
     .from("purchase_requests")

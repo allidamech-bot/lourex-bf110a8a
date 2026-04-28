@@ -147,6 +147,11 @@ const getPurchaseRequestById = async (id: string): Promise<OperationsRequest | n
   return requests.find((r) => r.id === id) || null;
 };
 
+const REQUEST_STATUSES_ALLOWED_TO_RESUBMIT = new Set<OperationsRequest["status"]>([
+  "cancelled",
+  "awaiting_clarification",
+]);
+
 /**
  * Internal helper to handle rollback of purchase requests that failed during
  * the submission process (e.g. image upload failure).
@@ -767,6 +772,9 @@ export const resubmitPurchaseRequest = async (
   try {
     const original = await getPurchaseRequestById(normalizedId);
     if (!original) return failure("Original request not found.");
+    if (!REQUEST_STATUSES_ALLOWED_TO_RESUBMIT.has(original.status)) {
+      throw new Error("Request cannot be resubmitted from its current status.");
+    }
 
     const requestNumber = `PR-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase()}-${Math.random()
         .toString(36)
