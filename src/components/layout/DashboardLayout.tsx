@@ -7,6 +7,7 @@ import {
   PackageSearch,
   Receipt,
   ShieldCheck,
+  SlidersHorizontal,
   Users,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
@@ -79,6 +80,12 @@ export const DashboardLayout = () => {
       label: t("dashboardNav.reports"),
       icon: BarChart3,
       roles: dashboardRoutePermissions.reports,
+    },
+    {
+      to: "/dashboard/system",
+      label: "System",
+      icon: SlidersHorizontal,
+      roles: dashboardRoutePermissions.system,
     },
   ];
 

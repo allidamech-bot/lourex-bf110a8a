@@ -40,6 +40,7 @@ export const ACCOUNTING_DASHBOARD_UI_ROLES: LourexRole[] = [
   ...ACCOUNTING_ROLES,
   "saudi_partner",
 ];
+export const SYSTEM_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "operations_employee"];
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
@@ -51,6 +52,7 @@ export const dashboardRoutePermissions = {
   editRequests: ACCOUNTING_DASHBOARD_UI_ROLES,
   audit: INTERNAL_ROLES,
   reports: [...OWNER_DASHBOARD_UI_ROLES, "operations_employee"] as LourexRole[],
+  system: SYSTEM_DASHBOARD_UI_ROLES,
 } as const;
 
 export const canAccessRole = (role: LourexRole | null | undefined, allowedRoles?: LourexRole[]) =>

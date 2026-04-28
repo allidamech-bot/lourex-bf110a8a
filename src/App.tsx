@@ -17,6 +17,7 @@ import {
     INTERNAL_ROLES,
     OWNER_DASHBOARD_UI_ROLES,
     OWNER_ONLY_ROLES,
+    SYSTEM_DASHBOARD_UI_ROLES,
 } from "@/features/auth/rbac";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
@@ -37,6 +38,7 @@ const AccountingPage = lazy(() => import("@/pages/dashboard/AccountingPage"));
 const EditRequestsPage = lazy(() => import("@/pages/dashboard/EditRequestsPage"));
 const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
+const SystemControlsPage = lazy(() => import("@/pages/dashboard/SystemControlsPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const CustomerPortal = lazy(() => import("@/pages/customer/CustomerPortal"));
 const CustomerRequestsPage = lazy(() => import("@/pages/customer/CustomerRequestsPage"));
@@ -165,6 +167,14 @@ const App = () => (
                                             element={
                                                 <ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}>
                                                     <PageWithAI component={<ReportsPage />} />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="system"
+                                            element={
+                                                <ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}>
+                                                    <PageWithAI component={<SystemControlsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
