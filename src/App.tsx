@@ -8,6 +8,7 @@ import { I18nProvider } from "@/lib/i18n";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthSessionProvider } from "@/features/auth/AuthSessionProvider";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
+import { isSupabaseConfigured, missingSupabaseEnvVars } from "@/integrations/supabase/client";
 
 const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout").then(m => ({ default: m.DashboardLayout })));
 const CustomerLayout = lazy(() => import("@/components/layout/CustomerLayout").then(m => ({ default: m.CustomerLayout })));
@@ -64,6 +65,29 @@ const PageWithAI = ({ component }: { component: React.ReactNode }) => (
     </>
 );
 
+const SupabaseSetupError = () => (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-2xl rounded-[1.75rem] border border-destructive/30 bg-card p-8 shadow-[0_24px_70px_-45px_rgba(0,0,0,0.65)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-destructive">Configuration required</p>
+            <h1 className="mt-3 font-serif text-3xl font-semibold">Supabase environment variables are missing</h1>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                Lourex cannot start authentication or database features until the runtime environment provides the Supabase project URL and publishable key.
+            </p>
+            <div className="mt-5 rounded-2xl border border-border/70 bg-secondary/30 p-4">
+                <p className="text-sm font-medium">Missing variables</p>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                    {missingSupabaseEnvVars.map((name) => (
+                        <li key={name} className="font-mono">{name}</li>
+                    ))}
+                </ul>
+            </div>
+            <p className="mt-5 text-sm leading-7 text-muted-foreground">
+                In Lovable Cloud, open the project, go to the Cloud tab, then add these values in the environment/secrets settings for the connected Supabase project. For local development, add them to your local .env file.
+            </p>
+        </div>
+    </div>
+);
+
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <I18nProvider>
@@ -71,10 +95,11 @@ const App = () => (
                 <ErrorBoundary>
                     <Toaster />
                     <Sonner />
-                    <BrowserRouter>
-                        <AuthSessionProvider>
-                            <Suspense fallback={<PageLoader />}>
-                                <Routes>
+                    {isSupabaseConfigured ? (
+                        <BrowserRouter>
+                            <AuthSessionProvider>
+                                <Suspense fallback={<PageLoader />}>
+                                    <Routes>
                                     <Route path="/" element={<HomePage />} />
                                     <Route path="/request" element={<PageWithAI component={<RequestPage />} />} />
                                     <Route path="/track" element={<PageWithAI component={<TrackPage />} />} />
@@ -223,10 +248,13 @@ const App = () => (
                                         }
                                     />
                                     <Route path="*" element={<NotFound />} />
-                                </Routes>
-                            </Suspense>
-                        </AuthSessionProvider>
-                    </BrowserRouter>
+                                    </Routes>
+                                </Suspense>
+                            </AuthSessionProvider>
+                        </BrowserRouter>
+                    ) : (
+                        <SupabaseSetupError />
+                    )}
                 </ErrorBoundary>
             </TooltipProvider>
         </I18nProvider>
