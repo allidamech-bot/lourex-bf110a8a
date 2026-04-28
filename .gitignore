@@ -25,6 +25,7 @@ Thumbs.db
 # IDE / EDITORS
 .vscode/
 .idea/
+.vs/
 
 # LOCAL TOOLING
 .lovable/
