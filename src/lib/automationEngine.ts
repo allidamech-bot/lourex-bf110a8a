@@ -13,7 +13,8 @@ export type AutomationEvent =
 export type AutomationAction =
   | {
       type: "send_notification";
-      recipientIds: string[];
+      recipientIds?: string[];
+      recipientRole?: "internal";
       notificationType: string;
       title: string;
       message: string;
@@ -63,6 +64,11 @@ export interface AutomationRule {
 
 export type AutomationPayload = JsonPayload & {
   requestId?: string;
+  requestNumber?: string;
+  customerId?: string | null;
+  customerName?: string;
+  productName?: string;
+  summary?: string;
   dealId?: string;
   shipmentId?: string;
   financialEntryId?: string;
@@ -87,9 +93,18 @@ export const automationRules: AutomationRule[] = [
   {
     id: "purchase-request-created-notify-internal",
     event: "purchase_request.created",
-    enabled: false,
-    description: "Foundation placeholder for notifying internal users after a request is created.",
-    actions: [],
+    enabled: true,
+    description: "Notify internal users after a purchase request is created.",
+    actions: [
+      {
+        type: "send_notification",
+        recipientRole: "internal",
+        notificationType: "purchase_request_created",
+        title: "New purchase request submitted",
+        message: "Purchase request {{requestNumber}} was submitted by {{customerName}}.",
+        link: "/dashboard/requests?request={{requestId}}",
+      },
+    ],
   },
   {
     id: "purchase-request-approved-foundation",
@@ -147,7 +162,7 @@ export const executeAction = async (
 ): Promise<AutomationActionResult> => {
   switch (action.type) {
     case "send_notification":
-      return sendNotificationIfMissing(action);
+      return sendNotificationIfMissing(action, payload);
     case "create_shipment_if_missing":
       return createShipmentIfMissing(action);
     case "create_financial_entry_if_missing":
@@ -165,12 +180,21 @@ export const executeAction = async (
 
 const sendNotificationIfMissing = async (
   action: Extract<AutomationAction, { type: "send_notification" }>,
+  payload: AutomationPayload,
 ): Promise<AutomationActionResult> => {
-  const recipientIds = Array.from(new Set(action.recipientIds.filter(Boolean)));
+  const recipientIds = Array.from(
+    new Set([
+      ...(action.recipientIds || []),
+      ...(action.recipientRole === "internal" ? await loadInternalRecipientIds() : []),
+    ].filter(Boolean)),
+  );
   if (recipientIds.length === 0) {
     return { action: action.type, status: "skipped", reason: "No recipients provided." };
   }
 
+  const title = interpolateTemplate(action.title, payload);
+  const message = interpolateTemplate(action.message, payload);
+  const link = action.link ? interpolateTemplate(action.link, payload) : "";
   let sentCount = 0;
 
   for (const userId of recipientIds) {
@@ -179,8 +203,8 @@ const sendNotificationIfMissing = async (
       .select("id")
       .eq("user_id", userId)
       .eq("type", action.notificationType)
-      .eq("title", action.title)
-      .eq("link", action.link || "")
+      .eq("title", title)
+      .eq("link", link)
       .limit(1);
 
     if (lookupError) throw lookupError;
@@ -189,9 +213,9 @@ const sendNotificationIfMissing = async (
     const { error: insertError } = await db.from("notifications").insert({
       user_id: userId,
       type: action.notificationType,
-      title: action.title,
-      message: action.message,
-      link: action.link || "",
+      title,
+      message,
+      link,
     });
 
     if (insertError) throw insertError;
@@ -204,6 +228,30 @@ const sendNotificationIfMissing = async (
     reason: sentCount > 0 ? undefined : "Matching notifications already exist.",
   };
 };
+
+const loadInternalRecipientIds = async (): Promise<string[]> => {
+  const { data, error } = await db
+    .from("profiles")
+    .select("id, role, status")
+    .in("role", ["owner", "operations_employee", "turkish_partner", "saudi_partner"])
+    .eq("status", "active");
+
+  if (error) throw error;
+  return (data || []).map((row: { id?: string | null }) => row.id).filter(Boolean) as string[];
+};
+
+const interpolateTemplate = (template: string, payload: AutomationPayload) =>
+  Object.entries({
+    requestId: payload.requestId || "",
+    requestNumber: payload.requestNumber || "new request",
+    customerId: payload.customerId || "",
+    customerName: payload.customerName || "a customer",
+    productName: payload.productName || "requested product",
+    summary: payload.summary || "",
+  }).reduce(
+    (currentTemplate, [key, value]) => currentTemplate.split(`{{${key}}}`).join(String(value)),
+    template,
+  );
 
 const createShipmentIfMissing = async (
   action: Extract<AutomationAction, { type: "create_shipment_if_missing" }>,

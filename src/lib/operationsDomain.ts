@@ -15,6 +15,7 @@ import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurcha
 import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
 import { isAssignedPartnerForDeal } from "@/domain/operations/guards";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
+import { runAutomation } from "@/lib/automationEngine";
 import type {
   AttachmentRecord,
   CustomerAccount,
@@ -835,6 +836,22 @@ export const createPurchaseRequestRecord = async (input: {
 
   if (inserted.error || !inserted.data) {
     return inserted;
+  }
+
+  const createdRequestPayload = {
+    requestId: inserted.data.id,
+    requestNumber: inserted.data.request_number || input.requestNumber,
+    customerId,
+    customerName: input.fullName,
+    userId: user.id,
+    productName: input.productName,
+    summary: `Purchase request ${inserted.data.request_number || input.requestNumber} was submitted by ${input.fullName}.`,
+  };
+
+  try {
+    await runAutomation("purchase_request.created", createdRequestPayload);
+  } catch (error) {
+    console.warn("purchase_request.created automation failed:", error);
   }
 
   if (input.imageUrls.length === 0) {
