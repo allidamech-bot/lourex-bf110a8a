@@ -66,7 +66,7 @@ export default function TrackingPage() {
   useEffect(() => {
     setInternalNote("");
     setCustomerNote(activeShipment?.customerVisibleNote || "");
-  }, [activeShipment?.customerVisibleNote, activeShipment?.id]);
+  }, [activeShipment?.id]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);

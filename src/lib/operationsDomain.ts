@@ -44,8 +44,6 @@ type DomainSingleResult<T> = Promise<{
   error: DomainError | null;
 }>;
 
-type TransferProofStatus = NonNullable<PurchaseRequest["transferProofStatus"]>;
-
 interface DomainSelectBuilder<T> extends PromiseLike<{ data: T[] | null; error: DomainError | null }> {
   eq(column: string, value: unknown): DomainSelectBuilder<T>;
   in(column: string, values: unknown[]): DomainSelectBuilder<T>;
@@ -157,12 +155,6 @@ export type PurchaseRequestRow = {
   transfer_accepted_by?: string | null;
   transfer_rejection_reason?: string | null;
 };
-
-const isTransferProofStatus = (value: unknown): value is TransferProofStatus =>
-  value === "pending" || value === "accepted" || value === "rejected";
-
-const normalizeTransferProofStatus = (value: unknown): PurchaseRequest["transferProofStatus"] =>
-  isTransferProofStatus(value) ? value : null;
 
 export type AttachmentRow = {
   id: string;
@@ -900,7 +892,7 @@ const mapExplicitRequest = (
   transferProofUrl: row.transfer_proof_url,
   transferProofName: row.transfer_proof_name,
   transferProofUploadedAt: row.transfer_proof_uploaded_at,
-  transferProofStatus: normalizeTransferProofStatus(row.transfer_proof_status),
+  transferProofStatus: row.transfer_proof_status as any,
   transferAcceptedAt: row.transfer_accepted_at,
   transferAcceptedBy: row.transfer_accepted_by,
   transferRejectionReason: row.transfer_rejection_reason,
@@ -2284,8 +2276,8 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   // Upload to private bucket
   const fileUrl = await uploadFile("DOCUMENTS", fullPath, file);
 
-  const { error } = await db
-    .from<PurchaseRequestRow>("purchase_requests")
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
     .update({
       transfer_proof_url: fullPath, // Store path instead of public URL for private access
       transfer_proof_name: file.name,
@@ -2317,16 +2309,16 @@ export const acceptTransferProof = async (requestId: string) => {
     throw new Error("صلاحياتك لا تسمح بقبول التحويلات.");
   }
 
-  const { data: request } = await db
-    .from<PurchaseRequestRow>("purchase_requests")
+  const { data: request } = await (supabase as any)
+    .from("purchase_requests")
     .select("*")
     .eq("id", requestId)
     .single();
 
   if (!request) throw new Error("الطلب غير موجود.");
 
-  const { error } = await db
-    .from<PurchaseRequestRow>("purchase_requests")
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
     .update({
       transfer_proof_status: "accepted",
       transfer_accepted_at: new Date().toISOString(),
@@ -2358,8 +2350,8 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
 
   if (!reason) throw new Error("يجب تحديد سبب الرفض.");
 
-  const { error } = await db
-    .from<PurchaseRequestRow>("purchase_requests")
+  const { error } = await (supabase as any)
+    .from("purchase_requests")
     .update({
       transfer_proof_status: "rejected",
       transfer_rejection_reason: reason,
