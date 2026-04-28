@@ -25,6 +25,8 @@ type AuthContextValue = {
   user: User | null;
   profile: LourexProfile | null;
   loading: boolean;
+  profileError: boolean;
+  profileMissing: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -39,30 +41,6 @@ const safeString = (value: unknown, fallback = "") => {
   return fallback;
 };
 
-const getFallbackName = (user: User) =>
-    safeString(user.user_metadata?.full_name) ||
-    safeString(user.user_metadata?.name) ||
-    safeString(user.email?.split("@")[0]) ||
-    "Customer";
-
-const buildFallbackProfile = (user: User): LourexProfile => {
-  const now = new Date().toISOString();
-
-  return {
-    id: user.id,
-    email: user.email || "",
-    fullName: getFallbackName(user),
-    role: "customer",
-    partnerType: null,
-    status: "active",
-    phone: undefined,
-    country: undefined,
-    city: undefined,
-    createdAt: now,
-    updatedAt: now,
-  };
-};
-
 const toRecord = (value: unknown): Record<string, unknown> => {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -71,13 +49,15 @@ const toRecord = (value: unknown): Record<string, unknown> => {
   return {};
 };
 
-const mapProfileRow = (rawRow: unknown, user: User): LourexProfile => {
+const mapProfileRow = (rawRow: unknown, user: User): LourexProfile | null => {
   const row = toRecord(rawRow);
-  const fallback = buildFallbackProfile(user);
-  const createdAt = safeString(row.created_at, fallback.createdAt);
+  const createdAt = safeString(row.created_at, new Date().toISOString());
 
   const rawRole = safeString(row.role) || safeString(row.role_name);
-  const role: LourexRole = isValidRole(rawRole) ? rawRole : "customer";
+  if (!isValidRole(rawRole)) {
+    return null;
+  }
+  const role: LourexRole = rawRole;
 
   const rawStatus = safeString(row.status);
   const status: LourexAccountStatus =
@@ -98,7 +78,9 @@ const mapProfileRow = (rawRow: unknown, user: User): LourexProfile => {
       safeString(row.full_name) ||
       safeString(row.fullName) ||
       safeString(row.name) ||
-      fallback.fullName,
+      safeString(user.user_metadata?.full_name) ||
+      safeString(user.user_metadata?.name) ||
+      safeString(user.email?.split("@")[0]),
     role,
     partnerType,
     status,
@@ -114,13 +96,17 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<LourexProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
+  const [profileMissing, setProfileMissing] = useState(false);
 
   const loadSessionState = useCallback(async (nextSession: Session | null) => {
     setLoading(true);
     setSession(nextSession);
+    setProfile(null);
+    setProfileError(false);
+    setProfileMissing(false);
 
     if (!nextSession?.user) {
-      setProfile(null);
       setLoading(false);
       return;
     }
@@ -135,18 +121,25 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) {
       console.warn("Profile fetch error:", error);
-      setProfile(buildFallbackProfile(user));
+      setProfileError(true);
       setLoading(false);
       return;
     }
 
     if (data) {
-      setProfile(mapProfileRow(data, user));
+      const nextProfile = mapProfileRow(data, user);
+      if (!nextProfile) {
+        console.warn("Profile row has an invalid or missing role.");
+        setProfileError(true);
+        setLoading(false);
+        return;
+      }
+      setProfile(nextProfile);
       setLoading(false);
       return;
     }
 
-    setProfile(buildFallbackProfile(user));
+    setProfileMissing(true);
     setLoading(false);
   }, []);
 
@@ -188,6 +181,8 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   const signOut = useCallback(async () => {
     setSession(null);
     setProfile(null);
+    setProfileError(false);
+    setProfileMissing(false);
     await supabase.auth.signOut();
   }, []);
 
@@ -197,10 +192,12 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
         user: session?.user ?? null,
         profile,
         loading,
+        profileError,
+        profileMissing,
         refreshProfile,
         signOut,
       }),
-      [session, profile, loading, refreshProfile, signOut],
+      [session, profile, loading, profileError, profileMissing, refreshProfile, signOut],
   );
 
   return (

@@ -34,7 +34,7 @@ export const ProtectedRoute = ({
   redirectToDefault = false,
 }: ProtectedRouteProps) => {
   const location = useLocation();
-  const { user, profile, loading, signOut } = useAuthSession();
+  const { user, profile, loading, profileError, profileMissing, signOut } = useAuthSession();
   const { t } = useI18n();
 
   if (loading) {
@@ -43,6 +43,30 @@ export const ProtectedRoute = ({
 
   if (!user) {
     return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+  }
+
+  if (profileError) {
+    return (
+      <AuthStateScreen
+        variant="error"
+        title="Failed to load user profile"
+        description="Failed to load user profile. Please refresh."
+        primaryAction={{ label: t("auth.backHome"), to: "/" }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
+
+  if (profileMissing) {
+    return (
+      <AuthStateScreen
+        variant="missing"
+        title="Account setup incomplete"
+        description="Account setup incomplete. Please contact support."
+        primaryAction={{ label: t("auth.backHome"), to: "/" }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
   }
 
   if (!profile) {
