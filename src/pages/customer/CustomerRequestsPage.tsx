@@ -39,7 +39,8 @@ import { loadPurchaseRequests, requestStatusMeta } from "@/lib/operationsDomain"
 import type { PurchaseRequestStatus } from "@/types/lourex";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
-type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
+type LoadedPurchaseRequestRow = Awaited<ReturnType<typeof loadPurchaseRequests>>[number];
+type CustomerRequestRow = Omit<LoadedPurchaseRequestRow, "status"> & {
   status: PurchaseRequestStatus | "cancelled";
   statusLabel?: string;
 };
@@ -119,9 +120,10 @@ const getTrackingCode = (row: CustomerRequestRow) => {
   return row.trackingCode || "-";
 };
 
-const getCustomerEmail = (row: CustomerRequestRow) => {
-  return row.customer?.email || "";
-};
+const toCustomerRequestRow = (row: LoadedPurchaseRequestRow): CustomerRequestRow => ({
+  ...row,
+  status: row.status,
+});
 
 const normalizeSearchValue = (value: string | undefined | null) => {
   return (value || "").trim().toLowerCase();
@@ -191,7 +193,7 @@ export default function CustomerRequestsPage() {
 
       const customerRows = normalizedProfileEmail
           ? loadedRows.filter((row) => {
-            const rowEmail = getCustomerEmail(row as any).trim().toLowerCase();
+            const rowEmail = normalizeSearchValue(row.customer?.email);
 
             if (!rowEmail) {
               return true;
@@ -201,7 +203,7 @@ export default function CustomerRequestsPage() {
           })
           : loadedRows;
 
-      setRows(customerRows as any);
+      setRows(customerRows.map(toCustomerRequestRow));
     } catch (loadError) {
       logOperationalError("customer_requests_load", loadError);
       setError(t("common.error"));
