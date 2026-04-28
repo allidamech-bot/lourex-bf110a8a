@@ -158,14 +158,14 @@ export const SharedAccountPanel = ({
 
     const { error } = await supabase
       .from("profiles")
-      .upsert({
-        id: user.id,
+      .update({
         full_name: profile.full_name,
         company_name: profile.company_name,
         phone: profile.phone,
         country: profile.country,
         avatar_url: profile.avatar_url,
-      });
+      })
+      .eq("id", user.id);
 
     if (error) toast.error(error.message);
     else toast.success(t("account.updated"));
