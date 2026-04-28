@@ -573,29 +573,45 @@ const getCurrentCustomerRecord = async () => {
     return null;
   }
 
-  const userEmail = user.email?.trim().toLowerCase() || "";
-
-  const byAuthUser = await db
-    .from<CustomerRow & { auth_user_id?: string | null }>("lourex_customers")
+  // In the Lourex Cloud ownership model, lourex_customers.id is intentionally equal to auth.users.id,
+  // and purchase_requests.customer_id stores that same authenticated user id.
+  const byUserId = await db
+    .from<CustomerRow>("lourex_customers")
     .select("*")
-    .eq("auth_user_id", user.id)
+    .eq("id", user.id)
     .maybeSingle();
 
-  if (byAuthUser.data) {
-    return byAuthUser.data;
+  if (byUserId.data) {
+    return byUserId.data;
   }
+
+  const userEmail = user.email?.trim().toLowerCase() || "";
 
   if (!userEmail) {
     return null;
   }
 
-  const byEmail = await db
-    .from<CustomerRow & { auth_user_id?: string | null }>("lourex_customers")
-    .select("*")
-    .eq("email", userEmail)
+  const upsertedCustomer = await db
+    .rpc<CurrentCustomerUpsertRow>("upsert_current_customer_record", {
+      p_full_name: user.user_metadata?.full_name || "",
+      p_email: userEmail,
+      p_phone: "",
+      p_country: "",
+      p_city: "",
+    })
     .maybeSingle();
 
-  return byEmail.data || null;
+  if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+    return null;
+  }
+
+  const upserted = await db
+    .from<CustomerRow>("lourex_customers")
+    .select("*")
+    .eq("id", upsertedCustomer.data.customer_id)
+    .maybeSingle();
+
+  return upserted.data || null;
 };
 
 // writeAuditLog moved to @/domain/audit/service
@@ -906,42 +922,21 @@ export const loadPurchaseRequests = async (
 ): Promise<OperationalPurchaseRequest[]> => {
   const { user, profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
-  const currentCustomer = isCustomer ? await getCurrentCustomerRecord() : null;
-  const currentCustomerId = currentCustomer?.id || null;
-  const currentUserEmail = user?.email?.trim().toLowerCase() || profile?.email?.trim().toLowerCase() || "";
+  if (isCustomer) {
+    await getCurrentCustomerRecord();
+  }
+  const currentCustomerId = isCustomer ? user?.id || profile?.id || null : null;
 
   let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
 
   if (isCustomer) {
-    const byCustomerIdPromise = currentCustomerId
+    explicitRowsPromise = currentCustomerId
       ? safeStructuredSelectWhereEq<PurchaseRequestRow>(
           "purchase_requests",
           "customer_id",
           currentCustomerId,
-        )
+        ).then((rows) => rows.filter((row) => !row.customer_hidden_at))
       : Promise.resolve([] as PurchaseRequestRow[]);
-
-    const byEmailPromise = currentUserEmail
-      ? safeStructuredSelectWhereEq<PurchaseRequestRow>(
-          "purchase_requests",
-          "email",
-          currentUserEmail,
-        )
-      : Promise.resolve([] as PurchaseRequestRow[]);
-
-    explicitRowsPromise = Promise.all([byCustomerIdPromise, byEmailPromise]).then(
-      ([byCustomerId, byEmail]) => {
-        const map = new Map<string, PurchaseRequestRow>();
-
-        [...byCustomerId, ...byEmail].forEach((row) => {
-          if (!row.customer_hidden_at) {
-            map.set(row.id, row);
-          }
-        });
-
-        return Array.from(map.values());
-      },
-    );
   } else {
     explicitRowsPromise = safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
   }
@@ -1929,9 +1924,9 @@ export const loadCustomerDashboards = async (): Promise<CustomerDashboard[]> => 
   const deals = await loadDeals();
   const customerRowsForProfile =
     isCustomer && profile?.id
-      ? await safeStructuredSelectWhereEq<CustomerRow & { auth_user_id?: string | null }>(
+      ? await safeStructuredSelectWhereEq<CustomerRow>(
           "lourex_customers",
-          "auth_user_id",
+          "id",
           profile.id,
         )
       : [];

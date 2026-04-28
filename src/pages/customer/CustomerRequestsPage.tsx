@@ -25,7 +25,6 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { 
   cancelPurchaseRequest as cancelRequest,
   resubmitPurchaseRequest,
@@ -119,10 +118,6 @@ const getTrackingCode = (row: CustomerRequestRow) => {
   return row.trackingCode || "-";
 };
 
-const getCustomerEmail = (row: CustomerRequestRow) => {
-  return row.customer?.email || "";
-};
-
 const normalizeSearchValue = (value: string | undefined | null) => {
   return (value || "").trim().toLowerCase();
 };
@@ -147,7 +142,6 @@ const RequestInfoTile = ({
 
 export default function CustomerRequestsPage() {
   const { locale, t } = useI18n();
-  const { profile } = useAuthSession();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -161,7 +155,6 @@ export default function CustomerRequestsPage() {
   const [uploadingProof, setUploadingProof] = useState(false);
 
   const selectedRequestId = searchParams.get("request");
-  const normalizedProfileEmail = profile?.email?.trim().toLowerCase() || "";
 
   const getStatusMeta = (status: PurchaseRequestStatus | "cancelled") => {
     if (status === "cancelled") {
@@ -188,20 +181,7 @@ export default function CustomerRequestsPage() {
 
     try {
       const loadedRows = await loadPurchaseRequests();
-
-      const customerRows = normalizedProfileEmail
-          ? loadedRows.filter((row) => {
-            const rowEmail = getCustomerEmail(row as any).trim().toLowerCase();
-
-            if (!rowEmail) {
-              return true;
-            }
-
-            return rowEmail === normalizedProfileEmail;
-          })
-          : loadedRows;
-
-      setRows(customerRows as any);
+      setRows(loadedRows as any);
     } catch (loadError) {
       logOperationalError("customer_requests_load", loadError);
       setError(t("common.error"));
@@ -214,7 +194,7 @@ export default function CustomerRequestsPage() {
   useEffect(() => {
     void loadRows("initial");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedProfileEmail]);
+  }, []);
 
   const requestFilters: Array<{ key: CustomerRequestFilter; label: string }> = [
     { key: "all", label: t("common.all") },
