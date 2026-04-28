@@ -28,10 +28,14 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
     const requestedPath = (location.state as { from?: string } | null)?.from;
     const fallbackPath = getDefaultRouteForRole(profile.role);
+    const isCustomer = profile.role === "customer";
+    const requestedCustomerPortal = requestedPath?.startsWith("/customer-portal");
+    const requestedDashboard = requestedPath?.startsWith("/dashboard");
     const targetPath =
       requestedPath &&
       requestedPath !== "/auth" &&
-      (profile.role !== "customer" || !requestedPath.startsWith("/dashboard"))
+      (!isCustomer || !requestedDashboard) &&
+      (isCustomer || !requestedCustomerPortal)
         ? requestedPath
         : fallbackPath;
 

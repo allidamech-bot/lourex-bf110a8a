@@ -21,6 +21,8 @@ export const SiteHeader = () => {
   const isRtl = lang === "ar";
 
   const isAuthenticated = Boolean(user || profile);
+  const isCustomer = profile?.role === "customer";
+  const usesDashboardWorkspace = Boolean(profile && profile.role !== "customer");
   const userEmail = profile?.email || user?.email || "";
   const signInLabel = t("nav.signIn");
   const signOutLabel = t("nav.signOut");
@@ -35,12 +37,18 @@ export const SiteHeader = () => {
       () => [
         { to: "/", label: t("nav.home") },
         { to: "/request", label: t("nav.purchaseRequest") },
-        { to: isAuthenticated ? "/customer-portal/requests" : "/auth", label: t("customerPortal.actions.requests.title") },
-        { to: isAuthenticated ? "/customer-portal/tracking" : "/track", label: t("customerPortal.actions.tracking.title") },
+        {
+          to: usesDashboardWorkspace ? "/dashboard/requests" : isCustomer ? "/customer-portal/requests" : "/auth",
+          label: t("customerPortal.actions.requests.title"),
+        },
+        {
+          to: usesDashboardWorkspace ? "/dashboard/tracking" : isCustomer ? "/customer-portal/tracking" : "/track",
+          label: t("customerPortal.actions.tracking.title"),
+        },
         { to: "/guidelines", label: t("nav.guidelines") },
         { to: "/contact", label: t("nav.contact") },
       ],
-      [isAuthenticated, t],
+      [isCustomer, t, usesDashboardWorkspace],
   );
 
   const workspaceLabel = profile
@@ -144,7 +152,7 @@ export const SiteHeader = () => {
 
                       <div className="min-w-0 text-start">
                         <p className="truncate text-sm font-semibold leading-5 text-foreground">{userName}</p>
-                        <p className="truncate text-xs leading-4 text-muted-foreground">{userEmail || roleLabel || workspaceLabel}</p>
+                        <p className="truncate text-xs leading-4 text-muted-foreground">{roleLabel || userEmail || workspaceLabel}</p>
                       </div>
                     </Link>
 
@@ -196,7 +204,7 @@ export const SiteHeader = () => {
 
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                          <p className="truncate text-xs text-muted-foreground">{userEmail || roleLabel || workspaceLabel}</p>
+                          <p className="truncate text-xs text-muted-foreground">{roleLabel || userEmail || workspaceLabel}</p>
                         </div>
                       </div>
 
