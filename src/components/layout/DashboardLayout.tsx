@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   PackageSearch,
   Receipt,
+  Scale,
   ShieldCheck,
   SlidersHorizontal,
   Users,
@@ -68,6 +69,12 @@ export const DashboardLayout = () => {
       label: t("dashboardNav.editRequests"),
       icon: FilePenLine,
       roles: dashboardRoutePermissions.editRequests,
+    },
+    {
+      to: "/dashboard/settlements",
+      label: "Settlements",
+      icon: Scale,
+      roles: dashboardRoutePermissions.settlements,
     },
     {
       to: "/dashboard/audit",

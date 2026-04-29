@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
+import { loadPartnerSettlements } from "@/domain/accounting/partnerSettlements";
 import { summarizeFinancialEntries, summarizeFinancialEntriesByCurrency } from "@/domain/accounting/utils";
 import { loadDeals, loadPurchaseRequests, loadCustomerDashboards, loadShipments } from "./operationsDomain";
 import type { OperationsFinancialEntry as FinancialEntry } from "@/domain/operations/types";
@@ -61,6 +62,10 @@ export type ReportSummary = {
   destination: number;
   delivered: number;
   currencyGroups: number;
+  partnerSettlementTotalDue?: number;
+  partnerSettlementUnpaid?: number;
+  partnerSettlementPaid?: number;
+  partnerSettlementDisputed?: number;
 };
 
 export type ExpenseCategory = {
@@ -205,7 +210,7 @@ export const getOperationsReport = async (): Promise<OperationsReport> => {
 };
 
 export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Date): Promise<DashboardReportSnapshot> => {
-  const [entries, editRequests, deals, requests, shipments, customers, auditCount, operations] = await Promise.all([
+  const [entries, editRequests, deals, requests, shipments, customers, auditCount, operations, settlements] = await Promise.all([
     loadFinancialEntries(),
     loadFinancialEditRequests(),
     loadDeals(),
@@ -214,6 +219,7 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
     loadCustomerDashboards(),
     supabase.from("audit_logs").select("id", { count: "exact", head: true }),
     getOperationsReport(),
+    loadPartnerSettlements().catch(() => []),
   ]);
 
   const filteredEntries = filterEntriesByDate(entries, startDate, endDate);
@@ -221,6 +227,7 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
   const filteredRequests = requests.filter((request) => isInRange(request.createdAt, startDate, endDate));
   const filteredShipments = shipments.filter((shipment) => isInRange(shipment.updatedAt, startDate, endDate));
   const filteredEditRequests = editRequests.filter((request) => isInRange(request.submittedAt, startDate, endDate));
+  const filteredSettlements = settlements.filter((settlement) => isInRange(settlement.createdAt, startDate, endDate));
   const financialSummary = buildFinancialSummaryReport(filteredEntries);
   const currencyGroups = summarizeFinancialEntriesByCurrency(filteredEntries).length;
   const customerReport = await getCustomerReport();
@@ -269,6 +276,14 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
       ).length,
       delivered: filteredShipments.filter((shipment) => shipment.stage === "delivered").length,
       currencyGroups,
+      partnerSettlementTotalDue: filteredSettlements.reduce((sum, settlement) => sum + settlement.netDue, 0),
+      partnerSettlementUnpaid: filteredSettlements
+        .filter((settlement) => settlement.status !== "paid")
+        .reduce((sum, settlement) => sum + settlement.netDue, 0),
+      partnerSettlementPaid: filteredSettlements
+        .filter((settlement) => settlement.status === "paid")
+        .reduce((sum, settlement) => sum + settlement.netDue, 0),
+      partnerSettlementDisputed: filteredSettlements.filter((settlement) => settlement.status === "disputed").length,
     },
     operations,
     financialSummary,

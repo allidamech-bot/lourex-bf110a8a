@@ -221,6 +221,27 @@ export interface FinancialEditRequest {
   proposedValue?: Record<string, unknown>;
 }
 
+export type PartnerSettlementStatus = "draft" | "pending_review" | "approved" | "paid" | "disputed";
+export type PartnerSettlementRole = "turkish_partner" | "saudi_partner";
+
+export interface PartnerSettlement {
+  id: string;
+  partnerId: string;
+  partnerName?: string;
+  partnerRole: PartnerSettlementRole;
+  settlementPeriod: string;
+  grossAmount: number;
+  partnerCommission: number;
+  expenses: number;
+  netDue: number;
+  status: PartnerSettlementStatus;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuditRecord {
   id: string;
   action: string;

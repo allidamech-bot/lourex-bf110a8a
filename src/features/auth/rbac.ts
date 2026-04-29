@@ -50,6 +50,7 @@ export const dashboardRoutePermissions = {
   tracking: INTERNAL_ROLES,
   accounting: ACCOUNTING_DASHBOARD_UI_ROLES,
   editRequests: ACCOUNTING_DASHBOARD_UI_ROLES,
+  settlements: INTERNAL_ROLES,
   audit: INTERNAL_ROLES,
   reports: [...OWNER_DASHBOARD_UI_ROLES, "operations_employee"] as LourexRole[],
   system: SYSTEM_DASHBOARD_UI_ROLES,

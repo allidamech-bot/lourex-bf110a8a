@@ -37,6 +37,7 @@ const DealsPage = lazy(() => import("@/pages/dashboard/DealsPage"));
 const TrackingPage = lazy(() => import("@/pages/dashboard/TrackingPage"));
 const AccountingPage = lazy(() => import("@/pages/dashboard/AccountingPage"));
 const EditRequestsPage = lazy(() => import("@/pages/dashboard/EditRequestsPage"));
+const PartnerSettlementsPage = lazy(() => import("@/pages/dashboard/PartnerSettlementsPage"));
 const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
 const SystemControlsPage = lazy(() => import("@/pages/dashboard/SystemControlsPage"));
@@ -176,6 +177,14 @@ const App = () => (
                                             element={
                                                 <ProtectedRoute allowedRoles={ACCOUNTING_DASHBOARD_UI_ROLES}>
                                                     <PageWithAI component={<EditRequestsPage />} />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="settlements"
+                                            element={
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                    <PageWithAI component={<PartnerSettlementsPage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
