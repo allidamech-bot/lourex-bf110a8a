@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          bucket_name: string
+          category: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_url: string
+          id: string
+          storage_path: string
+          uploaded_by: string | null
+          visibility: string
+        }
+        Insert: {
+          bucket_name?: string
+          category?: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          file_name?: string
+          file_url: string
+          id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Update: {
+          bucket_name?: string
+          category?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -226,48 +268,72 @@ export type Database = {
       }
       deals: {
         Row: {
+          accounting_reference: string | null
+          assigned_saudi_partner_id: string | null
+          assigned_turkish_partner_id: string | null
           broker_id: string | null
           client_id: string
           created_at: string
           currency: string | null
+          customer_id: string | null
           deal_number: string
           destination_country: string | null
           factory_id: string | null
           id: string
           notes: string | null
+          operation_title: string | null
+          operational_status: string
           origin_country: string | null
+          shipment_id: string | null
+          source_request_id: string | null
           status: string
           supplier_id: string | null
           total_value: number | null
           updated_at: string
         }
         Insert: {
+          accounting_reference?: string | null
+          assigned_saudi_partner_id?: string | null
+          assigned_turkish_partner_id?: string | null
           broker_id?: string | null
           client_id: string
           created_at?: string
           currency?: string | null
+          customer_id?: string | null
           deal_number: string
           destination_country?: string | null
           factory_id?: string | null
           id?: string
           notes?: string | null
+          operation_title?: string | null
+          operational_status?: string
           origin_country?: string | null
+          shipment_id?: string | null
+          source_request_id?: string | null
           status?: string
           supplier_id?: string | null
           total_value?: number | null
           updated_at?: string
         }
         Update: {
+          accounting_reference?: string | null
+          assigned_saudi_partner_id?: string | null
+          assigned_turkish_partner_id?: string | null
           broker_id?: string | null
           client_id?: string
           created_at?: string
           currency?: string | null
+          customer_id?: string | null
           deal_number?: string
           destination_country?: string | null
           factory_id?: string | null
           id?: string
           notes?: string | null
+          operation_title?: string | null
+          operational_status?: string
           origin_country?: string | null
+          shipment_id?: string | null
+          source_request_id?: string | null
           status?: string
           supplier_id?: string | null
           total_value?: number | null
@@ -275,10 +341,38 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "deals_assigned_saudi_partner_id_fkey"
+            columns: ["assigned_saudi_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_assigned_turkish_partner_id_fkey"
+            columns: ["assigned_turkish_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "deals_factory_id_fkey"
             columns: ["factory_id"]
             isOneToOne: false
             referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_source_request_id_fkey"
+            columns: ["source_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -513,6 +607,39 @@ export type Database = {
           ip_address?: string | null
           user_id?: string
           version?: string
+        }
+        Relationships: []
+      }
+      lourex_customers: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -966,6 +1093,150 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_requests: {
+        Row: {
+          brand: string | null
+          city: string | null
+          color: string | null
+          converted_deal_id: string | null
+          country: string | null
+          created_at: string
+          customer_hidden_at: string | null
+          customer_id: string | null
+          delivery_address: string | null
+          delivery_notes: string | null
+          destination: string | null
+          email: string
+          expected_supply_date: string | null
+          full_name: string
+          has_previous_sample: boolean | null
+          id: string
+          image_urls: string[]
+          internal_notes: string
+          is_full_sourcing: boolean | null
+          is_ready_made: boolean | null
+          last_reviewed_at: string | null
+          manufacturing_country: string | null
+          material: string | null
+          phone: string | null
+          preferred_shipping_method: string | null
+          product_description: string
+          product_name: string
+          quality_level: string | null
+          quantity: number
+          reference_link: string | null
+          request_number: string
+          reviewed_by: string | null
+          size_dimensions: string | null
+          source_inquiry_id: string | null
+          status: string
+          submitted_at: string | null
+          technical_specs: string | null
+          tracking_code: string | null
+          updated_at: string
+          weight: string | null
+        }
+        Insert: {
+          brand?: string | null
+          city?: string | null
+          color?: string | null
+          converted_deal_id?: string | null
+          country?: string | null
+          created_at?: string
+          customer_hidden_at?: string | null
+          customer_id?: string | null
+          delivery_address?: string | null
+          delivery_notes?: string | null
+          destination?: string | null
+          email?: string
+          expected_supply_date?: string | null
+          full_name?: string
+          has_previous_sample?: boolean | null
+          id?: string
+          image_urls?: string[]
+          internal_notes?: string
+          is_full_sourcing?: boolean | null
+          is_ready_made?: boolean | null
+          last_reviewed_at?: string | null
+          manufacturing_country?: string | null
+          material?: string | null
+          phone?: string | null
+          preferred_shipping_method?: string | null
+          product_description?: string
+          product_name?: string
+          quality_level?: string | null
+          quantity?: number
+          reference_link?: string | null
+          request_number: string
+          reviewed_by?: string | null
+          size_dimensions?: string | null
+          source_inquiry_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          technical_specs?: string | null
+          tracking_code?: string | null
+          updated_at?: string
+          weight?: string | null
+        }
+        Update: {
+          brand?: string | null
+          city?: string | null
+          color?: string | null
+          converted_deal_id?: string | null
+          country?: string | null
+          created_at?: string
+          customer_hidden_at?: string | null
+          customer_id?: string | null
+          delivery_address?: string | null
+          delivery_notes?: string | null
+          destination?: string | null
+          email?: string
+          expected_supply_date?: string | null
+          full_name?: string
+          has_previous_sample?: boolean | null
+          id?: string
+          image_urls?: string[]
+          internal_notes?: string
+          is_full_sourcing?: boolean | null
+          is_ready_made?: boolean | null
+          last_reviewed_at?: string | null
+          manufacturing_country?: string | null
+          material?: string | null
+          phone?: string | null
+          preferred_shipping_method?: string | null
+          product_description?: string
+          product_name?: string
+          quality_level?: string | null
+          quantity?: number
+          reference_link?: string | null
+          request_number?: string
+          reviewed_by?: string | null
+          size_dimensions?: string | null
+          source_inquiry_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          technical_specs?: string | null
+          tracking_code?: string | null
+          updated_at?: string
+          weight?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_converted_deal_id_fkey"
+            columns: ["converted_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           created_at: string
@@ -1220,6 +1491,9 @@ export type Database = {
         Row: {
           client_name: string
           created_at: string
+          current_stage_code: string | null
+          customer_visible_note: string | null
+          deal_id: string | null
           destination: string
           id: string
           pallets: number
@@ -1232,6 +1506,9 @@ export type Database = {
         Insert: {
           client_name?: string
           created_at?: string
+          current_stage_code?: string | null
+          customer_visible_note?: string | null
+          deal_id?: string | null
           destination?: string
           id?: string
           pallets?: number
@@ -1244,6 +1521,9 @@ export type Database = {
         Update: {
           client_name?: string
           created_at?: string
+          current_stage_code?: string | null
+          customer_visible_note?: string | null
+          deal_id?: string | null
           destination?: string
           id?: string
           pallets?: number
@@ -1253,7 +1533,15 @@ export type Database = {
           user_id?: string | null
           weight?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shipments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
@@ -1386,6 +1674,57 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      cancel_purchase_request: {
+        Args: { p_reason?: string; p_request_id: string }
+        Returns: {
+          brand: string | null
+          city: string | null
+          color: string | null
+          converted_deal_id: string | null
+          country: string | null
+          created_at: string
+          customer_hidden_at: string | null
+          customer_id: string | null
+          delivery_address: string | null
+          delivery_notes: string | null
+          destination: string | null
+          email: string
+          expected_supply_date: string | null
+          full_name: string
+          has_previous_sample: boolean | null
+          id: string
+          image_urls: string[]
+          internal_notes: string
+          is_full_sourcing: boolean | null
+          is_ready_made: boolean | null
+          last_reviewed_at: string | null
+          manufacturing_country: string | null
+          material: string | null
+          phone: string | null
+          preferred_shipping_method: string | null
+          product_description: string
+          product_name: string
+          quality_level: string | null
+          quantity: number
+          reference_link: string | null
+          request_number: string
+          reviewed_by: string | null
+          size_dimensions: string | null
+          source_inquiry_id: string | null
+          status: string
+          submitted_at: string | null
+          technical_specs: string | null
+          tracking_code: string | null
+          updated_at: string
+          weight: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "purchase_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       confirm_delivery: {
         Args: { p_message?: string; p_order_id: string }
         Returns: undefined
@@ -1406,6 +1745,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_lourex_role: { Args: never; Returns: string }
       get_staff_owner_id: { Args: never; Returns: string }
       has_org_role: {
         Args: { _owner_id: string; _roles: string[] }
@@ -1459,6 +1799,29 @@ export type Database = {
         Args: { p_message?: string; p_order_id: string; p_status: string }
         Returns: undefined
       }
+      upsert_current_customer_record:
+        | {
+            Args: {
+              p_city?: string
+              p_country?: string
+              p_email: string
+              p_full_name: string
+              p_phone?: string
+            }
+            Returns: {
+              customer_id: string
+            }[]
+          }
+        | {
+            Args: {
+              p_country: string
+              p_email: string
+              p_full_name: string
+              p_phone: string
+              p_user_id: string
+            }
+            Returns: string
+          }
     }
     Enums: {
       app_role:
