@@ -147,10 +147,8 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         return;
       }
 
-      const channel = supabase.channel(`user-notifications:${userId}`);
-      channelRef.current = channel;
-
-      channel
+      const channel = supabase
+        .channel(`user-notifications:${userId}`)
         .on(
           "postgres_changes",
           {
@@ -188,6 +186,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
           },
         );
 
+      channelRef.current = channel;
       channel.subscribe((status, error) => {
         if (!isActive || channelRef.current !== channel) {
           return;
