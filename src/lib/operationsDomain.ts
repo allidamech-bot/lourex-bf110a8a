@@ -931,6 +931,18 @@ const mapExplicitRequest = (
   transferRejectionReason: row.transfer_rejection_reason,
 });
 
+const buildPurchaseRequestAutomationPayload = (row: PurchaseRequestRow, actorId?: string | null) => ({
+  requestId: row.id,
+  requestNumber: row.request_number,
+  customerId: row.customer_id,
+  customerName: row.full_name,
+  customerEmail: row.email,
+  productName: row.product_name,
+  summary: row.product_description,
+  status: row.status,
+  actorId: actorId || null,
+});
+
 export const loadPurchaseRequests = async (
   options: { includeAttachments?: boolean; includeLegacy?: boolean } = {
     includeAttachments: true,
@@ -1115,6 +1127,17 @@ export const updatePurchaseRequestStatus = async (
         entity_label: current?.product_name || current?.request_number || "Purchase Request",
       },
     });
+
+    if (status === "ready_for_conversion") {
+      try {
+        await runAutomation(
+          "purchase_request.approved",
+          buildPurchaseRequestAutomationPayload({ ...current, status }, user.id),
+        );
+      } catch (error) {
+        console.warn("purchase_request.approved automation failed:", error);
+      }
+    }
   }
 
   return result;
@@ -2191,6 +2214,8 @@ export const deletePurchaseRequestRecord = async (requestId: string) => {
     throw new Error("You do not have permission to cancel this request.");
   }
 
+  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
+  const current = currentRows.find((row) => row.id === requestId);
   const now = new Date().toISOString();
   const cancellationPayload: Record<string, unknown> = {
     status: "cancelled",
@@ -2216,6 +2241,17 @@ export const deletePurchaseRequestRecord = async (requestId: string) => {
     recordId: requestId,
     newValues: cancellationPayload,
   });
+
+  if (current) {
+    try {
+      await runAutomation(
+        "purchase_request.cancelled",
+        buildPurchaseRequestAutomationPayload({ ...current, status: "cancelled" }, profile.id),
+      );
+    } catch (error) {
+      console.warn("purchase_request.cancelled automation failed:", error);
+    }
+  }
 
   return updated;
 };
@@ -2367,6 +2403,19 @@ export const acceptTransferProof = async (requestId: string) => {
       accepted_by: user.id,
     },
   });
+
+  try {
+    await runAutomation(
+      "purchase_request.approved",
+      buildPurchaseRequestAutomationPayload({
+        ...request,
+        status: "in_progress",
+        transfer_proof_status: "accepted",
+      }, user.id),
+    );
+  } catch (error) {
+    console.warn("purchase_request.approved automation failed:", error);
+  }
 
   return { success: true };
 };

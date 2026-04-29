@@ -14,7 +14,7 @@ export type AutomationAction =
   | {
       type: "send_notification";
       recipientIds?: string[];
-      recipientRole?: "internal";
+      recipientRole?: "internal" | "customer";
       notificationType: string;
       title: string;
       message: string;
@@ -67,6 +67,7 @@ export type AutomationPayload = JsonPayload & {
   requestNumber?: string;
   customerId?: string | null;
   customerName?: string;
+  customerEmail?: string;
   productName?: string;
   summary?: string;
   dealId?: string;
@@ -109,16 +110,34 @@ export const automationRules: AutomationRule[] = [
   {
     id: "purchase-request-approved-foundation",
     event: "purchase_request.approved",
-    enabled: false,
-    description: "Foundation placeholder for post-approval shipment and notification actions.",
-    actions: [],
+    enabled: true,
+    description: "Notify the customer after a purchase request is approved for payment or conversion.",
+    actions: [
+      {
+        type: "send_notification",
+        recipientRole: "customer",
+        notificationType: "purchase_request_approved",
+        title: "Purchase request approved",
+        message: "Purchase request {{requestNumber}} is approved and ready for the next step.",
+        link: "/customer/requests?request={{requestId}}",
+      },
+    ],
   },
   {
     id: "purchase-request-cancelled-foundation",
     event: "purchase_request.cancelled",
-    enabled: false,
-    description: "Foundation placeholder for cancellation notifications.",
-    actions: [],
+    enabled: true,
+    description: "Notify the customer after a purchase request is cancelled.",
+    actions: [
+      {
+        type: "send_notification",
+        recipientRole: "customer",
+        notificationType: "purchase_request_cancelled",
+        title: "Purchase request cancelled",
+        message: "Purchase request {{requestNumber}} was cancelled.",
+        link: "/customer/requests?request={{requestId}}",
+      },
+    ],
   },
   {
     id: "payment-received-foundation",
@@ -186,6 +205,7 @@ const sendNotificationIfMissing = async (
     new Set([
       ...(action.recipientIds || []),
       ...(action.recipientRole === "internal" ? await loadInternalRecipientIds() : []),
+      ...(action.recipientRole === "customer" && payload.customerId ? [payload.customerId] : []),
     ].filter(Boolean)),
   );
   if (recipientIds.length === 0) {
@@ -246,6 +266,7 @@ const interpolateTemplate = (template: string, payload: AutomationPayload) =>
     requestNumber: payload.requestNumber || "new request",
     customerId: payload.customerId || "",
     customerName: payload.customerName || "a customer",
+    customerEmail: payload.customerEmail || "",
     productName: payload.productName || "requested product",
     summary: payload.summary || "",
   }).reduce(

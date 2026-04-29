@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { runAutomation } from "@/lib/automationEngine";
 import type { Json } from "@/integrations/supabase/types";
 import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
 import {
@@ -595,6 +596,7 @@ export const cancelPurchaseRequest = async (
   }
 
   try {
+    const original = await getPurchaseRequestById(normalizedRequestId);
     const rpcClient = supabase as unknown as {
       rpc: (
         fn: "cancel_purchase_request",
@@ -612,6 +614,24 @@ export const cancelPurchaseRequest = async (
         return failure("This request can no longer be cancelled.");
       }
       throw error;
+    }
+
+    if (original) {
+      try {
+        await runAutomation("purchase_request.cancelled", {
+          requestId: original.id,
+          requestNumber: original.requestNumber,
+          customerId: original.customer.id,
+          customerName: original.customer.fullName,
+          customerEmail: original.customer.email,
+          productName: original.productName,
+          summary: original.productDescription,
+          status: "cancelled",
+          actorId: original.customer.id,
+        });
+      } catch (error) {
+        console.warn("purchase_request.cancelled automation failed:", error);
+      }
     }
 
     return success(undefined);
