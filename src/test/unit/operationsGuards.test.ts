@@ -33,19 +33,19 @@ describe("operations guards", () => {
   });
 
   it("only allows shipment advancement to the immediate next stage", () => {
-    expect(getNextShipmentStageCode("deal_accepted")).toBe("product_preparation");
+    expect(getNextShipmentStageCode("factory")).toBe("received_turkey");
     expect(
       canAdvanceShipmentStage({
         role: "operations_employee",
-        currentStage: "deal_accepted",
-        nextStage: "product_preparation",
+        currentStage: "factory",
+        nextStage: "received_turkey",
       }),
     ).toBe(true);
     expect(
       canAdvanceShipmentStage({
         role: "operations_employee",
-        currentStage: "deal_accepted",
-        nextStage: "at_origin_port",
+        currentStage: "factory",
+        nextStage: "preparing_export",
       }),
     ).toBe(false);
   });
@@ -54,15 +54,15 @@ describe("operations guards", () => {
     expect(
       canAdvanceShipmentStage({
         role: "saudi_partner",
-        currentStage: "transit_to_destination",
+        currentStage: "in_transit",
         nextStage: "arrived_destination",
       }),
     ).toBe(true);
     expect(
       canAdvanceShipmentStage({
         role: "saudi_partner",
-        currentStage: "deal_accepted",
-        nextStage: "product_preparation",
+        currentStage: "factory",
+        nextStage: "received_turkey",
       }),
     ).toBe(false);
   });
@@ -71,15 +71,15 @@ describe("operations guards", () => {
     expect(
       canAdvanceShipmentStage({
         role: "turkish_partner",
-        currentStage: "deal_accepted",
-        nextStage: "product_preparation",
+        currentStage: "factory",
+        nextStage: "received_turkey",
       }),
     ).toBe(true);
     expect(
       canAdvanceShipmentStage({
         role: "turkish_partner",
-        currentStage: "left_origin_country",
-        nextStage: "transit_to_destination",
+        currentStage: "departed_turkey",
+        nextStage: "in_transit",
       }),
     ).toBe(false);
   });

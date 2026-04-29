@@ -9,123 +9,173 @@ type LocalizedStageDefinition = ShipmentStageDefinition & {
 
 export const shipmentStages: LocalizedStageDefinition[] = [
   {
-    code: "deal_accepted",
+    code: "factory",
     order: 1,
-    label: "تم قبول الصفقة",
-    labelEn: "Deal accepted",
-    description: "تمت الموافقة على الطلب وتحويله إلى عملية تشغيلية.",
-    descriptionEn: "The request was approved and converted into an active operation.",
-    owner: "الإدارة / فريق العمليات",
-    ownerEn: "Management / operations team",
+    label: "في المصنع",
+    labelEn: "Factory",
+    description: "بدأ تجهيز الطلب عند المصنع أو المورد.",
+    descriptionEn: "The order is being prepared at the factory or supplier.",
+    owner: "فريق العمليات",
+    ownerEn: "Operations team",
   },
   {
-    code: "product_preparation",
+    code: "received_turkey",
     order: 2,
-    label: "المنتج قيد التجهيز",
-    labelEn: "Product under preparation",
-    description: "يعمل وكيل تركيا وفريق العمليات على تجهيز الطلب مع المورد.",
-    descriptionEn: "The Turkish partner and operations team are preparing the order with the supplier.",
+    label: "تم الاستلام في تركيا",
+    labelEn: "Received in Turkey",
+    description: "تم استلام الشحنة من المورد داخل تركيا.",
+    descriptionEn: "The shipment was received from the supplier in Turkey.",
     owner: "وكيل تركيا",
     ownerEn: "Turkish partner",
   },
   {
-    code: "moving_to_origin_port",
+    code: "in_turkey_warehouse",
     order: 3,
-    label: "جاري النقل للمنفذ",
-    labelEn: "Moving to port / airport",
-    description: "بدأ نقل الشحنة من موقع التنفيذ إلى المنفذ المناسب.",
-    descriptionEn: "The shipment has started moving from the execution site to the appropriate port.",
+    label: "في مستودع تركيا",
+    labelEn: "In Turkey warehouse",
+    description: "الشحنة موجودة في مستودع تركيا وتنتظر تجهيز التصدير.",
+    descriptionEn: "The shipment is in the Turkey warehouse awaiting export preparation.",
     owner: "وكيل تركيا",
     ownerEn: "Turkish partner",
   },
   {
-    code: "at_origin_port",
+    code: "preparing_export",
     order: 4,
-    label: "في مطار/ميناء المنشأ",
-    labelEn: "At origin port / airport",
-    description: "الشحنة وصلت إلى منفذ بلد المنشأ وتنتظر الخطوة التالية.",
-    descriptionEn: "The shipment reached the origin port and is waiting for the next step.",
+    label: "تجهيز التصدير",
+    labelEn: "Preparing export",
+    description: "تجري إجراءات وتجهيزات التصدير قبل مغادرة تركيا.",
+    descriptionEn: "Export preparation is underway before departure from Turkey.",
     owner: "وكيل تركيا",
     ownerEn: "Turkish partner",
   },
   {
-    code: "origin_customs",
+    code: "departed_turkey",
     order: 5,
-    label: "جاري التخليص (المنشأ)",
-    labelEn: "Origin customs clearance",
-    description: "إجراءات التخليص في بلد المنشأ قيد المعالجة.",
-    descriptionEn: "Origin-country customs clearance is currently being processed.",
+    label: "غادرت تركيا",
+    labelEn: "Departed Turkey",
+    description: "غادرت الشحنة تركيا وهي في طريقها الدولي.",
+    descriptionEn: "The shipment has departed Turkey and entered international transit.",
     owner: "وكيل تركيا / العمليات",
     ownerEn: "Turkish partner / operations",
   },
   {
-    code: "left_origin_country",
+    code: "in_transit",
     order: 6,
-    label: "غادر بلد المنشأ",
-    labelEn: "Left origin country",
-    description: "الشحنة غادرت بلد المنشأ بنجاح.",
-    descriptionEn: "The shipment has successfully departed the origin country.",
-    owner: "وكيل تركيا",
-    ownerEn: "Turkish partner",
-  },
-  {
-    code: "transit_to_destination",
-    order: 7,
-    label: "في الطريق للوجهة",
-    labelEn: "In transit to destination",
-    description: "الشحنة في مرحلة النقل الدولية إلى بلد العميل.",
-    descriptionEn: "The shipment is in international transit to the customer's country.",
+    label: "في الطريق",
+    labelEn: "In transit",
+    description: "الشحنة في مرحلة النقل الدولي إلى بلد الوجهة.",
+    descriptionEn: "The shipment is in international transit to the destination country.",
     owner: "الشحن الدولي",
     ownerEn: "International logistics",
   },
   {
     code: "arrived_destination",
+    order: 7,
+    label: "وصلت بلد الوجهة",
+    labelEn: "Arrived destination",
+    description: "وصلت الشحنة إلى بلد الوجهة وتنتظر الإجراءات المحلية.",
+    descriptionEn: "The shipment has arrived in the destination country and awaits local processing.",
+    owner: "وكيل السعودية",
+    ownerEn: "Saudi partner",
+  },
+  {
+    code: "customs_clearance",
     order: 8,
-    label: "وصل إلى بلد العميل",
-    labelEn: "Arrived in customer country",
-    description: "الشحنة وصلت إلى الوجهة وتنتظر التخليص المحلي.",
-    descriptionEn: "The shipment reached the destination country and is awaiting local clearance.",
+    label: "التخليص الجمركي",
+    labelEn: "Customs clearance",
+    description: "تجري إجراءات التخليص الجمركي في بلد الوجهة.",
+    descriptionEn: "Customs clearance is underway in the destination country.",
     owner: "وكيل السعودية",
     ownerEn: "Saudi partner",
   },
   {
-    code: "destination_customs",
+    code: "out_for_delivery",
     order: 9,
-    label: "جاري التخليص (الوجهة)",
-    labelEn: "Destination customs clearance",
-    description: "التخليص الجمركي في بلد العميل قيد التنفيذ.",
-    descriptionEn: "Destination-country customs clearance is currently in progress.",
-    owner: "وكيل السعودية",
-    ownerEn: "Saudi partner",
-  },
-  {
-    code: "moving_to_warehouse",
-    order: 10,
-    label: "جاري النقل للمستودع",
-    labelEn: "Moving to warehouse",
-    description: "الشحنة في طريقها إلى المستودع أو نقطة التسليم النهائية.",
-    descriptionEn: "The shipment is moving to the warehouse or final delivery point.",
+    label: "خارج للتسليم",
+    labelEn: "Out for delivery",
+    description: "الشحنة خرجت للتسليم النهائي.",
+    descriptionEn: "The shipment is out for final delivery.",
     owner: "وكيل السعودية",
     ownerEn: "Saudi partner",
   },
   {
     code: "delivered",
-    order: 11,
+    order: 10,
     label: "تم التسليم",
     labelEn: "Delivered",
-    description: "تم تسليم الشحنة وإغلاق العملية التشغيلية.",
-    descriptionEn: "The shipment was delivered and the operation was completed.",
+    description: "تم تسليم الشحنة للعميل.",
+    descriptionEn: "The shipment has been delivered to the customer.",
     owner: "وكيل السعودية / العميل",
     ownerEn: "Saudi partner / customer",
   },
+  {
+    code: "closed",
+    order: 11,
+    label: "مغلقة",
+    labelEn: "Closed",
+    description: "تم إغلاق عملية الشحنة بعد اكتمال التسليم.",
+    descriptionEn: "The shipment operation has been closed after delivery.",
+    owner: "فريق العمليات",
+    ownerEn: "Operations team",
+  },
 ];
 
-export const getShipmentStageDefinition = (code: ShipmentStageCode | undefined | null) =>
-  shipmentStages.find((stage) => stage.code === code) || null;
+const legacyStageMap: Record<string, ShipmentStageCode> = {
+  deal_accepted: "factory",
+  product_preparation: "factory",
+  moving_to_origin_port: "preparing_export",
+  transfer_to_port: "preparing_export",
+  at_origin_port: "preparing_export",
+  origin_port: "preparing_export",
+  origin_customs: "preparing_export",
+  left_origin_country: "departed_turkey",
+  departed_origin: "departed_turkey",
+  transit_to_destination: "in_transit",
+  destination_customs: "customs_clearance",
+  moving_to_warehouse: "out_for_delivery",
+  transfer_to_warehouse: "out_for_delivery",
+};
 
-export const getShipmentStageCopy = (code: ShipmentStageCode | undefined | null, lang: Lang) => {
-  const stage = getShipmentStageDefinition(code);
-  if (!stage) return null;
+export const normalizeShipmentStageCode = (
+  code: ShipmentStageCode | string | undefined | null,
+): ShipmentStageCode => {
+  if (shipmentStages.some((stage) => stage.code === code)) return code as ShipmentStageCode;
+  return legacyStageMap[String(code || "")] || "factory";
+};
+
+export const getShipmentStage = (stageCode: ShipmentStageCode | string | undefined | null) =>
+  shipmentStages.find((stage) => stage.code === normalizeShipmentStageCode(stageCode)) || shipmentStages[0];
+
+export const getShipmentStageDefinition = getShipmentStage;
+
+export const canMoveShipmentStage = (
+  fromStage: ShipmentStageCode | string | undefined | null,
+  toStage: ShipmentStageCode | string | undefined | null,
+  options: { allowSkip?: boolean } = {},
+) => {
+  const from = getShipmentStage(fromStage);
+  const to = getShipmentStage(toStage);
+  if (from.code === "closed") return false;
+  if (to.order <= from.order) return false;
+  if (from.code === "delivered" && to.code !== "closed") return false;
+  return options.allowSkip ? true : to.order === from.order + 1;
+};
+
+export const getNextShipmentStage = (currentStage: ShipmentStageCode | string | undefined | null) => {
+  const current = getShipmentStage(currentStage);
+  return shipmentStages.find((stage) => stage.order === current.order + 1) || null;
+};
+
+export const getShipmentProgressPercent = (currentStage: ShipmentStageCode | string | undefined | null) => {
+  const current = getShipmentStage(currentStage);
+  return Math.round((current.order / shipmentStages.length) * 100);
+};
+
+export const getShipmentStageCopy = (
+  code: ShipmentStageCode | string | undefined | null,
+  lang: Lang,
+) => {
+  const stage = getShipmentStage(code);
 
   return {
     ...stage,

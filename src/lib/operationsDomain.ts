@@ -9,7 +9,7 @@ import {
   type LourexAccountStatus,
   type LourexRole,
 } from "@/features/auth/rbac";
-import { shipmentStages } from "@/lib/shipmentStages";
+import { getShipmentProgressPercent, normalizeShipmentStageCode, shipmentStages } from "@/lib/shipmentStages";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
@@ -1396,7 +1396,7 @@ export const convertRequestToDeal = async (
       client_name: request.customer.fullName,
       destination: [request.customer.city, request.customer.country].filter(Boolean).join(", "),
       status: "factory",
-      current_stage_code: "deal_accepted",
+      current_stage_code: "factory",
       customer_visible_note: "تم قبول الصفقة وبدء تجهيز العملية.",
       deal_id: insertedDeal.data.id,
       user_id: user.id,
@@ -1441,8 +1441,8 @@ export const convertRequestToDeal = async (
   await db.from<TrackingUpdateRow>("tracking_updates").insert({
     shipment_id: insertedShipment.data.id,
     deal_id: insertedDeal.data.id,
-    stage_code: "deal_accepted",
-    previous_stage_code: "deal_accepted",
+    stage_code: "factory",
+    previous_stage_code: "factory",
     note: "تم إنشاء الشحنة وربطها بالصفقة الجديدة.",
     customer_note: "تم قبول الصفقة وبدء تجهيز العملية.",
     visibility: "customer_visible",
@@ -1633,7 +1633,7 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
       requestNumber: sourceRequest?.request_number || parseNoteLine(row.notes, "Request Number") || "",
       status: row.status,
       operationalStatus: (row.operational_status || "awaiting_assignment") as DealOperationalStatus,
-      stage: shipment?.current_stage_code || mapShipmentStatusToStage(shipment?.status || row.status),
+      stage: normalizeShipmentStageCode(shipment?.current_stage_code || mapShipmentStatusToStage(shipment?.status || row.status)),
       shipmentId: shipment?.id || row.shipment_id || null,
       trackingId: shipment?.tracking_id || "",
       accountingReference: row.accounting_reference || "",
@@ -1842,7 +1842,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       dealId: row.deal_id,
       dealNumber: deal?.dealNumber,
       requestNumber: deal?.requestNumber,
-      stage: row.current_stage_code || mapShipmentStatusToStage(row.status),
+      stage: normalizeShipmentStageCode(row.current_stage_code || mapShipmentStatusToStage(row.status)),
       updatedAt: row.updated_at,
       customerVisibleNote: row.customer_visible_note || "",
       timeline,
@@ -1883,7 +1883,7 @@ export const createTrackingUpdate = async (input: {
   ) {
     throw new Error("لا يمكنك تحديث هذه الشحنة لأنها ليست ضمن العمليات المعيّنة لك.");
   }
-  const currentStage = shipment.current_stage_code || mapShipmentStatusToStage(shipment.status);
+  const currentStage = normalizeShipmentStageCode(shipment.current_stage_code || mapShipmentStatusToStage(shipment.status));
   if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage: input.stageCode })) {
     throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
   }
@@ -1894,7 +1894,7 @@ export const createTrackingUpdate = async (input: {
       shipment_id: input.shipmentId,
       deal_id: input.dealId || shipment.deal_id || null,
       stage_code: input.stageCode,
-      previous_stage_code: shipment.current_stage_code || "deal_accepted",
+      previous_stage_code: currentStage,
       note: input.note,
       customer_note: input.customerNote || "",
       visibility: input.visibility || (input.customerNote ? "customer_visible" : "internal"),
@@ -1917,7 +1917,7 @@ export const createTrackingUpdate = async (input: {
     action: "tracking.updated",
     tableName: "tracking_updates",
     recordId: inserted.data.id,
-    oldValues: { stage_code: shipment.current_stage_code || "deal_accepted" },
+    oldValues: { stage_code: currentStage },
     newValues: {
       shipment_id: input.shipmentId,
       deal_id: input.dealId || shipment.deal_id || null,
@@ -2146,8 +2146,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
       currentStageDescription: stageDescriptionByCode[mappedStage],
       customerNote: "",
       lastUpdated: data.updated_at,
-      progressRatio:
-        ((shipmentStages.findIndex((item) => item.code === mappedStage) + 1) / shipmentStages.length) * 100,
+      progressRatio: getShipmentProgressPercent(mappedStage),
       timeline: [],
     };
   }
@@ -2170,7 +2169,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 
       const payload = row as Record<string, unknown>;
       const stageCode =
-        typeof payload.stageCode === "string" ? (payload.stageCode as ShipmentStageCode) : "deal_accepted";
+        typeof payload.stageCode === "string" ? normalizeShipmentStageCode(payload.stageCode) : "factory";
 
       return {
         id: typeof payload.id === "string" ? payload.id : "",
@@ -2199,9 +2198,8 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
     .sort((a, b) => +new Date(a.occurredAt) - +new Date(b.occurredAt));
 
-  const currentStage = (trackingLookup.data.current_stage_code || "deal_accepted") as ShipmentStageCode;
-  const progressRatio =
-    ((shipmentStages.findIndex((item) => item.code === currentStage) + 1) / shipmentStages.length) * 100;
+  const currentStage = normalizeShipmentStageCode(trackingLookup.data.current_stage_code || "factory");
+  const progressRatio = getShipmentProgressPercent(currentStage);
 
   return {
     trackingId: trackingLookup.data.tracking_id,

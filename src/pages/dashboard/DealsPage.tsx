@@ -92,7 +92,7 @@ export default function DealsPage() {
     () => ({
       assigned: rows.length,
       actionable: rows.filter((row) =>
-        isTurkishPartner ? row.stage !== "delivered" && row.stage !== "transit_to_destination" : row.stage !== "delivered",
+        isTurkishPartner ? !["departed_turkey", "in_transit", "arrived_destination", "customs_clearance", "out_for_delivery", "delivered", "closed"].includes(row.stage) : row.stage !== "delivered" && row.stage !== "closed",
       ).length,
       delivered: rows.filter((row) => row.stage === "delivered").length,
     }),

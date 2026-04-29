@@ -27,17 +27,17 @@ export type DealOperationalStatus =
   | "closed";
 
 export type ShipmentStageCode =
-  | "deal_accepted"
-  | "product_preparation"
-  | "moving_to_origin_port"
-  | "at_origin_port"
-  | "origin_customs"
-  | "left_origin_country"
-  | "transit_to_destination"
+  | "factory"
+  | "received_turkey"
+  | "in_turkey_warehouse"
+  | "preparing_export"
+  | "departed_turkey"
+  | "in_transit"
   | "arrived_destination"
-  | "destination_customs"
-  | "moving_to_warehouse"
-  | "delivered";
+  | "customs_clearance"
+  | "out_for_delivery"
+  | "delivered"
+  | "closed";
 
 export interface ShipmentStageDefinition {
   code: ShipmentStageCode;

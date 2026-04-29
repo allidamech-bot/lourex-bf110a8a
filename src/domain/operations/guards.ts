@@ -1,4 +1,4 @@
-import { shipmentStages } from "@/lib/shipmentStages";
+import { canMoveShipmentStage, getNextShipmentStage, getShipmentStage } from "@/lib/shipmentStages";
 import type { LourexRole } from "@/features/auth/rbac";
 import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
 
@@ -29,8 +29,7 @@ export const canConvertPurchaseRequest = (input: {
   !input.convertedDealNumber;
 
 export const getNextShipmentStageCode = (currentStage: ShipmentStageCode | null | undefined) => {
-  const currentIndex = shipmentStages.findIndex((stage) => stage.code === currentStage);
-  return currentIndex >= 0 ? shipmentStages[currentIndex + 1]?.code ?? null : null;
+  return getNextShipmentStage(currentStage)?.code ?? null;
 };
 
 export const canAdvanceShipmentStage = (input: {
@@ -40,11 +39,11 @@ export const canAdvanceShipmentStage = (input: {
 }) => {
   const expectedNextStage = getNextShipmentStageCode(input.currentStage);
 
-  if (!expectedNextStage || input.nextStage !== expectedNextStage) {
+  if (!expectedNextStage || !canMoveShipmentStage(input.currentStage, input.nextStage)) {
     return false;
   }
 
-  const nextOrder = shipmentStages.find((stage) => stage.code === input.nextStage)?.order ?? 0;
+  const nextOrder = getShipmentStage(input.nextStage).order;
 
   if (input.role === "owner" || input.role === "operations_employee") {
     return true;

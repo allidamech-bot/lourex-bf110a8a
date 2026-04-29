@@ -263,9 +263,9 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
         filteredDeals.length > 0
           ? filteredDeals.reduce((sum, deal) => sum + (deal.totalValue || 0), 0) / filteredDeals.length
           : 0,
-      inTransit: filteredShipments.filter((shipment) => shipment.stage === "transit_to_destination").length,
+      inTransit: filteredShipments.filter((shipment) => shipment.stage === "in_transit").length,
       destination: filteredShipments.filter((shipment) =>
-        ["arrived_destination", "destination_customs"].includes(shipment.stage),
+        ["arrived_destination", "customs_clearance"].includes(shipment.stage),
       ).length,
       delivered: filteredShipments.filter((shipment) => shipment.stage === "delivered").length,
       currencyGroups,

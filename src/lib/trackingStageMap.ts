@@ -1,18 +1,18 @@
 import type { ShipmentStageCode } from "@/types/lourex";
 
 const stageMap: Record<string, ShipmentStageCode> = {
-  factory: "product_preparation",
-  warehouse: "moving_to_warehouse",
-  shipping: "transit_to_destination",
-  customs: "destination_customs",
+  factory: "factory",
+  warehouse: "out_for_delivery",
+  shipping: "in_transit",
+  customs: "customs_clearance",
   delivered: "delivered",
-  pending: "deal_accepted",
-  confirmed: "product_preparation",
-  production_started: "product_preparation",
-  production_finished: "moving_to_origin_port",
-  quality_check: "at_origin_port",
-  shipped: "left_origin_country",
+  pending: "factory",
+  confirmed: "factory",
+  production_started: "factory",
+  production_finished: "received_turkey",
+  quality_check: "in_turkey_warehouse",
+  shipped: "departed_turkey",
 };
 
 export const mapShipmentStatusToStage = (status?: string | null): ShipmentStageCode =>
-  stageMap[status || ""] || "deal_accepted";
+  stageMap[status || ""] || "factory";

@@ -495,7 +495,7 @@ const createShipmentIfMissing = async (
       client_name: clientName,
       destination,
       status: "factory",
-      current_stage_code: action.initialStage || "deal_accepted",
+      current_stage_code: action.initialStage || "factory",
       customer_visible_note: action.customerVisibleNote || "",
       deal_id: deal.id,
       user_id: action.userId || deal.client_id || deal.customer_id || request?.customer_id || null,
