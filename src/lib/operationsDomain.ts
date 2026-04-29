@@ -1106,6 +1106,7 @@ export const updatePurchaseRequestStatus = async (
         internal_notes: internalNotes ?? current?.internal_notes ?? "",
         last_reviewed_at: new Date().toISOString(),
         reviewed_by: user?.id || null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", requestId),
   );
