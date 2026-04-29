@@ -5,6 +5,7 @@ import {
   Archive,
   CalendarDays,
   ClipboardList,
+  CreditCard,
   Eye,
   FileImage,
   Hash,
@@ -31,6 +32,7 @@ import {
   archivePurchaseRequestFromPortal,
   uploadTransferProof,
 } from "@/domain/operations/service";
+import { loadCustomerPaymentSummaries, type CustomerPaymentSummary } from "@/domain/accounting/payments";
 import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
@@ -114,6 +116,13 @@ const formatDateTime = (value: string | undefined, locale: string) => {
   }).format(date);
 };
 
+const formatMoney = (amount: number, currency: string, locale: string) =>
+  new Intl.NumberFormat(locale === "ar" ? "ar" : "en", {
+    style: "currency",
+    currency: currency || "SAR",
+    maximumFractionDigits: 2,
+  }).format(amount || 0);
+
 const getTrackingCode = (row: CustomerRequestRow) => {
   return row.trackingCode || "-";
 };
@@ -153,6 +162,7 @@ export default function CustomerRequestsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<CustomerRequestFilter>("all");
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [paymentSummaries, setPaymentSummaries] = useState<Map<string, CustomerPaymentSummary>>(new Map());
 
   const selectedRequestId = searchParams.get("request");
 
@@ -182,6 +192,8 @@ export default function CustomerRequestsPage() {
     try {
       const loadedRows = await loadPurchaseRequests();
       setRows(loadedRows as any);
+      const dealIds = loadedRows.map((row) => row.convertedDealId).filter(Boolean) as string[];
+      setPaymentSummaries(dealIds.length ? await loadCustomerPaymentSummaries(dealIds) : new Map());
     } catch (loadError) {
       logOperationalError("customer_requests_load", loadError);
       setError(t("common.error"));
@@ -266,6 +278,9 @@ export default function CustomerRequestsPage() {
       ? getCustomerRequestStatusCopy(selectedRow.status, locale === "ar" ? "ar" : "en")
       : null;
   const selectedStatusMeta = selectedRow ? getStatusMeta(selectedRow.status) : null;
+  const selectedPaymentSummary = selectedRow?.convertedDealId
+      ? paymentSummaries.get(selectedRow.convertedDealId)
+      : undefined;
   const removeActionLabel = locale === "ar" ? "حذف من قائمتي" : "Remove from my list";
 
   useEffect(() => {
@@ -672,6 +687,65 @@ export default function CustomerRequestsPage() {
                         <p className="mt-2 text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
                       </div>
                   )}
+
+                  {selectedPaymentSummary ? (
+                      <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-5">
+                        <div className="flex items-center gap-3">
+                          <CreditCard className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-medium">
+                              {locale === "ar" ? "ملخص المدفوعات" : "Payment summary"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {locale === "ar" ? "يعرض المدفوعات المرتبطة بهذه العملية فقط." : "Only payments linked to this operation are shown."}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                          <RequestInfoTile
+                              icon={<CreditCard className="h-3.5 w-3.5" />}
+                              label={locale === "ar" ? "المطلوب" : "Expected"}
+                              value={formatMoney(selectedPaymentSummary.expectedAmount, selectedPaymentSummary.currency, locale)}
+                          />
+                          <RequestInfoTile
+                              icon={<ShieldCheck className="h-3.5 w-3.5" />}
+                              label={locale === "ar" ? "المدفوع" : "Paid"}
+                              value={formatMoney(selectedPaymentSummary.paidAmount, selectedPaymentSummary.currency, locale)}
+                          />
+                          <RequestInfoTile
+                              icon={<Hash className="h-3.5 w-3.5" />}
+                              label={locale === "ar" ? "المتبقي" : "Remaining"}
+                              value={formatMoney(selectedPaymentSummary.remainingAmount, selectedPaymentSummary.currency, locale)}
+                          />
+                        </div>
+
+                        {selectedPaymentSummary.payments.length ? (
+                            <div className="mt-4 divide-y divide-border/50 rounded-[1.1rem] border border-border/50">
+                              {selectedPaymentSummary.payments.map((payment) => (
+                                  <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                                    <div>
+                                      <p className="font-medium">{payment.referenceNumber}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {formatDateTime(payment.receivedAt || payment.createdAt, locale)}
+                                      </p>
+                                    </div>
+                                    <div className="text-end">
+                                      <p className="font-semibold">
+                                        {formatMoney(payment.amount, payment.currency, locale)}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">{payment.paymentStatus}</p>
+                                    </div>
+                                  </div>
+                              ))}
+                            </div>
+                        ) : (
+                            <p className="mt-4 text-sm text-muted-foreground">
+                              {locale === "ar" ? "لا توجد مدفوعات مسجلة بعد." : "No payments recorded yet."}
+                            </p>
+                        )}
+                      </div>
+                  ) : null}
 
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <RequestInfoTile

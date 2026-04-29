@@ -242,6 +242,41 @@ export interface PartnerSettlement {
   updatedAt: string;
 }
 
+export type PaymentPayerType = "customer" | "saudi_partner" | "turkish_partner" | "internal";
+export type PaymentStatus = "pending" | "confirmed" | "rejected";
+export type ReconciliationStatus = "fully_paid" | "partially_paid" | "unpaid";
+
+export interface PaymentRecord {
+  id: string;
+  referenceNumber: string;
+  payerType: PaymentPayerType;
+  payerId?: string | null;
+  relatedDealId?: string | null;
+  relatedSettlementId?: string | null;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  paymentStatus: PaymentStatus;
+  receivedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentAllocationRecord {
+  id: string;
+  paymentId: string;
+  financialEntryId: string;
+  allocatedAmount: number;
+  createdAt: string;
+}
+
+export interface OutstandingBalance {
+  expectedAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  reconciliationStatus: ReconciliationStatus;
+}
+
 export interface AuditRecord {
   id: string;
   action: string;

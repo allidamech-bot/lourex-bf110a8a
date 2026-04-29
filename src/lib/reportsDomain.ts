@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { loadFinancialEntries, loadFinancialEditRequests } from "@/domain/accounting/service";
 import { loadPartnerSettlements } from "@/domain/accounting/partnerSettlements";
+import { loadPayments, loadPaymentAllocations } from "@/domain/accounting/payments";
 import { summarizeFinancialEntries, summarizeFinancialEntriesByCurrency } from "@/domain/accounting/utils";
 import { loadDeals, loadPurchaseRequests, loadCustomerDashboards, loadShipments } from "./operationsDomain";
 import type { OperationsFinancialEntry as FinancialEntry } from "@/domain/operations/types";
@@ -66,6 +67,10 @@ export type ReportSummary = {
   partnerSettlementUnpaid?: number;
   partnerSettlementPaid?: number;
   partnerSettlementDisputed?: number;
+  totalReceived?: number;
+  outstandingBalance?: number;
+  settlementCoverageRatio?: number;
+  unpaidDeals?: number;
 };
 
 export type ExpenseCategory = {
@@ -210,7 +215,7 @@ export const getOperationsReport = async (): Promise<OperationsReport> => {
 };
 
 export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Date): Promise<DashboardReportSnapshot> => {
-  const [entries, editRequests, deals, requests, shipments, customers, auditCount, operations, settlements] = await Promise.all([
+  const [entries, editRequests, deals, requests, shipments, customers, auditCount, operations, settlements, payments, allocations] = await Promise.all([
     loadFinancialEntries(),
     loadFinancialEditRequests(),
     loadDeals(),
@@ -220,6 +225,8 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
     supabase.from("audit_logs").select("id", { count: "exact", head: true }),
     getOperationsReport(),
     loadPartnerSettlements().catch(() => []),
+    loadPayments().catch(() => []),
+    loadPaymentAllocations().catch(() => []),
   ]);
 
   const filteredEntries = filterEntriesByDate(entries, startDate, endDate);
@@ -228,9 +235,40 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
   const filteredShipments = shipments.filter((shipment) => isInRange(shipment.updatedAt, startDate, endDate));
   const filteredEditRequests = editRequests.filter((request) => isInRange(request.submittedAt, startDate, endDate));
   const filteredSettlements = settlements.filter((settlement) => isInRange(settlement.createdAt, startDate, endDate));
+  const filteredPayments = payments.filter((payment) => isInRange(payment.createdAt, startDate, endDate));
   const financialSummary = buildFinancialSummaryReport(filteredEntries);
   const currencyGroups = summarizeFinancialEntriesByCurrency(filteredEntries).length;
   const customerReport = await getCustomerReport();
+  const entryAmountMap = new Map(filteredEntries.map((entry) => [entry.id, entry.amount]));
+  const paidByEntry = new Map<string, number>();
+  allocations.forEach((allocation) => {
+    if (!entryAmountMap.has(allocation.financialEntryId)) return;
+    paidByEntry.set(
+      allocation.financialEntryId,
+      (paidByEntry.get(allocation.financialEntryId) || 0) + allocation.allocatedAmount,
+    );
+  });
+  const expectedReceivables = filteredEntries
+    .filter((entry) => entry.type === "income")
+    .reduce((sum, entry) => sum + entry.amount, 0);
+  const allocatedReceived = filteredEntries
+    .filter((entry) => entry.type === "income")
+    .reduce((sum, entry) => sum + Math.min(paidByEntry.get(entry.id) || 0, entry.amount), 0);
+  const totalReceived = filteredPayments
+    .filter((payment) => payment.paymentStatus === "confirmed")
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const paidSettlementTotal = filteredSettlements
+    .filter((settlement) => settlement.status === "paid")
+    .reduce((sum, settlement) => sum + settlement.netDue, 0);
+  const settlementTotalDue = filteredSettlements.reduce((sum, settlement) => sum + settlement.netDue, 0);
+  const dealReceivables = new Map<string, number>();
+  const dealReceived = new Map<string, number>();
+  filteredEntries
+    .filter((entry) => entry.dealId && entry.type === "income")
+    .forEach((entry) => {
+      dealReceivables.set(entry.dealId || "", (dealReceivables.get(entry.dealId || "") || 0) + entry.amount);
+      dealReceived.set(entry.dealId || "", (dealReceived.get(entry.dealId || "") || 0) + Math.min(paidByEntry.get(entry.id) || 0, entry.amount));
+    });
 
   const categoryMap = new Map<string, number>();
   filteredEntries
@@ -284,6 +322,13 @@ export const getDashboardReportSnapshot = async (startDate?: Date, endDate?: Dat
         .filter((settlement) => settlement.status === "paid")
         .reduce((sum, settlement) => sum + settlement.netDue, 0),
       partnerSettlementDisputed: filteredSettlements.filter((settlement) => settlement.status === "disputed").length,
+      totalReceived,
+      outstandingBalance: Math.max(expectedReceivables - allocatedReceived, 0),
+      settlementCoverageRatio: settlementTotalDue > 0 ? paidSettlementTotal / settlementTotalDue : 0,
+      unpaidDeals: filteredDeals.filter((deal) => {
+        const expected = dealReceivables.get(deal.id) || 0;
+        return expected > 0 && (dealReceived.get(deal.id) || 0) < expected;
+      }).length,
     },
     operations,
     financialSummary,
