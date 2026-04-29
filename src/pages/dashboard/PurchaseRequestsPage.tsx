@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
     ArrowRightLeft,
     CheckCircle2,
@@ -281,8 +281,10 @@ export default function PurchaseRequestsPage() {
     const [aiOutput, setAiOutput] = useState("");
     const [aiOutputTitle, setAiOutputTitle] = useState("");
     const [aiUsedFallback, setAiUsedFallback] = useState(false);
+    const initialLoadStartedRef = useRef(false);
 
-    const selectedRequestId = searchParams.get("request");
+    const selectedRequestIdFromParams = searchParams.get("request");
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(selectedRequestIdFromParams);
     const getRequestStatusMeta = (status: PurchaseRequestStatus | string | null | undefined) => {
         if (status && status in requestStatusMeta) {
             return requestStatusMeta[status as PurchaseRequestStatus];
@@ -312,6 +314,7 @@ export default function PurchaseRequestsPage() {
 
     const setSelectedRequest = useCallback(
         (requestId: string | null) => {
+            setSelectedRequestId(requestId);
             const nextParams = new URLSearchParams(searchParams);
 
             if (requestId) {
@@ -325,6 +328,10 @@ export default function PurchaseRequestsPage() {
         [searchParams, setSearchParams],
     );
 
+    useEffect(() => {
+        setSelectedRequestId(selectedRequestIdFromParams);
+    }, [selectedRequestIdFromParams]);
+
     const refresh = useCallback(
         async (preserveSelection = true) => {
             setLoading(true);
@@ -335,7 +342,9 @@ export default function PurchaseRequestsPage() {
                 setRows(data);
 
                 if (!preserveSelection) {
-                    setSelectedRequest(data[0]?.id ?? null);
+                    const requestedRowExists =
+                        selectedRequestId !== null && data.some((row) => row.id === selectedRequestId);
+                    setSelectedRequest(requestedRowExists ? selectedRequestId : data[0]?.id ?? null);
                     return;
                 }
 
@@ -359,6 +368,11 @@ export default function PurchaseRequestsPage() {
     );
 
     useEffect(() => {
+        if (initialLoadStartedRef.current) {
+            return;
+        }
+
+        initialLoadStartedRef.current = true;
         void refresh(false);
     }, [refresh]);
 
@@ -381,6 +395,10 @@ export default function PurchaseRequestsPage() {
     const selectedRow = useMemo(() => {
         if (filteredRows.length === 0) {
             return null;
+        }
+
+        if (!selectedRequestId) {
+            return filteredRows[0] || null;
         }
 
         return filteredRows.find((row) => row.id === selectedRequestId) || filteredRows[0] || null;
