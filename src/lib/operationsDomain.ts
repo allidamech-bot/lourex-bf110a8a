@@ -1802,7 +1802,7 @@ export const updateDealOperation = async (
   return result;
 };
 
-import { STORAGE_BUCKETS, STORAGE_PATHS, uploadFile, deleteFolder } from "./storage";
+import { STORAGE_BUCKETS, STORAGE_PATHS, uploadFile, uploadFileToStorage, deleteFolder } from "./storage";
 
 export const uploadDealAttachment = async (input: {
   dealId: string;
@@ -2447,19 +2447,13 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const storagePath = STORAGE_PATHS.TRANSFER_PROOFS(requestId);
   const fullPath = `${storagePath}/${fileName}`;
 
-  // Upload to private bucket
-  const fileUrl = await uploadFile("DOCUMENTS", fullPath, file);
+  const uploaded = await uploadFileToStorage("DOCUMENTS", fullPath, file);
 
-  const { error } = await (supabase as any)
-    .from("purchase_requests")
-    .update({
-      transfer_proof_url: fullPath, // Store path instead of public URL for private access
-      transfer_proof_name: file.name,
-      transfer_proof_uploaded_at: new Date().toISOString(),
-      transfer_proof_status: "pending",
-      status: "transfer_proof_pending",
-    })
-    .eq("id", requestId);
+  const { error } = await (supabase as any).rpc("submit_transfer_proof_for_purchase_request", {
+    request_id: requestId,
+    proof_url: uploaded.path,
+    proof_path: uploaded.path,
+  });
 
   if (error) throw error;
 

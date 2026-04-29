@@ -14,7 +14,7 @@ export const STORAGE_BUCKETS = {
 export const STORAGE_PATHS = {
   PURCHASE_REQUESTS: (id: string) => `purchase-requests/${sanitizePathSegment(id)}`,
   DEAL_ATTACHMENTS: (dealNumber: string) => `deal-attachments/${sanitizePathSegment(dealNumber)}`,
-  TRANSFER_PROOFS: (requestId: string) => `transfer-proofs/${sanitizePathSegment(requestId)}`,
+  TRANSFER_PROOFS: (requestId: string) => `customer-portal/requests/${sanitizePathSegment(requestId)}/transfer-proof`,
 } as const;
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024;
@@ -135,10 +135,7 @@ const validateUploadFile = (file: File) => {
   }
 };
 
-/**
- * Centralized upload helper to ensure consistent bucket and path usage.
- */
-export const uploadFile = async (
+export const uploadFileToStorage = async (
     bucket: keyof typeof STORAGE_BUCKETS,
     path: string,
     file: File,
@@ -164,7 +161,23 @@ export const uploadFile = async (
     throw new Error("The file was uploaded but no public URL was returned.");
   }
 
-  return data.publicUrl;
+  return {
+    publicUrl: data.publicUrl,
+    path: safePath,
+    bucket: bucketName,
+  };
+};
+
+/**
+ * Centralized upload helper to ensure consistent bucket and path usage.
+ */
+export const uploadFile = async (
+    bucket: keyof typeof STORAGE_BUCKETS,
+    path: string,
+    file: File,
+) => {
+  const uploaded = await uploadFileToStorage(bucket, path, file);
+  return uploaded.publicUrl;
 };
 
 /**

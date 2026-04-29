@@ -879,9 +879,20 @@ export const uploadTransferProof = async (
     return success(undefined);
   } catch (error) {
     logOperationalError("purchase_request_transfer_proof_upload", error, { requestId });
+    const message = error instanceof Error ? error.message : String(error || "");
+    const storageNotConfigured =
+        message.toLowerCase().includes("bucket not found") ||
+        message.toLowerCase().includes("storage bucket") ||
+        message.toLowerCase().includes("bucket");
+
     return {
       data: null,
-      error: createDomainError(error, "Failed to upload transfer proof."),
+      error: createDomainError(
+          error,
+          storageNotConfigured
+              ? "Transfer proof storage is not configured."
+              : "Failed to upload transfer proof.",
+      ),
     };
   }
 };
