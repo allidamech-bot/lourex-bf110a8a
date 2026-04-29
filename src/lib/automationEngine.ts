@@ -26,10 +26,10 @@ export type AutomationAction =
     }
   | {
       type: "create_shipment_if_missing";
-      dealId: string;
-      trackingId: string;
-      clientName: string;
-      destination: string;
+      dealId?: string;
+      trackingId?: string;
+      clientName?: string;
+      destination?: string;
       userId?: string | null;
       customerVisibleNote?: string;
       initialStage?: ShipmentStageCode;
@@ -153,6 +153,9 @@ export const automationRules: AutomationRule[] = [
         type: "create_deal_if_missing",
       },
       {
+        type: "create_shipment_if_missing",
+      },
+      {
         type: "send_notification",
         recipientRole: "internal",
         notificationType: "purchase_request_ready_for_conversion",
@@ -208,7 +211,7 @@ export const executeAction = async (
     case "create_deal_if_missing":
       return createDealIfMissing(payload);
     case "create_shipment_if_missing":
-      return createShipmentIfMissing(action);
+      return createShipmentIfMissing(action, payload);
     case "create_financial_entry_if_missing":
       return createFinancialEntryIfMissing(action);
     case "update_request_status_if_needed":
@@ -382,56 +385,136 @@ const createDealIfMissing = async (payload: AutomationPayload): Promise<Automati
 
 const createShipmentIfMissing = async (
   action: Extract<AutomationAction, { type: "create_shipment_if_missing" }>,
+  payload: AutomationPayload,
 ): Promise<AutomationActionResult> => {
-  if (!action.dealId || !action.trackingId) {
-    return { action: action.type, status: "skipped", reason: "dealId and trackingId are required." };
+  let request: {
+    id: string;
+    request_number?: string | null;
+    customer_id?: string | null;
+    full_name?: string | null;
+    country?: string | null;
+    city?: string | null;
+    converted_deal_id?: string | null;
+  } | null = null;
+
+  if (payload.requestId) {
+    const { data: requestRow, error: requestError } = await db
+      .from("purchase_requests")
+      .select("id, request_number, customer_id, full_name, country, city, converted_deal_id")
+      .eq("id", payload.requestId)
+      .maybeSingle();
+
+    if (requestError) throw requestError;
+    request = requestRow;
+  }
+
+  let dealId = action.dealId || payload.dealId || request?.converted_deal_id || null;
+
+  if (!dealId && request?.id) {
+    const { data: existingDeal, error: existingDealError } = await db
+      .from("deals")
+      .select("id")
+      .eq("source_request_id", request.id)
+      .limit(1);
+
+    if (existingDealError) throw existingDealError;
+    dealId = existingDeal?.[0]?.id || null;
+
+    if (dealId) {
+      const { error: backfillError } = await db
+        .from("purchase_requests")
+        .update({ converted_deal_id: dealId })
+        .eq("id", request.id);
+
+      if (backfillError) throw backfillError;
+    }
+  }
+
+  if (!dealId) {
+    return { action: action.type, status: "skipped", reason: "No linked deal found for shipment automation." };
+  }
+
+  const { data: deal, error: dealError } = await db
+    .from("deals")
+    .select("id, deal_number, shipment_id, source_request_id, customer_id, client_id, operation_title, destination_country")
+    .eq("id", dealId)
+    .maybeSingle();
+
+  if (dealError) throw dealError;
+  if (!deal) {
+    return { action: action.type, status: "skipped", reason: "Linked deal not found." };
+  }
+
+  if (deal.shipment_id) {
+    return {
+      action: action.type,
+      status: "skipped",
+      reason: "Deal already has a linked shipment.",
+      recordId: deal.shipment_id,
+    };
   }
 
   const { data: existingByDeal, error: dealLookupError } = await db
     .from("shipments")
     .select("id")
-    .eq("deal_id", action.dealId)
+    .eq("deal_id", deal.id)
     .limit(1);
 
   if (dealLookupError) throw dealLookupError;
   if (existingByDeal?.length) {
-    return { action: action.type, status: "skipped", reason: "Shipment already exists for deal.", recordId: existingByDeal[0].id };
-  }
+    const existingShipmentId = existingByDeal[0].id;
+    const { error: linkError } = await db
+      .from("deals")
+      .update({ shipment_id: existingShipmentId })
+      .eq("id", deal.id);
 
-  const { data: existingByTracking, error: trackingLookupError } = await db
-    .from("shipments")
-    .select("id")
-    .eq("tracking_id", action.trackingId)
-    .limit(1);
-
-  if (trackingLookupError) throw trackingLookupError;
-  if (existingByTracking?.length) {
+    if (linkError) throw linkError;
     return {
       action: action.type,
       status: "skipped",
-      reason: "Shipment already exists for tracking id.",
-      recordId: existingByTracking[0].id,
+      reason: "Shipment already exists for deal.",
+      recordId: existingShipmentId,
     };
   }
+
+  const trackingId =
+    action.trackingId ||
+    `TRK-AUTO-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+  const clientName = action.clientName || payload.customerName || request?.full_name || "Lourex Customer";
+  const destination =
+    action.destination ||
+    [request?.city, request?.country].filter(Boolean).join(", ") ||
+    deal.destination_country ||
+    "";
+  const now = new Date().toISOString();
 
   const { data: inserted, error: insertError } = await db
     .from("shipments")
     .insert({
-      tracking_id: action.trackingId,
-      client_name: action.clientName,
-      destination: action.destination,
+      tracking_id: trackingId,
+      client_name: clientName,
+      destination,
       status: "factory",
       current_stage_code: action.initialStage || "deal_accepted",
       customer_visible_note: action.customerVisibleNote || "",
-      deal_id: action.dealId,
-      user_id: action.userId || null,
+      deal_id: deal.id,
+      user_id: action.userId || deal.client_id || deal.customer_id || request?.customer_id || null,
       pallets: 0,
       weight: 0,
+      created_at: now,
+      updated_at: now,
     })
     .select("id")
     .single();
 
   if (insertError) throw insertError;
+
+  const { error: linkError } = await db
+    .from("deals")
+    .update({ shipment_id: inserted.id })
+    .eq("id", deal.id);
+
+  if (linkError) throw linkError;
   return { action: action.type, status: "created", recordId: inserted.id };
 };
 
