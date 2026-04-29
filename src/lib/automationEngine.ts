@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { generateTrackingId, syncShipmentStatusWithStage } from "@/lib/shipmentIdentity";
 import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
 
 type JsonPayload = Record<string, unknown>;
@@ -477,9 +478,7 @@ const createShipmentIfMissing = async (
     };
   }
 
-  const trackingId =
-    action.trackingId ||
-    `TRK-AUTO-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+  const trackingId = action.trackingId || generateTrackingId();
   const clientName = action.clientName || payload.customerName || request?.full_name || "Lourex Customer";
   const destination =
     action.destination ||
@@ -490,11 +489,10 @@ const createShipmentIfMissing = async (
 
   const { data: inserted, error: insertError } = await db
     .from("shipments")
-    .insert({
+    .insert(syncShipmentStatusWithStage({
       tracking_id: trackingId,
       client_name: clientName,
       destination,
-      status: "factory",
       current_stage_code: action.initialStage || "factory",
       customer_visible_note: action.customerVisibleNote || "",
       deal_id: deal.id,
@@ -503,7 +501,7 @@ const createShipmentIfMissing = async (
       weight: 0,
       created_at: now,
       updated_at: now,
-    })
+    }))
     .select("id")
     .single();
 

@@ -10,6 +10,7 @@ import {
   type LourexRole,
 } from "@/features/auth/rbac";
 import { getShipmentProgressPercent, normalizeShipmentStageCode, shipmentStages } from "@/lib/shipmentStages";
+import { generateTrackingId, syncShipmentStatusWithStage } from "@/lib/shipmentIdentity";
 import { mapShipmentStatusToStage } from "@/lib/trackingStageMap";
 import { canAdvanceShipmentStage, canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
@@ -1401,7 +1402,7 @@ export const convertRequestToDeal = async (
   }
 
   const dealNumber = `DL-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-  const trackingNumber = `TRK-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+  const trackingNumber = generateTrackingId();
   const accountingReference = `ACC-${dealNumber}`;
 
   // Build a comprehensive operational summary for the deal notes
@@ -1450,18 +1451,17 @@ export const convertRequestToDeal = async (
 
   const insertedShipment = await db
     .from<ShipmentRow>("shipments")
-    .insert({
+    .insert(syncShipmentStatusWithStage({
       tracking_id: trackingNumber,
       client_name: request.customer.fullName,
       destination: [request.customer.city, request.customer.country].filter(Boolean).join(", "),
-      status: "factory",
       current_stage_code: "factory",
       customer_visible_note: "تم قبول الصفقة وبدء تجهيز العملية.",
       deal_id: insertedDeal.data.id,
       user_id: user.id,
       pallets: 0,
       weight: 0,
-    })
+    }))
     .select("*")
     .single();
 
@@ -1906,6 +1906,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
     });
 
     const deal = row.deal_id ? dealMap.get(row.deal_id) : undefined;
+    const syncedShipment = syncShipmentStatusWithStage(row);
 
     return {
       id: row.id,
@@ -1915,7 +1916,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       dealId: row.deal_id,
       dealNumber: deal?.dealNumber,
       requestNumber: deal?.requestNumber,
-      stage: normalizeShipmentStageCode(row.current_stage_code || mapShipmentStatusToStage(row.status)),
+      stage: normalizeShipmentStageCode(syncedShipment.current_stage_code || mapShipmentStatusToStage(syncedShipment.status)),
       updatedAt: row.updated_at,
       customerVisibleNote: row.customer_visible_note || "",
       timeline,
@@ -1958,7 +1959,8 @@ export const createTrackingUpdate = async (input: {
     throw new Error("لا يمكنك تحديث هذه الشحنة لأنها ليست ضمن العمليات المعيّنة لك.");
   }
   const currentStage = normalizeShipmentStageCode(shipment.current_stage_code || mapShipmentStatusToStage(shipment.status));
-  if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage: input.stageCode })) {
+  const nextStage = normalizeShipmentStageCode(input.stageCode);
+  if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage })) {
     throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
   }
 
@@ -1967,7 +1969,7 @@ export const createTrackingUpdate = async (input: {
     .insert({
       shipment_id: input.shipmentId,
       deal_id: input.dealId || shipment.deal_id || null,
-      stage_code: input.stageCode,
+      stage_code: nextStage,
       previous_stage_code: currentStage,
       note: input.note,
       customer_note: input.customerNote || "",
@@ -1982,7 +1984,7 @@ export const createTrackingUpdate = async (input: {
   if (inserted.error) {
     logOperationalError("tracking_update_create", inserted.error, {
       shipmentId: input.shipmentId,
-      stageCode: input.stageCode,
+      stageCode: nextStage,
     });
     throw inserted.error;
   }
@@ -1996,8 +1998,8 @@ export const createTrackingUpdate = async (input: {
       shipment_id: input.shipmentId,
       deal_id: input.dealId || shipment.deal_id || null,
       tracking_id: shipment.tracking_id,
-      stage_code: input.stageCode,
-      summary: `تم تحديث التتبع إلى مرحلة ${stageLabelByCode[input.stageCode]}`,
+      stage_code: nextStage,
+      summary: `تم تحديث التتبع إلى مرحلة ${stageLabelByCode[nextStage]}`,
       entity_label: shipment.tracking_id,
       customer_note: input.customerNote || "",
     },
@@ -2014,7 +2016,7 @@ export const createTrackingUpdate = async (input: {
       userId: recipientId,
       type: "tracking_update",
       title: "تم تسجيل تحديث تتبع جديد",
-      message: `${shipment.tracking_id} انتقل إلى مرحلة ${stageLabelByCode[input.stageCode]}.`,
+      message: `${shipment.tracking_id} انتقل إلى مرحلة ${stageLabelByCode[nextStage]}.`,
       link: deal?.dealNumber
         ? `/dashboard/tracking?deal=${deal.dealNumber}&tracking=${shipment.tracking_id}`
         : `/dashboard/tracking?tracking=${shipment.tracking_id}`,
@@ -2025,7 +2027,7 @@ export const createTrackingUpdate = async (input: {
     flow: "operations_domain",
     shipmentId: input.shipmentId,
     dealId: input.dealId || null,
-    stageCode: input.stageCode,
+    stageCode: nextStage,
     visibility: input.visibility || (input.customerNote ? "customer_visible" : "internal"),
   });
 

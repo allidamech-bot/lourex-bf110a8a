@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
-import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
+import { getNextShipmentStage, getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
@@ -70,8 +70,10 @@ export default function TrackingPage() {
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
-  const nextStageCode = activeStageIndex >= 0 ? shipmentStages[activeStageIndex + 1]?.code : null;
+  const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
+  const nextStageCode = nextStageDefinition?.code || null;
   const nextStage = nextStageCode ? getShipmentStageCopy(nextStageCode, lang) : null;
+  const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
 
   const canAdvance = useMemo(() => {
     if (!profile || !activeShipment) return false;
@@ -190,6 +192,16 @@ export default function TrackingPage() {
         <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-5">
           <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{t("tracking.currentStage")}</p>
           <p className="mt-2 font-serif text-2xl font-semibold">{currentStage?.label || t("tracking.noStage")}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            current_stage_code: {activeShipment.stage}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("tracking.labels.nextStage")}: {nextStage?.label || "closed"}
+          </p>
+          <div className="mt-4 h-2 rounded-full bg-secondary">
+            <div className="h-2 rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{progressPercent}%</p>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentStage?.description}</p>
           {currentStage?.owner ? <p className="mt-3 text-sm font-medium text-primary/90">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
         </div>

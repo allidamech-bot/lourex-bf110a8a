@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { loadShipments, loadPurchaseRequests } from "@/lib/operationsDomain";
-import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
+import { getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { useI18n, type Lang } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { toast } from "sonner";
@@ -225,6 +225,8 @@ export default function CustomerTrackingPage() {
   const activeStageIndex = activeShipment
       ? shipmentStages.findIndex((item) => item.code === activeShipment.stage)
       : -1;
+  const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
+  const latestShipmentEvent = activeShipment?.shipmentEvents[activeShipment.shipmentEvents.length - 1] || null;
 
   const setSelectedTracking = (trackingId: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -276,7 +278,7 @@ export default function CustomerTrackingPage() {
         total: rows.length,
         completed: rows.filter((row) => row.stage === "delivered").length,
         active: rows.filter((row) => row.stage !== "delivered").length,
-        updates: rows.reduce((sum, row) => sum + (row.timeline?.length || 0), 0),
+        updates: rows.reduce((sum, row) => sum + (row.shipmentEvents?.length || row.timeline?.length || 0), 0),
       }),
       [rows],
   );
@@ -508,6 +510,25 @@ export default function CustomerTrackingPage() {
                           ? "لا يوجد وصف متاح لهذه المرحلة حالياً."
                           : "No description is available for this stage yet.")}
                 </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <ShipmentInfoTile
+                    label={locale === "ar" ? "رقم التتبع" : "Tracking ID"}
+                    value={activeShipment.trackingId}
+                />
+                <ShipmentInfoTile
+                    label={locale === "ar" ? "التقدم" : "Progress"}
+                    value={`${formatNumber(progressPercent, locale)}%`}
+                />
+                <ShipmentInfoTile
+                    label={locale === "ar" ? "آخر حدث" : "Latest event"}
+                    value={latestShipmentEvent ? formatDateTime(latestShipmentEvent.createdAt, locale) : formatDateTime(activeShipment.updatedAt, locale)}
+                />
+              </div>
+
+              <div className="h-2 rounded-full bg-secondary">
+                <div className="h-2 rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
               </div>
 
               <div className="rounded-[1.25rem] border border-primary/15 bg-primary/10 p-4 text-sm leading-7 text-muted-foreground">
