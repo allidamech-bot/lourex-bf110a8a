@@ -1129,10 +1129,21 @@ export const updatePurchaseRequestStatus = async (
     });
 
     if (status === "ready_for_conversion") {
+      const automationPayload = buildPurchaseRequestAutomationPayload({ ...current, status }, user.id);
+
+      try {
+        await runAutomation(
+          "purchase_request.ready_for_conversion",
+          automationPayload,
+        );
+      } catch (error) {
+        console.warn("ready_for_conversion automation failed:", error);
+      }
+
       try {
         await runAutomation(
           "purchase_request.approved",
-          buildPurchaseRequestAutomationPayload({ ...current, status }, user.id),
+          automationPayload,
         );
       } catch (error) {
         console.warn("purchase_request.approved automation failed:", error);
@@ -2219,9 +2230,6 @@ export const deletePurchaseRequestRecord = async (requestId: string) => {
   const now = new Date().toISOString();
   const cancellationPayload: Record<string, unknown> = {
     status: "cancelled",
-    status_label: "Cancelled",
-    cancellation_reason: "Soft cancellation requested through deletePurchaseRequestRecord.",
-    cancelled_at: now,
     updated_at: now,
   };
 

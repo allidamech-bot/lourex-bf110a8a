@@ -7,6 +7,7 @@ export type AutomationEvent =
   | "purchase_request.created"
   | "purchase_request.approved"
   | "purchase_request.cancelled"
+  | "purchase_request.ready_for_conversion"
   | "payment.received"
   | "shipment.stage_changed";
 
@@ -19,6 +20,9 @@ export type AutomationAction =
       title: string;
       message: string;
       link?: string;
+    }
+  | {
+      type: "create_deal_if_missing";
     }
   | {
       type: "create_shipment_if_missing";
@@ -140,6 +144,25 @@ export const automationRules: AutomationRule[] = [
     ],
   },
   {
+    id: "purchase-request-ready-for-conversion-create-deal",
+    event: "purchase_request.ready_for_conversion",
+    enabled: true,
+    description: "Create a minimal deal when a purchase request becomes ready for conversion.",
+    actions: [
+      {
+        type: "create_deal_if_missing",
+      },
+      {
+        type: "send_notification",
+        recipientRole: "internal",
+        notificationType: "purchase_request_ready_for_conversion",
+        title: "Purchase request ready for conversion",
+        message: "Purchase request {{requestNumber}} is ready for conversion.",
+        link: "/dashboard/requests?request={{requestId}}",
+      },
+    ],
+  },
+  {
     id: "payment-received-foundation",
     event: "payment.received",
     enabled: false,
@@ -182,6 +205,8 @@ export const executeAction = async (
   switch (action.type) {
     case "send_notification":
       return sendNotificationIfMissing(action, payload);
+    case "create_deal_if_missing":
+      return createDealIfMissing(payload);
     case "create_shipment_if_missing":
       return createShipmentIfMissing(action);
     case "create_financial_entry_if_missing":
@@ -273,6 +298,87 @@ const interpolateTemplate = (template: string, payload: AutomationPayload) =>
     (currentTemplate, [key, value]) => currentTemplate.split(`{{${key}}}`).join(String(value)),
     template,
   );
+
+const createDealIfMissing = async (payload: AutomationPayload): Promise<AutomationActionResult> => {
+  if (!payload.requestId) {
+    return { action: "create_deal_if_missing", status: "skipped", reason: "requestId is required." };
+  }
+
+  const { data: request, error: requestError } = await db
+    .from("purchase_requests")
+    .select("id, request_number, customer_id, product_name, converted_deal_id")
+    .eq("id", payload.requestId)
+    .single();
+
+  if (requestError) throw requestError;
+  if (!request) return { action: "create_deal_if_missing", status: "skipped", reason: "Request not found." };
+  if (request.converted_deal_id) {
+    return {
+      action: "create_deal_if_missing",
+      status: "skipped",
+      reason: "Request already has a converted deal.",
+      recordId: request.converted_deal_id,
+    };
+  }
+
+  const { data: existingDeal, error: existingDealError } = await db
+    .from("deals")
+    .select("id")
+    .eq("source_request_id", request.id)
+    .limit(1);
+
+  if (existingDealError) throw existingDealError;
+  if (existingDeal?.length) {
+    const existingDealId = existingDeal[0].id;
+    const { error: updateError } = await db
+      .from("purchase_requests")
+      .update({ converted_deal_id: existingDealId })
+      .eq("id", request.id);
+
+    if (updateError) throw updateError;
+    return {
+      action: "create_deal_if_missing",
+      status: "skipped",
+      reason: "Deal already exists for request.",
+      recordId: existingDealId,
+    };
+  }
+
+  const dealId = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `00000000-0000-4000-8000-${Date.now().toString().padStart(12, "0").slice(-12)}`;
+  const requestNumber = payload.requestNumber || request.request_number || payload.requestId;
+  const operationTitle = payload.productName || request.product_name || requestNumber;
+  const customerId = payload.customerId || request.customer_id || null;
+
+  const { data: insertedDeal, error: insertError } = await db
+    .from("deals")
+    .insert({
+      id: dealId,
+      deal_number: `DL-AUTO-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+      client_id: customerId,
+      source_request_id: request.id,
+      customer_id: customerId,
+      operation_title: operationTitle,
+      operational_status: "awaiting_assignment",
+      status: "draft",
+      total_value: 0,
+      currency: "SAR",
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertError) throw insertError;
+
+  const { error: updateError } = await db
+    .from("purchase_requests")
+    .update({ converted_deal_id: insertedDeal.id })
+    .eq("id", request.id);
+
+  if (updateError) throw updateError;
+  return { action: "create_deal_if_missing", status: "created", recordId: insertedDeal.id };
+};
 
 const createShipmentIfMissing = async (
   action: Extract<AutomationAction, { type: "create_shipment_if_missing" }>,
