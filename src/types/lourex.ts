@@ -85,6 +85,18 @@ export interface TrackingUpdateRecord {
   createdAt: string;
 }
 
+export interface ShipmentEventRecord {
+  id: string;
+  shipmentId: string;
+  eventType: string;
+  fromStage?: ShipmentStageCode | null;
+  toStage?: ShipmentStageCode | null;
+  note?: string | null;
+  actorUserId?: string | null;
+  isCustomerVisible: boolean;
+  createdAt: string;
+}
+
 export interface PurchaseRequest {
   id: string;
   requestNumber: string;

@@ -25,6 +25,7 @@ import type {
   PublicTrackingResult,
   PurchaseRequest,
   PurchaseRequestStatus,
+  ShipmentEventRecord,
   ShipmentStageCode,
   TrackingUpdateRecord,
 } from "@/types/lourex";
@@ -182,6 +183,18 @@ export type TrackingUpdateRow = {
   updated_by?: string | null;
   updated_by_role?: string | null;
   occurred_at?: string | null;
+  created_at: string;
+};
+
+export type ShipmentEventRow = {
+  id: string;
+  shipment_id: string;
+  event_type: string;
+  from_stage?: string | null;
+  to_stage?: string | null;
+  note?: string | null;
+  actor_user_id?: string | null;
+  is_customer_visible?: boolean | null;
   created_at: string;
 };
 
@@ -344,6 +357,25 @@ const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.in(column, values);
+  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error) throw error;
+  return data || [];
+};
+
+const safeStructuredSelectWhereInEq = async <T extends Record<string, unknown>>(
+  table: string,
+  inColumn: string,
+  values: unknown[],
+  eqColumn: string,
+  eqValue: unknown,
+  query?: string,
+) => {
+  if (values.length === 0 || (table === "purchase_requests" && !(await getLourexDomainAvailability()))) {
+    return [] as T[];
+  }
+
+  const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
+  const { data, error } = await builder.in(inColumn, values).eq(eqColumn, eqValue);
   if (error && isMissingSchemaError(error)) return [] as T[];
   if (error) throw error;
   return data || [];
@@ -524,6 +556,7 @@ export type OperationalShipment = {
   updatedAt: string;
   customerVisibleNote: string;
   timeline: TrackingUpdateRecord[];
+  shipmentEvents: ShipmentEventRecord[];
 };
 
 export type CustomerDashboard = CustomerAccount & {
@@ -700,6 +733,18 @@ const mapTrackingUpdate = (row: TrackingUpdateRow): TrackingUpdateRecord => ({
   createdAt: row.created_at,
 });
 
+const mapShipmentEvent = (row: ShipmentEventRow): ShipmentEventRecord => ({
+  id: row.id,
+  shipmentId: row.shipment_id,
+  eventType: row.event_type,
+  fromStage: row.from_stage ? normalizeShipmentStageCode(row.from_stage) : null,
+  toStage: row.to_stage ? normalizeShipmentStageCode(row.to_stage) : null,
+  note: row.note || null,
+  actorUserId: row.actor_user_id || null,
+  isCustomerVisible: Boolean(row.is_customer_visible),
+  createdAt: row.created_at,
+});
+
 const getAttachmentMap = (attachments: AttachmentRecord[]) => {
   const map = new Map<string, AttachmentRecord[]>();
   attachments.forEach((attachment) => {
@@ -718,6 +763,20 @@ const getTrackingMap = (updates: TrackingUpdateRecord[]) => {
     map.set(
       key,
       rows.sort((a, b) => +new Date(a.occurredAt) - +new Date(b.occurredAt)),
+    );
+  });
+  return map;
+};
+
+const getShipmentEventMap = (events: ShipmentEventRecord[]) => {
+  const map = new Map<string, ShipmentEventRecord[]>();
+  events.forEach((event) => {
+    map.set(event.shipmentId, [...(map.get(event.shipmentId) || []), event]);
+  });
+  map.forEach((rows, key) => {
+    map.set(
+      key,
+      rows.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)),
     );
   });
   return map;
@@ -1817,8 +1876,22 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
     ? await safeStructuredSelectWhereIn<TrackingUpdateRow>("tracking_updates", "shipment_id", shipmentIds)
     : await safeStructuredSelect<TrackingUpdateRow>("tracking_updates");
 
+  const shipmentEventRows =
+    isCustomer && shipmentIds.length
+      ? await safeStructuredSelectWhereInEq<ShipmentEventRow>(
+          "shipment_events",
+          "shipment_id",
+          shipmentIds,
+          "is_customer_visible",
+          true,
+        )
+      : [];
+
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const trackingMap = getTrackingMap((trackingRows || []).map(mapTrackingUpdate));
+  const shipmentEventMap = getShipmentEventMap(
+    (shipmentEventRows || []).map(mapShipmentEvent),
+  );
   
   // RLS handles visibility, but we double-check customer ownership if needed.
   const filteredShipments = shipments.filter((row) => {
@@ -1846,6 +1919,7 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       updatedAt: row.updated_at,
       customerVisibleNote: row.customer_visible_note || "",
       timeline,
+      shipmentEvents: shipmentEventMap.get(row.id) || [],
     };
   });
 };

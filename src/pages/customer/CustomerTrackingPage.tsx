@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { loadShipments, loadPurchaseRequests } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type Lang } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { toast } from "sonner";
 
@@ -80,6 +80,23 @@ const getRemainingStages = (currentStage: string) => {
   if (index === -1) return 0;
 
   return Math.max(0, shipmentStages.length - 1 - index);
+};
+
+const getEventTypeLabel = (eventType: string, locale: string) => {
+  const labels: Record<string, { ar: string; en: string }> = {
+    stage_changed: { ar: "تغيرت المرحلة", en: "Stage changed" },
+    note_added: { ar: "تمت إضافة ملاحظة", en: "Note added" },
+    system_created: { ar: "بدأ التتبع", en: "Timeline started" },
+  };
+
+  const label = labels[eventType];
+  if (!label) return eventType.replace(/_/g, " ");
+  return locale === "ar" ? label.ar : label.en;
+};
+
+const getEventStageLabel = (stage: string | null | undefined, lang: Lang) => {
+  if (!stage) return "";
+  return getShipmentStageCopy(stage, lang)?.label || stage;
 };
 
 const ShipmentMetricCard = ({
@@ -541,6 +558,62 @@ export default function CustomerTrackingPage() {
               <ShipmentTimeline
                   currentStage={activeShipment.stage}
               />
+            </BentoCard>
+
+            <BentoCard className="space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {locale === "ar" ? "سجل الشحنة" : "Shipment timeline"}
+                </p>
+                <h3 className="mt-2 text-lg font-semibold">
+                  {locale === "ar" ? "الأحداث المرئية للعميل" : "Customer-visible events"}
+                </h3>
+              </div>
+
+              {activeShipment.shipmentEvents.length ? (
+                <div className="space-y-3">
+                  {activeShipment.shipmentEvents.map((event) => {
+                    const fromStage = getEventStageLabel(event.fromStage, lang);
+                    const toStage = getEventStageLabel(event.toStage, lang);
+
+                    return (
+                      <div
+                        key={event.id}
+                        className="rounded-[1.25rem] border border-border/60 bg-secondary/10 px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {getEventTypeLabel(event.eventType, locale)}
+                            </p>
+                            {fromStage || toStage ? (
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {fromStage && toStage
+                                  ? `${fromStage} → ${toStage}`
+                                  : toStage || fromStage}
+                              </p>
+                            ) : null}
+                          </div>
+                          <p className="shrink-0 text-xs text-muted-foreground">
+                            {formatDateTime(event.createdAt, locale)}
+                          </p>
+                        </div>
+                        {event.note ? (
+                          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                            {event.note}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-[1.25rem] border border-dashed border-border/60 bg-secondary/5 p-4 text-sm text-muted-foreground">
+                  {locale === "ar"
+                    ? "لا توجد أحداث مرئية للعميل بعد."
+                    : "No customer-visible shipment events yet."}
+                </div>
+              )}
             </BentoCard>
             </>
             ) : (
