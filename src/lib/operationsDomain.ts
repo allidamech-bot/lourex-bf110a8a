@@ -1958,6 +1958,38 @@ export const createTrackingUpdate = async (input: {
   return inserted.data;
 };
 
+export const logShipmentEvent = async (input: {
+  shipmentId: string;
+  eventType: "stage_changed" | "note_added" | "system_created" | string;
+  fromStage?: ShipmentStageCode | string | null;
+  toStage?: ShipmentStageCode | string | null;
+  note?: string | null;
+  actorUserId?: string | null;
+  isCustomerVisible?: boolean;
+}) => {
+  const { user } = await getCurrentUserContext();
+
+  const { data, error } = await (db as any).rpc("log_shipment_event", {
+    p_shipment_id: input.shipmentId,
+    p_event_type: input.eventType,
+    p_from_stage: input.fromStage ? normalizeShipmentStageCode(input.fromStage) : null,
+    p_to_stage: input.toStage ? normalizeShipmentStageCode(input.toStage) : null,
+    p_note: input.note || null,
+    p_actor_user_id: input.actorUserId || user?.id || null,
+    p_is_customer_visible: Boolean(input.isCustomerVisible),
+  });
+
+  if (error) {
+    logOperationalError("shipment_event_log", error, {
+      shipmentId: input.shipmentId,
+      eventType: input.eventType,
+    });
+    throw error;
+  }
+
+  return data as string;
+};
+
 // loadFinancialEntries moved to @/domain/accounting/service
 
 // createFinancialEntry moved to @/domain/accounting/service
