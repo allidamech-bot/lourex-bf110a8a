@@ -723,9 +723,9 @@ export default function PurchaseRequestsPage() {
 
     if (loading) {
         return (
-            <div className="grid gap-4">
+            <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
                 {Array.from({ length: 4 }).map((_, index) => (
-                    <Skeleton key={index} className="h-44 w-full rounded-[2rem]" />
+                    <Skeleton key={index} className="h-32 w-full rounded-2xl border border-white/10 bg-white/[0.04]" />
                 ))}
             </div>
         );
@@ -744,23 +744,23 @@ export default function PurchaseRequestsPage() {
     return (
         <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                <BentoCard className="space-y-4">
+                <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
                     <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("requests.inboxEyebrow")}</p>
                         <h2 className="mt-2 font-serif text-2xl font-semibold">{t("requests.inboxTitle")}</h2>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("requests.inboxDescription")}</p>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         {[
                             { label: t("requests.total"), value: requestMetrics.total },
                             { label: t("requests.review"), value: requestMetrics.review },
                             { label: t("requests.ready"), value: requestMetrics.ready },
                             { label: t("requests.converted"), value: requestMetrics.converted },
                         ].map((item) => (
-                            <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4 text-center">
-                                <p className="text-2xl font-bold">{item.value}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+                            <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25">
+                                <p className="text-2xl font-bold text-white">{item.value}</p>
+                                <p className="mt-1 text-xs text-slate-400">{item.label}</p>
                             </div>
                         ))}
                     </div>
@@ -772,12 +772,12 @@ export default function PurchaseRequestsPage() {
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder={t("requests.searchPlaceholder")}
-                                className="ps-9"
+                                className="h-10 rounded-xl border-white/10 bg-white/[0.04] ps-9"
                             />
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            <Button variant="outline" size="sm" onClick={() => void refresh()}>
+                            <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => void refresh()}>
                                 {t("common.refresh")}
                             </Button>
                             {requestFilters.map((filter) => (
@@ -785,6 +785,7 @@ export default function PurchaseRequestsPage() {
                                     key={filter.key}
                                     variant={activeFilter === filter.key ? "gold" : "outline"}
                                     size="sm"
+                                    className="h-10 rounded-xl"
                                     onClick={() => setActiveFilter(filter.key)}
                                 >
                                     <Filter className="me-2 h-4 w-4" />
@@ -801,7 +802,7 @@ export default function PurchaseRequestsPage() {
                     ) : null}
 
                     {filteredRows.length === 0 ? (
-                        <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
+                        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-6">
                             <EmptyState
                                 icon={ClipboardList}
                                 title={t("requests.emptyFilteredTitle")}
@@ -1032,14 +1033,14 @@ export default function PurchaseRequestsPage() {
                                             { label: t("requests.labels.color"), value: selectedRow.color || "—" },
                                             { label: t("requests.labels.reference"), value: selectedRow.referenceLink || t("requests.noReference") },
                                         ].map((item) => (
-                                            <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 px-4 py-3">
-                                                <p className="text-xs text-muted-foreground">{item.label}</p>
-                                                <p className="mt-1 break-words text-sm font-medium">{item.value}</p>
+                                            <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                                                <p className="text-xs text-slate-400">{item.label}</p>
+                                                <p className="mt-1 break-words text-sm font-medium text-white">{item.value}</p>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                                         <div className="flex items-center gap-3">
                                             <ShieldCheck className="h-4 w-4 text-primary" />
                                             <p className="font-medium">{t("requests.labels.technicalSpecs")}</p>

@@ -108,19 +108,19 @@ const ShipmentMetricCard = ({
   label: string;
   value: string | number;
 }) => (
-    <div className="rounded-[1.25rem] bg-secondary/15 p-4 text-center">
-      <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25 hover:bg-blue-500/[0.06]">
+      <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
         {icon}
       </div>
-      <p className="mt-3 text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-slate-400">{label}</p>
     </div>
 );
 
 const ShipmentInfoTile = ({ label, value }: { label: string; value: string }) => (
-    <div className="rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-sm font-medium">{value}</p>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors hover:border-blue-400/25">
+      <p className="text-[10px] uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-sm font-medium text-white">{value}</p>
     </div>
 );
 
