@@ -1,6 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
     ArrowRightLeft,
+    Ban,
     CheckCircle2,
     ClipboardList,
     Copy,
@@ -9,10 +10,12 @@ import {
     Filter,
     Loader2,
     MessageSquareWarning,
+    RotateCcw,
     Search,
     ShieldCheck,
     Sparkles,
     StickyNote,
+    Trash2,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -24,9 +27,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
     acceptTransferProof,
     convertRequestToDeal,
+    deletePurchaseRequestRecord,
     loadPurchaseRequests,
     rejectTransferProof,
-    requestStatusMeta,
     updatePurchaseRequestInternalNotes,
     updatePurchaseRequestStatus,
 } from "@/lib/operationsDomain";
@@ -71,6 +74,23 @@ const valueOrDash = (value: unknown) => {
     if (typeof value === "boolean") return value ? "Yes" : "No";
     return "-";
 };
+
+const statusBadgeClasses: Record<PurchaseRequestStatus, string> = {
+    intake_submitted: "border-blue-400/25 bg-blue-500/10 text-blue-100",
+    under_review: "border-amber-400/25 bg-amber-400/10 text-amber-100",
+    awaiting_clarification: "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-100",
+    ready_for_conversion: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100",
+    transfer_proof_pending: "border-cyan-400/25 bg-cyan-500/10 text-cyan-100",
+    transfer_proof_rejected: "border-rose-400/25 bg-rose-500/10 text-rose-100",
+    in_progress: "border-sky-400/25 bg-sky-500/10 text-sky-100",
+    completed: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
+    cancelled: "border-slate-500/25 bg-slate-500/10 text-slate-300",
+};
+
+const getStatusBadgeClass = (status: PurchaseRequestStatus | string | null | undefined) =>
+    status && status in statusBadgeClasses
+        ? statusBadgeClasses[status as PurchaseRequestStatus]
+        : "border-slate-500/25 bg-slate-500/10 text-slate-300";
 
 const buildSafeAiRequestContext = (row: PurchaseRequestRow) => ({
     id: row.id,
@@ -285,22 +305,30 @@ export default function PurchaseRequestsPage() {
 
     const selectedRequestIdFromParams = searchParams.get("request");
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(selectedRequestIdFromParams);
-    const getRequestStatusMeta = (status: PurchaseRequestStatus | string | null | undefined) => {
-        if (status && status in requestStatusMeta) {
-            return requestStatusMeta[status as PurchaseRequestStatus];
-        }
-
-        return {
-            label: status || t("common.unknown"),
-            tone: "bg-zinc-500/15 text-zinc-300",
-        };
-    };
 
     const statusActions: Array<{ value: PurchaseRequestStatus; label: string }> = [
         { value: "under_review", label: t("requests.actions.under_review") },
         { value: "awaiting_clarification", label: t("requests.actions.awaiting_clarification") },
         { value: "ready_for_conversion", label: t("requests.actions.ready_for_conversion") },
     ];
+    const actionLabels = {
+        open: lang === "ar" ? "فتح" : "Open",
+        cancel: lang === "ar" ? "إلغاء" : "Cancel",
+        delete: lang === "ar" ? "حذف" : "Delete",
+        resend: lang === "ar" ? "إعادة إرسال" : "Resend",
+        cancelConfirm:
+            lang === "ar"
+                ? "هل تريد إلغاء هذا الطلب؟"
+                : "Cancel this request?",
+        deleteConfirm:
+            lang === "ar"
+                ? "سيتم إلغاء الطلب وحفظ السجل التشغيلي. هل تريد المتابعة؟"
+                : "This will cancel the request while preserving operational history. Continue?",
+        resendConfirm:
+            lang === "ar"
+                ? "إعادة الطلب إلى انتظار التوضيح؟"
+                : "Move this request back to awaiting clarification?",
+    };
 
     const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
         { key: "all", label: t("requests.filters.all") },
@@ -540,6 +568,35 @@ export default function PurchaseRequestsPage() {
         }
     };
 
+    const handleCancelRequest = async (row: PurchaseRequestRow) => {
+        if (!window.confirm(actionLabels.cancelConfirm)) return;
+        await handleStatusUpdate(row.id, "cancelled");
+    };
+
+    const handleResendRequest = async (row: PurchaseRequestRow) => {
+        if (!window.confirm(actionLabels.resendConfirm)) return;
+        await handleStatusUpdate(row.id, "awaiting_clarification");
+    };
+
+    const handleDeleteRequest = async (row: PurchaseRequestRow) => {
+        if (updatingStatusId) return;
+        if (!window.confirm(actionLabels.deleteConfirm)) return;
+
+        setUpdatingStatusId(row.id);
+
+        try {
+            await deletePurchaseRequestRecord(row.id);
+            toast.success(`${t("requests.toasts.statusUpdated")} ${row.requestNumber} -> ${t("statuses.cancelled")}`);
+            await refresh();
+            setSelectedRequest(row.id);
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_delete", error, { requestId: row.id });
+            toast.error(getErrorMessage(error, t("requests.toasts.statusError")));
+        } finally {
+            setUpdatingStatusId(null);
+        }
+    };
+
     const handleSaveNotes = async () => {
         if (!selectedRow) {
             return;
@@ -754,29 +811,37 @@ export default function PurchaseRequestsPage() {
                     ) : (
                         <div className="space-y-3">
                             {filteredRows.map((row) => {
-                                const statusMeta = getRequestStatusMeta(row.status);
+                                const isSelected = selectedRow?.id === row.id;
+                                const isBusy = updatingStatusId === row.id;
+                                const canCancel = canTransitionPurchaseRequestStatus(row.status, "cancelled");
+                                const canResend = canTransitionPurchaseRequestStatus(row.status, "awaiting_clarification");
 
                                 return (
-                                    <button
+                                    <div
                                         key={row.id}
-                                        type="button"
-                                        onClick={() => setSelectedRequest(row.id)}
-                                        className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
-                                            selectedRow?.id === row.id
-                                                ? "border-primary/30 bg-primary/10"
-                                                : "border-border/60 bg-secondary/15 hover:border-primary/20"
+                                        className={`rounded-[1.35rem] border transition-colors ${
+                                            isSelected
+                                                ? "border-blue-400/40 bg-blue-500/10 shadow-[0_18px_46px_-34px_rgba(59,130,246,0.9)]"
+                                                : "border-white/10 bg-white/[0.03] hover:border-blue-400/25 hover:bg-blue-500/5"
                                         }`}
                                     >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedRequest(row.id)}
+                                            className="w-full px-4 py-4 text-start"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
                                                     {row.requestNumber}
                                                 </p>
-                                                <p className="mt-2 font-medium">{row.productName || t("requests.genericRequest")}</p>
-                                                <p className="mt-1 text-sm text-muted-foreground">{row.customer.fullName}</p>
+                                                <p className="mt-2 truncate text-base font-semibold text-foreground">
+                                                    {row.productName || t("requests.genericRequest")}
+                                                </p>
+                                                <p className="mt-1 truncate text-sm text-muted-foreground">{row.customer.fullName}</p>
                                             </div>
 
-                                            <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                                            <span className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
                         {t(`statuses.${row.status}`)}
                       </span>
                                         </div>
@@ -786,7 +851,54 @@ export default function PurchaseRequestsPage() {
                                             <span>•</span>
                                             <span>{new Date(row.createdAt).toLocaleDateString(locale)}</span>
                                         </div>
-                                    </button>
+                                        </button>
+
+                                        <div className="flex flex-wrap gap-2 border-t border-white/10 px-4 py-3">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 rounded-lg border-white/10 bg-white/[0.03] px-2.5 text-xs hover:border-blue-400/35 hover:bg-blue-500/10"
+                                                onClick={() => setSelectedRequest(row.id)}
+                                            >
+                                                <Eye className="me-1.5 h-3.5 w-3.5" />
+                                                {actionLabels.open}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 rounded-lg border-amber-400/25 bg-amber-400/10 px-2.5 text-xs text-amber-100 hover:bg-amber-400/15"
+                                                disabled={isBusy || !canResend || row.status === "awaiting_clarification"}
+                                                onClick={() => void handleResendRequest(row)}
+                                            >
+                                                <RotateCcw className="me-1.5 h-3.5 w-3.5" />
+                                                {actionLabels.resend}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 hover:bg-slate-500/15"
+                                                disabled={isBusy || !canCancel}
+                                                onClick={() => void handleCancelRequest(row)}
+                                            >
+                                                {isBusy ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
+                                                {actionLabels.cancel}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 rounded-lg border-rose-400/25 bg-rose-500/10 px-2.5 text-xs text-rose-100 hover:bg-rose-500/15"
+                                                disabled={isBusy || row.status === "cancelled"}
+                                                onClick={() => void handleDeleteRequest(row)}
+                                            >
+                                                <Trash2 className="me-1.5 h-3.5 w-3.5" />
+                                                {actionLabels.delete}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -794,17 +906,17 @@ export default function PurchaseRequestsPage() {
                 </BentoCard>
 
                 {selectedRow ? (
-                    <BentoCard className="p-0">
-                        <div className="border-b border-border/50 p-6">
+                    <BentoCard className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-0 xl:self-start">
+                        <div className="border-b border-white/10 p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-blue-200">
                                         {selectedRow.requestNumber}
                                     </p>
-                                    <h2 className="mt-2 font-serif text-3xl font-semibold">
+                                    <h2 className="mt-2 font-serif text-3xl font-semibold text-white">
                                         {selectedRow.productName || t("requests.genericRequest")}
                                     </h2>
-                                    <p className="mt-2 text-sm text-muted-foreground">
+                                    <p className="mt-2 text-sm text-slate-400">
                                         {selectedRow.customer.fullName} • {selectedRow.customer.email}
                                     </p>
                                 </div>
@@ -851,10 +963,8 @@ export default function PurchaseRequestsPage() {
 
                             <div className="mt-4 flex flex-wrap gap-2">
                                 {(() => {
-                                    const statusMeta = getRequestStatusMeta(selectedRow.status);
-
                                     return (
-                                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusMeta.tone}`}>
+                                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(selectedRow.status)}`}>
             {t(`statuses.${selectedRow.status}`)}
         </span>
                                     );
