@@ -369,6 +369,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "deals_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "deals_source_request_id_fkey"
             columns: ["source_request_id"]
             isOneToOne: false
@@ -466,6 +473,127 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      financial_edit_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          deal_id: string | null
+          financial_entry_id: string | null
+          id: string
+          reason: string
+          requested_by_email: string
+          requested_by_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          deal_id?: string | null
+          financial_entry_id?: string | null
+          id?: string
+          reason?: string
+          requested_by_email?: string
+          requested_by_name?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          deal_id?: string | null
+          financial_entry_id?: string | null
+          id?: string
+          reason?: string
+          requested_by_email?: string
+          requested_by_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_edit_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_edit_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_edit_requests_financial_entry_id_fkey"
+            columns: ["financial_entry_id"]
+            isOneToOne: false
+            referencedRelation: "financial_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string | null
+          deal_id: string | null
+          entry_number: string
+          id: string
+          locked: boolean
+          note: string | null
+          scope: string
+          type: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          entry_number: string
+          id?: string
+          locked?: boolean
+          note?: string | null
+          scope: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          entry_number?: string
+          id?: string
+          locked?: boolean
+          note?: string | null
+          scope?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inquiries: {
         Row: {
@@ -924,6 +1052,231 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_settlement_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          settlement_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          settlement_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          settlement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_events_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_settlement_items: {
+        Row: {
+          amount: number
+          created_at: string
+          financial_entry_id: string | null
+          id: string
+          settlement_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          settlement_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          settlement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_items_financial_entry_id_fkey"
+            columns: ["financial_entry_id"]
+            isOneToOne: false
+            referencedRelation: "financial_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_items_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_settlements: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          note: string | null
+          partner_name: string
+          partner_type: string
+          settlement_number: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          partner_name?: string
+          partner_type: string
+          settlement_number: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          partner_name?: string
+          partner_type?: string
+          settlement_number?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_allocations: {
+        Row: {
+          amount: number
+          created_at: string
+          financial_entry_id: string | null
+          id: string
+          payment_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          payment_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_allocations_financial_entry_id_fkey"
+            columns: ["financial_entry_id"]
+            isOneToOne: false
+            referencedRelation: "financial_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_allocations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          payment_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          payment_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          note: string | null
+          payment_method: string | null
+          payment_number: string
+          related_settlement_id: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          payment_method?: string | null
+          payment_number: string
+          related_settlement_id?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          payment_method?: string | null
+          payment_number?: string
+          related_settlement_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_related_settlement_id_fkey"
+            columns: ["related_settlement_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_prices: {
         Row: {
           created_at: string
@@ -1133,6 +1486,13 @@ export type Database = {
           submitted_at: string | null
           technical_specs: string | null
           tracking_code: string | null
+          transfer_accepted_at: string | null
+          transfer_accepted_by: string | null
+          transfer_proof_name: string
+          transfer_proof_status: string
+          transfer_proof_uploaded_at: string | null
+          transfer_proof_url: string
+          transfer_rejection_reason: string
           updated_at: string
           weight: string | null
         }
@@ -1175,6 +1535,13 @@ export type Database = {
           submitted_at?: string | null
           technical_specs?: string | null
           tracking_code?: string | null
+          transfer_accepted_at?: string | null
+          transfer_accepted_by?: string | null
+          transfer_proof_name?: string
+          transfer_proof_status?: string
+          transfer_proof_uploaded_at?: string | null
+          transfer_proof_url?: string
+          transfer_rejection_reason?: string
           updated_at?: string
           weight?: string | null
         }
@@ -1217,6 +1584,13 @@ export type Database = {
           submitted_at?: string | null
           technical_specs?: string | null
           tracking_code?: string | null
+          transfer_accepted_at?: string | null
+          transfer_accepted_by?: string | null
+          transfer_proof_name?: string
+          transfer_proof_status?: string
+          transfer_proof_uploaded_at?: string | null
+          transfer_proof_url?: string
+          transfer_rejection_reason?: string
           updated_at?: string
           weight?: string | null
         }
@@ -1674,6 +2048,15 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      backfill_lourex_domain: {
+        Args: never
+        Returns: {
+          customers_count: number
+          linked_deals_count: number
+          linked_shipments_count: number
+          purchase_requests_count: number
+        }[]
+      }
       cancel_purchase_request: {
         Args: { p_reason?: string; p_request_id: string }
         Returns: {
@@ -1715,6 +2098,13 @@ export type Database = {
           submitted_at: string | null
           technical_specs: string | null
           tracking_code: string | null
+          transfer_accepted_at: string | null
+          transfer_accepted_by: string | null
+          transfer_proof_name: string
+          transfer_proof_status: string
+          transfer_proof_uploaded_at: string | null
+          transfer_proof_url: string
+          transfer_rejection_reason: string
           updated_at: string
           weight: string | null
         }
@@ -1746,6 +2136,10 @@ export type Database = {
         Returns: string
       }
       current_lourex_role: { Args: never; Returns: string }
+      extract_legacy_line: {
+        Args: { label: string; source: string }
+        Returns: string
+      }
       get_staff_owner_id: { Args: never; Returns: string }
       has_org_role: {
         Args: { _owner_id: string; _roles: string[] }
@@ -1758,6 +2152,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_lourex_internal: { Args: { user_id: string }; Returns: boolean }
       is_verified_user: { Args: never; Returns: boolean }
       lookup_shipment_by_tracking: {
         Args: { p_tracking_id: string }
@@ -1770,6 +2165,10 @@ export type Database = {
           weight: number
         }[]
       }
+      mark_partner_settlement_paid: {
+        Args: { p_settlement_id: string }
+        Returns: undefined
+      }
       submit_quote: {
         Args: {
           p_currency?: string
@@ -1781,6 +2180,14 @@ export type Database = {
           p_rfq_id: string
         }
         Returns: string
+      }
+      submit_transfer_proof: {
+        Args: { proof_path?: string; proof_url: string; request_id: string }
+        Returns: undefined
+      }
+      submit_transfer_proof_for_purchase_request: {
+        Args: { proof_path?: string; proof_url: string; request_id: string }
+        Returns: undefined
       }
       supplier_submit_quote: {
         Args: {
