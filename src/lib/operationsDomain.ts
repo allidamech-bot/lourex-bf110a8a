@@ -2529,6 +2529,63 @@ export const acceptTransferProof = async (requestId: string) => {
   return { success: true };
 };
 
+export type TransferProofPaymentType = "first_payment" | "second_payment" | "full_payment";
+
+export type AcceptTransferProofPaymentPayload = {
+  paymentType: TransferProofPaymentType;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  transferReferenceNumber?: string;
+  internalNote?: string;
+};
+
+export const acceptTransferProofWithPayment = async (
+  requestId: string,
+  payload: AcceptTransferProofPaymentPayload,
+) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("طµظ„ط§ط­ظٹط§طھظƒ ظ„ط§ طھط³ظ…ط­ ط¨ظ‚ط¨ظˆظ„ ط§ظ„طھط­ظˆظٹظ„ط§طھ.");
+  }
+
+  if (!payload.paymentType) {
+    throw new Error("Payment type is required.");
+  }
+
+  if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
+    throw new Error("Received amount must be greater than zero.");
+  }
+
+  const { data, error } = await (supabase as any).rpc("accept_transfer_proof_with_payment", {
+    p_request_id: requestId,
+    p_payment_type: payload.paymentType,
+    p_amount: payload.amount,
+    p_currency: payload.currency || "SAR",
+    p_payment_method: payload.paymentMethod || "bank_transfer",
+    p_transfer_reference_number: payload.transferReferenceNumber ?? "",
+    p_internal_note: payload.internalNote ?? "",
+  });
+
+  if (error) throw error;
+
+  await writeAuditLog({
+    action: "purchase_request.transfer_proof_accepted_with_payment",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    newValues: {
+      status: "in_progress",
+      accepted_by: user.id,
+      payment_type: payload.paymentType,
+      amount: payload.amount,
+      currency: payload.currency || "SAR",
+      payment_method: payload.paymentMethod || "bank_transfer",
+    },
+  });
+
+  return { success: true, data };
+};
+
 export const rejectTransferProof = async (requestId: string, reason: string) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile || !assertManagementUser(profile.role)) {

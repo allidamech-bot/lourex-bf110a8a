@@ -162,6 +162,7 @@ export default function CustomerRequestsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<CustomerRequestFilter>("all");
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [selectedProofFile, setSelectedProofFile] = useState<File | null>(null);
   const [paymentSummaries, setPaymentSummaries] = useState<Map<string, CustomerPaymentSummary>>(new Map());
 
   const selectedRequestId = searchParams.get("request");
@@ -281,6 +282,9 @@ export default function CustomerRequestsPage() {
   const selectedPaymentSummary = selectedRow?.convertedDealId
       ? paymentSummaries.get(selectedRow.convertedDealId)
       : undefined;
+  const submitReceiptLabel = locale === "ar" ? "إرسال الإيصال" : t("transferProof.submitButton");
+  const receiptSubmittedMessage =
+      locale === "ar" ? "تم إرسال الإيصال وهو قيد المراجعة" : "Receipt submitted and under review";
   const removeActionLabel = locale === "ar" ? "حذف من قائمتي" : "Remove from my list";
 
   useEffect(() => {
@@ -314,6 +318,10 @@ export default function CustomerRequestsPage() {
       detailsRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedRequestId]);
+
+  useEffect(() => {
+    setSelectedProofFile(null);
+  }, [selectedRow?.id]);
 
   const setSelectedRequest = (requestId: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -411,18 +419,23 @@ export default function CustomerRequestsPage() {
     }
   };
 
-  const handleUploadProof = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProofFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !selectedRow) return;
+    setSelectedProofFile(file || null);
+  };
+
+  const handleSubmitProof = async () => {
+    if (!selectedProofFile || !selectedRow || uploadingProof) return;
 
     setUploadingProof(true);
-    const { error } = await uploadTransferProof(selectedRow.id, file);
+    const { error } = await uploadTransferProof(selectedRow.id, selectedProofFile);
     setUploadingProof(false);
 
     if (error) {
       toast.error(error.message || t("transferProof.error"));
     } else {
-      toast.success(t("transferProof.success"));
+      toast.success(receiptSubmittedMessage);
+      setSelectedProofFile(null);
       void loadRows("refresh");
     }
   };
@@ -891,18 +904,34 @@ export default function CustomerRequestsPage() {
                                 type="file"
                                 id="proof-upload"
                                 className="hidden"
-                                onChange={handleUploadProof}
+                                accept="image/*,.pdf,.doc,.docx"
+                                onChange={handleProofFileChange}
                                 disabled={uploadingProof}
                             />
-                            <Button
-                                asChild
-                                disabled={uploadingProof}
-                                className="h-12 px-8"
-                            >
-                              <label htmlFor="proof-upload" className="cursor-pointer">
-                                {uploadingProof ? t("transferProof.uploading") : t("transferProof.uploadButton")}
-                              </label>
-                            </Button>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <Button
+                                  asChild
+                                  variant="outline"
+                                  disabled={uploadingProof}
+                                  className="h-12 px-8"
+                              >
+                                <label htmlFor="proof-upload" className="cursor-pointer">
+                                  {t("transferProof.uploadButton")}
+                                </label>
+                              </Button>
+                              <Button
+                                  onClick={handleSubmitProof}
+                                  disabled={!selectedProofFile || uploadingProof}
+                                  className="h-12 px-8"
+                              >
+                                {uploadingProof ? t("transferProof.uploading") : submitReceiptLabel}
+                              </Button>
+                            </div>
+                            {selectedProofFile ? (
+                              <p className="mt-3 break-words text-sm text-muted-foreground">
+                                {selectedProofFile.name}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                     ) : null}

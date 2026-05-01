@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
     ArrowRightLeft,
     Ban,
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    acceptTransferProof,
+    acceptTransferProofWithPayment,
     convertRequestToDeal,
     deletePurchaseRequestRecord,
     loadPurchaseRequests,
@@ -45,6 +45,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
+type TransferPaymentType = "first_payment" | "second_payment" | "full_payment";
 type PurchaseRequestAiMode =
     | "purchase_request_summary"
     | "purchase_request_missing_info"
@@ -292,6 +293,12 @@ export default function PurchaseRequestsPage() {
     const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
     const [actingOnProof, setActingOnProof] = useState(false);
     const [proofSignedUrl, setProofSignedUrl] = useState<string | null>(null);
+    const [transferPaymentType, setTransferPaymentType] = useState<TransferPaymentType>("first_payment");
+    const [transferReceivedAmount, setTransferReceivedAmount] = useState("");
+    const [transferCurrency, setTransferCurrency] = useState("SAR");
+    const [transferPaymentMethod, setTransferPaymentMethod] = useState("bank_transfer");
+    const [transferReferenceNumber, setTransferReferenceNumber] = useState("");
+    const [transferInternalNote, setTransferInternalNote] = useState("");
     const [search, setSearch] = useState("");
     const deferredSearch = useDeferredValue(search);
     const [activeFilter, setActiveFilter] = useState<"all" | PurchaseRequestStatus>("all");
@@ -328,6 +335,27 @@ export default function PurchaseRequestsPage() {
             lang === "ar"
                 ? "إعادة الطلب إلى انتظار التوضيح؟"
                 : "Move this request back to awaiting clarification?",
+    };
+
+    const transferPaymentLabels = {
+        paymentType: lang === "ar" ? "نوع الدفعة" : "Payment type",
+        firstPayment: lang === "ar" ? "دفعة أولى" : "First payment",
+        secondPayment: lang === "ar" ? "دفعة ثانية" : "Second payment",
+        fullPayment: lang === "ar" ? "مبلغ كامل" : "Full payment",
+        receivedAmount: lang === "ar" ? "المبلغ المستلم" : "Received amount",
+        currency: lang === "ar" ? "العملة" : "Currency",
+        paymentMethod: lang === "ar" ? "طريقة الدفع" : "Payment method",
+        transferReferenceNumber: lang === "ar" ? "رقم مرجع التحويل" : "Transfer reference number",
+        internalNote: lang === "ar" ? "ملاحظة داخلية" : "Internal note",
+        acceptAndRecord: lang === "ar" ? "قبول التحويل وتسجيله" : "Accept and record payment",
+        bankTransfer: lang === "ar" ? "تحويل بنكي" : "Bank transfer",
+        amountRequired:
+            lang === "ar" ? "يجب إدخال مبلغ مستلم أكبر من صفر." : "Enter a received amount greater than zero.",
+        typeRequired: lang === "ar" ? "يجب اختيار نوع الدفعة." : "Select a payment type.",
+        accepted:
+            lang === "ar"
+                ? "تم قبول التحويل وتسجيل الدفعة محاسبياً"
+                : "Transfer accepted and payment recorded",
     };
 
     const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
@@ -445,6 +473,12 @@ export default function PurchaseRequestsPage() {
         }
 
         setInternalNotesDraft(selectedRow.internalNotes || "");
+        setTransferPaymentType("first_payment");
+        setTransferReceivedAmount("");
+        setTransferCurrency("SAR");
+        setTransferPaymentMethod("bank_transfer");
+        setTransferReferenceNumber("");
+        setTransferInternalNote("");
 
         if (selectedRow.transferProofUrl) {
             void getSignedUrl("DOCUMENTS", selectedRow.transferProofUrl).then((url) => setProofSignedUrl(url));
@@ -674,19 +708,38 @@ export default function PurchaseRequestsPage() {
         }
     };
 
-    const handleAcceptTransfer = async () => {
+    const handleAcceptTransfer = async (event?: FormEvent<HTMLFormElement>) => {
+        event?.preventDefault();
         if (!selectedRow || actingOnProof) return;
+
+        if (!transferPaymentType) {
+            toast.error(transferPaymentLabels.typeRequired);
+            return;
+        }
+
+        const amount = Number(transferReceivedAmount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            toast.error(transferPaymentLabels.amountRequired);
+            return;
+        }
 
         setActingOnProof(true);
 
         try {
-            const result = await acceptTransferProof(selectedRow.id);
+            const result = await acceptTransferProofWithPayment(selectedRow.id, {
+                paymentType: transferPaymentType,
+                amount,
+                currency: transferCurrency.trim() || "SAR",
+                paymentMethod: transferPaymentMethod.trim() || "bank_transfer",
+                transferReferenceNumber: transferReferenceNumber.trim(),
+                internalNote: transferInternalNote.trim(),
+            });
 
             if (!result.success) {
                 throw new Error(t("transferProof.acceptFailed"));
             }
 
-            toast.success(t("transferProof.accepted"));
+            toast.success(transferPaymentLabels.accepted);
             await refresh();
             setSelectedRequest(selectedRow.id);
         } catch (error: unknown) {
@@ -1103,29 +1156,93 @@ export default function PurchaseRequestsPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="mt-6 flex gap-3">
-                                                    <Button
-                                                        onClick={handleAcceptTransfer}
-                                                        disabled={actingOnProof}
-                                                        className="bg-emerald-600 text-white hover:bg-emerald-700"
-                                                    >
-                                                        {actingOnProof ? (
-                                                            <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <CheckCircle2 className="me-2 h-4 w-4" />
-                                                        )}
-                                                        {t("requests.actions.acceptTransfer")}
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={handleRejectTransfer}
-                                                        disabled={actingOnProof}
-                                                        className="border-rose-500/50 text-rose-500 hover:bg-rose-500/10"
-                                                    >
-                                                        <MessageSquareWarning className="me-2 h-4 w-4" />
-                                                        {t("requests.actions.rejectTransfer")}
-                                                    </Button>
-                                                </div>
+                                                <form className="mt-6 space-y-4" onSubmit={handleAcceptTransfer}>
+                                                    <div className="grid gap-3 md:grid-cols-2">
+                                                        <label className="space-y-1.5 text-sm">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.paymentType}</span>
+                                                            <select
+                                                                value={transferPaymentType}
+                                                                onChange={(event) => setTransferPaymentType(event.target.value as TransferPaymentType)}
+                                                                disabled={actingOnProof}
+                                                                className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm text-foreground"
+                                                            >
+                                                                <option value="first_payment">{transferPaymentLabels.firstPayment}</option>
+                                                                <option value="second_payment">{transferPaymentLabels.secondPayment}</option>
+                                                                <option value="full_payment">{transferPaymentLabels.fullPayment}</option>
+                                                            </select>
+                                                        </label>
+                                                        <label className="space-y-1.5 text-sm">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.receivedAmount}</span>
+                                                            <Input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.01"
+                                                                value={transferReceivedAmount}
+                                                                onChange={(event) => setTransferReceivedAmount(event.target.value)}
+                                                                disabled={actingOnProof}
+                                                            />
+                                                        </label>
+                                                        <label className="space-y-1.5 text-sm">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.currency}</span>
+                                                            <Input
+                                                                value={transferCurrency}
+                                                                onChange={(event) => setTransferCurrency(event.target.value)}
+                                                                disabled={actingOnProof}
+                                                            />
+                                                        </label>
+                                                        <label className="space-y-1.5 text-sm">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.paymentMethod}</span>
+                                                            <Input
+                                                                value={transferPaymentMethod}
+                                                                onChange={(event) => setTransferPaymentMethod(event.target.value)}
+                                                                disabled={actingOnProof}
+                                                                placeholder={transferPaymentLabels.bankTransfer}
+                                                            />
+                                                        </label>
+                                                        <label className="space-y-1.5 text-sm md:col-span-2">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.transferReferenceNumber}</span>
+                                                            <Input
+                                                                value={transferReferenceNumber}
+                                                                onChange={(event) => setTransferReferenceNumber(event.target.value)}
+                                                                disabled={actingOnProof}
+                                                            />
+                                                        </label>
+                                                        <label className="space-y-1.5 text-sm md:col-span-2">
+                                                            <span className="text-muted-foreground">{transferPaymentLabels.internalNote}</span>
+                                                            <Textarea
+                                                                value={transferInternalNote}
+                                                                onChange={(event) => setTransferInternalNote(event.target.value)}
+                                                                disabled={actingOnProof}
+                                                                rows={3}
+                                                            />
+                                                        </label>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-3">
+                                                        <Button
+                                                            type="submit"
+                                                            disabled={actingOnProof}
+                                                            className="bg-emerald-600 text-white hover:bg-emerald-700"
+                                                        >
+                                                            {actingOnProof ? (
+                                                                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <CheckCircle2 className="me-2 h-4 w-4" />
+                                                            )}
+                                                            {transferPaymentLabels.acceptAndRecord}
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={handleRejectTransfer}
+                                                            disabled={actingOnProof}
+                                                            className="border-rose-500/50 text-rose-500 hover:bg-rose-500/10"
+                                                        >
+                                                            <MessageSquareWarning className="me-2 h-4 w-4" />
+                                                            {t("requests.actions.rejectTransfer")}
+                                                        </Button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         )}
 

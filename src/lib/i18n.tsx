@@ -841,6 +841,7 @@ const translations: Record<Lang, TranslationTree> = {
         title: "Upload transfer proof",
         description: "Upload an image, PDF, or document showing your transfer confirmation.",
         uploadButton: "Upload proof",
+        submitButton: "Submit receipt",
         statusPending: "Transfer proof uploaded. Waiting for admin approval.",
         rejectionReason: "Rejection reason:",
         accepted: "Transfer accepted successfully.",
