@@ -1842,7 +1842,7 @@ const translations: Record<Lang, TranslationTree> = {
     },
     overview: {
       heroEyebrow: "نظرة عامة",
-      heroTitle: "مركز قيادة Lourex",
+      heroTitle: "مركز تحكم لوريكس",
       heroDescription:
         "صورة تشغيلية موحّدة للطلبات والصفقات والشحن والانضباط المالي وسجل التدقيق.",
       openRequests: "فتح صندوق الطلبات",
