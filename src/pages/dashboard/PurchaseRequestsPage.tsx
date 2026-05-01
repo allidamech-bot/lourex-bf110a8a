@@ -86,7 +86,7 @@ const statusBadgeClasses: Record<PurchaseRequestStatus, string> = {
     transfer_proof_rejected: "border-rose-400/25 bg-rose-500/10 text-rose-100",
     in_progress: "border-sky-400/25 bg-sky-500/10 text-sky-100",
     completed: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
-    cancelled: "border-slate-500/25 bg-slate-500/10 text-slate-300",
+    cancelled: "border-slate-400/40 bg-slate-500/20 text-slate-100 ring-1 ring-slate-400/20",
 };
 
 const getStatusBadgeClass = (status: PurchaseRequestStatus | string | null | undefined) =>
@@ -943,6 +943,7 @@ export default function PurchaseRequestsPage() {
                             {filteredRows.map((row) => {
                                 const isSelected = selectedRow?.id === row.id;
                                 const isBusy = updatingStatusId === row.id;
+                                const isCancelled = row.status === "cancelled";
                                 const canCancel = canTransitionPurchaseRequestStatus(row.status, "cancelled");
                                 const canResubmit = canResubmitPurchaseRequest(row.status);
 
@@ -950,7 +951,11 @@ export default function PurchaseRequestsPage() {
                                     <div
                                         key={row.id}
                                         className={`rounded-[1.35rem] border transition-colors ${
-                                            isSelected
+                                            isCancelled
+                                                ? isSelected
+                                                    ? "border-slate-400/45 bg-slate-500/10 shadow-[0_18px_46px_-36px_rgba(148,163,184,0.75)]"
+                                                    : "border-slate-500/25 bg-slate-500/[0.06] opacity-80 hover:border-slate-400/35 hover:bg-slate-500/10"
+                                                : isSelected
                                                 ? "border-blue-400/40 bg-blue-500/10 shadow-[0_18px_46px_-34px_rgba(59,130,246,0.9)]"
                                                 : "border-white/10 bg-white/[0.03] hover:border-blue-400/25 hover:bg-blue-500/5"
                                         }`}
@@ -969,6 +974,11 @@ export default function PurchaseRequestsPage() {
                                                     {row.productName || t("requests.genericRequest")}
                                                 </p>
                                                 <p className="mt-1 truncate text-sm text-muted-foreground">{row.customer.fullName}</p>
+                                                {isCancelled ? (
+                                                    <p className="mt-2 text-xs font-medium text-slate-300">
+                                                        {t("requests.dashboardActions.cancelledNotice")}
+                                                    </p>
+                                                ) : null}
                                             </div>
 
                                             <span className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
@@ -1006,17 +1016,19 @@ export default function PurchaseRequestsPage() {
                                                 <RotateCcw className="me-1.5 h-3.5 w-3.5" />
                                                 {requestResubmitLabels.resubmit}
                                             </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 hover:bg-slate-500/15"
-                                                disabled={isBusy || !canCancel}
-                                                onClick={() => void handleCancelRequest(row)}
-                                            >
-                                                {isBusy ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
-                                                {requestArchiveLabels.cancel}
-                                            </Button>
+                                            {!isCancelled ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 hover:bg-slate-500/15"
+                                                    disabled={isBusy || !canCancel}
+                                                    onClick={() => void handleCancelRequest(row)}
+                                                >
+                                                    {isBusy ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
+                                                    {requestArchiveLabels.cancel}
+                                                </Button>
+                                            ) : null}
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -1039,7 +1051,11 @@ export default function PurchaseRequestsPage() {
                 {selectedRow ? (
                     <BentoCard
                         ref={detailsPanelRef}
-                        className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-0 xl:self-start"
+                        className={`sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] p-0 xl:self-start ${
+                            selectedRow.status === "cancelled"
+                                ? "border-slate-400/25 bg-[linear-gradient(180deg,rgba(30,41,59,0.88),rgba(15,23,42,0.88))]"
+                                : "border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))]"
+                        }`}
                     >
                         <div className="border-b border-white/10 p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1116,6 +1132,12 @@ export default function PurchaseRequestsPage() {
                   </span>
                                 ) : null}
                             </div>
+
+                            {selectedRow.status === "cancelled" ? (
+                                <div className="mt-4 rounded-2xl border border-slate-400/25 bg-slate-500/10 p-4 text-sm leading-7 text-slate-200">
+                                    {t("requests.dashboardActions.cancelledNotice")}
+                                </div>
+                            ) : null}
                         </div>
 
                         <div className="grid gap-0 xl:grid-cols-[1.02fr_0.98fr]">
