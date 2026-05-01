@@ -406,7 +406,7 @@ export default function OverviewPage() {
         </div>
         <div className="mt-5 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <h2 className="font-serif text-3xl font-bold md:text-4xl">
+            <h2 className="font-serif text-3xl font-bold md:text-4xl opacity-100 shadow-none rounded border-gold border-0">
               {t("overview.heroTitle")}
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{t("overview.heroDescription")}</p>
@@ -451,7 +451,7 @@ export default function OverviewPage() {
                     {t("overview.liveFocus")}
                   </span>
                 </div>
-                <p className="mt-5 font-serif text-4xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
+                <p className="mt-2 font-serif text-xl font-bold border-none border-gold border-0 shadow opacity-80 text-white">{item.value.toLocaleString(locale)}</p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">{item.label}</p>
                 <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-400">{item.helper}</p>
               </>
