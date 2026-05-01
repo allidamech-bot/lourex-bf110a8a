@@ -1138,16 +1138,45 @@ export default function PurchaseRequestsPage() {
                                     {t("requests.dashboardActions.cancelledNotice")}
                                 </div>
                             ) : null}
+
+                            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                {[
+                                    { label: t("requests.labels.requestNumber"), value: selectedRow.requestNumber },
+                                    { label: t("requests.labels.status"), value: t(`statuses.${selectedRow.status}`) },
+                                    {
+                                        label: t("requests.labels.date"),
+                                        value: new Date(selectedRow.createdAt).toLocaleString(locale),
+                                    },
+                                    {
+                                        label: t("requests.labels.customer"),
+                                        value: selectedRow.customer.fullName || t("common.notAvailable"),
+                                    },
+                                ].map((item) => (
+                                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                                            {item.label}
+                                        </p>
+                                        <p className="mt-1 break-words text-sm font-semibold text-white">{item.value}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="grid gap-0 xl:grid-cols-[1.02fr_0.98fr]">
                             <div className="border-b border-border/50 p-6 xl:border-b-0 xl:border-e">
                                 <div className="space-y-5">
-                                    <div>
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                                            {t("requests.intake.productTitle")}
+                                        </p>
                                         <p className="text-sm leading-7 text-muted-foreground">
                                             {selectedRow.productDescription || t("requests.noDescription")}
                                         </p>
                                     </div>
+
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                        {t("requests.labels.details")}
+                                    </p>
 
                                     <div className="grid gap-3 md:grid-cols-2">
                                         {[
