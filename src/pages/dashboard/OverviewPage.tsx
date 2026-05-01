@@ -407,7 +407,7 @@ export default function OverviewPage() {
         <div className="mt-5 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <h2 className="font-serif text-3xl font-bold md:text-4xl">
-              {t("overview.heroTitle")} <span className="text-blue-200">Lourex</span>
+              {t("overview.heroTitle")}
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{t("overview.heroDescription")}</p>
           </div>
