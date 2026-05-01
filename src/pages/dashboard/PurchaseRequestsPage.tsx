@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
     ArrowRightLeft,
+    Archive,
     Ban,
     CheckCircle2,
     ClipboardList,
@@ -15,7 +16,6 @@ import {
     ShieldCheck,
     Sparkles,
     StickyNote,
-    Trash2,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -36,6 +36,7 @@ import {
 import type { PurchaseRequestStatus } from "@/types/lourex";
 import { isInternalRole } from "@/features/auth/rbac";
 import { canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
+import { resubmitPurchaseRequest } from "@/domain/operations/service";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
@@ -92,6 +93,9 @@ const getStatusBadgeClass = (status: PurchaseRequestStatus | string | null | und
     status && status in statusBadgeClasses
         ? statusBadgeClasses[status as PurchaseRequestStatus]
         : "border-slate-500/25 bg-slate-500/10 text-slate-300";
+
+const canResubmitPurchaseRequest = (status: PurchaseRequestStatus) =>
+    status === "cancelled" || status === "awaiting_clarification";
 
 const buildSafeAiRequestContext = (row: PurchaseRequestRow) => ({
     id: row.id,
@@ -338,21 +342,6 @@ export default function PurchaseRequestsPage() {
     ];
     const actionLabels = {
         open: lang === "ar" ? "فتح" : "Open",
-        cancel: lang === "ar" ? "إلغاء" : "Cancel",
-        delete: lang === "ar" ? "حذف" : "Delete",
-        resend: lang === "ar" ? "إعادة إرسال" : "Resend",
-        cancelConfirm:
-            lang === "ar"
-                ? "هل تريد إلغاء هذا الطلب؟"
-                : "Cancel this request?",
-        deleteConfirm:
-            lang === "ar"
-                ? "سيتم إلغاء الطلب وحفظ السجل التشغيلي. هل تريد المتابعة؟"
-                : "This will cancel the request while preserving operational history. Continue?",
-        resendConfirm:
-            lang === "ar"
-                ? "إعادة الطلب إلى انتظار التوضيح؟"
-                : "Move this request back to awaiting clarification?",
     };
 
     const transferPaymentLabels = {
@@ -389,6 +378,26 @@ export default function PurchaseRequestsPage() {
                 : "Archive this request? It will disappear from the active list while preserving operational history.",
         cancelled: lang === "ar" ? "تم إلغاء الطلب." : "Request cancelled.",
         archived: lang === "ar" ? "تمت أرشفة الطلب." : "Request archived.",
+    };
+
+    const requestResubmitLabels = {
+        resubmit: lang === "ar" ? "إعادة إرسال" : "Resubmit",
+        confirm:
+            lang === "ar"
+                ? "هل تريد إنشاء طلب جديد بناء على بيانات هذا الطلب؟"
+                : "Create a new request from this request's details?",
+        unavailable:
+            lang === "ar"
+                ? "إعادة الإرسال متاحة فقط للطلبات الملغاة أو التي تنتظر التوضيح."
+                : "Resubmit is only available for cancelled requests or requests awaiting clarification.",
+        success:
+            lang === "ar"
+                ? "تمت إعادة إرسال الطلب كطلب جديد."
+                : "Request resubmitted as a new request.",
+        failed:
+            lang === "ar"
+                ? "تعذرت إعادة إرسال الطلب."
+                : "Failed to resubmit request.",
     };
 
     const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
@@ -673,9 +682,33 @@ export default function PurchaseRequestsPage() {
         }
     };
 
-    const handleResendRequest = async (row: PurchaseRequestRow) => {
-        if (!window.confirm(actionLabels.resendConfirm)) return;
-        await handleStatusUpdate(row.id, "awaiting_clarification");
+    const handleResubmitRequest = async (row: PurchaseRequestRow) => {
+        if (updatingStatusId) return;
+        if (!canResubmitPurchaseRequest(row.status)) {
+            toast.error(requestResubmitLabels.unavailable);
+            return;
+        }
+
+        if (!window.confirm(requestResubmitLabels.confirm)) return;
+
+        setUpdatingStatusId(row.id);
+
+        try {
+            const result = await resubmitPurchaseRequest(row.id);
+            if (result.error) {
+                throw new Error(result.error.message);
+            }
+
+            toast.success(`${requestResubmitLabels.success} ${row.requestNumber}`);
+            const newRequestId = result.data?.id ?? null;
+            await refresh(false);
+            setSelectedRequest(newRequestId || row.id, Boolean(newRequestId));
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_resubmit", error, { requestId: row.id });
+            toast.error(getErrorMessage(error, requestResubmitLabels.failed));
+        } finally {
+            setUpdatingStatusId(null);
+        }
     };
 
     const handleArchiveRequest = async (row: PurchaseRequestRow) => {
@@ -936,7 +969,7 @@ export default function PurchaseRequestsPage() {
                                 const isSelected = selectedRow?.id === row.id;
                                 const isBusy = updatingStatusId === row.id;
                                 const canCancel = canTransitionPurchaseRequestStatus(row.status, "cancelled");
-                                const canResend = canTransitionPurchaseRequestStatus(row.status, "awaiting_clarification");
+                                const canResubmit = canResubmitPurchaseRequest(row.status);
 
                                 return (
                                     <div
@@ -991,11 +1024,12 @@ export default function PurchaseRequestsPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 className="h-8 rounded-lg border-amber-400/25 bg-amber-400/10 px-2.5 text-xs text-amber-100 hover:bg-amber-400/15"
-                                                disabled={isBusy || !canResend || row.status === "awaiting_clarification"}
-                                                onClick={() => void handleResendRequest(row)}
+                                                disabled={isBusy || !canResubmit}
+                                                onClick={() => void handleResubmitRequest(row)}
+                                                title={!canResubmit ? requestResubmitLabels.unavailable : undefined}
                                             >
                                                 <RotateCcw className="me-1.5 h-3.5 w-3.5" />
-                                                {actionLabels.resend}
+                                                {requestResubmitLabels.resubmit}
                                             </Button>
                                             <Button
                                                 type="button"
@@ -1016,7 +1050,7 @@ export default function PurchaseRequestsPage() {
                                                 disabled={isBusy}
                                                 onClick={() => void handleArchiveRequest(row)}
                                             >
-                                                <Trash2 className="me-1.5 h-3.5 w-3.5" />
+                                                <Archive className="me-1.5 h-3.5 w-3.5" />
                                                 {requestArchiveLabels.archive}
                                             </Button>
                                         </div>
