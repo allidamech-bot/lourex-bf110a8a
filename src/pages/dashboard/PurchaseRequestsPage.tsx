@@ -312,6 +312,24 @@ export default function PurchaseRequestsPage() {
 
     const selectedRequestIdFromParams = searchParams.get("request");
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(selectedRequestIdFromParams);
+    const detailsPanelRef = useRef<HTMLDivElement>(null);
+    const shouldRevealDetailsRef = useRef(false);
+
+    const revealDetailsPanel = useCallback(() => {
+        window.requestAnimationFrame(() => {
+            const detailsPanel = detailsPanelRef.current;
+            if (!detailsPanel) return;
+
+            const rect = detailsPanel.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const safeTop = 80;
+            const isAlreadyVisible = rect.top >= safeTop && rect.top <= viewportHeight * 0.7;
+
+            if (!isAlreadyVisible) {
+                detailsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+    }, []);
 
     const statusActions: Array<{ value: PurchaseRequestStatus; label: string }> = [
         { value: "under_review", label: t("requests.actions.under_review") },
@@ -384,7 +402,8 @@ export default function PurchaseRequestsPage() {
     ];
 
     const setSelectedRequest = useCallback(
-        (requestId: string | null) => {
+        (requestId: string | null, revealDetails = false) => {
+            shouldRevealDetailsRef.current = Boolean(requestId && revealDetails);
             setSelectedRequestId(requestId);
             const nextParams = new URLSearchParams(searchParams);
 
@@ -395,8 +414,13 @@ export default function PurchaseRequestsPage() {
             }
 
             setSearchParams(nextParams);
+
+            if (requestId && revealDetails && requestId === selectedRequestId) {
+                shouldRevealDetailsRef.current = false;
+                revealDetailsPanel();
+            }
         },
-        [searchParams, setSearchParams],
+        [revealDetailsPanel, searchParams, selectedRequestId, setSearchParams],
     );
 
     useEffect(() => {
@@ -474,6 +498,15 @@ export default function PurchaseRequestsPage() {
 
         return filteredRows.find((row) => row.id === selectedRequestId) || filteredRows[0] || null;
     }, [filteredRows, selectedRequestId]);
+
+    useEffect(() => {
+        if (!selectedRow || !shouldRevealDetailsRef.current) {
+            return;
+        }
+
+        shouldRevealDetailsRef.current = false;
+        revealDetailsPanel();
+    }, [revealDetailsPanel, selectedRow]);
 
     useEffect(() => {
         setAiActionLoading(null);
@@ -655,7 +688,8 @@ export default function PurchaseRequestsPage() {
             await deletePurchaseRequestRecord(row.id);
             toast.success(`${requestArchiveLabels.archived} ${row.requestNumber}`);
             const remainingRows = rows.filter((current) => current.id !== row.id);
-            setSelectedRequest(remainingRows[0]?.id ?? null);
+            const nextSelectedId = remainingRows[0]?.id ?? null;
+            setSelectedRequest(nextSelectedId, Boolean(nextSelectedId));
             await refresh(false);
         } catch (error: unknown) {
             logOperationalError("purchase_request_archive", error, { requestId: row.id });
@@ -915,7 +949,7 @@ export default function PurchaseRequestsPage() {
                                     >
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedRequest(row.id)}
+                                            onClick={() => setSelectedRequest(row.id, true)}
                                             className="w-full px-4 py-4 text-start"
                                         >
                                             <div className="flex items-start justify-between gap-3">
@@ -947,7 +981,7 @@ export default function PurchaseRequestsPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 className="h-8 rounded-lg border-white/10 bg-white/[0.03] px-2.5 text-xs hover:border-blue-400/35 hover:bg-blue-500/10"
-                                                onClick={() => setSelectedRequest(row.id)}
+                                                onClick={() => setSelectedRequest(row.id, true)}
                                             >
                                                 <Eye className="me-1.5 h-3.5 w-3.5" />
                                                 {actionLabels.open}
@@ -994,7 +1028,10 @@ export default function PurchaseRequestsPage() {
                 </BentoCard>
 
                 {selectedRow ? (
-                    <BentoCard className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-0 xl:self-start">
+                    <BentoCard
+                        ref={detailsPanelRef}
+                        className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-0 xl:self-start"
+                    >
                         <div className="border-b border-white/10 p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
