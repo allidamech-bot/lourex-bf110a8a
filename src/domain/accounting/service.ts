@@ -113,7 +113,7 @@ export const createFinancialEntry = async (input: {
   dealId?: string;
   customerId?: string;
   type: "income" | "expense";
-  scope: "deal_linked" | "global" | "customer_linked";
+  scope: "deal_linked" | "global";
   amount: number;
   currency: string;
   note: string;
@@ -153,8 +153,16 @@ export const createFinancialEntry = async (input: {
   }
 
   const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-  const relationType =
-    input.scope === "deal_linked" ? "deal_linked" : input.scope === "customer_linked" ? "customer_linked" : "general";
+  const detailNote = [
+    normalizedNote,
+    `Method: ${normalizedMethod}`,
+    `Counterparty: ${normalizedCounterparty}`,
+    `Category: ${normalizedCategory}`,
+    normalizedReferenceLabel ? `Reference: ${normalizedReferenceLabel}` : "",
+    `Entry date: ${input.entryDate}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const inserted = await (supabase as any)
@@ -165,15 +173,9 @@ export const createFinancialEntry = async (input: {
       customer_id: input.customerId || null,
       type: input.type,
       scope: input.scope,
-      relation_type: relationType,
       amount: input.amount,
       currency: normalizedCurrency,
-      note: normalizedNote,
-      entry_date: input.entryDate,
-      method: normalizedMethod,
-      counterparty: normalizedCounterparty,
-      category: normalizedCategory,
-      reference_label: normalizedReferenceLabel,
+      note: detailNote,
       created_by: user.id,
       locked: true,
     })

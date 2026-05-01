@@ -123,7 +123,7 @@ export default function AccountingPage() {
     }
 
     const parsedAmount = Number(amount);
-    if (!parsedAmount || !note.trim() || !method.trim() || !counterparty.trim() || !category.trim()) {
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0 || !currency.trim() || !note.trim() || !method.trim() || !counterparty.trim() || !category.trim()) {
       toast.error(t("accounting.validation"));
       return;
     }
