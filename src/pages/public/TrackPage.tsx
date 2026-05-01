@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock3, MapPin, Search, ShieldCheck, Truck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
 import { useI18n } from "@/lib/i18n";
@@ -8,7 +9,8 @@ import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 export default function TrackPage() {
-  const { lang, t } = useI18n();
+  const { lang, locale, t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [trackingId, setTrackingId] = useState("");
   const [result, setResult] = useState<Awaited<ReturnType<typeof lookupPublicTracking>>>(null);
   const [loading, setLoading] = useState(false);
@@ -16,7 +18,7 @@ export default function TrackPage() {
 
   const stageIndex = shipmentStages.findIndex((item) => item.code === result?.currentStage);
   const nextStage = stageIndex >= 0 ? getShipmentStageCopy(shipmentStages[stageIndex + 1]?.code, lang) : null;
-  const completedStages = stageIndex >= 0 ? stageIndex : 0;
+  const completedStages = stageIndex >= 0 ? stageIndex + 1 : 0;
   const remainingStages = stageIndex >= 0 ? shipmentStages.length - stageIndex - 1 : shipmentStages.length;
   const progressRatio = result?.progressRatio || 0;
   const currentStage = result ? getShipmentStageCopy(result.currentStage, lang) : null;
@@ -26,10 +28,10 @@ export default function TrackPage() {
     [result],
   );
 
-  const handleLookup = async () => {
+  const handleLookup = useCallback(async (value?: string) => {
     if (loading) return;
 
-    const normalized = trackingId.trim().toUpperCase();
+    const normalized = (value ?? trackingId).trim().toUpperCase();
 
     if (!normalized) {
       setError(t("publicTracking.errorEmpty"));
@@ -37,9 +39,16 @@ export default function TrackPage() {
       return;
     }
 
+    if (!/^[A-Z0-9][A-Z0-9-]{2,63}$/.test(normalized)) {
+      setError(t("publicTracking.errorInvalid"));
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setError("");
     setResult(null);
+    setTrackingId(normalized);
 
     try {
       const data = await lookupPublicTracking(normalized);
@@ -65,6 +74,26 @@ export default function TrackPage() {
     } finally {
       setLoading(false);
     }
+  }, [loading, t, trackingId]);
+
+  useEffect(() => {
+    const initialTracking = searchParams.get("tracking") || searchParams.get("id") || "";
+    if (!initialTracking) return;
+
+    setTrackingId(initialTracking);
+    void handleLookup(initialTracking);
+    // Run once for a shared tracking URL; subsequent searches use the form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submitLookup = () => {
+    const normalized = trackingId.trim().toUpperCase();
+    if (normalized) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("tracking", normalized);
+      setSearchParams(nextParams, { replace: true });
+    }
+    void handleLookup(normalized);
   };
 
   return (
@@ -77,7 +106,7 @@ export default function TrackPage() {
             {t("publicTracking.eyebrow")}
           </div>
           <h1 className="font-serif text-4xl font-bold text-white sm:text-5xl md:text-6xl">
-            {lang === "ar" ? "تتبع شحنتك" : "Track Your Shipment"}
+            {t("publicTracking.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
             {t("publicTracking.description")}
@@ -90,13 +119,13 @@ export default function TrackPage() {
                 <input
                   value={trackingId}
                   onChange={(event) => setTrackingId(event.target.value)}
-                  onKeyDown={(event) => event.key === "Enter" && handleLookup()}
+                  onKeyDown={(event) => event.key === "Enter" && submitLookup()}
                   placeholder={t("publicTracking.placeholder")}
                   className="h-14 w-full rounded-2xl border border-white/10 bg-slate-950/80 ps-12 pe-4 text-base text-white outline-none transition-colors placeholder:text-slate-500 focus:border-blue-400/60"
                 />
               </div>
               <button
-                onClick={handleLookup}
+                onClick={submitLookup}
                 disabled={loading}
                 className="h-14 rounded-2xl bg-blue-500 px-8 text-sm font-bold text-white shadow-lg shadow-blue-950/35 transition-colors hover:bg-blue-400 disabled:opacity-60"
               >
@@ -151,7 +180,7 @@ export default function TrackPage() {
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <Clock3 className="h-4 w-4 text-blue-200" />
                   <p className="mt-3 text-xs text-slate-400">{t("publicTracking.lastUpdate")}</p>
-                  <p className="mt-1 font-semibold text-white">{new Date(result.lastUpdated).toLocaleString()}</p>
+                  <p className="mt-1 font-semibold text-white">{new Date(result.lastUpdated).toLocaleString(locale)}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <CheckCircle2 className="h-4 w-4 text-blue-200" />
@@ -166,7 +195,7 @@ export default function TrackPage() {
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-white">{t("publicTracking.confidenceSubtitle")}</p>
                   <span className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-100">
-                    {completedStages} / {shipmentStages.length}
+                    {completedStages.toLocaleString(locale)} / {shipmentStages.length.toLocaleString(locale)}
                   </span>
                 </div>
                 <ShipmentTimeline currentStage={result.currentStage} />
@@ -189,7 +218,7 @@ export default function TrackPage() {
                     return (
                       <div key={event.id} className="rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-4">
                         <p className="font-medium text-white">{stage?.label || event.stageCode}</p>
-                        <p className="mt-1 text-xs text-slate-500">{new Date(event.occurredAt).toLocaleString()}</p>
+                        <p className="mt-1 text-xs text-slate-500">{new Date(event.occurredAt).toLocaleString(locale)}</p>
                         <p className="mt-3 text-sm leading-7 text-slate-400">
                           {event.customerNote || t("publicTracking.defaultUpdateNote")}
                         </p>

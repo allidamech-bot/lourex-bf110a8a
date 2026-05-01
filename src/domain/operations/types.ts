@@ -91,6 +91,8 @@ export type OperationsShipment = {
   trackingId: string;
   clientName: string;
   destination: string;
+  pallets: number;
+  weight: number;
   dealId?: string | null;
   dealNumber?: string;
   stage: ShipmentStageCode;

@@ -8,7 +8,7 @@ interface ShipmentTimelineProps {
 }
 
 export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const currentIndex = shipmentStages.findIndex((stage) => stage.code === currentStage);
 
   return (
@@ -43,7 +43,7 @@ export const ShipmentTimeline = ({ currentStage }: ShipmentTimelineProps) => {
               </p>
               {owner ? (
                 <p className="mt-1 text-xs font-medium text-primary/80">
-                  {lang === "ar" ? "المسؤول:" : "Owner:"} {owner}
+                  {t("tracking.owner", { value: owner })}
                 </p>
               ) : null}
               <p className="mt-1 text-sm leading-6 text-muted-foreground">

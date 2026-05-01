@@ -174,7 +174,7 @@ export default function CustomerTrackingPage() {
       setRows(customerShipments);
     } catch (err) {
       logOperationalError("customer_tracking_load", err);
-      setError(getSafeLabel(t("common.error"), "Error loading shipments"));
+      setError(t("tracking.toasts.loadError"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -346,11 +346,7 @@ export default function CustomerTrackingPage() {
           <EmptyState
               icon={Route}
               title={getSafeLabel(t("tracking.noShipments"), locale === "ar" ? "لا توجد شحنات بعد" : "No shipments yet")}
-              description={
-                locale === "ar"
-                    ? "ستظهر الشحنات هنا بعد تحويل الطلب إلى عملية تشغيلية."
-                    : "Shipments will appear here after a request is converted into an operation."
-              }
+              description={t("tracking.emptyDescription")}
           />
         </div>
     );
@@ -436,7 +432,7 @@ export default function CustomerTrackingPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={getSafeLabel(
-                      t("common.search"),
+                      t("tracking.searchPlaceholder"),
                       locale === "ar" ? "بحث في الشحنات..." : "Search shipments...",
                   )}
                   className="ps-9"
@@ -499,7 +495,7 @@ export default function CustomerTrackingPage() {
               <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.22em] text-blue-200">
-                    {locale === "ar" ? "تتبع الشحنة" : "Shipment tracking"}
+                    {t("publicTracking.cta")}
                   </p>
                   <h2 className="mt-3 break-words font-serif text-4xl font-bold text-white md:text-5xl">
                     {activeShipment.trackingId}
@@ -516,16 +512,14 @@ export default function CustomerTrackingPage() {
                   </div>
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
                     {currentStage?.description ||
-                        (locale === "ar"
-                            ? "لا يوجد وصف متاح لهذه المرحلة حالياً."
-                            : "No description is available for this stage yet.")}
+                        t("tracking.noStageDescription")}
                   </p>
                 </div>
 
                 <div className="grid shrink-0 grid-cols-2 gap-3 sm:min-w-[18rem]">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                     <p className="text-xs font-medium text-slate-400">
-                      {locale === "ar" ? "نسبة التقدم" : "Progress"}
+                      {t("tracking.progress")}
                     </p>
                     <p className="mt-2 text-3xl font-bold text-white">{formatNumber(progressPercent, locale)}%</p>
                   </div>
@@ -548,23 +542,21 @@ export default function CustomerTrackingPage() {
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {currentStage?.description ||
-                      (locale === "ar"
-                          ? "لا يوجد وصف متاح لهذه المرحلة حالياً."
-                          : "No description is available for this stage yet.")}
+                      t("tracking.noStageDescription")}
                 </p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
                 <ShipmentInfoTile
-                    label={locale === "ar" ? "رقم التتبع" : "Tracking ID"}
+                    label={t("tracking.labels.trackingNumber")}
                     value={activeShipment.trackingId}
                 />
                 <ShipmentInfoTile
-                    label={locale === "ar" ? "التقدم" : "Progress"}
+                    label={t("tracking.progress")}
                     value={`${formatNumber(progressPercent, locale)}%`}
                 />
                 <ShipmentInfoTile
-                    label={locale === "ar" ? "آخر حدث" : "Latest event"}
+                    label={t("tracking.latestEvent")}
                     value={latestShipmentEvent ? formatDateTime(latestShipmentEvent.createdAt, locale) : formatDateTime(activeShipment.updatedAt, locale)}
                 />
               </div>
@@ -572,7 +564,7 @@ export default function CustomerTrackingPage() {
               <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-white">
-                    {locale === "ar" ? "مسار تقدم الشحنة" : "Shipment progress"}
+                    {t("tracking.shipmentProgress")}
                   </p>
                   <span className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-100">
                     {formatNumber(activeStageIndex + 1, locale)} / {formatNumber(shipmentStages.length, locale)}
@@ -633,6 +625,14 @@ export default function CustomerTrackingPage() {
                     value={activeShipment.destination}
                 />
                 <ShipmentInfoTile
+                    label={t("tracking.labels.weight")}
+                    value={`${activeShipment.weight.toLocaleString(locale)} kg`}
+                />
+                <ShipmentInfoTile
+                    label={t("tracking.labels.pallets")}
+                    value={activeShipment.pallets.toLocaleString(locale)}
+                />
+                <ShipmentInfoTile
                     label={getSafeLabel(t("tracking.labels.deal"), locale === "ar" ? "رقم العملية" : "Deal")}
                     value={activeShipment.dealNumber || getSafeLabel(t("tracking.unlinked"), locale === "ar" ? "غير مرتبطة" : "Unlinked")}
                 />
@@ -671,10 +671,10 @@ export default function CustomerTrackingPage() {
             <BentoCard className="space-y-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  {locale === "ar" ? "سجل الشحنة" : "Shipment timeline"}
+                  {t("tracking.shipmentTimeline")}
                 </p>
                 <h3 className="mt-2 text-lg font-semibold">
-                  {locale === "ar" ? "الأحداث المرئية للعميل" : "Customer-visible events"}
+                  {t("tracking.customerVisibleEvents")}
                 </h3>
               </div>
 
@@ -717,9 +717,7 @@ export default function CustomerTrackingPage() {
                 </div>
               ) : (
                 <div className="rounded-[1.25rem] border border-dashed border-border/60 bg-secondary/5 p-4 text-sm text-muted-foreground">
-                  {locale === "ar"
-                    ? "لا توجد أحداث مرئية للعميل بعد."
-                    : "No customer-visible shipment events yet."}
+                  {t("tracking.noCustomerEvents")}
                 </div>
               )}
             </BentoCard>

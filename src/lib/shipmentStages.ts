@@ -61,7 +61,7 @@ export const shipmentStages: LocalizedStageDefinition[] = [
   {
     code: "in_transit",
     order: 6,
-    label: "في الطريق",
+    label: "قيد الشحن",
     labelEn: "In transit",
     description: "الشحنة في مرحلة النقل الدولي إلى بلد الوجهة.",
     descriptionEn: "The shipment is in international transit to the destination country.",
@@ -71,7 +71,7 @@ export const shipmentStages: LocalizedStageDefinition[] = [
   {
     code: "arrived_destination",
     order: 7,
-    label: "وصلت بلد الوجهة",
+    label: "وصلت إلى الوجهة",
     labelEn: "Arrived destination",
     description: "وصلت الشحنة إلى بلد الوجهة وتنتظر الإجراءات المحلية.",
     descriptionEn: "The shipment has arrived in the destination country and awaits local processing.",
@@ -91,7 +91,7 @@ export const shipmentStages: LocalizedStageDefinition[] = [
   {
     code: "out_for_delivery",
     order: 9,
-    label: "خارج للتسليم",
+    label: "قيد التسليم",
     labelEn: "Out for delivery",
     description: "الشحنة خرجت للتسليم النهائي.",
     descriptionEn: "The shipment is out for final delivery.",

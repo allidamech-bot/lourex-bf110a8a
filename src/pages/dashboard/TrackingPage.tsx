@@ -146,11 +146,18 @@ export default function TrackingPage() {
 
   if (!activeShipment) {
     return (
-      <EmptyState
-        icon={Route}
-        title={t("tracking.noTimelineTitle")}
-        description={t("tracking.noTimelineDescription")}
-      />
+      <div className="space-y-4">
+        {loadError ? (
+          <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+            {loadError}
+          </div>
+        ) : null}
+        <EmptyState
+          icon={Route}
+          title={t("tracking.noShipments")}
+          description={t("tracking.noTimelineDescription")}
+        />
+      </div>
     );
   }
 
@@ -193,10 +200,10 @@ export default function TrackingPage() {
           <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{t("tracking.currentStage")}</p>
           <p className="mt-2 font-serif text-2xl font-semibold">{currentStage?.label || t("tracking.noStage")}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            current_stage_code: {activeShipment.stage}
+            {t("tracking.labels.stageCode")}: {activeShipment.stage}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("tracking.labels.nextStage")}: {nextStage?.label || "closed"}
+            {t("tracking.labels.nextStage")}: {nextStage?.label || t("tracking.completedMessage")}
           </p>
           <div className="mt-4 h-2 rounded-full bg-secondary">
             <div className="h-2 rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
@@ -211,6 +218,8 @@ export default function TrackingPage() {
             { label: t("tracking.labels.trackingNumber"), value: activeShipment.trackingId },
             { label: t("tracking.labels.customer"), value: activeShipment.clientName },
             { label: t("tracking.labels.destination"), value: activeShipment.destination },
+            { label: t("tracking.labels.weight"), value: `${activeShipment.weight.toLocaleString(locale)} kg` },
+            { label: t("tracking.labels.pallets"), value: activeShipment.pallets.toLocaleString(locale) },
             { label: t("tracking.labels.deal"), value: activeShipment.dealNumber || t("tracking.unlinked") },
             { label: t("tracking.labels.lastUpdated"), value: new Date(activeShipment.updatedAt).toLocaleString(locale) },
           ].map((item) => {

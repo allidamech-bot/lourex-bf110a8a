@@ -550,6 +550,8 @@ export type OperationalShipment = {
   trackingId: string;
   clientName: string;
   destination: string;
+  pallets: number;
+  weight: number;
   dealId?: string | null;
   dealNumber?: string;
   requestNumber?: string;
@@ -1915,6 +1917,8 @@ export const loadShipments = async (): Promise<OperationalShipment[]> => {
       trackingId: row.tracking_id,
       clientName: row.client_name,
       destination: row.destination,
+      pallets: Number(row.pallets || 0),
+      weight: Number(row.weight || 0),
       dealId: row.deal_id,
       dealNumber: deal?.dealNumber,
       requestNumber: deal?.requestNumber,
@@ -1989,6 +1993,23 @@ export const createTrackingUpdate = async (input: {
       stageCode: nextStage,
     });
     throw inserted.error;
+  }
+
+  const shipmentUpdate = await db
+    .from<ShipmentRow>("shipments")
+    .update(syncShipmentStatusWithStage({
+      current_stage_code: nextStage,
+      customer_visible_note: input.customerNote?.trim() || shipment.customer_visible_note || "",
+      updated_at: new Date().toISOString(),
+    }))
+    .eq("id", input.shipmentId);
+
+  if (shipmentUpdate.error) {
+    logOperationalError("shipment_stage_sync", shipmentUpdate.error, {
+      shipmentId: input.shipmentId,
+      stageCode: nextStage,
+    });
+    throw shipmentUpdate.error;
   }
 
   await writeAuditLog({
