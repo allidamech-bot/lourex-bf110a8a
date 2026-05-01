@@ -341,63 +341,41 @@ export default function PurchaseRequestsPage() {
         { value: "ready_for_conversion", label: t("requests.actions.ready_for_conversion") },
     ];
     const actionLabels = {
-        open: lang === "ar" ? "فتح" : "Open",
+        open: t("requests.dashboardActions.open"),
     };
 
     const transferPaymentLabels = {
-        paymentType: lang === "ar" ? "نوع الدفعة" : "Payment type",
-        firstPayment: lang === "ar" ? "دفعة أولى" : "First payment",
-        secondPayment: lang === "ar" ? "دفعة ثانية" : "Second payment",
-        fullPayment: lang === "ar" ? "مبلغ كامل" : "Full payment",
-        receivedAmount: lang === "ar" ? "المبلغ المستلم" : "Received amount",
-        currency: lang === "ar" ? "العملة" : "Currency",
-        paymentMethod: lang === "ar" ? "طريقة الدفع" : "Payment method",
-        transferReferenceNumber: lang === "ar" ? "رقم مرجع التحويل" : "Transfer reference number",
-        internalNote: lang === "ar" ? "ملاحظة داخلية" : "Internal note",
-        acceptAndRecord: lang === "ar" ? "قبول التحويل وتسجيله" : "Accept and record payment",
-        bankTransfer: lang === "ar" ? "تحويل بنكي" : "Bank transfer",
-        amountRequired:
-            lang === "ar" ? "يجب إدخال مبلغ مستلم أكبر من صفر." : "Enter a received amount greater than zero.",
-        typeRequired: lang === "ar" ? "يجب اختيار نوع الدفعة." : "Select a payment type.",
-        accepted:
-            lang === "ar"
-                ? "تم قبول التحويل وتسجيل الدفعة محاسبياً"
-                : "Transfer accepted and payment recorded",
+        paymentType: t("requests.transferProof.paymentType"),
+        firstPayment: t("requests.transferProof.firstPayment"),
+        secondPayment: t("requests.transferProof.secondPayment"),
+        fullPayment: t("requests.transferProof.fullPayment"),
+        receivedAmount: t("requests.transferProof.receivedAmount"),
+        currency: t("requests.transferProof.currency"),
+        paymentMethod: t("requests.transferProof.paymentMethod"),
+        transferReferenceNumber: t("requests.transferProof.transferReferenceNumber"),
+        internalNote: t("requests.transferProof.internalNote"),
+        acceptAndRecord: t("requests.transferProof.acceptAndRecord"),
+        bankTransfer: t("requests.transferProof.bankTransfer"),
+        amountRequired: t("requests.transferProof.amountRequired"),
+        typeRequired: t("requests.transferProof.typeRequired"),
+        accepted: t("requests.transferProof.paymentRecorded"),
     };
 
     const requestArchiveLabels = {
-        cancel: lang === "ar" ? "إلغاء" : "Cancel",
-        archive: lang === "ar" ? "أرشفة" : "Archive",
-        cancelConfirm:
-            lang === "ar"
-                ? "هل تريد إلغاء هذا الطلب؟ سيبقى ظاهراً بحالة ملغاة."
-                : "Cancel this request? It will remain visible with cancelled status.",
-        archiveConfirm:
-            lang === "ar"
-                ? "هل تريد أرشفة هذا الطلب؟ سيختفي من القائمة النشطة مع حفظ سجله التشغيلي."
-                : "Archive this request? It will disappear from the active list while preserving operational history.",
-        cancelled: lang === "ar" ? "تم إلغاء الطلب." : "Request cancelled.",
-        archived: lang === "ar" ? "تمت أرشفة الطلب." : "Request archived.",
+        cancel: t("requests.dashboardActions.cancel"),
+        archive: t("requests.dashboardActions.archive"),
+        cancelConfirm: t("requests.dashboardActions.cancelConfirm"),
+        archiveConfirm: t("requests.dashboardActions.archiveConfirm"),
+        cancelled: t("requests.dashboardActions.cancelled"),
+        archived: t("requests.dashboardActions.archived"),
     };
 
     const requestResubmitLabels = {
-        resubmit: lang === "ar" ? "إعادة إرسال" : "Resubmit",
-        confirm:
-            lang === "ar"
-                ? "هل تريد إنشاء طلب جديد بناء على بيانات هذا الطلب؟"
-                : "Create a new request from this request's details?",
-        unavailable:
-            lang === "ar"
-                ? "إعادة الإرسال متاحة فقط للطلبات الملغاة أو التي تنتظر التوضيح."
-                : "Resubmit is only available for cancelled requests or requests awaiting clarification.",
-        success:
-            lang === "ar"
-                ? "تمت إعادة إرسال الطلب كطلب جديد."
-                : "Request resubmitted as a new request.",
-        failed:
-            lang === "ar"
-                ? "تعذرت إعادة إرسال الطلب."
-                : "Failed to resubmit request.",
+        resubmit: t("requests.dashboardActions.resubmit"),
+        confirm: t("requests.dashboardActions.resubmitConfirm"),
+        unavailable: t("requests.dashboardActions.resubmitUnavailable"),
+        success: t("requests.dashboardActions.resubmitted"),
+        failed: t("requests.dashboardActions.resubmitFailed"),
     };
 
     const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
@@ -458,10 +436,7 @@ export default function PurchaseRequestsPage() {
 
                 setSelectedRequest(data[0]?.id ?? null);
             } catch (error: unknown) {
-                const message = getErrorMessage(
-                    error,
-                    t("requests.toasts.loadError") || "Failed to load purchase requests",
-                );
+                const message = getErrorMessage(error, t("requests.toasts.loadError"));
                 setLoadError(message);
                 toast.error(message);
             } finally {
@@ -599,10 +574,10 @@ export default function PurchaseRequestsPage() {
 
         try {
             await navigator.clipboard.writeText(aiOutput);
-            toast.success(lang === "ar" ? "تم نسخ مخرجات الذكاء الاصطناعي." : "AI output copied.");
+            toast.success(t("requests.ai.copySuccess"));
         } catch (error: unknown) {
             logOperationalError("purchase_request_ai_copy", error, { requestId: selectedRow?.id });
-            toast.error(lang === "ar" ? "تعذر نسخ النص." : "Could not copy AI output.");
+            toast.error(t("requests.ai.copyError"));
         }
     };
 
@@ -837,7 +812,7 @@ export default function PurchaseRequestsPage() {
             });
 
             if (!result.success) {
-                throw new Error(t("transferProof.acceptFailed"));
+                throw new Error(t("requests.transferProof.acceptFailed"));
             }
 
             toast.success(transferPaymentLabels.accepted);
@@ -845,7 +820,7 @@ export default function PurchaseRequestsPage() {
             setSelectedRequest(selectedRow.id);
         } catch (error: unknown) {
             logOperationalError("transfer_proof_accept", error, { requestId: selectedRow.id });
-            toast.error(getErrorMessage(error, t("transferProof.acceptFailed")));
+            toast.error(getErrorMessage(error, t("requests.transferProof.acceptFailed")));
         } finally {
             setActingOnProof(false);
         }
@@ -853,7 +828,7 @@ export default function PurchaseRequestsPage() {
 
     const handleRejectTransfer = async () => {
         if (!selectedRow || actingOnProof) return;
-        const reason = window.prompt(t("transferProof.rejectionReason"));
+        const reason = window.prompt(t("requests.transferProof.rejectionReason"));
         if (reason === null) return;
 
         setActingOnProof(true);
@@ -864,12 +839,12 @@ export default function PurchaseRequestsPage() {
                 throw error;
             }
 
-            toast.success(t("transferProof.rejected"));
+            toast.success(t("requests.transferProof.rejected"));
             await refresh();
             setSelectedRequest(selectedRow.id);
         } catch (error: unknown) {
             logOperationalError("transfer_proof_reject", error, { requestId: selectedRow.id });
-            toast.error(getErrorMessage(error, t("transferProof.rejectFailed")));
+            toast.error(getErrorMessage(error, t("requests.transferProof.rejectFailed")));
         } finally {
             setActingOnProof(false);
         }
@@ -1243,9 +1218,9 @@ export default function PurchaseRequestsPage() {
                                             <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-6">
                                                 <div className="flex items-center gap-3">
                                                     <FileImage className="h-5 w-5 text-primary" />
-                                                    <h3 className="text-lg font-semibold">{t("transferProof.title")}</h3>
+                                                    <h3 className="text-lg font-semibold">{t("requests.transferProof.title")}</h3>
                                                 </div>
-                                                <p className="mt-2 text-sm text-muted-foreground">{t("transferProof.description")}</p>
+                                                <p className="mt-2 text-sm text-muted-foreground">{t("requests.transferProof.description")}</p>
 
                                                 {proofSignedUrl && (
                                                     <div className="mt-4">
@@ -1256,7 +1231,7 @@ export default function PurchaseRequestsPage() {
                                                             className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20"
                                                         >
                                                             <Eye className="h-4 w-4" />
-                                                            {selectedRow.transferProofName || "View Proof"}
+                                                            {selectedRow.transferProofName || t("requests.transferProof.viewProof")}
                                                         </a>
                                                     </div>
                                                 )}
@@ -1353,9 +1328,9 @@ export default function PurchaseRequestsPage() {
 
                                         {selectedRow.status === "transfer_proof_rejected" && (
                                             <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/10 p-6 text-rose-100">
-                                                <p className="font-bold">{t("transferProof.rejected")}</p>
+                                                <p className="font-bold">{t("requests.transferProof.rejected")}</p>
                                                 <p className="mt-1 text-sm">
-                                                    {t("transferProof.rejectionReason")} {selectedRow.transferRejectionReason}
+                                                    {t("requests.transferProof.rejectionReason")} {selectedRow.transferRejectionReason}
                                                 </p>
                                             </div>
                                         )}
@@ -1373,14 +1348,10 @@ export default function PurchaseRequestsPage() {
                                                         </span>
                                                         <div>
                                                             <p className="text-xs uppercase tracking-[0.18em] text-primary">
-                                                                {lang === "ar"
-                                                                    ? "مساعد LOUREX AI لمراجعة الطلب"
-                                                                    : "LOUREX AI Review Assistant"}
+                                                                {t("requests.ai.title")}
                                                             </p>
                                                             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                                                                {lang === "ar"
-                                                                    ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والمراجعة النهائية تتم بواسطة فريق لوركس."
-                                                                    : "AI output is advisory. Final review must be performed by the Lourex team."}
+                                                                {t("requests.ai.description")}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -1389,7 +1360,7 @@ export default function PurchaseRequestsPage() {
                                                 {aiOutput ? (
                                                     <Button variant="outline" size="sm" onClick={() => void handleCopyAiOutput()}>
                                                         <Copy className="me-2 h-4 w-4" />
-                                                        {lang === "ar" ? "نسخ" : "Copy"}
+                                                        {t("requests.ai.copy")}
                                                     </Button>
                                                 ) : null}
                                             </div>
@@ -1423,9 +1394,7 @@ export default function PurchaseRequestsPage() {
 
                                             {aiUsedFallback ? (
                                                 <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
-                                                    {lang === "ar"
-                                                        ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء مسودة إرشادية محلية بدلاً من ذلك."
-                                                        : "LOUREX AI is unavailable right now. A local advisory draft was generated instead."}
+                                                    {t("requests.ai.unavailable")}
                                                 </div>
                                             ) : null}
 
@@ -1434,7 +1403,7 @@ export default function PurchaseRequestsPage() {
                                                     <div className="mb-3 flex items-center justify-between gap-3">
                                                         <p className="text-sm font-semibold text-primary">{aiOutputTitle}</p>
                                                         <span className="rounded-full border border-primary/20 px-2.5 py-1 text-[11px] text-muted-foreground">
-                                                            {lang === "ar" ? "إرشادي" : "Advisory"}
+                                                            {t("requests.ai.advisory")}
                                                         </span>
                                                     </div>
                                                     <pre className="max-h-[24rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-foreground">{aiOutput}</pre>
