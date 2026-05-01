@@ -698,18 +698,25 @@ export const PurchaseRequestForm = ({
     const formDraft = buildAnalyzerDraft();
 
     try {
+      const responseLanguage = lang === "ar" ? "Arabic" : "English";
       const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
         body: {
-          message: "Analyze this purchase request draft and return only the requested JSON.",
+          message:
+            lang === "ar"
+              ? "حلل مسودة طلب الشراء هذه وأعد JSON المطلوب فقط. يجب أن تكون الحقول النصية العربية باللغة العربية."
+              : "Analyze this purchase request draft and return only the requested JSON. English text fields must be in English.",
           messages: [
             {
               role: "user",
-              content: `Analyze this purchase request draft for readiness. Draft: ${JSON.stringify(formDraft)}`,
+              content: `Analyze this purchase request draft for readiness. Respond in ${responseLanguage}. Draft: ${JSON.stringify(formDraft)}`,
             },
           ],
           pageContext: "public_request",
           route: location.pathname,
           locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
           userRole: profile?.role ?? "guest",
           analysisMode: "purchase_request_analyzer",
           formDraft,

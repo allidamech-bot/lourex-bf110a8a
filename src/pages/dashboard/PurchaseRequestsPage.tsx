@@ -531,13 +531,20 @@ export default function PurchaseRequestsPage() {
         setAiUsedFallback(false);
 
         try {
+            const responseLanguage = lang === "ar" ? "Arabic" : "English";
             const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
                 body: {
-                    message: `${outputTitle} for internal purchase request ${selectedRow.requestNumber}`,
+                    message:
+                        lang === "ar"
+                            ? `${outputTitle} لطلب الشراء الداخلي ${selectedRow.requestNumber}. أجب باللغة العربية فقط.`
+                            : `${outputTitle} for internal purchase request ${selectedRow.requestNumber}. Respond in English only.`,
                     messages: [],
                     pageContext: "dashboard_purchase_requests",
                     route: window.location.pathname,
                     locale,
+                    language: lang,
+                    responseLanguage,
+                    languageInstruction: `Respond in ${responseLanguage} only.`,
                     userRole: profile?.role,
                     analysisMode: mode,
                     requestContext: buildSafeAiRequestContext(selectedRow),

@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { FilePenLine, Receipt, Route, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { FilePenLine, Info, Receipt, Route, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -14,7 +14,7 @@ import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
-import { buildAccountingEntriesCsv, downloadCsv } from "@/lib/adminOperations";
+import { buildAccountingEntriesCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting } from "@/features/auth/rbac";
 
@@ -164,7 +164,9 @@ export default function AccountingPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_entry_create", error, { dealId: focusedDeal?.id || null });
-      toast.error(error instanceof Error ? error.message : t("accounting.toasts.createError"));
+      const message = error instanceof Error ? error.message : t("accounting.toasts.createError");
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -203,6 +205,64 @@ export default function AccountingPage() {
         ? `${t("accounting.toasts.exportSuccess")} ${focusDeal}`
         : t("accounting.toasts.exportSuccess"),
     );
+  };
+
+  const handleExportPdf = () => {
+    if (visibleEntries.length === 0) {
+      const message = t("common.noDataToExport");
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
+
+    const exported = printPdfReport({
+      title: focusDeal ? `${t("accounting.entriesTitle")} - ${focusDeal}` : t("accounting.entriesTitle"),
+      filename: `lourex-accounting-${focusDeal || "all"}.pdf`,
+      appName: t("common.appName"),
+      generatedAtLabel: t("common.generatedAt"),
+      generatedAt: new Date().toLocaleString(locale),
+      direction: locale.startsWith("ar") ? "rtl" : "ltr",
+      filters: [
+        [t("accounting.focusedContext"), focusDeal || t("accounting.global")],
+        [t("accounting.labels.totalIncome"), `${totals.income.toLocaleString(locale)} ${totals.currencyLabel}`],
+        [t("accounting.labels.totalExpense"), `${totals.expense.toLocaleString(locale)} ${totals.currencyLabel}`],
+        [t("accounting.labels.net"), `${totals.net.toLocaleString(locale)} ${totals.currencyLabel}`],
+      ],
+      sections: [
+        {
+          title: t("accounting.entriesTitle"),
+          headers: [
+            t("requests.labels.requestNumber"),
+            t("common.status"),
+            t("accounting.labels.type"),
+            t("accounting.labels.amount"),
+            t("common.currency"),
+            t("accounting.labels.category"),
+            t("accounting.counterparty"),
+            t("accounting.labels.date"),
+          ],
+          rows: visibleEntries.map((entry) => [
+            entry.entryNumber,
+            entry.locked ? t("accounting.locked") : t("accounting.openState"),
+            entry.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense"),
+            entry.amount.toLocaleString(locale),
+            entry.currency,
+            entry.category || t("accounting.uncategorized"),
+            entry.counterparty || t("common.notSpecified"),
+            new Date(entry.entryDate).toLocaleDateString(locale),
+          ]),
+        },
+      ],
+    });
+
+    if (!exported) {
+      const message = t("common.exportFailed");
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
+
+    toast.success(t("common.exportCompleted"));
   };
 
   if (loading) {
@@ -368,6 +428,17 @@ export default function AccountingPage() {
               <FilePenLine className="h-5 w-5 text-primary" />
               <h2 className="font-serif text-2xl font-semibold">{t("accounting.createTitle")}</h2>
             </div>
+            <div className="rounded-[1.25rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+              <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                <Info className="h-4 w-4 text-primary" />
+                {t("accounting.guidanceTitle")}
+              </div>
+              <ul className="list-inside list-disc space-y-1">
+                <li>{t("accounting.guidance.entryPurpose")}</li>
+                <li>{t("accounting.guidance.lockedMeaning")}</li>
+                <li>{t("accounting.guidance.correctionPath")}</li>
+              </ul>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label>{t("common.type")}</Label>
@@ -447,7 +518,7 @@ export default function AccountingPage() {
                 </span>
               </div>
               <div className="mt-4">
-                <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
                     <Input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
@@ -458,6 +529,9 @@ export default function AccountingPage() {
                   </Button>
                   <Button variant="outline" onClick={handleExport}>
                     {t("common.exportCsv")}
+                  </Button>
+                  <Button variant="outline" onClick={handleExportPdf}>
+                    {t("common.exportPdf")}
                   </Button>
                 </div>
               </div>
@@ -500,7 +574,7 @@ export default function AccountingPage() {
                     </div>
                     <div className="rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.methodCounterparty")}</p>
-                      <p className="mt-1 font-medium">{row.method || "—"} • {row.counterparty || "—"}</p>
+                      <p className="mt-1 font-medium">{row.method || "-"} / {row.counterparty || "-"}</p>
                     </div>
                     <div className="rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.date")}</p>
@@ -509,7 +583,7 @@ export default function AccountingPage() {
                   </div>
                   <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span>{t("accounting.labels.category")}: {row.category || t("accounting.uncategorized")}</span>
-                    <span>•</span>
+                    <span>/</span>
                     <span>{t("accounting.labels.reference")}: {row.referenceLabel || t("accounting.noReference")}</span>
                   </div>
                   <p className="mt-4 text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>

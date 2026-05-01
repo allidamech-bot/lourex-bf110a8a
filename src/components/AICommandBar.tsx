@@ -202,13 +202,17 @@ const AICommandBar = () => {
     setLoading(true);
 
     try {
+      const responseLanguage = lang === "ar" ? "Arabic" : "English";
       const { data, error: invokeError } = await supabase.functions.invoke("lourex-ai-chat", {
         body: {
-          message: msg,
+          message: lang === "ar" ? `${msg}\n\nأجب باللغة العربية فقط.` : `${msg}\n\nRespond in English only.`,
           messages: allMessages,
           pageContext,
           route: location.pathname,
           locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
           userRole: profile?.role ?? "guest",
         },
       });

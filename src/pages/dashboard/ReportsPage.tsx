@@ -22,7 +22,7 @@ import {
 } from "@/lib/reportsDomain";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
-import { buildReportCsv, downloadCsv } from "@/lib/adminOperations";
+import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -40,7 +40,7 @@ const getRangeStart = (range: ReportRange, customStart?: string) => {
 };
 
 export default function ReportsPage() {
-  const { lang, t } = useI18n();
+  const { lang, locale, t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<ReportRange>("monthly");
   const [customStart, setCustomStart] = useState("");
@@ -153,6 +153,79 @@ export default function ReportsPage() {
     toast.success(t("reports.export.success"));
   };
 
+  const handleExportPdf = () => {
+    if (!snapshot) {
+      const message = t("common.noDataToExport");
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
+
+    const exported = printPdfReport({
+      title: t("reports.title"),
+      filename: `lourex-report-${range}.pdf`,
+      appName: t("common.appName"),
+      generatedAtLabel: t("common.generatedAt"),
+      generatedAt: new Date().toLocaleString(locale),
+      direction: lang === "ar" ? "rtl" : "ltr",
+      filters: [
+        [t("reports.window"), `${rangeStart.toLocaleDateString(locale)} - ${rangeEnd.toLocaleDateString(locale)}`],
+        [t("reports.ranges.custom"), t(`reports.ranges.${range}`)],
+      ],
+      sections: [
+        {
+          title: t("reports.operationsRead"),
+          headers: [t("common.value"), t("common.amount")],
+          rows: [
+            [t("reports.metrics.requests"), metrics.requests],
+            [t("reports.metrics.deals"), metrics.deals],
+            [t("reports.metrics.shipments"), metrics.shipments],
+            [t("reports.metrics.customers"), metrics.customers],
+            [t("reports.metrics.income"), `${metrics.income.toLocaleString(locale)} SAR`],
+            [t("reports.metrics.expense"), `${metrics.expense.toLocaleString(locale)} SAR`],
+            [t("reports.metrics.profit"), `${(metrics.income - metrics.expense).toLocaleString(locale)} SAR`],
+            [t("reports.metrics.lockedEntries"), metrics.lockedEntries],
+            [t("reports.metrics.pendingEditRequests"), metrics.pendingEditRequests],
+          ],
+        },
+        {
+          title: t("reports.shipmentSummary"),
+          headers: [t("common.status"), t("common.value")],
+          rows: [
+            [t("reports.inTransit"), metrics.inTransit],
+            [t("reports.destination"), metrics.destination],
+            [t("reports.delivered"), metrics.delivered],
+          ],
+        },
+        {
+          title: t("reports.topCustomers"),
+          headers: [t("common.customer"), t("reports.metrics.requests"), t("reports.labels.outstandingBalance")],
+          rows: snapshot.topCustomers.map((customer) => [
+            customer.fullName,
+            customer.requestsCount,
+            `${customer.outstandingBalance.toLocaleString(locale)} SAR`,
+          ]),
+        },
+        {
+          title: t("reports.topExpenses"),
+          headers: [t("common.category"), t("common.amount")],
+          rows: snapshot.topExpenseCategories.map((item) => [
+            item.category || t("reports.uncategorized"),
+            `${Number(item.amount).toLocaleString(locale)} SAR`,
+          ]),
+        },
+      ],
+    });
+
+    if (!exported) {
+      setLoadError(t("common.exportFailed"));
+      toast.error(t("common.exportFailed"));
+      return;
+    }
+
+    toast.success(t("common.exportCompleted"));
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4 lg:grid-cols-2">
@@ -170,7 +243,7 @@ export default function ReportsPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("reports.window")}</p>
             <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
           </div>
-          <div className="grid gap-3 md:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-6">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
@@ -186,6 +259,9 @@ export default function ReportsPage() {
             <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <button onClick={handleExport} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
               <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />{t("common.exportCsv")}</span>
+            </button>
+            <button onClick={handleExportPdf} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />{t("common.exportPdf")}</span>
             </button>
             <button onClick={() => window.print()} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
               <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />{t("common.print")}</span>
@@ -226,7 +302,7 @@ export default function ReportsPage() {
         <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-xl font-semibold capitalize">
-              {drillDownData.type.replace("_", " ")} {t("reports.title")}
+              {t(`reports.drilldowns.${drillDownData.type}`)} {t("reports.title")}
             </h2>
             <button onClick={() => setDrillDownData(null)} className="text-sm text-primary hover:underline">
               {t("common.close")}

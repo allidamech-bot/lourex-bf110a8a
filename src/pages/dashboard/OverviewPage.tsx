@@ -321,13 +321,20 @@ export default function OverviewPage() {
     setBriefingUsedFallback(false);
 
     try {
+      const responseLanguage = lang === "ar" ? "Arabic" : "English";
       const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
         body: {
-          message: "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview.",
+          message:
+            lang === "ar"
+              ? "أعد موجز LOUREX AI اليومي الداخلي للوحة التحكم باللغة العربية فقط."
+              : "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview in English only.",
           messages: [],
           pageContext: "dashboard_home",
           route: window.location.pathname,
           locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
           userRole: profile?.role,
           analysisMode: "dashboard_daily_briefing",
           dashboardContext,
