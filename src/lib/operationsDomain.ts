@@ -1027,7 +1027,9 @@ export const loadPurchaseRequests = async (
         ).then((rows) => rows.filter((row) => !row.customer_hidden_at))
       : Promise.resolve([] as PurchaseRequestRow[]);
   } else {
-    explicitRowsPromise = safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
+    explicitRowsPromise = safeStructuredSelect<PurchaseRequestRow>("purchase_requests").then((rows) =>
+      rows.filter((row) => !row.customer_hidden_at),
+    );
   }
 
   const [explicitRows, attachmentRows, legacyResult, { data: conversions }] = await Promise.all([
@@ -2329,44 +2331,31 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 export const deletePurchaseRequestRecord = async (requestId: string) => {
   const { profile } = await getCurrentUserContext();
   if (!profile || !assertManagementUser(profile.role)) {
-    throw new Error("You do not have permission to cancel this request.");
+    throw new Error("You do not have permission to archive this request.");
   }
 
-  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
-  const current = currentRows.find((row) => row.id === requestId);
   const now = new Date().toISOString();
-  const cancellationPayload: Record<string, unknown> = {
-    status: "cancelled",
+  const archivePayload: Record<string, unknown> = {
+    customer_hidden_at: now,
     updated_at: now,
   };
 
-  // Soft cancellation only. Do not hard-delete operational purchase request history.
+  // Archive only. Do not hard-delete operational purchase request history.
   const updated = await safeStructuredMutation(() =>
     db
       .from("purchase_requests")
-      .update(cancellationPayload)
+      .update(archivePayload)
       .eq("id", requestId),
   );
 
   if (updated.error) throw updated.error;
 
   await writeAuditLog({
-    action: "purchase_request.cancelled_on_failure",
+    action: "purchase_request.archived",
     tableName: "purchase_requests",
     recordId: requestId,
-    newValues: cancellationPayload,
+    newValues: archivePayload,
   });
-
-  if (current) {
-    try {
-      await runAutomation(
-        "purchase_request.cancelled",
-        buildPurchaseRequestAutomationPayload({ ...current, status: "cancelled" }, profile.id),
-      );
-    } catch (error) {
-      console.warn("purchase_request.cancelled automation failed:", error);
-    }
-  }
 
   return updated;
 };

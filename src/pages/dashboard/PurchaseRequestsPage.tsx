@@ -358,6 +358,21 @@ export default function PurchaseRequestsPage() {
                 : "Transfer accepted and payment recorded",
     };
 
+    const requestArchiveLabels = {
+        cancel: lang === "ar" ? "إلغاء" : "Cancel",
+        archive: lang === "ar" ? "أرشفة" : "Archive",
+        cancelConfirm:
+            lang === "ar"
+                ? "هل تريد إلغاء هذا الطلب؟ سيبقى ظاهراً بحالة ملغاة."
+                : "Cancel this request? It will remain visible with cancelled status.",
+        archiveConfirm:
+            lang === "ar"
+                ? "هل تريد أرشفة هذا الطلب؟ سيختفي من القائمة النشطة مع حفظ سجله التشغيلي."
+                : "Archive this request? It will disappear from the active list while preserving operational history.",
+        cancelled: lang === "ar" ? "تم إلغاء الطلب." : "Request cancelled.",
+        archived: lang === "ar" ? "تمت أرشفة الطلب." : "Request archived.",
+    };
+
     const requestFilters: Array<{ key: "all" | PurchaseRequestStatus; label: string }> = [
         { key: "all", label: t("requests.filters.all") },
         { key: "intake_submitted", label: t("requests.filters.intake_submitted") },
@@ -603,8 +618,26 @@ export default function PurchaseRequestsPage() {
     };
 
     const handleCancelRequest = async (row: PurchaseRequestRow) => {
-        if (!window.confirm(actionLabels.cancelConfirm)) return;
-        await handleStatusUpdate(row.id, "cancelled");
+        if (updatingStatusId) return;
+        if (!window.confirm(requestArchiveLabels.cancelConfirm)) return;
+
+        setUpdatingStatusId(row.id);
+
+        try {
+            const { error } = await updatePurchaseRequestStatus(row.id, "cancelled", internalNotesDraft);
+            if (error) {
+                throw error;
+            }
+
+            toast.success(`${requestArchiveLabels.cancelled} ${row.requestNumber}`);
+            await refresh();
+            setSelectedRequest(row.id);
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_cancel", error, { requestId: row.id });
+            toast.error(getErrorMessage(error, t("requests.toasts.statusError")));
+        } finally {
+            setUpdatingStatusId(null);
+        }
     };
 
     const handleResendRequest = async (row: PurchaseRequestRow) => {
@@ -612,19 +645,20 @@ export default function PurchaseRequestsPage() {
         await handleStatusUpdate(row.id, "awaiting_clarification");
     };
 
-    const handleDeleteRequest = async (row: PurchaseRequestRow) => {
+    const handleArchiveRequest = async (row: PurchaseRequestRow) => {
         if (updatingStatusId) return;
-        if (!window.confirm(actionLabels.deleteConfirm)) return;
+        if (!window.confirm(requestArchiveLabels.archiveConfirm)) return;
 
         setUpdatingStatusId(row.id);
 
         try {
             await deletePurchaseRequestRecord(row.id);
-            toast.success(`${t("requests.toasts.statusUpdated")} ${row.requestNumber} -> ${t("statuses.cancelled")}`);
-            await refresh();
-            setSelectedRequest(row.id);
+            toast.success(`${requestArchiveLabels.archived} ${row.requestNumber}`);
+            const remainingRows = rows.filter((current) => current.id !== row.id);
+            setSelectedRequest(remainingRows[0]?.id ?? null);
+            await refresh(false);
         } catch (error: unknown) {
-            logOperationalError("purchase_request_delete", error, { requestId: row.id });
+            logOperationalError("purchase_request_archive", error, { requestId: row.id });
             toast.error(getErrorMessage(error, t("requests.toasts.statusError")));
         } finally {
             setUpdatingStatusId(null);
@@ -938,18 +972,18 @@ export default function PurchaseRequestsPage() {
                                                 onClick={() => void handleCancelRequest(row)}
                                             >
                                                 {isBusy ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
-                                                {actionLabels.cancel}
+                                                {requestArchiveLabels.cancel}
                                             </Button>
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 className="h-8 rounded-lg border-rose-400/25 bg-rose-500/10 px-2.5 text-xs text-rose-100 hover:bg-rose-500/15"
-                                                disabled={isBusy || row.status === "cancelled"}
-                                                onClick={() => void handleDeleteRequest(row)}
+                                                disabled={isBusy}
+                                                onClick={() => void handleArchiveRequest(row)}
                                             >
                                                 <Trash2 className="me-1.5 h-3.5 w-3.5" />
-                                                {actionLabels.delete}
+                                                {requestArchiveLabels.archive}
                                             </Button>
                                         </div>
                                     </div>
