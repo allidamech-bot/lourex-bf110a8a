@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useI18n } from "@/lib/i18n";
+import { logOperationalError } from "@/lib/monitoring";
 
 interface SharedAccountPanelProps {
   title?: string;
@@ -53,6 +54,7 @@ const AvatarUploadSection = ({ avatarUrl, onUploaded }: { avatarUrl: string; onU
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      toast.error(t("account.sessionExpired"));
       setUploading(false);
       return;
     }
@@ -60,7 +62,8 @@ const AvatarUploadSection = ({ avatarUrl, onUploaded }: { avatarUrl: string; onU
     const path = `${user.id}/avatar_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
     if (error) {
-      toast.error(error.message);
+      logOperationalError("account_avatar_upload", error);
+      toast.error(t("account.avatarUploadError"));
       setUploading(false);
       return;
     }
@@ -113,6 +116,7 @@ export const SharedAccountPanel = ({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
+        toast.error(t("account.sessionExpired"));
         setLoading(false);
         return;
       }
@@ -125,7 +129,8 @@ export const SharedAccountPanel = ({
         .maybeSingle();
 
       if (error) {
-        toast.error(error.message);
+        logOperationalError("account_profile_load", error);
+        toast.error(t("account.loadError"));
       }
 
       if (data) {
@@ -152,6 +157,7 @@ export const SharedAccountPanel = ({
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      toast.error(t("account.sessionExpired"));
       setSaving(false);
       return;
     }
@@ -167,8 +173,12 @@ export const SharedAccountPanel = ({
       })
       .eq("id", user.id);
 
-    if (error) toast.error(error.message);
-    else toast.success(t("account.updated"));
+    if (error) {
+      logOperationalError("account_profile_update", error);
+      toast.error(t("account.updateError"));
+    } else {
+      toast.success(t("account.updated"));
+    }
     setSaving(false);
   };
 
@@ -182,7 +192,8 @@ export const SharedAccountPanel = ({
     const { error } = await supabase.functions.invoke("delete-account", { body: {} });
 
     if (error) {
-      toast.error(error.message || t("account.deleteError"));
+      logOperationalError("account_delete", error);
+      toast.error(t("account.deleteError"));
       setDeleting(false);
       return;
     }

@@ -416,6 +416,12 @@ const translations: Record<Lang, TranslationTree> = {
       missingTitle: "Operational profile not found",
       missingDescription:
         "Your sign-in succeeded, but this account does not have a Lourex application profile yet.",
+      checkingSession: "Checking your session...",
+      loadingProfile: "Loading your profile...",
+      profileLoadTitle: "Unable to load your account profile",
+      profileLoadDescription: "Your session is valid, but Lourex could not load the account profile needed to continue.",
+      setupIncompleteTitle: "Account setup incomplete",
+      setupIncompleteDescription: "Your account profile is not complete yet. Please contact Lourex support.",
       inactiveTitle: "Account is inactive",
       inactiveDescription:
         "This Lourex account exists, but access is currently inactive. Contact the owner or operations team.",
@@ -441,7 +447,11 @@ const translations: Record<Lang, TranslationTree> = {
       fullName: "Full name",
       saveChanges: "Save changes",
       updated: "Profile updated successfully.",
+      loadError: "Unable to load your account profile.",
+      updateError: "Unable to update profile.",
+      sessionExpired: "Please sign in to continue.",
       avatarUploaded: "Avatar updated successfully.",
+      avatarUploadError: "Unable to upload photo.",
       uploading: "Uploading...",
       uploadPhoto: "Upload photo",
       photoHint: "JPG, PNG or GIF. Max 1MB.",
@@ -509,12 +519,14 @@ const translations: Record<Lang, TranslationTree> = {
       },
       roles: {
         owner: "Owner",
+        turkish_partner: "Turkish Partner",
         saudi_partner: "Saudi Partner",
         operations_employee: "Operations Employee",
         customer: "Customer",
       },
       entities: {
         general_management: "General Management",
+        turkish_partner: "Turkish Partner",
         saudi_partner: "Saudi Partner",
       },
       workspaces: {
@@ -525,6 +537,10 @@ const translations: Record<Lang, TranslationTree> = {
         saudi_partner: {
           title: "General Management",
           description: "Platform oversight, operational visibility, and reporting live here.",
+        },
+        turkish_partner: {
+          title: "Turkey Operations",
+          description: "Source-side shipment execution, supplier coordination, and Turkish partner follow-up live here.",
         },
         operations_employee: {
           title: "Operations Room",
@@ -1745,6 +1761,12 @@ const translations: Record<Lang, TranslationTree> = {
       missingTitle: "لم يتم العثور على ملف التشغيل",
       missingDescription:
         "تم تسجيل الدخول بنجاح، لكن هذا الحساب لا يملك ملف تطبيق Lourex حتى الآن.",
+      checkingSession: "جارٍ التحقق من الجلسة...",
+      loadingProfile: "جارٍ تحميل ملفك الشخصي...",
+      profileLoadTitle: "تعذر تحميل بيانات حسابك",
+      profileLoadDescription: "الجلسة صالحة، لكن Lourex لم يتمكن من تحميل ملف الحساب المطلوب للمتابعة.",
+      setupIncompleteTitle: "إعداد الحساب غير مكتمل",
+      setupIncompleteDescription: "ملف حسابك غير مكتمل بعد. يرجى التواصل مع دعم Lourex.",
       inactiveTitle: "الحساب غير نشط",
       inactiveDescription:
         "هذا الحساب موجود في Lourex ولكن الوصول إليه غير مفعّل حاليًا. يرجى التواصل مع المالك أو فريق العمليات.",
@@ -1770,7 +1792,11 @@ const translations: Record<Lang, TranslationTree> = {
       fullName: "الاسم الكامل",
       saveChanges: "حفظ التغييرات",
       updated: "تم تحديث الملف الشخصي بنجاح.",
+      loadError: "تعذر تحميل بيانات حسابك.",
+      updateError: "تعذر تحديث الملف الشخصي.",
+      sessionExpired: "الرجاء تسجيل الدخول للمتابعة.",
       avatarUploaded: "تم تحديث الصورة الشخصية بنجاح.",
+      avatarUploadError: "تعذر رفع الصورة.",
       uploading: "جاري الرفع...",
       uploadPhoto: "رفع صورة",
       photoHint: "JPG, PNG أو GIF. بحد أقصى 1 ميجابايت.",
@@ -1838,12 +1864,14 @@ const translations: Record<Lang, TranslationTree> = {
       },
       roles: {
         owner: "المالك",
+        turkish_partner: "الشريك التركي",
         saudi_partner: "الشريك السعودي",
         operations_employee: "موظف العمليات",
         customer: "العميل",
       },
       entities: {
         general_management: "الإدارة العامة",
+        turkish_partner: "الشريك التركي",
         saudi_partner: "الشريك السعودي",
       },
       workspaces: {
@@ -1854,6 +1882,10 @@ const translations: Record<Lang, TranslationTree> = {
         saudi_partner: {
           title: "الإدارة العامة",
           description: "هنا تظهر المتابعة الشاملة للمنصة والرؤية التشغيلية والتقارير.",
+        },
+        turkish_partner: {
+          title: "عمليات تركيا",
+          description: "هنا تتم متابعة تنفيذ مراحل بلد المنشأ والتنسيق مع الموردين والشريك التركي.",
         },
         operations_employee: {
           title: "غرفة العمليات",

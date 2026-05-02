@@ -21,7 +21,13 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
   const [fullName, setFullName] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, loading: sessionLoading } = useAuthSession();
+  const {
+    user,
+    profile,
+    loading: sessionLoading,
+    profileError,
+    profileMissing,
+  } = useAuthSession();
 
   useEffect(() => {
     if (sessionLoading || !user || !profile || profile.status !== "active") return;
@@ -42,7 +48,24 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     navigate(targetPath, { replace: true });
   }, [sessionLoading, user, profile, location.state, navigate]);
 
-  if (!sessionLoading && user && !profile) {
+  if (!sessionLoading && user && profileError) {
+    return (
+      <AuthStateScreen
+        variant="error"
+        title={t("auth.profileLoadTitle")}
+        description={t("auth.profileLoadDescription")}
+        primaryAction={{ label: t("auth.backHome"), to: "/" }}
+        secondaryAction={{
+          label: t("auth.signOut"),
+          onClick: () => {
+            void supabase.auth.signOut();
+          },
+        }}
+      />
+    );
+  }
+
+  if (!sessionLoading && user && (profileMissing || !profile)) {
     return (
       <AuthStateScreen
         variant="missing"

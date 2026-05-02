@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { BriefcaseBusiness, Crown, Shield, UserCircle2, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { AuthStateScreen } from "@/components/auth/AuthStateScreen";
 import { SharedAccountPanel } from "@/components/account/SharedAccountPanel";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getEntityLabel, getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
@@ -14,10 +15,20 @@ const roleIcons = {
 } as const;
 
 const Profile = () => {
-  const { user, profile } = useAuthSession();
+  const { user, profile, signOut } = useAuthSession();
   const { t } = useI18n();
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <AuthStateScreen
+        variant="missing"
+        title={t("auth.missingTitle")}
+        description={t("auth.missingDescription")}
+        primaryAction={{ label: t("auth.backHome"), to: "/" }}
+        secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
+      />
+    );
+  }
 
   const RoleIcon = roleIcons[profile.role as keyof typeof roleIcons] || Users;
   const statusLabel = t(`common.${profile.status}`);

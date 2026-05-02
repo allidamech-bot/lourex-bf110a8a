@@ -18,11 +18,12 @@ type ProtectedRouteProps = {
   redirectToDefault?: boolean;
 };
 
-const LoadingState = () => (
+const LoadingState = ({ label }: { label: string }) => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="flex flex-col items-center gap-4">
       <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       <span className="text-sm font-medium tracking-wide text-muted-foreground">LOUREX</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   </div>
 );
@@ -38,7 +39,7 @@ export const ProtectedRoute = ({
   const { t } = useI18n();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState label={t("auth.checkingSession")} />;
   }
 
   if (!user) {
@@ -49,8 +50,8 @@ export const ProtectedRoute = ({
     return (
       <AuthStateScreen
         variant="error"
-        title="Failed to load user profile"
-        description="Failed to load user profile. Please refresh."
+        title={t("auth.profileLoadTitle")}
+        description={t("auth.profileLoadDescription")}
         primaryAction={{ label: t("auth.backHome"), to: "/" }}
         secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
       />
@@ -61,8 +62,8 @@ export const ProtectedRoute = ({
     return (
       <AuthStateScreen
         variant="missing"
-        title="Account setup incomplete"
-        description="Account setup incomplete. Please contact support."
+        title={t("auth.setupIncompleteTitle")}
+        description={t("auth.setupIncompleteDescription")}
         primaryAction={{ label: t("auth.backHome"), to: "/" }}
         secondaryAction={{ label: t("auth.signOut"), onClick: () => void signOut() }}
       />

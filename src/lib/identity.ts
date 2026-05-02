@@ -10,6 +10,8 @@ export const getEntityLabel = (profile: IdentityProfile, t: Translate) => {
   switch (profile.role) {
     case "owner":
       return t("identity.entities.general_management");
+    case "turkish_partner":
+      return t("identity.entities.turkish_partner");
     case "saudi_partner":
       return t("identity.entities.saudi_partner");
     default:
@@ -22,6 +24,8 @@ export const getWorkspaceTitle = (profile: IdentityProfile, t: Translate) => {
     case "owner":
     case "saudi_partner":
       return t("identity.workspaces.owner.title");
+    case "turkish_partner":
+      return t("identity.workspaces.turkish_partner.title");
     case "operations_employee":
       return t("identity.workspaces.operations_employee.title");
     case "customer":
@@ -35,6 +39,8 @@ export const getWorkspaceDescription = (profile: IdentityProfile, t: Translate) 
     case "owner":
     case "saudi_partner":
       return t("identity.workspaces.owner.description");
+    case "turkish_partner":
+      return t("identity.workspaces.turkish_partner.description");
     case "operations_employee":
       return t("identity.workspaces.operations_employee.description");
     case "customer":
