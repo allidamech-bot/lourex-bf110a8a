@@ -164,7 +164,7 @@ export default function AccountingPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_entry_create", error, { dealId: focusedDeal?.id || null });
-      const message = error instanceof Error ? error.message : t("accounting.toasts.createError");
+      const message = t("accounting.toasts.createError");
       setLoadError(message);
       toast.error(message);
     } finally {
@@ -587,18 +587,26 @@ export default function AccountingPage() {
                     <span>{t("accounting.labels.reference")}: {row.referenceLabel || t("accounting.noReference")}</span>
                   </div>
                   <p className="mt-4 text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>
+                  {row.locked ? (
+                    <div className="mt-4 rounded-[1.15rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
+                      <p className="font-medium">{t("accounting.lockedEntryTitle")}</p>
+                      <p className="mt-1">{t("accounting.lockedEntryCorrectionHint")}</p>
+                    </div>
+                  ) : null}
                   <div className="mt-4 flex flex-wrap gap-3">
                     {row.dealNumber ? (
                       <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-sm font-medium text-primary hover:underline">
                         {t("accounting.openDeal")}
                       </Link>
                     ) : null}
-                    <Link
-                      to={`/dashboard/edit-requests?deal=${row.dealNumber || focusDeal || ""}&entry=${row.id}`}
-                      className="text-sm font-medium text-primary hover:underline"
-                    >
-                      {t("accounting.requestEdit")}
-                    </Link>
+                    {row.locked ? (
+                      <Link
+                        to={`/dashboard/edit-requests?deal=${row.dealNumber || focusDeal || ""}&entry=${row.id}`}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        {t("accounting.requestCorrection")}
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               ))

@@ -1333,6 +1333,10 @@ const translations: Record<Lang, TranslationTree> = {
       uncategorized: "Uncategorized",
       noReference: "No extra reference",
       requestEdit: "Request edit",
+      requestCorrection: "Request correction",
+      lockedEntryTitle: "Locked entry",
+      lockedEntryCorrectionHint:
+        "This entry is locked to protect the financial record. Locked entries cannot be edited directly; submit an edit request for review.",
       labels: {
         totalIncome: "Total income",
         totalExpense: "Total expense",
@@ -1386,6 +1390,13 @@ const translations: Record<Lang, TranslationTree> = {
       noDescription: "No description recorded",
       oldValue: "Old value",
       proposedValue: "Proposed value",
+      emptyValue: "Not provided",
+      lockedRequired: "Only locked financial entries can use this edit request workflow.",
+      lockedGuidanceTitle: "Locked entry correction",
+      lockedGuidanceDescription:
+        "Locked entries protect financial history. To fix an error, submit an edit request for review instead of editing the record directly.",
+      unlockedEntryNotice:
+        "This entry is not locked, so the locked-record edit request workflow is unavailable.",
       openDeal: "Open deal",
       openAccounting: "Open accounting",
       withoutDeal: "Without linked deal",
@@ -1401,6 +1412,13 @@ const translations: Record<Lang, TranslationTree> = {
         pending: "Pending",
         approved: "Approved",
         rejected: "Rejected",
+      },
+      fields: {
+        amount: "Amount",
+        method: "Payment method",
+        counterparty: "Counterparty",
+        category: "Category",
+        note: "Description",
       },
       toasts: {
         submitted: "Edit request submitted successfully.",
@@ -2706,6 +2724,10 @@ const translations: Record<Lang, TranslationTree> = {
       uncategorized: "غير مصنف",
       noReference: "لا يوجد مرجع إضافي",
       requestEdit: "طلب تعديل",
+      requestCorrection: "طلب تصحيح",
+      lockedEntryTitle: "قيد مقفل",
+      lockedEntryCorrectionHint:
+        "هذا القيد مقفل لحماية السجل المالي. لا يمكن تعديل القيود المقفلة مباشرة؛ أرسل طلب تعديل للمراجعة.",
       labels: {
         totalIncome: "إجمالي الإيرادات",
         totalExpense: "إجمالي المصروفات",
@@ -2759,6 +2781,13 @@ const translations: Record<Lang, TranslationTree> = {
       noDescription: "لا يوجد وصف مسجل",
       oldValue: "القيمة السابقة",
       proposedValue: "القيمة المقترحة",
+      emptyValue: "غير متوفر",
+      lockedRequired: "تُستخدم طلبات التعديل هذه للقيود المالية المقفلة فقط.",
+      lockedGuidanceTitle: "تصحيح قيد مقفل",
+      lockedGuidanceDescription:
+        "تحمي القيود المقفلة السجل المالي. لإصلاح خطأ، أرسل طلب تعديل للمراجعة بدلاً من تعديل القيد مباشرة.",
+      unlockedEntryNotice:
+        "هذا القيد غير مقفل، لذلك لا تتوفر له آلية طلب تعديل القيود المقفلة.",
       openDeal: "فتح الصفقة",
       openAccounting: "فتح المحاسبة",
       withoutDeal: "بدون صفقة مرتبطة",
@@ -2774,6 +2803,13 @@ const translations: Record<Lang, TranslationTree> = {
         pending: "معلقة",
         approved: "معتمدة",
         rejected: "مرفوضة",
+      },
+      fields: {
+        amount: "المبلغ",
+        method: "طريقة الدفع",
+        counterparty: "الطرف المقابل",
+        category: "الفئة",
+        note: "الوصف",
       },
       toasts: {
         submitted: "تم إرسال طلب التعديل بنجاح.",

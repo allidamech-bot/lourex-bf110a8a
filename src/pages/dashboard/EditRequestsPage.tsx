@@ -79,6 +79,57 @@ export default function EditRequestsPage() {
   const scopedRows = rows.filter((row) => (!focusDeal ? true : row.dealNumber === focusDeal));
   const visibleRows = useMemo(() => filterFinancialEditRequests(scopedRows, search, statusFilter), [scopedRows, search, statusFilter]);
   const pendingCount = useMemo(() => visibleRows.filter((row) => row.status === "pending").length, [visibleRows]);
+  const fieldLabel = (key: string) => {
+    switch (key) {
+      case "amount":
+        return t("editRequests.fields.amount");
+      case "method":
+        return t("editRequests.fields.method");
+      case "counterparty":
+        return t("editRequests.fields.counterparty");
+      case "category":
+        return t("editRequests.fields.category");
+      case "note":
+        return t("editRequests.fields.note");
+      default:
+        return key;
+    }
+  };
+
+  const formatEditValue = (value: unknown) => {
+    if (value === null || value === undefined || value === "") {
+      return t("editRequests.emptyValue");
+    }
+
+    if (typeof value === "number") {
+      return value.toLocaleString(locale);
+    }
+
+    if (typeof value === "boolean") {
+      return value ? t("common.yes") : t("common.no");
+    }
+
+    return String(value);
+  };
+
+  const renderEditValueSummary = (value: Record<string, unknown>) => {
+    const entries = Object.entries(value || {});
+
+    if (entries.length === 0) {
+      return <p className="mt-2 text-sm text-muted-foreground">{t("editRequests.emptyValue")}</p>;
+    }
+
+    return (
+      <dl className="mt-3 grid gap-2 text-sm">
+        {entries.map(([key, currentValue]) => (
+          <div key={key} className="grid gap-1 rounded-[0.9rem] bg-background/45 px-3 py-2 sm:grid-cols-[8rem_1fr]">
+            <dt className="text-muted-foreground">{fieldLabel(key)}</dt>
+            <dd className="font-medium text-foreground">{formatEditValue(currentValue)}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  };
 
   useEffect(() => {
     if (!entry) return;
@@ -116,7 +167,7 @@ export default function EditRequestsPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_edit_request_review", error, { id, status });
-      toast.error(error instanceof Error ? error.message : t("editRequests.toasts.updateError"));
+      toast.error(t("editRequests.toasts.updateError"));
     } finally {
       setUpdatingId(null);
     }
@@ -131,6 +182,10 @@ export default function EditRequestsPage() {
 
     if (!requester.trim() || !email.trim() || !reason.trim() || !entry) {
       toast.error(t("editRequests.validation"));
+      return;
+    }
+    if (!entry.locked) {
+      toast.error(t("editRequests.lockedRequired"));
       return;
     }
     const parsedAmount = Number(proposedAmount);
@@ -172,7 +227,7 @@ export default function EditRequestsPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_edit_request_submit", error, { financialEntryId: entry.id });
-      toast.error(error instanceof Error ? error.message : t("editRequests.toasts.submitError"));
+      toast.error(t("editRequests.toasts.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -188,6 +243,15 @@ export default function EditRequestsPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("editRequests.newRequest")}</p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("editRequests.title")}</h2>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("editRequests.description")}</p>
+        </div>
+        <div className="rounded-[1.25rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+          <p className="font-medium text-foreground">{t("editRequests.lockedGuidanceTitle")}</p>
+          <p className="mt-1">{t("editRequests.lockedGuidanceDescription")}</p>
+          {entry && !entry.locked ? (
+            <p className="mt-3 rounded-[1rem] border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-amber-100">
+              {t("editRequests.unlockedEntryNotice")}
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -213,7 +277,7 @@ export default function EditRequestsPage() {
               <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
                 <p className="text-xs text-muted-foreground">{t("editRequests.currentValue")}</p>
                 <p className="mt-2 font-medium">{entry.amount.toLocaleString()} {entry.currency}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{entry.method || t("editRequests.noMethod")} • {entry.counterparty || t("editRequests.noCounterparty")}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{entry.method || t("editRequests.noMethod")} / {entry.counterparty || t("editRequests.noCounterparty")}</p>
               </div>
               <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
                 <p className="text-xs text-muted-foreground">{t("editRequests.currentDescription")}</p>
@@ -249,7 +313,7 @@ export default function EditRequestsPage() {
           <Textarea rows={6} value={reason} onChange={(event) => setReason(event.target.value)} />
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="gold" onClick={submit} disabled={submitting || !entry || !canManageFinancialEditRequests}>
+          <Button variant="gold" onClick={submit} disabled={submitting || !entry || !entry.locked || !canManageFinancialEditRequests}>
             {submitting ? t("editRequests.submitting") : t("editRequests.submit")}
           </Button>
           {focusDeal ? (
@@ -318,7 +382,7 @@ export default function EditRequestsPage() {
                     <p className="mt-1 text-sm text-muted-foreground">{row.requestedByEmail}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {row.dealNumber ? `${t("editRequests.dealReference")}: ${row.dealNumber}` : t("editRequests.withoutDeal")}
-                      {row.targetEntryNumber ? ` • ${t("editRequests.entryReference")}: ${row.targetEntryNumber}` : ""}
+                      {row.targetEntryNumber ? ` / ${t("editRequests.entryReference")}: ${row.targetEntryNumber}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -340,11 +404,11 @@ export default function EditRequestsPage() {
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-[1.15rem] bg-secondary/20 p-4">
                     <p className="text-xs text-muted-foreground">{t("editRequests.oldValue")}</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{JSON.stringify(row.oldValue || {}, null, 2)}</p>
+                    {renderEditValueSummary(row.oldValue || {})}
                   </div>
                   <div className="rounded-[1.15rem] bg-secondary/20 p-4">
                     <p className="text-xs text-muted-foreground">{t("editRequests.proposedValue")}</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{JSON.stringify(row.proposedValue || {}, null, 2)}</p>
+                    {renderEditValueSummary(row.proposedValue || {})}
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-3">
@@ -368,7 +432,7 @@ export default function EditRequestsPage() {
                     {row.reviewerName
                       ? t("editRequests.reviewedBy", { name: row.reviewerName, date: new Date(row.reviewedAt).toLocaleString(locale) })
                       : t("editRequests.reviewedGeneric", { date: new Date(row.reviewedAt).toLocaleString(locale) })}
-                    {row.reviewNote ? ` • ${row.reviewNote}` : ""}
+                    {row.reviewNote ? ` / ${row.reviewNote}` : ""}
                   </p>
                 ) : null}
                 {row.status === "pending" && canManageFinancialEditRequests ? (
