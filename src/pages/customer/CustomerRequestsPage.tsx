@@ -525,7 +525,7 @@ export default function CustomerRequestsPage() {
                 </div>
             ) : null}
 
-            <div className="grid shrink-0 grid-cols-4 gap-2">
+            <div className="grid shrink-0 grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { label: t("requests.total"), value: requestMetrics.total },
                 { label: t("requests.submitted"), value: requestMetrics.submitted },
@@ -533,8 +533,8 @@ export default function CustomerRequestsPage() {
                 { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
                   <div key={item.label} className="rounded-2xl bg-secondary/20 p-3 text-center">
-                    <p className="text-xl font-bold">{item.value}</p>
-                    <p className="mt-1 truncate text-[10px] text-muted-foreground">{item.label}</p>
+                    <p className="text-lg sm:text-xl font-bold">{item.value}</p>
+                    <p className="mt-1 text-[11px] sm:text-[10px] text-muted-foreground leading-tight">{item.label}</p>
                   </div>
               ))}
             </div>
