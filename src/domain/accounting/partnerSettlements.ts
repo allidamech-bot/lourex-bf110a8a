@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries } from "@/domain/accounting/service";
-import { getCurrentUserContext, safeStructuredSelect } from "@/lib/operationsDomain";
+import { getCurrentUserContext, safeStructuredSelect, safeStructuredSelectWhereEq } from "@/lib/operationsDomain";
 import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import type { PartnerSettlement, PartnerSettlementRole } from "@/types/lourex";
 
@@ -84,7 +84,10 @@ const mapSettlement = (
 
 export const loadPartnerProfiles = async () => {
   const { profile } = await assertSettlementActor();
-  const profiles = await safeStructuredSelect<PartnerProfileRow>("profiles", "id, full_name, email, role, status");
+  const profiles =
+    profile.role === "turkish_partner" || profile.role === "saudi_partner"
+      ? await safeStructuredSelectWhereEq<PartnerProfileRow>("profiles", "id", profile.id, "id, full_name, email, role, status")
+      : await safeStructuredSelect<PartnerProfileRow>("profiles", "id, full_name, email, role, status");
   const partnerRows = profiles.filter(
     (row) => (row.role === "turkish_partner" || row.role === "saudi_partner") && row.status === "active",
   );
@@ -97,13 +100,22 @@ export const loadPartnerProfiles = async () => {
 };
 
 export const loadPartnerSettlements = async (): Promise<PartnerSettlement[]> => {
-  await assertSettlementActor();
+  const { profile } = await assertSettlementActor();
+  const rowsPromise =
+    profile.role === "turkish_partner" || profile.role === "saudi_partner"
+      ? safeStructuredSelectWhereEq<PartnerSettlementRow>("partner_settlements", "partner_id", profile.id)
+      : safeStructuredSelect<PartnerSettlementRow>("partner_settlements");
   const [rows, profiles] = await Promise.all([
-    safeStructuredSelect<PartnerSettlementRow>("partner_settlements"),
+    rowsPromise,
     safeStructuredSelect<PartnerProfileRow>("profiles", "id, full_name, email, role, status"),
   ]);
   const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
-  return rows.map((row) => mapSettlement(row, profileMap)).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  const visibleRows =
+    profile.role === "turkish_partner" || profile.role === "saudi_partner"
+      ? rows.filter((row) => row.partner_id === profile.id && row.partner_role === profile.role)
+      : rows;
+
+  return visibleRows.map((row) => mapSettlement(row, profileMap)).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 };
 
 export const calculatePartnerSettlement = async (
@@ -205,7 +217,15 @@ export const markPartnerSettlementPaid = async (settlementId: string) => {
 };
 
 export const disputePartnerSettlement = async (settlementId: string, reason = "") => {
-  await assertSettlementActor();
+  const { profile } = await assertSettlementActor();
+  if (profile.role === "turkish_partner" || profile.role === "saudi_partner") {
+    const visibleSettlements = await loadPartnerSettlements();
+    const settlement = visibleSettlements.find((row) => row.id === settlementId);
+    if (!settlement) {
+      throw new Error("This settlement is not available for your partner account.");
+    }
+  }
+
   const { error } = await db.rpc("dispute_partner_settlement", {
     p_settlement_id: settlementId,
     p_reason: reason,
