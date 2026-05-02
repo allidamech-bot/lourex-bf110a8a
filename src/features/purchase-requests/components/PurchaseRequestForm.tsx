@@ -897,12 +897,11 @@ export const PurchaseRequestForm = ({
       setUploads([]);
       toast.success(t("requests.intake.errors.success"));
     } catch (error: unknown) {
-      const message =
-          !isAuthenticated
-              ? loginRequiredMessage
-          : error instanceof Error && error.message
-              ? error.message
-              : t("requests.intake.errors.submitFailed");
+      const message = !isAuthenticated
+        ? loginRequiredMessage
+        : isEditMode
+          ? t("requests.intake.errors.updateFailed")
+          : t("requests.intake.errors.submitFailed");
 
       logOperationalError("purchase_request_submit", error, {
         flow: "purchase_request",

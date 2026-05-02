@@ -38,7 +38,7 @@ export const SiteHeader = () => {
         { to: "/", label: t("nav.home") },
         { to: "/request", label: t("nav.purchaseRequest") },
         {
-          to: usesDashboardWorkspace ? "/dashboard/requests" : isCustomer ? "/customer-portal/requests" : "/auth",
+          to: usesDashboardWorkspace ? "/dashboard/requests" : isCustomer ? "/customer-portal/requests#requests" : "/auth",
           label: t("customerPortal.actions.requests.title"),
         },
         {

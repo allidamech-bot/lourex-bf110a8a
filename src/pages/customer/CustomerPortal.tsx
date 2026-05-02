@@ -227,7 +227,7 @@ const CustomerPortal = () => {
               : "Review your purchase requests and follow their progress.",
       ),
       icon: ClipboardList,
-      link: "/customer-portal/requests",
+      link: "/customer-portal/requests#requests",
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
       badge: portalMetrics.requests,
@@ -584,7 +584,7 @@ const CustomerPortal = () => {
                   })}
 
                   <Button variant="link" className="h-auto p-0 text-xs" asChild>
-                    <Link to="/customer-portal/requests">
+                    <Link to="/customer-portal/requests#requests">
                       {getSafeLabel(
                           t("customerPortal.recent.viewAll"),
                           locale === "ar" ? "عرض كل الطلبات" : "View all requests",

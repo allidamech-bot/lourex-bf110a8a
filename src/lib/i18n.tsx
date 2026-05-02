@@ -806,6 +806,7 @@ const translations: Record<Lang, TranslationTree> = {
       },
     },
     requests: {
+      loadError: "Unable to load requests.",
       labels: {
         requestNumber: "Request Number",
         trackingCode: "Tracking Code",
@@ -2129,6 +2130,7 @@ const translations: Record<Lang, TranslationTree> = {
       },
     },
     requests: {
+      loadError: "تعذر تحميل الطلبات.",
       labels: {
         requestNumber: "رقم الطلب",
         trackingCode: "رقم التتبع",

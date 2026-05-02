@@ -18,7 +18,7 @@ import {
   Trash2,
   Truck,
 } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import BentoCard from "@/components/BentoCard";
@@ -152,6 +152,7 @@ const RequestInfoTile = ({
 export default function CustomerRequestsPage() {
   const { locale, t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [rows, setRows] = useState<CustomerRequestRow[]>([]);
@@ -166,6 +167,8 @@ export default function CustomerRequestsPage() {
   const [paymentSummaries, setPaymentSummaries] = useState<Map<string, CustomerPaymentSummary>>(new Map());
 
   const selectedRequestId = searchParams.get("request");
+  const listRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToListRef = useRef(false);
 
   const getStatusMeta = (status: PurchaseRequestStatus | "cancelled") => {
     if (status === "cancelled") {
@@ -192,12 +195,16 @@ export default function CustomerRequestsPage() {
 
     try {
       const loadedRows = await loadPurchaseRequests();
-      setRows(loadedRows as any);
+      const customerRows: CustomerRequestRow[] = loadedRows.map((row) => ({
+        ...row,
+        status: row.status as CustomerRequestRow["status"],
+      }));
+      setRows(customerRows);
       const dealIds = loadedRows.map((row) => row.convertedDealId).filter(Boolean) as string[];
       setPaymentSummaries(dealIds.length ? await loadCustomerPaymentSummaries(dealIds) : new Map());
     } catch (loadError) {
       logOperationalError("customer_requests_load", loadError);
-      setError(t("common.error"));
+      setError(t("requests.loadError"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -320,6 +327,15 @@ export default function CustomerRequestsPage() {
   }, [selectedRequestId]);
 
   useEffect(() => {
+    if (loading || location.hash !== "#requests" || hasScrolledToListRef.current) {
+      return;
+    }
+
+    hasScrolledToListRef.current = true;
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [loading, location.hash]);
+
+  useEffect(() => {
     setSelectedProofFile(null);
   }, [selectedRow?.id]);
 
@@ -428,15 +444,23 @@ export default function CustomerRequestsPage() {
     if (!selectedProofFile || !selectedRow || uploadingProof) return;
 
     setUploadingProof(true);
-    const { error } = await uploadTransferProof(selectedRow.id, selectedProofFile);
-    setUploadingProof(false);
+    try {
+      const { error } = await uploadTransferProof(selectedRow.id, selectedProofFile);
 
-    if (error) {
-      toast.error(error.message || t("transferProof.error"));
-    } else {
+      if (error) {
+        throw new Error(error.message || t("transferProof.error"));
+      }
+
       toast.success(receiptSubmittedMessage);
       setSelectedProofFile(null);
       void loadRows("refresh");
+    } catch (proofError) {
+      logOperationalError("customer_transfer_proof_submit", proofError, {
+        requestId: selectedRow.id,
+      });
+      toast.error(t("transferProof.error"));
+    } finally {
+      setUploadingProof(false);
     }
   };
 
@@ -452,9 +476,9 @@ export default function CustomerRequestsPage() {
     setActionLoadingId(null);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(t("requests.remove.failed"));
     } else {
-      toast.success(t("requests.actions.removeSuccess") || "Removed from list.");
+      toast.success(t("requests.remove.success"));
       void loadRows("refresh");
     }
   };
@@ -471,6 +495,7 @@ export default function CustomerRequestsPage() {
   return (
       <div className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+          <div id="requests" ref={listRef} className="scroll-mt-24">
           <BentoCard className="flex flex-col gap-4 overflow-hidden">
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-4">
               <div>
@@ -492,6 +517,13 @@ export default function CustomerRequestsPage() {
                 </Button>
               </div>
             </div>
+
+            {error ? (
+                <div className="flex items-start gap-2 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+            ) : null}
 
             <div className="grid shrink-0 grid-cols-4 gap-2">
               {[
@@ -629,6 +661,7 @@ export default function CustomerRequestsPage() {
               )}
             </div>
           </BentoCard>
+          </div>
 
           <div ref={detailsRef} className="min-w-0">
             {selectedRow ? (
