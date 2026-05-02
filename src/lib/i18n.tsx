@@ -103,6 +103,10 @@ const translations: Record<Lang, TranslationTree> = {
       privacy: "Privacy",
       guidelines: "Guidelines",
       profile: "Profile",
+      menu: "Menu",
+      primaryNavigation: "Primary navigation",
+      mobileNavigation: "Mobile navigation",
+      dashboardNavigation: "Dashboard navigation",
     },
     home: {
       charter: {
@@ -167,8 +171,10 @@ const translations: Record<Lang, TranslationTree> = {
       tracking: "Tracking",
       accounting: "Accounting",
       editRequests: "Edit Requests",
+      settlements: "Settlements",
       audit: "Audit Log",
       reports: "Reports",
+      system: "System",
     },
     publicTracking: {
       eyebrow: "Customer Tracking",
@@ -374,6 +380,9 @@ const translations: Record<Lang, TranslationTree> = {
       title: "Notifications",
       empty: "No notifications yet",
       markAllRead: "Mark all as read",
+      viewAll: "View all notifications",
+      loadError: "Unable to load notifications",
+      unreadCount: "{{count}} unread",
       realtimeUnavailable: "Live updates are temporarily unavailable.",
     },
     auth: {
@@ -1428,6 +1437,10 @@ const translations: Record<Lang, TranslationTree> = {
       privacy: "سياسة الخصوصية",
       guidelines: "الإرشادات",
       profile: "الملف الشخصي",
+      menu: "القائمة",
+      primaryNavigation: "التنقل الرئيسي",
+      mobileNavigation: "تنقل الجوال",
+      dashboardNavigation: "تنقل لوحة التحكم",
     },
     home: {
       charter: {
@@ -1492,8 +1505,10 @@ const translations: Record<Lang, TranslationTree> = {
       tracking: "التتبع",
       accounting: "المحاسبة",
       editRequests: "طلبات التعديل",
+      settlements: "التسويات",
       audit: "سجل التدقيق",
       reports: "التقارير",
+      system: "النظام",
     },
     publicTracking: {
       eyebrow: "تتبع العميل",
@@ -1693,6 +1708,9 @@ const translations: Record<Lang, TranslationTree> = {
       title: "الإشعارات",
       empty: "لا توجد إشعارات بعد",
       markAllRead: "تعيين الكل كمقروء",
+      viewAll: "عرض كل الإشعارات",
+      loadError: "تعذر تحميل الإشعارات",
+      unreadCount: "{{count}} غير مقروء",
       realtimeUnavailable: "التحديثات الفورية غير متاحة مؤقتًا.",
     },
     auth: {

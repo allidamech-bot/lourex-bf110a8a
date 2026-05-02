@@ -58,7 +58,7 @@ export const SiteHeader = () => {
           : t("nav.signIn");
 
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
-  const canSeeDashboardMenu = profile?.role === "owner" || profile?.role === "saudi_partner";
+  const canSeeDashboardMenu = Boolean(profile && profile.role !== "customer");
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -90,7 +90,7 @@ export const SiteHeader = () => {
               type="button"
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground shadow-sm transition-colors hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-blue-100"
               onClick={() => setIsOpen((value) => !value)}
-              aria-label="Toggle navigation menu"
+              aria-label={t("nav.menu")}
               aria-expanded={isOpen}
             >
               {isOpen ? <X size={22} /> : <Menu size={22} />}
@@ -98,7 +98,7 @@ export const SiteHeader = () => {
           </div>
         </div>
 
-        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-5 px-4 sm:px-6 xl:grid" dir="ltr">
+        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 xl:grid" dir={isRtl ? "rtl" : "ltr"}>
           <Link
             to="/"
             className="flex shrink-0 items-center gap-3"
@@ -111,12 +111,12 @@ export const SiteHeader = () => {
             <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
           </Link>
 
-          <nav className="hidden min-w-0 items-center justify-center gap-1.5 xl:flex" dir={isRtl ? "rtl" : "ltr"} aria-label="Primary navigation">
+          <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex" aria-label={t("nav.primaryNavigation")}>
             {canSeeDashboardMenu ? (
                 <NavLink
                     to="/dashboard"
                     className={({ isActive }) =>
-                        `whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
+                        `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
                                 ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
                                 : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -132,7 +132,7 @@ export const SiteHeader = () => {
                     key={`${link.to}-${link.label}`}
                     to={link.to}
                     className={({ isActive }) =>
-                        `whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
+                        `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
                                 ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
                                 : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -144,7 +144,7 @@ export const SiteHeader = () => {
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-2" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="flex shrink-0 items-center justify-end gap-2">
             <div className="hidden shrink-0 items-center gap-2 xl:flex">
               {isAuthenticated ? (
                   <>
@@ -228,7 +228,7 @@ export const SiteHeader = () => {
                   <ThemeToggle />
                 </div>
 
-                <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
+                <nav className="flex flex-col gap-1" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (
                       <NavLink
                           to="/dashboard"
@@ -242,7 +242,7 @@ export const SiteHeader = () => {
                           }
                       >
                         <span>{t("nav.dashboard")}</span>
-                        <ChevronRight className="h-4 w-4 opacity-60" />
+                        <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ) : null}
 
@@ -260,7 +260,7 @@ export const SiteHeader = () => {
                           }
                       >
                         <span>{link.label}</span>
-                        <ChevronRight className="h-4 w-4 opacity-60" />
+                        <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ))}
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,8 @@ const REALTIME_TIMEOUT_MS = 8_000;
 const NotificationBell = ({ userId }: { userId: string }) => {
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const navigate = useNavigate();
   const { locale, t } = useI18n();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -74,17 +76,23 @@ const NotificationBell = ({ userId }: { userId: string }) => {
   const fetchNotifications = useCallback(async () => {
     if (!userId) {
       setNotifications([]);
+      setLoadError("");
       return;
     }
 
+    setLoading(true);
     const result = await fetchUserNotifications(userId);
     if (result.error || !result.data) {
       logDevIssue("Failed to load notifications.", result.error);
+      setLoadError(t("notifications.loadError"));
+      setLoading(false);
       return;
     }
 
     setNotifications(result.data);
-  }, [logDevIssue, userId]);
+    setLoadError("");
+    setLoading(false);
+  }, [logDevIssue, t, userId]);
 
   const startPolling = useCallback(() => {
     if (pollRef.current !== null) {
@@ -297,10 +305,17 @@ const NotificationBell = ({ userId }: { userId: string }) => {
             initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute end-0 top-full z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
+            className="fixed inset-x-3 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-xl border border-border bg-card shadow-xl sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:max-h-96 sm:w-80"
           >
             <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
-              <h4 className="text-sm font-semibold">{t("notifications.title")}</h4>
+              <div>
+                <h4 className="text-sm font-semibold">{t("notifications.title")}</h4>
+                {unreadCount > 0 ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t("notifications.unreadCount", { count: unreadCount })}
+                  </p>
+                ) : null}
+              </div>
               {unreadCount > 0 ? (
                 <button onClick={() => void markAllRead()} className="text-xs text-primary hover:underline">
                   {t("notifications.markAllRead")}
@@ -308,7 +323,16 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               ) : null}
             </div>
 
-            {notifications.length === 0 ? (
+            {loading && notifications.length === 0 ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("common.loading")}
+              </div>
+            ) : loadError ? (
+              <div className="px-4 py-8 text-center text-sm text-destructive">
+                {loadError}
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
                 {t("notifications.empty")}
               </div>
@@ -347,7 +371,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               }}
               className="w-full px-4 py-3 text-center text-xs font-medium text-primary transition-colors hover:bg-secondary/30"
             >
-              {locale === "ar" ? "عرض كل الإشعارات" : "View all notifications"}
+              {t("notifications.viewAll")}
             </button>
           </motion.div>
         ) : null}
