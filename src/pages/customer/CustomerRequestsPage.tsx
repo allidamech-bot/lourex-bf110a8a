@@ -674,7 +674,7 @@ export default function CustomerRequestsPage() {
                           {selectedRow.requestNumber}
                         </p>
                       </div>
-                      <h2 className="mt-2 break-words font-serif text-3xl font-semibold">
+                      <h2 className="mt-2 break-words font-serif text-xl sm:text-2xl lg:text-3xl font-semibold">
                         {selectedRow.productName || t("requests.genericRequest")}
                       </h2>
                     </div>
