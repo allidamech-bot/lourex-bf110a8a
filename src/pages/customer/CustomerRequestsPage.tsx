@@ -497,15 +497,15 @@ export default function CustomerRequestsPage() {
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
           <div id="requests" ref={listRef} className="scroll-mt-24">
           <BentoCard className="flex flex-col gap-4 overflow-hidden">
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   {t("customerPortal.eyebrow")}
                 </p>
-                <h1 className="mt-2 font-serif text-2xl font-semibold">{t("customerPortal.title")}</h1>
+                <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold">{t("customerPortal.title")}</h1>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing}>
                   <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 </Button>
@@ -525,7 +525,7 @@ export default function CustomerRequestsPage() {
                 </div>
             ) : null}
 
-            <div className="grid shrink-0 grid-cols-4 gap-2">
+            <div className="grid shrink-0 grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { label: t("requests.total"), value: requestMetrics.total },
                 { label: t("requests.submitted"), value: requestMetrics.submitted },
@@ -533,8 +533,8 @@ export default function CustomerRequestsPage() {
                 { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
                   <div key={item.label} className="rounded-2xl bg-secondary/20 p-3 text-center">
-                    <p className="text-xl font-bold">{item.value}</p>
-                    <p className="mt-1 truncate text-[10px] text-muted-foreground">{item.label}</p>
+                    <p className="text-lg sm:text-xl font-bold">{item.value}</p>
+                    <p className="mt-1 text-[11px] sm:text-[10px] text-muted-foreground leading-tight">{item.label}</p>
                   </div>
               ))}
             </div>
@@ -674,7 +674,7 @@ export default function CustomerRequestsPage() {
                           {selectedRow.requestNumber}
                         </p>
                       </div>
-                      <h2 className="mt-2 break-words font-serif text-3xl font-semibold">
+                      <h2 className="mt-2 break-words font-serif text-xl sm:text-2xl lg:text-3xl font-semibold">
                         {selectedRow.productName || t("requests.genericRequest")}
                       </h2>
                     </div>
