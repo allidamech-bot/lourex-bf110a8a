@@ -547,7 +547,11 @@ export type Database = {
           id: string
           locked: boolean
           note: string | null
+          purchase_request_id: string | null
           scope: string
+          source_payment_id: string | null
+          transfer_proof_name: string
+          transfer_proof_path: string
           type: string
         }
         Insert: {
@@ -561,7 +565,11 @@ export type Database = {
           id?: string
           locked?: boolean
           note?: string | null
+          purchase_request_id?: string | null
           scope: string
+          source_payment_id?: string | null
+          transfer_proof_name?: string
+          transfer_proof_path?: string
           type: string
         }
         Update: {
@@ -575,7 +583,11 @@ export type Database = {
           id?: string
           locked?: boolean
           note?: string | null
+          purchase_request_id?: string | null
           scope?: string
+          source_payment_id?: string | null
+          transfer_proof_name?: string
+          transfer_proof_path?: string
           type?: string
         }
         Relationships: [
@@ -1236,36 +1248,66 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string
           currency: string
+          customer_id: string | null
           id: string
+          internal_note: string
           note: string | null
           payment_method: string | null
           payment_number: string
+          payment_type: string | null
+          related_deal_id: string | null
+          related_purchase_request_id: string | null
           related_settlement_id: string | null
           status: string
+          transfer_proof_name: string
+          transfer_proof_path: string
+          transfer_reference_number: string
         }
         Insert: {
           amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
           currency?: string
+          customer_id?: string | null
           id?: string
+          internal_note?: string
           note?: string | null
           payment_method?: string | null
           payment_number: string
+          payment_type?: string | null
+          related_deal_id?: string | null
+          related_purchase_request_id?: string | null
           related_settlement_id?: string | null
           status?: string
+          transfer_proof_name?: string
+          transfer_proof_path?: string
+          transfer_reference_number?: string
         }
         Update: {
           amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
           currency?: string
+          customer_id?: string | null
           id?: string
+          internal_note?: string
           note?: string | null
           payment_method?: string | null
           payment_number?: string
+          payment_type?: string | null
+          related_deal_id?: string | null
+          related_purchase_request_id?: string | null
           related_settlement_id?: string | null
           status?: string
+          transfer_proof_name?: string
+          transfer_proof_path?: string
+          transfer_reference_number?: string
         }
         Relationships: [
           {
@@ -1482,16 +1524,23 @@ export type Database = {
           reviewed_by: string | null
           size_dimensions: string | null
           source_inquiry_id: string | null
+          source_payment_id: string | null
           status: string
           submitted_at: string | null
           technical_specs: string | null
           tracking_code: string | null
           transfer_accepted_at: string | null
           transfer_accepted_by: string | null
+          transfer_payment_method: string
+          transfer_payment_note: string
+          transfer_payment_type: string | null
           transfer_proof_name: string
           transfer_proof_status: string
           transfer_proof_uploaded_at: string | null
           transfer_proof_url: string
+          transfer_received_amount: number | null
+          transfer_received_currency: string
+          transfer_reference_number: string
           transfer_rejection_reason: string
           updated_at: string
           weight: string | null
@@ -1531,16 +1580,23 @@ export type Database = {
           reviewed_by?: string | null
           size_dimensions?: string | null
           source_inquiry_id?: string | null
+          source_payment_id?: string | null
           status?: string
           submitted_at?: string | null
           technical_specs?: string | null
           tracking_code?: string | null
           transfer_accepted_at?: string | null
           transfer_accepted_by?: string | null
+          transfer_payment_method?: string
+          transfer_payment_note?: string
+          transfer_payment_type?: string | null
           transfer_proof_name?: string
           transfer_proof_status?: string
           transfer_proof_uploaded_at?: string | null
           transfer_proof_url?: string
+          transfer_received_amount?: number | null
+          transfer_received_currency?: string
+          transfer_reference_number?: string
           transfer_rejection_reason?: string
           updated_at?: string
           weight?: string | null
@@ -1580,16 +1636,23 @@ export type Database = {
           reviewed_by?: string | null
           size_dimensions?: string | null
           source_inquiry_id?: string | null
+          source_payment_id?: string | null
           status?: string
           submitted_at?: string | null
           technical_specs?: string | null
           tracking_code?: string | null
           transfer_accepted_at?: string | null
           transfer_accepted_by?: string | null
+          transfer_payment_method?: string
+          transfer_payment_note?: string
+          transfer_payment_type?: string | null
           transfer_proof_name?: string
           transfer_proof_status?: string
           transfer_proof_uploaded_at?: string | null
           transfer_proof_url?: string
+          transfer_received_amount?: number | null
+          transfer_received_currency?: string
+          transfer_reference_number?: string
           transfer_rejection_reason?: string
           updated_at?: string
           weight?: string | null
@@ -2044,6 +2107,18 @@ export type Database = {
     }
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string }
+      accept_transfer_proof_with_payment: {
+        Args: {
+          p_amount: number
+          p_currency: string
+          p_internal_note?: string
+          p_payment_method: string
+          p_payment_type: string
+          p_request_id: string
+          p_transfer_reference_number?: string
+        }
+        Returns: Json
+      }
       admin_approve_factory_application: {
         Args: { p_application_id: string }
         Returns: undefined
@@ -2094,16 +2169,23 @@ export type Database = {
           reviewed_by: string | null
           size_dimensions: string | null
           source_inquiry_id: string | null
+          source_payment_id: string | null
           status: string
           submitted_at: string | null
           technical_specs: string | null
           tracking_code: string | null
           transfer_accepted_at: string | null
           transfer_accepted_by: string | null
+          transfer_payment_method: string
+          transfer_payment_note: string
+          transfer_payment_type: string | null
           transfer_proof_name: string
           transfer_proof_status: string
           transfer_proof_uploaded_at: string | null
           transfer_proof_url: string
+          transfer_received_amount: number | null
+          transfer_received_currency: string
+          transfer_reference_number: string
           transfer_rejection_reason: string
           updated_at: string
           weight: string | null
