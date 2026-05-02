@@ -680,17 +680,38 @@ export const createNotifications = async (
 
   if (payload.length === 0) return;
 
-  await supabase.from("notifications").insert(
-    payload.filter(
-      (item, index, array) =>
-        array.findIndex(
-          (candidate) =>
-            candidate.user_id === item.user_id &&
-            candidate.title === item.title &&
-            candidate.link === item.link,
-        ) === index,
-    ),
+  const uniquePayload = payload.filter(
+    (item, index, array) =>
+      array.findIndex(
+        (candidate) =>
+          candidate.user_id === item.user_id &&
+          candidate.type === item.type &&
+          candidate.title === item.title &&
+          candidate.link === item.link,
+      ) === index,
   );
+
+  const pendingInserts: typeof uniquePayload = [];
+
+  for (const item of uniquePayload) {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("user_id", item.user_id)
+      .eq("type", item.type)
+      .eq("title", item.title)
+      .eq("link", item.link)
+      .limit(1);
+
+    if (error) throw error;
+    if (!data?.length) {
+      pendingInserts.push(item);
+    }
+  }
+
+  if (pendingInserts.length === 0) return;
+
+  await supabase.from("notifications").insert(pendingInserts);
 };
 
 export const getInternalNotificationRecipients = async (extraUserIds: Array<string | null | undefined> = []) => {
@@ -913,7 +934,10 @@ export const createPurchaseRequestRecord = async (input: {
   try {
     await runAutomation("purchase_request.created", createdRequestPayload);
   } catch (error) {
-    console.warn("purchase_request.created automation failed:", error);
+    logOperationalError("automation_purchase_request_created", error, {
+      requestId: inserted.data.id,
+      requestNumber: inserted.data.request_number || input.requestNumber,
+    });
   }
 
   if (input.imageUrls.length === 0) {
@@ -1202,7 +1226,7 @@ export const updatePurchaseRequestStatus = async (
           automationPayload,
         );
       } catch (error) {
-        console.warn("ready_for_conversion automation failed:", error);
+        logOperationalError("automation_ready_for_conversion", error, { requestId, status });
       }
 
       try {
@@ -1211,7 +1235,7 @@ export const updatePurchaseRequestStatus = async (
           automationPayload,
         );
       } catch (error) {
-        console.warn("purchase_request.approved automation failed:", error);
+        logOperationalError("automation_purchase_request_approved", error, { requestId, status });
       }
     }
   }
@@ -1403,6 +1427,69 @@ export const convertRequestToDeal = async (
 
     if (insertedRequest.error) throw insertedRequest.error;
     requestId = insertedRequest.data.id;
+  }
+
+  const currentRequestLookup = await db
+    .from<PurchaseRequestRow>("purchase_requests")
+    .select("id, status, converted_deal_id, customer_hidden_at")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (currentRequestLookup.error) throw currentRequestLookup.error;
+
+  if (!currentRequestLookup.data) {
+    throw new Error("تعذر العثور على طلب الشراء المطلوب.");
+  }
+
+  if (currentRequestLookup.data.customer_hidden_at || currentRequestLookup.data.status === "cancelled") {
+    throw new Error("لا يمكن تحويل طلب ملغى أو مؤرشف إلى صفقة.");
+  }
+
+  const linkedDealLookup = currentRequestLookup.data?.converted_deal_id
+    ? await db
+        .from<DealRow>("deals")
+        .select("id, deal_number, shipment_id")
+        .eq("id", currentRequestLookup.data.converted_deal_id)
+        .maybeSingle()
+    : await db
+        .from<DealRow>("deals")
+        .select("id, deal_number, shipment_id")
+        .eq("source_request_id", requestId)
+        .maybeSingle();
+
+  if (linkedDealLookup.error) throw linkedDealLookup.error;
+
+  if (linkedDealLookup.data) {
+    if (!currentRequestLookup.data.converted_deal_id) {
+      const conversionPatch: Partial<PurchaseRequestRow> = {
+        converted_deal_id: linkedDealLookup.data.id,
+      };
+
+      if (currentRequestLookup.data.status === "ready_for_conversion") {
+        conversionPatch.status = "in_progress";
+      }
+
+      await db
+        .from<PurchaseRequestRow>("purchase_requests")
+        .update(conversionPatch)
+        .eq("id", requestId);
+    }
+
+    const existingShipmentLookup = linkedDealLookup.data.shipment_id
+      ? await db
+          .from<ShipmentRow>("shipments")
+          .select("tracking_id")
+          .eq("id", linkedDealLookup.data.shipment_id)
+          .maybeSingle()
+      : { data: null, error: null };
+
+    if (existingShipmentLookup.error) throw existingShipmentLookup.error;
+
+    return {
+      dealId: linkedDealLookup.data.id,
+      dealNumber: linkedDealLookup.data.deal_number,
+      trackingId: existingShipmentLookup.data?.tracking_id || "",
+    };
   }
 
   const dealNumber = `DL-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
@@ -2533,7 +2620,7 @@ export const acceptTransferProof = async (requestId: string) => {
       }, user.id),
     );
   } catch (error) {
-    console.warn("purchase_request.approved automation failed:", error);
+    logOperationalError("automation_purchase_request_approved", error, { requestId });
   }
 
   return { success: true };

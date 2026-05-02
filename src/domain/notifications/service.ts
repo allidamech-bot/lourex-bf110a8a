@@ -16,6 +16,7 @@ type NotificationPayload = Partial<NotificationRow> | null | undefined;
 export type NotificationRecord = {
   id: string;
   userId: string;
+  type: string;
   title: string;
   message: string;
   link: string | null;
@@ -33,6 +34,7 @@ const normalizeNotification = (row: NotificationPayload): NotificationRecord | n
   return {
     id: row.id,
     userId: row.user_id,
+    type: normalizeText(row.type),
     title: normalizeText(row.title),
     message: normalizeText(row.message),
     link: normalizeOptionalText(row.link),

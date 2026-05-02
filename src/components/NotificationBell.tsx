@@ -35,6 +35,63 @@ const NotificationBell = ({ userId }: { userId: string }) => {
     [notifications],
   );
   const latestNotifications = useMemo(() => notifications.slice(0, 5), [notifications]);
+  const getNotificationDisplay = useCallback(
+    (notification: NotificationRecord) => {
+      switch (notification.type) {
+        case "purchase_request_created":
+          return {
+            title: t("notifications.events.purchaseRequestCreated.title"),
+            message: t("notifications.events.purchaseRequestCreated.message"),
+          };
+        case "purchase_request_approved":
+          return {
+            title: t("notifications.events.purchaseRequestApproved.title"),
+            message: t("notifications.events.purchaseRequestApproved.message"),
+          };
+        case "purchase_request_cancelled":
+          return {
+            title: t("notifications.events.purchaseRequestCancelled.title"),
+            message: t("notifications.events.purchaseRequestCancelled.message"),
+          };
+        case "purchase_request_ready_for_conversion":
+          return {
+            title: t("notifications.events.purchaseRequestReady.title"),
+            message: t("notifications.events.purchaseRequestReady.message"),
+          };
+        case "request_conversion":
+          return {
+            title: t("notifications.events.dealCreated.title"),
+            message: t("notifications.events.dealCreated.message"),
+          };
+        case "tracking_update":
+          return {
+            title: t("notifications.events.shipmentUpdated.title"),
+            message: t("notifications.events.shipmentUpdated.message"),
+          };
+        case "financial_edit_request":
+          return {
+            title: t("notifications.events.editRequestSubmitted.title"),
+            message: t("notifications.events.editRequestSubmitted.message"),
+          };
+        case "financial_edit_request_review":
+          return notification.title.toLowerCase().includes("rejected")
+            ? {
+                title: t("notifications.events.editRequestRejected.title"),
+                message: t("notifications.events.editRequestRejected.message"),
+              }
+            : {
+                title: t("notifications.events.editRequestApproved.title"),
+                message: t("notifications.events.editRequestApproved.message"),
+              };
+        default:
+          return {
+            title: notification.title,
+            message: notification.message,
+          };
+      }
+    },
+    [t],
+  );
 
   const logDevIssue = useCallback((message: string, details?: unknown) => {
     if (!import.meta.env.DEV) {
@@ -337,30 +394,34 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 {t("notifications.empty")}
               </div>
             ) : (
-              latestNotifications.map((notification) => (
-                <button
-                  key={notification.id}
-                  onClick={() => void handleClick(notification)}
-                  className={`w-full border-b border-border/30 px-4 py-3 text-start transition-colors hover:bg-secondary/30 ${
-                    !notification.isRead ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    {!notification.isRead ? (
-                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{notification.title}</p>
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
-                        {notification.message}
-                      </p>
-                      <p className="mt-1 text-[10px] text-muted-foreground/60">
-                        {new Date(notification.createdAt).toLocaleString(locale)}
-                      </p>
+              latestNotifications.map((notification) => {
+                const display = getNotificationDisplay(notification);
+
+                return (
+                  <button
+                    key={notification.id}
+                    onClick={() => void handleClick(notification)}
+                    className={`w-full border-b border-border/30 px-4 py-3 text-start transition-colors hover:bg-secondary/30 ${
+                      !notification.isRead ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {!notification.isRead ? (
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      ) : null}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{display.title}</p>
+                        <p className="line-clamp-2 text-xs text-muted-foreground">
+                          {display.message}
+                        </p>
+                        <p className="mt-1 text-[10px] text-muted-foreground/60">
+                          {new Date(notification.createdAt).toLocaleString(locale)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
 
             <button

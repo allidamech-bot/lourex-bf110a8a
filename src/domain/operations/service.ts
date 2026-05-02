@@ -630,7 +630,10 @@ export const cancelPurchaseRequest = async (
           actorId: original.customer.id,
         });
       } catch (error) {
-        console.warn("purchase_request.cancelled automation failed:", error);
+        logOperationalError("automation_purchase_request_cancelled", error, {
+          requestId: original.id,
+          requestNumber: original.requestNumber,
+        });
       }
     }
 

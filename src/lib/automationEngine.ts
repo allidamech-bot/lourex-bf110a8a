@@ -310,12 +310,23 @@ const createDealIfMissing = async (payload: AutomationPayload): Promise<Automati
 
   const { data: request, error: requestError } = await db
     .from("purchase_requests")
-    .select("id, request_number, customer_id, product_name, converted_deal_id")
+    .select("id, request_number, customer_id, product_name, converted_deal_id, status, customer_hidden_at")
     .eq("id", payload.requestId)
     .single();
 
   if (requestError) throw requestError;
   if (!request) return { action: "create_deal_if_missing", status: "skipped", reason: "Request not found." };
+  if (request.customer_hidden_at) {
+    return { action: "create_deal_if_missing", status: "skipped", reason: "Archived requests are not converted." };
+  }
+  if (request.status !== "ready_for_conversion") {
+    return {
+      action: "create_deal_if_missing",
+      status: "skipped",
+      reason: "Request is not ready for conversion.",
+      recordId: request.id,
+    };
+  }
   if (request.converted_deal_id) {
     return {
       action: "create_deal_if_missing",
@@ -396,17 +407,22 @@ const createShipmentIfMissing = async (
     country?: string | null;
     city?: string | null;
     converted_deal_id?: string | null;
+    status?: PurchaseRequestStatus | null;
+    customer_hidden_at?: string | null;
   } | null = null;
 
   if (payload.requestId) {
     const { data: requestRow, error: requestError } = await db
       .from("purchase_requests")
-      .select("id, request_number, customer_id, full_name, country, city, converted_deal_id")
+      .select("id, request_number, customer_id, full_name, country, city, converted_deal_id, status, customer_hidden_at")
       .eq("id", payload.requestId)
       .maybeSingle();
 
     if (requestError) throw requestError;
     request = requestRow;
+    if (request?.customer_hidden_at || request?.status === "cancelled") {
+      return { action: action.type, status: "skipped", reason: "Cancelled or archived requests do not create shipments." };
+    }
   }
 
   let dealId = action.dealId || payload.dealId || request?.converted_deal_id || null;

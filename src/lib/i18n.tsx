@@ -417,6 +417,44 @@ const translations: Record<Lang, TranslationTree> = {
       loadError: "Unable to load notifications",
       unreadCount: "{{count}} unread",
       realtimeUnavailable: "Live updates are temporarily unavailable.",
+      events: {
+        purchaseRequestCreated: {
+          title: "New purchase request",
+          message: "A purchase request was submitted.",
+        },
+        purchaseRequestApproved: {
+          title: "Purchase request approved",
+          message: "The request is ready for the next operational step.",
+        },
+        purchaseRequestCancelled: {
+          title: "Purchase request cancelled",
+          message: "The purchase request was cancelled.",
+        },
+        purchaseRequestReady: {
+          title: "Request ready for conversion",
+          message: "The purchase request is ready for conversion.",
+        },
+        dealCreated: {
+          title: "Deal created",
+          message: "A new deal was created.",
+        },
+        shipmentUpdated: {
+          title: "Shipment updated",
+          message: "Shipment status was updated.",
+        },
+        editRequestSubmitted: {
+          title: "Edit request submitted",
+          message: "An edit request was submitted for review.",
+        },
+        editRequestApproved: {
+          title: "Edit request approved",
+          message: "The edit request was approved.",
+        },
+        editRequestRejected: {
+          title: "Edit request rejected",
+          message: "The edit request was rejected.",
+        },
+      },
     },
     auth: {
       signIn: "Sign in",
@@ -1816,6 +1854,44 @@ const translations: Record<Lang, TranslationTree> = {
       loadError: "تعذر تحميل الإشعارات",
       unreadCount: "{{count}} غير مقروء",
       realtimeUnavailable: "التحديثات الفورية غير متاحة مؤقتًا.",
+      events: {
+        purchaseRequestCreated: {
+          title: "طلب شراء جديد",
+          message: "تم إرسال طلب شراء.",
+        },
+        purchaseRequestApproved: {
+          title: "تمت الموافقة على طلب الشراء",
+          message: "الطلب جاهز للخطوة التشغيلية التالية.",
+        },
+        purchaseRequestCancelled: {
+          title: "تم إلغاء طلب الشراء",
+          message: "تم إلغاء طلب الشراء.",
+        },
+        purchaseRequestReady: {
+          title: "الطلب جاهز للتحويل",
+          message: "طلب الشراء جاهز للتحويل.",
+        },
+        dealCreated: {
+          title: "تم إنشاء الصفقة",
+          message: "تم إنشاء صفقة جديدة.",
+        },
+        shipmentUpdated: {
+          title: "تم تحديث الشحنة",
+          message: "تم تحديث حالة الشحنة.",
+        },
+        editRequestSubmitted: {
+          title: "تم إرسال طلب تعديل",
+          message: "تم إرسال طلب تعديل للمراجعة.",
+        },
+        editRequestApproved: {
+          title: "تمت الموافقة على طلب التعديل",
+          message: "تمت الموافقة على طلب التعديل.",
+        },
+        editRequestRejected: {
+          title: "تم رفض طلب التعديل",
+          message: "تم رفض طلب التعديل.",
+        },
+      },
     },
     auth: {
       signIn: "تسجيل الدخول",
