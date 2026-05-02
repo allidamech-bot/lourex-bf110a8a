@@ -497,15 +497,15 @@ export default function CustomerRequestsPage() {
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
           <div id="requests" ref={listRef} className="scroll-mt-24">
           <BentoCard className="flex flex-col gap-4 overflow-hidden">
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   {t("customerPortal.eyebrow")}
                 </p>
-                <h1 className="mt-2 font-serif text-2xl font-semibold">{t("customerPortal.title")}</h1>
+                <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold">{t("customerPortal.title")}</h1>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing}>
                   <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 </Button>
