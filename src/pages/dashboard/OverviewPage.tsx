@@ -1,24 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
-  BarChart3,
   ChevronRight,
   ClipboardList,
   Clock3,
   FilePenLine,
   Loader2,
   PackageSearch,
-  Receipt,
   RefreshCw,
-  Sparkles,
   Truck,
-  WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
-import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchAuditCount,
   fetchDeals,
@@ -33,6 +26,13 @@ import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
 import { supabase } from "@/integrations/supabase/client";
 import { logOperationalError } from "@/lib/monitoring";
 
+// UI Components
+import GradientMeshBackground from "@/components/ui/GradientMeshBackground";
+import GlassPanel from "@/components/ui/GlassPanel";
+import AiOrb from "@/components/ai/AiOrb";
+import FloatingMetrics from "@/components/dashboard/FloatingMetrics";
+import TimelineFlow, { TimelineItem } from "@/components/timeline/TimelineFlow";
+
 interface OverviewMetrics {
   requests: number;
   deals: number;
@@ -40,16 +40,6 @@ interface OverviewMetrics {
   audits: number;
   financialEntries: number;
 }
-
-interface MetricCard {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  helper: string;
-  accent: string;
-}
-
-const loadingCards = Array.from({ length: 4 }, (_, index) => index);
 
 type DashboardRequests = Awaited<ReturnType<typeof fetchRequests>>;
 type DashboardDeals = Awaited<ReturnType<typeof fetchDeals>>;
@@ -190,7 +180,6 @@ export default function OverviewPage() {
   });
   const [requests, setRequests] = useState<DashboardRequests>([]);
   const [deals, setDeals] = useState<DashboardDeals>([]);
-  const [recentRequests, setRecentRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
   const [shipments, setShipments] = useState<Awaited<ReturnType<typeof fetchShipments>>>([]);
   const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof fetchFinancialEditRequests>>>([]);
   const [financialEntries, setFinancialEntries] = useState<DashboardFinancialEntries>([]);
@@ -230,7 +219,6 @@ export default function OverviewPage() {
         });
         setRequests(requestsDomain);
         setDeals(dealsDomain);
-        setRecentRequests(requestsDomain.slice(0, 4));
         setShipments(shipmentsDomain);
         setEditRequests(editsDomain);
         setFinancialEntries(financialEntriesDomain);
@@ -239,7 +227,6 @@ export default function OverviewPage() {
         setMetrics({ requests: 0, deals: 0, shipments: 0, audits: 0, financialEntries: 0 });
         setRequests([]);
         setDeals([]);
-        setRecentRequests([]);
         setShipments([]);
         setEditRequests([]);
         setFinancialEntries([]);
@@ -251,66 +238,49 @@ export default function OverviewPage() {
     void load();
   }, [profile?.role]);
 
-  const requestSummary = useMemo(
-    () => ({
-      review: recentRequests.filter((item) => item.status === "under_review").length,
-      ready: recentRequests.filter((item) => item.status === "ready_for_conversion").length,
-      converted: recentRequests.filter((item) => item.status === "in_progress" || item.status === "completed").length,
-    }),
-    [recentRequests],
-  );
-
   const dashboardContext = useMemo(
     () => buildDashboardContext(requests, shipments, editRequests, metrics),
     [requests, shipments, editRequests, metrics],
   );
 
-  const deliverySummary = useMemo(
-    () => ({
-      active: shipments.filter((item) => item.stage !== "delivered" && item.stage !== "closed").length,
-      delivered: shipments.filter((item) => item.stage === "delivered" || item.stage === "closed").length,
-    }),
-    [shipments],
-  );
-
-  const pendingEditRequests = editRequests.filter((item) => item.status === "pending").length;
-  const newestFinancialEntry = financialEntries[0];
-
-  const recentActivity = useMemo(() => {
-    const requestActivity = requests.slice(0, 3).map((item) => ({
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const requestItems = requests.slice(0, 3).map((item) => ({
       id: `request-${item.id}`,
       title: item.requestNumber || t("overview.genericRequest"),
-      description: item.productName || item.customer.fullName,
-      badge: t(`statuses.${item.status}`),
-      date: item.createdAt,
-      to: "/dashboard/requests",
-      icon: ClipboardList,
+      subtitle: item.productName || item.customer.fullName,
+      status: item.status === "ready_for_conversion" ? "ready" : "under_review",
+      time: new Date(item.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+      type: "request" as const,
+      icon: <ClipboardList size={18} />,
+      date: new Date(item.createdAt),
     }));
 
-    const dealActivity = deals.slice(0, 2).map((item) => ({
+    const dealItems = deals.slice(0, 2).map((item) => ({
       id: `deal-${item.id}`,
       title: item.dealNumber,
-      description: item.operationTitle || item.customerName,
-      badge: t("dashboardNav.deals"),
-      date: item.createdAt,
-      to: "/dashboard/deals",
-      icon: PackageSearch,
+      subtitle: item.operationTitle || item.customerName,
+      status: item.operationalStatus === "delivered" || item.operationalStatus === "closed" ? "completed" : "active",
+      time: new Date(item.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+      type: "deal" as const,
+      icon: <PackageSearch size={18} />,
+      date: new Date(item.createdAt),
     }));
 
-    const shipmentActivity = shipments.slice(0, 2).map((item) => ({
+    const shipmentItems = shipments.slice(0, 2).map((item) => ({
       id: `shipment-${item.id}`,
       title: item.trackingId,
-      description: item.clientName || item.destination,
-      badge: t("dashboardNav.tracking"),
-      date: item.updatedAt,
-      to: "/dashboard/tracking",
-      icon: Truck,
+      subtitle: item.clientName || item.destination,
+      status: item.stage === "delivered" || item.stage === "closed" ? "delivered" : "active",
+      time: new Date(item.updatedAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+      type: "shipment" as const,
+      icon: <Truck size={18} />,
+      date: new Date(item.updatedAt),
     }));
 
-    return [...requestActivity, ...dealActivity, ...shipmentActivity]
-      .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime())
-      .slice(0, 6);
-  }, [deals, requests, shipments, t]);
+    return [...requestItems, ...dealItems, ...shipmentItems]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .map(({ date, ...rest }) => rest);
+  }, [deals, requests, shipments, t, locale]);
 
   const prepareDailyBriefing = useCallback(async () => {
     if (!isInternal || loading) {
@@ -351,7 +321,7 @@ export default function OverviewPage() {
       }
 
       setBriefingText(reply);
-    } catch (error: unknown) {
+    } catch (error: any) {
       logOperationalError("dashboard_ai_daily_briefing", error, { role: profile?.role });
 
       let isQuotaError = false;
@@ -360,7 +330,6 @@ export default function OverviewPage() {
         isQuotaError = error.message.includes("402");
       }
 
-      // Supabase FunctionsHttpError case
       if (
           typeof error === "object" &&
           error !== null &&
@@ -391,294 +360,174 @@ export default function OverviewPage() {
     }
   }, [briefingLoading, briefingText, isInternal, loading, prepareDailyBriefing]);
 
-  const metricCards: MetricCard[] = [
-    {
-      label: t("overview.metrics.requests"),
-      value: metrics.requests,
-      icon: ClipboardList,
-      helper: t("overview.reviewDescription"),
-      accent: "from-blue-500/25 to-cyan-400/10 text-blue-100 ring-blue-400/25",
-    },
-    {
-      label: t("overview.metrics.deals"),
-      value: metrics.deals,
-      icon: PackageSearch,
-      helper: t("overview.readyDescription"),
-      accent: "from-indigo-500/25 to-blue-400/10 text-indigo-100 ring-indigo-400/25",
-    },
-    {
-      label: t("overview.activeShipments"),
-      value: metrics.shipments,
-      icon: Truck,
-      helper: t("overview.currentOpsDescription"),
-      accent: "from-sky-500/25 to-blue-400/10 text-sky-100 ring-sky-400/25",
-    },
-    {
-      label: t("reports.metrics.linkedEntries"),
-      value: metrics.financialEntries,
-      icon: WalletCards,
-      helper: t("overview.editDescription"),
-      accent: "from-emerald-500/20 to-blue-400/10 text-emerald-100 ring-emerald-400/25",
-    },
-  ];
+  const briefingPreview = useMemo(() => {
+    if (!briefingText) return "";
+    return briefingText.length > 120 
+      ? briefingText.substring(0, 120).replace(/[#*`]/g, "") + "..." 
+      : briefingText.replace(/[#*`]/g, "");
+  }, [briefingText]);
 
   return (
-    <div className="space-y-6 pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
-      <BentoCard
-        span="full"
-        className="rounded-[1.75rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.24),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-6 shadow-[0_28px_70px_-48px_rgba(59,130,246,0.9)] md:p-8"
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">
-            {t("overview.heroEyebrow")}
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
-            {new Date().toLocaleDateString(locale)}
-          </span>
-        </div>
-        <div className="mt-5 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <h2 className="font-serif text-3xl font-bold md:text-4xl opacity-100 shadow-none rounded border-gold border-0">
-              {t("overview.heroTitle")}
-            </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{t("overview.heroDescription")}</p>
+    <div className="relative min-h-screen pb-20 pt-6" dir={lang === "ar" ? "rtl" : "ltr"}>
+      <GradientMeshBackground />
+
+      <div className="container relative z-10 mx-auto px-4 md:px-6">
+        {/* Header Section */}
+        <header className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h1 className="font-serif text-3xl font-bold tracking-tight text-white md:text-5xl">
+              {t("overview.heroTitle") || "Lourex Command Center"}
+            </h1>
+            <p className="mt-2 text-sm font-medium text-slate-400">
+              {new Date().toLocaleDateString(locale)} • {t("overview.heroEyebrow")}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="default" asChild className="rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => void prepareDailyBriefing()} className="rounded-xl border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10">
+              <RefreshCw className={briefingLoading ? "animate-spin" : ""} size={16} />
+            </Button>
+            <Button asChild className="rounded-xl bg-blue-600 px-6 font-semibold shadow-lg shadow-blue-500/20 hover:bg-blue-500">
               <Link to="/dashboard/requests">
                 {t("overview.openRequests")}
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white">
-              <Link to="/dashboard/deals">
-                {t("overview.openDeals")}
-                <ChevronRight className="h-4 w-4" />
+                <ArrowUpRight className="ms-2" size={16} />
               </Link>
             </Button>
           </div>
-        </div>
-      </BentoCard>
+        </header>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {(loading ? loadingCards : metricCards).map((item, index) => (
-          <BentoCard
-            key={loading ? item : item.label}
-            delay={index * 0.05}
-            className="rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(6,17,31,0.9))] p-5"
-          >
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-12 w-12 rounded-2xl" />
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-4 w-28" />
+        {/* AI Orb & Status Section */}
+        <section className="mb-12">
+          <GlassPanel className="flex flex-col items-center gap-6 p-8 md:flex-row md:gap-10">
+            <AiOrb active={briefingLoading || !!briefingText} className="shrink-0" />
+            <div className="flex-1 text-center md:text-start">
+              <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
+                {lang === "ar" ? "تحليل الذكاء الاصطناعي اليومي" : "AI Daily Analysis"}
+              </h2>
+              <div className="mt-3 min-h-[3rem]">
+                {briefingLoading ? (
+                  <p className="flex items-center justify-center gap-2 text-lg text-slate-300 md:justify-start">
+                    <Loader2 className="animate-spin text-blue-400" size={20} />
+                    {lang === "ar" ? "جارٍ تحليل البيانات..." : "Analyzing data..."}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-lg leading-relaxed text-slate-200">
+                      {briefingText ? briefingPreview : (lang === "ar" ? "بانتظار البيانات..." : "Waiting for data...")}
+                    </p>
+                    {briefingUsedFallback && (
+                      <span className="mt-2 inline-block text-[10px] font-bold uppercase tracking-widest text-amber-500/80">
+                        {lang === "ar" ? "وضع المحلل المحلي" : "Local Engine Active"}
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ring-1 ${item.accent}`}>
-                    <item.icon className="h-5 w-5" />
+            </div>
+            {briefingText && (
+              <Button asChild variant="ghost" className="rounded-xl text-blue-400 hover:bg-blue-500/10 hover:text-blue-300">
+                <Link to="/dashboard/requests">
+                  {lang === "ar" ? "عرض التفاصيل" : "View Details"}
+                  <ChevronRight className="ms-1" size={16} />
+                </Link>
+              </Button>
+            )}
+          </GlassPanel>
+        </section>
+
+        {/* Floating Metrics Section */}
+        <section className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <FloatingMetrics 
+            label={t("overview.metrics.requests")} 
+            value={loading ? "..." : metrics.requests} 
+          />
+          <FloatingMetrics 
+            label={t("overview.metrics.deals")} 
+            value={loading ? "..." : metrics.deals} 
+          />
+          <FloatingMetrics 
+            label={t("overview.activeShipments")} 
+            value={loading ? "..." : metrics.shipments} 
+          />
+          <FloatingMetrics 
+            label={t("reports.metrics.linkedEntries")} 
+            value={loading ? "..." : metrics.financialEntries} 
+          />
+        </section>
+
+        {/* Activity & Quick Actions Grid */}
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+          <section>
+            <GlassPanel className="h-full overflow-hidden">
+              <div className="border-b border-white/5 px-6 py-5">
+                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-400">
+                  <Clock3 size={14} />
+                  {t("overview.priorityTitle") || "Operational Flow"}
+                </h3>
+              </div>
+              <div className="p-6">
+                {loading ? (
+                   <div className="flex flex-col gap-6">
+                     {Array.from({ length: 4 }).map((_, i) => (
+                       <div key={i} className="flex gap-4 animate-pulse">
+                         <div className="h-10 w-10 rounded-full bg-white/5" />
+                         <div className="flex-1 space-y-2">
+                           <div className="h-4 w-1/3 rounded bg-white/5" />
+                           <div className="h-3 w-1/4 rounded bg-white/5" />
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                ) : timelineItems.length > 0 ? (
+                  <TimelineFlow items={timelineItems} />
+                ) : (
+                  <div className="py-10 text-center text-sm text-slate-500">
+                    {t("overview.noRequests")}
                   </div>
-                  <span className="rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold text-blue-100">
-                    {t("overview.liveFocus")}
-                  </span>
-                </div>
-                <p className="mt-2 font-serif text-xl font-bold border-none border-gold border-0 shadow opacity-80 text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-2 text-sm font-semibold text-slate-100">{item.label}</p>
-                <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-400">{item.helper}</p>
-              </>
-            )}
-          </BentoCard>
-        ))}
-      </div>
-
-      {isInternal ? (
-        <BentoCard span="full" className="rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-6 shadow-[0_22px_60px_-42px_rgba(59,130,246,0.9)] md:p-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-400/25 bg-blue-500/15 text-blue-100">
-                  <Sparkles className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-blue-200">
-                    {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
-                  </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-400">
-                    {lang === "ar"
-                      ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق لوركس."
-                      : "AI output is advisory. Final decisions remain with the Lourex team."}
-                  </p>
-                </div>
+                )}
               </div>
-            </div>
+            </GlassPanel>
+          </section>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="shrink-0 rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
-              disabled={briefingLoading || loading}
-              onClick={() => void prepareDailyBriefing()}
-              aria-label={lang === "ar" ? "تحديث الموجز اليومي" : "Refresh daily briefing"}
-              aria-busy={briefingLoading}
-            >
-              {briefingLoading ? (
-                <Loader2 className="me-2 h-4 w-4 animate-spin text-blue-200" />
-              ) : (
-                <RefreshCw className="me-2 h-4 w-4 text-blue-200" />
-              )}
-              {lang === "ar" ? "تحديث الموجز" : "Refresh briefing"}
-            </Button>
-          </div>
-
-          {briefingUsedFallback ? (
-            <div className="mt-5 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
-              {lang === "ar"
-                ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء موجز تشغيلي محلي بدلاً من ذلك."
-                : "LOUREX AI is unavailable right now. A local operational briefing was generated instead."}
-            </div>
-          ) : null}
-
-          <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5">
-            {briefingLoading ? (
-              <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-200" />
-                {lang === "ar" ? "جارٍ تجهيز الموجز اليومي..." : "Preparing daily briefing..."}
-              </div>
-            ) : briefingText ? (
-              <pre className="max-h-[28rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-100">{briefingText}</pre>
-            ) : (
-              <div className="text-sm leading-7 text-slate-400">
-                {lang === "ar"
-                  ? "سيظهر الموجز اليومي بعد تحميل بيانات لوحة التحكم."
-                  : "The daily briefing will appear after dashboard data finishes loading."}
-              </div>
-            )}
-          </div>
-        </BentoCard>
-      ) : null}
-
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-blue-200">{t("overview.priorityBoard")}</p>
-              <h3 className="mt-2 font-serif text-2xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
-            </div>
-            <div className="rounded-full border border-blue-400/25 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-100">{t("overview.liveFocus")}</div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { label: t("overview.reviewLabel"), value: requestSummary.review, description: t("overview.reviewDescription") },
-              { label: t("overview.readyLabel"), value: requestSummary.ready, description: t("overview.readyDescription") },
-              { label: t("overview.editLabel"), value: pendingEditRequests, description: t("overview.editDescription") },
-            ].map((item) => (
-              <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5 transition-colors hover:border-blue-400/30 hover:bg-blue-500/10">
-                <p className="text-xs font-medium text-slate-400">{item.label}</p>
-                <p className="mt-2 text-3xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-400">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </BentoCard>
-
-        <BentoCard className="space-y-4 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
-            <Receipt className="h-5 w-5" />
-          </div>
-          <h3 className="font-serif text-2xl font-semibold text-white">{t("overview.currentOpsTitle")}</h3>
-          <div className="grid gap-3">
-            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
-              <p className="text-xs font-medium text-slate-400">{t("overview.activeShipments")}</p>
-              <p className="mt-2 text-2xl font-bold text-white">{deliverySummary.active.toLocaleString(locale)}</p>
-            </div>
-            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
-              <p className="text-xs font-medium text-slate-400">{t("overview.deliveredShipments")}</p>
-              <p className="mt-2 text-2xl font-bold text-white">{deliverySummary.delivered.toLocaleString(locale)}</p>
-            </div>
-            <div className="rounded-[1.25rem] border border-blue-400/20 bg-blue-500/10 p-4 text-sm leading-7 text-slate-300">
-              {t("overview.currentOpsDescription")}
-            </div>
-          </div>
-        </BentoCard>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <BentoCard span="1" className="rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))] p-0">
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-6 py-5">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-blue-200">{t("customers.activity")}</p>
-              <h3 className="mt-2 font-serif text-2xl font-semibold text-white">{t("overview.latestRequests")}</h3>
-            </div>
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
-              <Clock3 className="h-4 w-4" />
-            </span>
-          </div>
-          <div className="space-y-0">
-            {loading ? (
-              <div className="space-y-4 p-6">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-20 w-full rounded-2xl" />
+          <section className="flex flex-col gap-6">
+            <GlassPanel className="p-6">
+              <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-400">
+                <FilePenLine size={14} />
+                {t("overview.quickActions")}
+              </h3>
+              <div className="grid gap-3">
+                {[
+                  { label: t("overview.quickReview"), to: "/dashboard/requests" },
+                  { label: t("overview.quickDeals"), to: "/dashboard/deals" },
+                  { label: t("overview.quickTracking"), to: "/dashboard/tracking" },
+                  { label: t("overview.quickEditRequests"), to: "/dashboard/edit-requests" },
+                ].map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:bg-white/10 hover:ps-5"
+                  >
+                    {item.label}
+                    <ChevronRight size={14} className="text-slate-600" />
+                  </Link>
                 ))}
               </div>
-            ) : recentActivity.length > 0 ? (
-              recentActivity.map((item) => (
-                <Link
-                  key={item.id}
-                  to={item.to}
-                  className="group block border-b border-white/10 px-6 py-4 transition-colors last:border-b-0 hover:bg-blue-500/10"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-blue-100 group-hover:border-blue-400/30">
-                        <item.icon className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-                        <p className="mt-1 truncate text-sm text-slate-400">{item.description || t("overview.genericRequest")}</p>
-                      </div>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-100">
-                      {item.badge}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">{new Date(item.date).toLocaleString(locale)}</p>
-                </Link>
-              ))
-            ) : (
-              <div className="px-6 py-10 text-sm text-slate-400">{t("overview.noRequests")}</div>
-            )}
-          </div>
-        </BentoCard>
+            </GlassPanel>
 
-        <BentoCard className="space-y-4 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
-            <FilePenLine className="h-5 w-5" />
-          </div>
-          <h3 className="font-serif text-2xl font-semibold text-white">{t("overview.quickActions")}</h3>
-          <div className="grid gap-3">
-            {[
-              { label: t("overview.quickReview"), to: "/dashboard/requests" },
-              { label: t("overview.quickDeals"), to: "/dashboard/deals" },
-              { label: t("overview.quickTracking"), to: "/dashboard/tracking" },
-              { label: t("overview.quickEditRequests"), to: "/dashboard/edit-requests" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                className="group flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:border-blue-400/35 hover:bg-blue-500/10 hover:text-white"
-              >
-                <span>{item.label}</span>
-                <ChevronRight className="h-4 w-4 text-slate-500 transition-colors group-hover:text-blue-100" />
-              </Link>
-            ))}
-          </div>
-          {newestFinancialEntry ? (
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
-              {t("reports.metrics.linkedEntries")}: {metrics.financialEntries.toLocaleString(locale)}
-            </div>
-          ) : null}
-        </BentoCard>
+            {isInternal && (
+               <GlassPanel className="border-blue-500/20 bg-blue-500/5 p-6">
+                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-400">
+                   {t("reports.metrics.linkedEntries")}
+                 </h4>
+                 <p className="mt-2 text-2xl font-bold text-white">
+                   {metrics.financialEntries.toLocaleString(locale)}
+                 </p>
+                 <p className="mt-1 text-xs text-slate-400">
+                   {lang === "ar" ? "مدخلات مالية مسجلة" : "Financial entries recorded"}
+                 </p>
+               </GlassPanel>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );
