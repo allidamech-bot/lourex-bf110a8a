@@ -101,7 +101,7 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="container mx-auto grid gap-5 px-4 py-6 md:px-8 lg:grid-cols-[244px_minmax(0,1fr)]">
+      <div className="container mx-auto grid gap-6 px-4 py-6 md:px-8 lg:grid-cols-[244px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-border/60 bg-card/80 p-3 shadow-sm lg:sticky lg:top-20 lg:self-start">
           <div className="mb-4 rounded-xl bg-secondary/70 p-3">
             <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
@@ -145,7 +145,7 @@ export const DashboardLayout = () => {
           </nav>
         </aside>
 
-        <main className="min-w-0">
+        <main className="min-w-0 pb-12">
           <div className="mb-5 rounded-2xl border border-primary/15 bg-[linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.9))] px-5 py-4 shadow-[0_24px_55px_-38px_rgba(0,0,0,0.32)] dark:shadow-[0_24px_55px_-38px_rgba(0,0,0,0.65)]">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>

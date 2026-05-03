@@ -398,7 +398,7 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="space-y-6" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="space-y-6 pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
       <BentoCard
         span="full"
         className="rounded-[1.75rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.24),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-6 shadow-[0_28px_70px_-48px_rgba(59,130,246,0.9)] md:p-8"
@@ -494,6 +494,8 @@ export default function OverviewPage() {
               className="shrink-0 rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
               disabled={briefingLoading || loading}
               onClick={() => void prepareDailyBriefing()}
+              aria-label={lang === "ar" ? "تحديث الموجز اليومي" : "Refresh daily briefing"}
+              aria-busy={briefingLoading}
             >
               {briefingLoading ? (
                 <Loader2 className="me-2 h-4 w-4 animate-spin text-blue-200" />

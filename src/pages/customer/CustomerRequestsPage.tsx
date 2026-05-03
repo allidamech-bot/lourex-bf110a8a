@@ -493,7 +493,7 @@ export default function CustomerRequestsPage() {
   }
 
   return (
-      <div className="space-y-4">
+      <div className="space-y-4 pb-12">
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
           <div id="requests" ref={listRef} className="scroll-mt-24">
           <BentoCard className="flex flex-col gap-4 overflow-hidden">

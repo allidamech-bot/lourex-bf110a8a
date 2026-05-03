@@ -374,7 +374,12 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 ) : null}
               </div>
               {unreadCount > 0 ? (
-                <button onClick={() => void markAllRead()} className="text-xs text-primary hover:underline">
+                <button
+                  onClick={() => void markAllRead()}
+                  disabled={loading}
+                  className="text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                  aria-busy={loading}
+                >
                   {t("notifications.markAllRead")}
                 </button>
               ) : null}
