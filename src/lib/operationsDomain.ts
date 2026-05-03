@@ -1011,11 +1011,21 @@ const mapExplicitRequest = (
   transferProofUrl: row.transfer_proof_url,
   transferProofName: row.transfer_proof_name,
   transferProofUploadedAt: row.transfer_proof_uploaded_at,
-  transferProofStatus: row.transfer_proof_status as any,
+  transferProofStatus: normalizeTransferProofStatus(row.transfer_proof_status),
   transferAcceptedAt: row.transfer_accepted_at,
   transferAcceptedBy: row.transfer_accepted_by,
   transferRejectionReason: row.transfer_rejection_reason,
 });
+
+const normalizeTransferProofStatus = (
+  value: string | null | undefined,
+): PurchaseRequest["transferProofStatus"] => {
+  if (value === "pending" || value === "accepted" || value === "rejected") {
+    return value;
+  }
+
+  return null;
+};
 
 const buildPurchaseRequestAutomationPayload = (row: PurchaseRequestRow, actorId?: string | null) => ({
   requestId: row.id,
@@ -1037,10 +1047,11 @@ export const loadPurchaseRequests = async (
 ): Promise<OperationalPurchaseRequest[]> => {
   const { user, profile } = await getCurrentUserContext();
   const isCustomer = profile?.role === "customer";
+  let currentCustomerId: string | null = null;
   if (isCustomer) {
-    await getCurrentCustomerRecord();
+    const customerRecord = await getCurrentCustomerRecord();
+    currentCustomerId = customerRecord?.id || null;
   }
-  const currentCustomerId = isCustomer ? user?.id || profile?.id || null : null;
 
   let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
 
@@ -1052,15 +1063,26 @@ export const loadPurchaseRequests = async (
           currentCustomerId,
         ).then((rows) => rows.filter((row) => !row.customer_hidden_at))
       : Promise.resolve([] as PurchaseRequestRow[]);
-  } else {
+  } else if (profile?.role === "owner" || profile?.role === "operations_employee") {
+    // Management can see all requests
     explicitRowsPromise = safeStructuredSelect<PurchaseRequestRow>("purchase_requests").then((rows) =>
       rows.filter((row) => !row.customer_hidden_at),
     );
+  } else {
+    // Partners or other roles don't see the full PR list by default for privacy
+    explicitRowsPromise = Promise.resolve([] as PurchaseRequestRow[]);
   }
 
-  const [explicitRows, attachmentRows, legacyResult, { data: conversions }] = await Promise.all([
-    explicitRowsPromise,
-    options.includeAttachments ? safeStructuredSelect<AttachmentRow>("attachments") : Promise.resolve([] as AttachmentRow[]),
+  const explicitRows = await explicitRowsPromise;
+  const explicitRequestIds = explicitRows.map((row) => row.id);
+  const attachmentRowsPromise = !options.includeAttachments
+    ? Promise.resolve([] as AttachmentRow[])
+    : isCustomer
+      ? safeStructuredSelectWhereIn<AttachmentRow>("attachments", "entity_id", explicitRequestIds)
+      : safeStructuredSelect<AttachmentRow>("attachments");
+
+  const [attachmentRows, legacyResult, { data: conversions }] = await Promise.all([
+    attachmentRowsPromise,
     !options.includeLegacy || isCustomer
       ? Promise.resolve({ data: [] as InquiryRow[] | null, error: null })
       : supabase
@@ -1713,20 +1735,34 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
       : safeStructuredSelect<ShipmentRow>("shipments"),
     isCustomer
       ? (async () => {
-          const rows = await safeStructuredSelectWhereIn<AttachmentRow>("attachments", "entity_id", dealIds);
+          const rows = await safeStructuredSelectWhereInEq<AttachmentRow>(
+            "attachments",
+            "entity_id",
+            dealIds,
+            "visibility",
+            "customer_visible",
+            "id, entity_type, entity_id, category, file_name, file_url, bucket_name, visibility, created_at",
+          );
           return rows.filter((row) => row.entity_type === "deal");
         })()
       : safeStructuredSelect<AttachmentRow>("attachments"),
     isCustomer ? [] : await safeStructuredSelect<TrackingUpdateRow>("tracking_updates"),
     isCustomer
-      ? safeStructuredSelectWhereIn<FinancialEntryRow>("financial_entries", "deal_id", dealIds)
+      ? Promise.resolve([] as FinancialEntryRow[])
       : await safeStructuredSelect<FinancialEntryRow>("financial_entries"),
     isCustomer ? [] : await safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
   ]);
 
   const shipmentIds = shipments.map((row) => row.id);
   const customerTrackingRows = isCustomer
-    ? await safeStructuredSelectWhereIn<TrackingUpdateRow>("tracking_updates", "shipment_id", shipmentIds)
+    ? await safeStructuredSelectWhereInEq<TrackingUpdateRow>(
+        "tracking_updates",
+        "shipment_id",
+        shipmentIds,
+        "visibility",
+        "customer_visible",
+        "id, shipment_id, deal_id, stage_code, previous_stage_code, customer_note, visibility, occurred_at",
+      )
     : trackingRows;
 
   const requestMap = new Map<string, PurchaseRequestRow>((requests || []).map((row) => [row.id, row]));
@@ -2153,7 +2189,25 @@ export const logShipmentEvent = async (input: {
   actorUserId?: string | null;
   isCustomerVisible?: boolean;
 }) => {
-  const { user } = await getCurrentUserContext();
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile) {
+    throw new Error("يجب تسجيل الدخول للقيام بهذا الإجراء.");
+  }
+
+  // Security check for partners and customers
+  if (profile.role !== "owner" && profile.role !== "operations_employee") {
+    const deals = await loadDeals();
+    const { data: shipment } = await db
+      .from<ShipmentRow>("shipments")
+      .select("deal_id")
+      .eq("id", input.shipmentId)
+      .maybeSingle();
+    
+    const hasAccess = shipment?.deal_id && deals.some((d) => d.id === shipment.deal_id);
+    if (!hasAccess) {
+      throw new Error("ليس لديك صلاحية لإضافة أحداث لهذه الشحنة.");
+    }
+  }
 
   const { data, error } = await (db as any).rpc("log_shipment_event", {
     p_shipment_id: input.shipmentId,
@@ -2161,7 +2215,7 @@ export const logShipmentEvent = async (input: {
     p_from_stage: input.fromStage ? normalizeShipmentStageCode(input.fromStage) : null,
     p_to_stage: input.toStage ? normalizeShipmentStageCode(input.toStage) : null,
     p_note: input.note || null,
-    p_actor_user_id: input.actorUserId || user?.id || null,
+    p_actor_user_id: input.actorUserId || user.id,
     p_is_customer_visible: Boolean(input.isCustomerVisible),
   });
 
@@ -2439,7 +2493,7 @@ export const lookupPublicTracking = async (trackingId: string): Promise<PublicTr
 export const deletePurchaseRequestRecord = async (requestId: string) => {
   const { profile } = await getCurrentUserContext();
   if (!profile || !assertManagementUser(profile.role)) {
-    throw new Error("You do not have permission to archive this request.");
+    throw new Error("ليس لديك صلاحية لأرشفة هذا الطلب.");
   }
 
   const now = new Date().toISOString();
@@ -2526,18 +2580,32 @@ export const formatTrackingVisibility = (visibility: TrackingUpdateRecord["visib
   trackingVisibilityLabel[visibility];
 
 export const uploadTransferProof = async (requestId: string, file: File) => {
-  const { user } = await getCurrentUserContext();
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile) {
+    throw new Error("يجب تسجيل الدخول للقيام بهذا الإجراء.");
+  }
+
+  if (profile.role === "turkish_partner" || profile.role === "saudi_partner") {
+    throw new Error("لا يمكن للشركاء رفع إثباتات الدفع مباشرة.");
+  }
 
   const { data: request, error: requestError } = await (supabase as any)
     .from("purchase_requests")
-    .select("id, status")
+    .select("id, status, customer_id")
     .eq("id", requestId)
     .single();
 
   if (requestError || !request) throw requestError || new Error("الطلب غير موجود.");
+
+  // Customer ownership check
+  if (profile.role === "customer") {
+    const customer = await getCurrentCustomerRecord();
+    if (!customer || request.customer_id !== customer.id) {
+      throw new Error("ليس لديك صلاحية لرفع إثبات دفع لهذا الطلب.");
+    }
+  }
   if (!["ready_for_conversion", "transfer_proof_rejected"].includes(request.status)) {
-    throw new Error("Transfer proof can only be uploaded for requests awaiting payment proof.");
+    throw new Error("يمكن رفع إثبات الدفع فقط للطلبات التي تنتظر إثبات الدفع.");
   }
 
   const fileName = `${Date.now()}-${file.name}`;
@@ -2585,7 +2653,7 @@ export const acceptTransferProof = async (requestId: string) => {
     request.status !== "transfer_proof_pending" ||
     (request.transfer_proof_status && request.transfer_proof_status !== "pending")
   ) {
-    throw new Error("Only pending transfer proofs can be accepted.");
+    throw new Error("يمكن فقط قبول إثباتات الدفع المعلقة.");
   }
 
   const { error } = await (supabase as any)
@@ -2647,11 +2715,11 @@ export const acceptTransferProofWithPayment = async (
   }
 
   if (!payload.paymentType) {
-    throw new Error("Payment type is required.");
+    throw new Error("نوع الدفع مطلوب.");
   }
 
   if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-    throw new Error("Received amount must be greater than zero.");
+    throw new Error("يجب أن يكون المبلغ المستلم أكبر من صفر.");
   }
 
   const { data, error } = await (supabase as any).rpc("accept_transfer_proof_with_payment", {
@@ -2702,7 +2770,7 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
     request.status !== "transfer_proof_pending" ||
     (request.transfer_proof_status && request.transfer_proof_status !== "pending")
   ) {
-    throw new Error("Only pending transfer proofs can be rejected.");
+    throw new Error("يمكن فقط رفض إثباتات الدفع المعلقة.");
   }
 
   const { error } = await (supabase as any)
