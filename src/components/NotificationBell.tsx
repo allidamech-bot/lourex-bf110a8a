@@ -212,8 +212,11 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         return;
       }
 
+      // We use a unique instance ID for each channel to prevent race conditions
+      // during rapid re-mounts or session switches.
+      const instanceId = Date.now();
       const channel = supabase
-        .channel(`user-notifications:${userId}`)
+        .channel(`user-notifications:${userId}:${instanceId}`)
         .on(
           "postgres_changes",
           {

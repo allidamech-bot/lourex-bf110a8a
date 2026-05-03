@@ -353,8 +353,33 @@ export default function OverviewPage() {
       setBriefingText(reply);
     } catch (error: unknown) {
       logOperationalError("dashboard_ai_daily_briefing", error, { role: profile?.role });
+
+      let isQuotaError = false;
+
+      if (error instanceof Error) {
+        isQuotaError = error.message.includes("402");
+      }
+
+      // Supabase FunctionsHttpError case
+      if (
+          typeof error === "object" &&
+          error !== null &&
+          "status" in error &&
+          typeof (error as { status?: unknown }).status === "number"
+      ) {
+        const status = (error as { status: number }).status;
+        if (status === 402) {
+          isQuotaError = true;
+        }
+      }
+
       setBriefingUsedFallback(true);
       setBriefingText(buildLocalDailyBriefing(dashboardContext, lang));
+
+      if (isQuotaError) {
+        console.warn("AI Quota exceeded (402). Using local briefing engine.");
+      }
+
     } finally {
       setBriefingLoading(false);
     }

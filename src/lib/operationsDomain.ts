@@ -319,12 +319,16 @@ export const getLourexDomainAvailability = async () => {
 
 export const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
   if (table === "purchase_requests" && !(await getLourexDomainAvailability())) {
+    logOperationalError("domain_select_unavailable", new Error(`Table ${table} is not available in current schema`), { table });
     return [] as T[];
   }
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder;
-  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error && isMissingSchemaError(error)) {
+    logOperationalError("domain_select_schema_error", error, { table });
+    return [] as T[];
+  }
   if (error) throw error;
   return data || [];
 };
@@ -386,11 +390,16 @@ const safeStructuredMutation = async <T>(
   runner: () => PromiseLike<{ data?: T | null; error?: DomainError | null }>,
 ) => {
   const available = await getLourexDomainAvailability();
-  if (!available) return { data: null as T | null, error: null };
+  if (!available) {
+    const error = { message: "الخدمة غير متوفرة حالياً (قاعدة البيانات غير جاهزة)." };
+    logOperationalError("domain_mutation_unavailable", new Error(error.message));
+    return { data: null as T | null, error };
+  }
 
   const result = await runner();
   if (result.error && isMissingSchemaError(result.error)) {
-    return { data: null as T | null, error: null };
+    logOperationalError("domain_mutation_schema_error", result.error);
+    return { data: null as T | null, error: result.error };
   }
 
   return result;

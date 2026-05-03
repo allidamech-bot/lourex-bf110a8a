@@ -561,14 +561,20 @@ export default function PurchaseRequestsPage() {
             }
 
             setAiOutput(reply);
-        } catch (error: unknown) {
+        } catch (error: any) {
             logOperationalError("purchase_request_ai_review", error, {
                 requestId: selectedRow.id,
                 requestNumber: selectedRow.requestNumber,
                 mode,
             });
+            
+            const isQuotaError = error?.status === 402 || error?.message?.includes("402");
             setAiUsedFallback(true);
             setAiOutput(buildLocalAiOutput(mode, selectedRow, lang));
+            
+            if (isQuotaError) {
+                toast.error(lang === "ar" ? "انتهت حصة الذكاء الاصطناعي حالياً. تم استخدام المحلل المحلي." : "AI quota exceeded. Local analyzer used instead.");
+            }
         } finally {
             setAiActionLoading(null);
         }
