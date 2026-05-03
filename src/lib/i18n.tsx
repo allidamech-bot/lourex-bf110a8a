@@ -28,6 +28,11 @@ interface I18nContextType {
 
 const translations: Record<Lang, TranslationTree> = {
   en: {
+    errorBoundary: {
+      title: "An unexpected error occurred",
+      description: "We've stopped this interface to prevent the operation from continuing in an unclear state. You can try again now, and if the error persists, review the last action performed.",
+      retry: "Retry",
+    },
     common: {
       appName: "LOUREX",
       loading: "Loading...",
@@ -1472,6 +1477,11 @@ const translations: Record<Lang, TranslationTree> = {
     },
   },
   ar: {
+    errorBoundary: {
+      title: "حدث خطأ غير متوقع داخل المنصة",
+      description: "أوقفنا هذه الواجهة حتى لا تستمر العملية بشكل غير واضح. يمكنك إعادة المحاولة الآن، وإذا تكرر الخطأ فراجع آخر إجراء تم تنفيذه.",
+      retry: "إعادة المحاولة",
+    },
     common: {
       appName: "لوريكس",
       loading: "جارٍ التحميل...",
