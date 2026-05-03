@@ -290,75 +290,80 @@ export default function OverviewPage() {
     setBriefingLoading(true);
     setBriefingUsedFallback(false);
 
+    // Outer safety net: NEVER allow any error to propagate out of this function.
+    // A runtime crash in the edge function must never cause a blank screen.
     try {
-      const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
-        body: {
-          message:
-            lang === "ar"
-              ? "أعد موجز LOUREX AI اليومي الداخلي للوحة التحكم باللغة العربية فقط."
-              : "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview in English only.",
-          messages: [],
-          pageContext: "dashboard_home",
-          route: window.location.pathname,
-          locale,
-          language: lang,
-          responseLanguage,
-          languageInstruction: `Respond in ${responseLanguage} only.`,
-          userRole: profile?.role,
-          analysisMode: "dashboard_daily_briefing",
-          dashboardContext,
-        },
-      });
+      try {
+        const responseLanguage = lang === "ar" ? "Arabic" : "English";
+        const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+          body: {
+            message:
+              lang === "ar"
+                ? "أعد موجز LOUREX AI اليومي الداخلي للوحة التحكم باللغة العربية فقط."
+                : "Prepare the internal LOUREX AI Daily Briefing for the dashboard overview in English only.",
+            messages: [],
+            pageContext: "dashboard_home",
+            route: window.location.pathname,
+            locale,
+            language: lang,
+            responseLanguage,
+            languageInstruction: `Respond in ${responseLanguage} only.`,
+            userRole: profile?.role,
+            analysisMode: "dashboard_daily_briefing",
+            dashboardContext,
+          },
+        });
 
-      if (error) {
-        throw error;
-      }
+        if (error) {
+          throw error;
+        }
 
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
-      if (!reply) {
-        throw new Error("Empty daily briefing response");
-      }
+        const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+        if (!reply) {
+          throw new Error("Empty daily briefing response");
+        }
 
-      setBriefingText(reply);
-    } catch (error: any) {
-      logOperationalError("dashboard_ai_daily_briefing", error, { role: profile?.role });
+        setBriefingText(reply);
+      } catch (innerError: unknown) {
+        logOperationalError("dashboard_ai_daily_briefing", innerError, { role: profile?.role });
 
-      let isQuotaError = false;
+        let isQuotaError = false;
+        if (innerError instanceof Error) {
+          isQuotaError = innerError.message.includes("402");
+        }
+        if (
+          typeof innerError === "object" &&
+          innerError !== null &&
+          "status" in innerError &&
+          typeof (innerError as { status?: unknown }).status === "number"
+        ) {
+          if ((innerError as { status: number }).status === 402) {
+            isQuotaError = true;
+          }
+        }
 
-      if (error instanceof Error) {
-        isQuotaError = error.message.includes("402");
-      }
+        // Always fall back to local engine — never leave the UI empty
+        setBriefingUsedFallback(true);
+        setBriefingText(buildLocalDailyBriefing(dashboardContext, lang));
 
-      if (
-          typeof error === "object" &&
-          error !== null &&
-          "status" in error &&
-          typeof (error as { status?: unknown }).status === "number"
-      ) {
-        const status = (error as { status: number }).status;
-        if (status === 402) {
-          isQuotaError = true;
+        if (isQuotaError) {
+          console.warn("[Lourex] AI quota exceeded (402). Local briefing engine active.");
+        } else {
+          console.warn("[Lourex] AI edge function unavailable. Local briefing engine active.");
         }
       }
-
+    } catch {
+      // Final safety net — set fallback state and continue rendering
       setBriefingUsedFallback(true);
       setBriefingText(buildLocalDailyBriefing(dashboardContext, lang));
-
-      if (isQuotaError) {
-        console.warn("AI Quota exceeded (402). Using local briefing engine.");
-      }
-
     } finally {
       setBriefingLoading(false);
     }
   }, [dashboardContext, isInternal, lang, loading, locale, profile?.role]);
 
-  useEffect(() => {
-    if (!loading && isInternal && !briefingText && !briefingLoading) {
-      void prepareDailyBriefing();
-    }
-  }, [briefingLoading, briefingText, isInternal, loading, prepareDailyBriefing]);
+  // AI briefing is INTENTIONALLY NOT auto-fired on mount.
+  // It only runs when the user explicitly clicks the Refresh button.
+  // This prevents a broken edge function from causing a blank screen.
 
   const briefingPreview = useMemo(() => {
     if (!briefingText) return "";
