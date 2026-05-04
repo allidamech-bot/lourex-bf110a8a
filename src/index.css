@@ -47,10 +47,10 @@
     --surface-elevated: 222 47% 9%;
     --surface-overlay: 222 47% 7%;
 
-    /* Legacy gold aliases → mapped to blue */
-    --gold: 217 91% 60%;
-    --gold-light: 217 91% 70%;
-    --gold-dark: 217 91% 45%;
+    /* Brand Accent (5%) */
+    --gold: 42 64% 53%;
+    --gold-light: 45 86% 62%;
+    --gold-dark: 42 64% 43%;
 
     /* Sidebar */
     --sidebar-background: 222 47% 8%;
@@ -87,9 +87,9 @@
     --ring: 217 91% 60%;
     --surface-elevated: 222 47% 9%;
     --surface-overlay: 222 47% 7%;
-    --gold: 217 91% 60%;
-    --gold-light: 217 91% 70%;
-    --gold-dark: 217 91% 45%;
+    --gold: 42 64% 53%;
+    --gold-light: 45 86% 62%;
+    --gold-dark: 42 64% 43%;
     --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 220 13% 65%;
     --sidebar-primary: 217 91% 60%;
@@ -124,9 +124,9 @@
     --ring: 217 91% 60%;
     --surface-elevated: 222 47% 9%;
     --surface-overlay: 222 47% 7%;
-    --gold: 217 91% 60%;
-    --gold-light: 217 91% 70%;
-    --gold-dark: 217 91% 45%;
+    --gold: 42 64% 53%;
+    --gold-light: 45 86% 62%;
+    --gold-dark: 42 64% 43%;
     --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 220 13% 65%;
     --sidebar-primary: 217 91% 60%;
@@ -293,10 +293,7 @@
   ═══════════════════════════════════════════ */
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, #60A5FA, #3B82F6, #2563EB);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
   }
 
   .text-gradient-blue {

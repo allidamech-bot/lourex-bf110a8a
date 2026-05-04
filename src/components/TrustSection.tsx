@@ -62,7 +62,7 @@ const TrustSection = () => {
             <div className="mt-10 grid grid-cols-3 gap-4">
               {trustMetrics.map((item) => (
                 <div key={item.label} className="rounded-[1.4rem] border border-border/60 bg-secondary/20 p-4 text-center">
-                  <div className="font-serif text-4xl font-bold text-gradient-gold">{item.value}</div>
+                  <div className="font-serif text-4xl font-bold text-primary">{item.value}</div>
                   <div className="mt-2 text-xs leading-6 text-muted-foreground">{item.label}</div>
                 </div>
               ))}
@@ -79,7 +79,7 @@ const TrustSection = () => {
                 transition={{ delay: index * 0.08 }}
                 className="flex gap-5 rounded-[2rem] border border-primary/10 bg-primary/5 p-6"
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_10px_rgba(212,166,58,0.1)]">
                   <item.icon className="h-6 w-6" />
                 </div>
                 <div>

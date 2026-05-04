@@ -63,7 +63,7 @@ const HeroSection = () => {
               className="font-serif text-4xl font-bold leading-[1.08] text-foreground md:text-6xl xl:text-7xl"
             >
               {t("home.hero.titlePrefix")}
-              <span className="text-gradient-gold">
+              <span className="text-primary">
                 {t("home.hero.titleGradient")}
               </span>
               {t("home.hero.titleSuffix")}
@@ -84,7 +84,7 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.24 }}
               className="mt-10 flex flex-wrap gap-4"
             >
-              <Button variant="gold" size="lg" className="px-8 text-base font-semibold" asChild>
+              <Button variant="default" size="lg" className="px-8 text-base font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]" asChild>
                 <Link to="/request">
                   {t("home.hero.ctaRequest")}
                   <ArrowRight className="ms-2 h-4 w-4" />
@@ -110,7 +110,7 @@ const HeroSection = () => {
             <div className="grid gap-4">
               <div className="rounded-[1.5rem] border border-primary/20 bg-background/70 p-5 dark:bg-black/20">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,166,58,0.15)]">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div>
@@ -136,7 +136,7 @@ const HeroSection = () => {
                     transition={{ delay: 0.32 + index * 0.08 }}
                     className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4 dark:border-white/10 dark:bg-black/15"
                   >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_10px_rgba(212,166,58,0.1)]">
                       <stat.icon className="h-5 w-5" />
                     </div>
                     <p className="mt-5 font-serif text-xl font-semibold text-foreground">{stat.value}</p>

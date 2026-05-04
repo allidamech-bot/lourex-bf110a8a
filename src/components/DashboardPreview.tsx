@@ -97,7 +97,7 @@ const DashboardPreview = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <Button variant="gold" asChild>
+            <Button variant="default" className="shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]" asChild>
               <Link to="/dashboard">{lang === "ar" ? "فتح غرفة العمليات" : "Open operations room"}</Link>
             </Button>
           </div>

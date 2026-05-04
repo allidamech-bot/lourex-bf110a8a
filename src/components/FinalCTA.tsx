@@ -17,7 +17,7 @@ const FinalCTA = forwardRef<HTMLElement>((_props, ref) => {
           viewport={{ once: true }}
           className="mx-auto max-w-4xl rounded-[2.5rem] border border-primary/10 bg-[linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.88))] px-8 py-12 text-center shadow-[0_30px_80px_-42px_rgba(0,0,0,0.24)] dark:shadow-[0_30px_80px_-42px_rgba(0,0,0,0.85)]"
         >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-primary/20 bg-primary/10 text-primary">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,166,58,0.15)]">
             <ShieldCheck className="h-8 w-8" />
           </div>
           <h2 className="mt-6 font-serif text-3xl font-bold md:text-5xl">
@@ -31,7 +31,7 @@ const FinalCTA = forwardRef<HTMLElement>((_props, ref) => {
               : "If you have a product that needs real sourcing and execution, submit it with images and detailed specs. Lourex will move it through review, deal creation, tracking, accounting, and audit within one platform."}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button variant="gold" size="lg" className="px-10 text-base font-semibold" asChild>
+            <Button variant="default" size="lg" className="px-10 text-base font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]" asChild>
               <Link to="/request">
                 <ClipboardList className="me-2 h-4 w-4" />
                 {lang === "ar" ? "إرسال طلب شراء" : "Submit purchase request"}

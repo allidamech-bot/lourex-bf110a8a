@@ -69,8 +69,8 @@ const WhyLourexSafe = () => {
               transition={{ delay: i * 0.1 }}
               className="luxury-card rounded-[2rem] p-6 text-center group"
             >
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <item.icon className="h-7 w-7 text-primary" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-gold/20 bg-gold/10 transition-colors group-hover:bg-gold/20 shadow-[0_0_10px_rgba(212,166,58,0.1)]">
+                <item.icon className="h-7 w-7 text-gold" />
               </div>
               <h3 className="mb-2 font-serif text-lg font-bold">{item.title}</h3>
               <p className="text-sm leading-7 text-muted-foreground">{item.desc}</p>

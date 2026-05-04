@@ -83,7 +83,7 @@ const CoreFeatures = () => {
               transition={{ delay: index * 0.07 }}
               className="luxury-card group rounded-[2rem] p-7"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold transition-colors group-hover:bg-gold/15 shadow-[0_0_10px_rgba(212,166,58,0.1)]">
                 <feature.icon className="h-6 w-6" />
               </div>
               <h3 className="mt-6 font-serif text-2xl font-semibold">{feature.title}</h3>

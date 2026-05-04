@@ -80,7 +80,7 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-white/[0.04] shadow-inner">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
                 <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
               </span>
               <span className="truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
@@ -105,7 +105,7 @@ export const SiteHeader = () => {
             onClick={() => setIsOpen(false)}
             aria-label="Lourex home"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-white/[0.04] shadow-inner">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
               <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
             </span>
             <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
