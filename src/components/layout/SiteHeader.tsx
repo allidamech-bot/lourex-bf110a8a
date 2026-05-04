@@ -11,6 +11,8 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
+// Removed getSafeLabel as t() should handle missing keys or fallbacks gracefully via i18n.tsx
+
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { lang, t } = useI18n();
@@ -60,7 +62,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-        className="glass-topbar sticky top-0 z-50 border-b border-[#1E293B] shadow-[0_4px_30px_-8px_rgba(37,99,235,0.1)]"
+        className="glass-topbar sticky top-0 z-50 border-b border-white/[0.08] shadow-[0_4px_30px_-8px_rgba(212,166,58,0.1)]"
         style={{ background: "rgba(11,18,32,0.85)", backdropFilter: "blur(16px)" }}
         dir={isRtl ? "rtl" : "ltr"}
       >
@@ -72,15 +74,15 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-[#121A2B] shadow-[0_0_15px_rgba(37,99,235,0.15)]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold/20 bg-white/[0.03] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
                 <img src="/logo.png" alt="Lourex" className="h-9 w-9 object-contain" />
               </span>
-              <span className="truncate font-serif text-2xl font-bold tracking-wide text-[#F8FAFC]">LOUREX</span>
+              <span className="truncate font-serif text-2xl font-bold tracking-wide text-foreground">LOUREX</span>
             </Link>
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#1E293B] bg-[#121A2B] text-[#F8FAFC] shadow-sm transition-colors hover:border-blue-500/50 hover:bg-blue-600/10 hover:text-blue-400"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-foreground shadow-sm transition-colors hover:border-gold/50 hover:bg-gold/10 hover:text-gold-light"
               onClick={() => setIsOpen((value) => !value)}
               aria-label={t("nav.menu")}
               aria-expanded={isOpen}
@@ -97,10 +99,10 @@ export const SiteHeader = () => {
             onClick={() => setIsOpen(false)}
             aria-label="Lourex home"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-[#121A2B] shadow-[0_0_15px_rgba(37,99,235,0.15)]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold/20 bg-white/[0.03] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
               <img src="/logo.png" alt="Lourex" className="h-9 w-9 object-contain" />
             </span>
-            <span className="font-serif text-2xl font-bold tracking-wide text-[#F8FAFC]">LOUREX</span>
+            <span className="font-serif text-2xl font-bold tracking-wide text-foreground">LOUREX</span>
           </Link>
 
           <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex" aria-label={t("nav.primaryNavigation")}>
@@ -110,8 +112,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
                             isActive
-                                ? "text-blue-500 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)] shadow-[0_2px_0_0_#3B82F6]"
-                                : "text-[#94A3B8] hover:bg-[#121A2B] hover:text-blue-400"
+                                ? "text-gold drop-shadow-[0_0_8px_rgba(212,166,58,0.5)] shadow-[0_2px_0_0_var(--gold)]"
+                                : "text-slate-300 hover:bg-white/[0.03] hover:text-gold-light"
                         }`
                     }
                 >
@@ -126,8 +128,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
                             isActive
-                                ? "text-blue-500 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)] shadow-[0_2px_0_0_#3B82F6]"
-                                : "text-[#94A3B8] hover:bg-[#121A2B] hover:text-blue-400"
+                                ? "text-gold drop-shadow-[0_0_8px_rgba(212,166,58,0.5)] shadow-[0_2px_0_0_var(--gold)]"
+                                : "text-slate-300 hover:bg-white/[0.03] hover:text-gold-light"
                         }`
                     }
                 >
@@ -142,20 +144,20 @@ export const SiteHeader = () => {
                   <>
                     <Link
                         to="/profile"
-                        className="flex min-w-0 max-w-[170px] items-center gap-2 rounded-xl border border-[#1E293B] bg-[#121A2B] px-2.5 py-1.5 transition-colors hover:border-blue-500/40 hover:bg-blue-600/10 2xl:max-w-[230px] 2xl:px-3"
+                        className="flex min-w-0 max-w-[170px] items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 transition-colors hover:border-gold/40 hover:bg-gold/10 2xl:max-w-[230px] 2xl:px-3"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600/15 text-sm font-bold text-blue-500 ring-1 ring-blue-500/30">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/15 text-sm font-bold text-gold ring-1 ring-gold/30">
                         {userName.slice(0, 1).toUpperCase()}
                       </div>
 
                       <div className="min-w-0 text-start">
-                        <p className="truncate text-sm font-semibold leading-5 text-[#F8FAFC]">{userName}</p>
-                        <p className="truncate text-xs leading-4 text-[#94A3B8]">{roleLabel || userEmail || workspaceLabel}</p>
+                        <p className="truncate text-sm font-semibold leading-5 text-foreground">{userName}</p>
+                        <p className="truncate text-xs leading-4 text-slate-400">{roleLabel || userEmail || workspaceLabel}</p>
                       </div>
                     </Link>
 
                     {profile?.role === "owner" ? (
-                        <Button variant="outline" asChild className="h-9 w-9 border-[#1E293B] bg-[#121A2B] px-0 text-slate-200 hover:border-blue-500/40 hover:bg-blue-600/10 hover:text-white 2xl:w-auto 2xl:px-3">
+                        <Button variant="outline" asChild className="h-9 w-9 border-white/10 bg-white/[0.03] px-0 text-slate-200 hover:border-gold/40 hover:bg-gold/10 hover:text-white 2xl:w-auto 2xl:px-3">
                           <Link to="/admin" aria-label={t("nav.admin")}>
                             <Shield className="h-4 w-4 2xl:me-2" />
                             <span className="hidden 2xl:inline">{t("nav.admin")}</span>
@@ -166,19 +168,19 @@ export const SiteHeader = () => {
                     {user ? <NotificationBell userId={user.id} /> : null}
                     <LanguageSwitcher />
 
-                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-[#94A3B8] hover:bg-[#121A2B] hover:text-[#F8FAFC] 2xl:w-auto 2xl:px-3">
+                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-slate-300 hover:bg-white/[0.04] hover:text-white 2xl:w-auto 2xl:px-3">
                       <LogOut className="h-4 w-4 2xl:me-2" />
                       <span className="hidden whitespace-nowrap 2xl:inline">{t("nav.signOut")}</span>
                     </Button>
                     
-                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-blue-600 px-5 font-semibold text-white shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all">
+                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-gold px-5 font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
                       <Link to="/dashboard">ابدأ الآن</Link>
                     </Button>
                   </>
               ) : (
                   <>
                     <LanguageSwitcher />
-                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-blue-600 px-5 font-semibold text-white shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all">
+                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-gold px-5 font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
                       <Link to="/auth">ابدأ الآن</Link>
                     </Button>
                   </>
@@ -189,34 +191,34 @@ export const SiteHeader = () => {
         </div>
 
         {isOpen ? (
-            <div className="border-t border-[#1E293B] shadow-2xl xl:hidden" style={{ background: "rgba(11,18,32,0.98)", backdropFilter: "blur(16px)" }}>
+            <div className="border-t border-white/[0.08] shadow-2xl xl:hidden" style={{ background: "rgba(11,18,32,0.98)", backdropFilter: "blur(16px)" }}>
               <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-4 sm:px-6" dir={isRtl ? "rtl" : "ltr"}>
                 {isAuthenticated ? (
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="block rounded-2xl border border-[#1E293B] bg-[#121A2B] px-4 py-4 transition-colors hover:border-blue-500/40 hover:bg-blue-600/10"
+                        className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-gold/40 hover:bg-gold/10"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600/15 text-base font-bold text-blue-500 ring-1 ring-blue-500/30">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold/15 text-base font-bold text-gold ring-1 ring-gold/30">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
 
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#F8FAFC]">{userName}</p>
-                          <p className="truncate text-xs text-[#94A3B8]">{roleLabel || userEmail || workspaceLabel}</p>
+                          <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+                          <p className="truncate text-xs text-slate-400">{roleLabel || userEmail || workspaceLabel}</p>
                         </div>
                       </div>
 
                       {roleLabel ? (
-                          <p className="mt-3 rounded-xl bg-blue-600/10 px-3 py-2 text-xs text-blue-400">
+                          <p className="mt-3 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold">
                             {roleLabel}
                           </p>
                       ) : null}
                     </Link>
                 ) : null}
 
-                <div className="flex items-center gap-3 rounded-xl border border-[#1E293B] bg-[#121A2B] px-3 py-2">
+                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                 </div>
@@ -229,8 +231,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                             `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
                               isActive
-                                ? "bg-blue-600/15 text-blue-500 ring-1 ring-blue-500/30 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]"
-                                : "text-[#94A3B8] hover:bg-[#121A2B] hover:text-blue-400"
+                                ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
+                                : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
                             }`
                           }
                       >
@@ -247,8 +249,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                             `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
                               isActive
-                                ? "bg-blue-600/15 text-blue-500 ring-1 ring-blue-500/30 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]"
-                                : "text-[#94A3B8] hover:bg-[#121A2B] hover:text-blue-400"
+                                ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
+                                : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
                             }`
                           }
                       >
@@ -266,8 +268,8 @@ export const SiteHeader = () => {
                                 className={({ isActive }) =>
                                   `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
                                     isActive
-                                      ? "bg-blue-600/15 text-blue-500 ring-1 ring-blue-500/30 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]"
-                                      : "text-[#94A3B8] hover:bg-[#121A2B] hover:text-blue-400"
+                                      ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
+                                      : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
                                   }`
                                 }
                             >
@@ -279,14 +281,14 @@ export const SiteHeader = () => {
                         <button
                             type="button"
                             onClick={() => void handleLogout()}
-                            className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-[#94A3B8] transition-colors hover:bg-[#121A2B] hover:text-[#F8FAFC]"
+                            className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.04] hover:text-white"
                         >
                           <span>{signOutLabel}</span>
                           <LogOut className="h-4 w-4 opacity-70" />
                         </button>
                       </>
                   ) : (
-                      <Button variant="default" asChild className="mt-2 h-11 rounded-xl bg-blue-600 font-semibold text-white shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all">
+                      <Button variant="default" asChild className="mt-2 h-11 rounded-xl bg-gold font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
                           ابدأ الآن
                         </Link>
