@@ -35,13 +35,20 @@ export const SiteHeader = () => {
 
   const publicLinks = useMemo(
       () => [
-        { to: "/", label: t("nav.home") || "الرئيسية" },
-        { to: "/#how-it-works", label: t("nav.howItWorks") || "كيف يعمل" },
-        { to: "/#services", label: t("nav.services") || "الخدمات" },
-        { to: "/track", label: t("nav.track") || "تتبع الشحنات" },
-        { to: "/contact", label: t("nav.contact") || "تواصل معنا" },
+        { to: "/", label: t("nav.home") },
+        { to: "/request", label: t("nav.purchaseRequest") },
+        {
+          to: usesDashboardWorkspace ? "/dashboard/requests" : isCustomer ? "/customer-portal/requests#requests" : "/auth",
+          label: t("customerPortal.actions.requests.title"),
+        },
+        {
+          to: usesDashboardWorkspace ? "/dashboard/tracking" : isCustomer ? "/customer-portal/tracking" : "/track",
+          label: t("customerPortal.actions.tracking.title"),
+        },
+        { to: "/guidelines", label: t("nav.guidelines") },
+        { to: "/contact", label: t("nav.contact") },
       ],
-      [t],
+      [isCustomer, t, usesDashboardWorkspace],
   );
 
   const workspaceLabel = profile
@@ -62,8 +69,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-        className="glass-topbar sticky top-0 z-50 border-b border-white/[0.08] shadow-[0_4px_30px_-8px_rgba(212,166,58,0.1)]"
-        style={{ background: "rgba(11,18,32,0.85)", backdropFilter: "blur(16px)" }}
+        className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
         dir={isRtl ? "rtl" : "ltr"}
       >
         <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 xl:hidden">
@@ -74,15 +80,15 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold/20 bg-white/[0.03] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
-                <img src="/logo.png" alt="Lourex" className="h-9 w-9 object-contain" />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-white/[0.04] shadow-inner">
+                <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
               </span>
-              <span className="truncate font-serif text-2xl font-bold tracking-wide text-foreground">LOUREX</span>
+              <span className="truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
             </Link>
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-foreground shadow-sm transition-colors hover:border-gold/50 hover:bg-gold/10 hover:text-gold-light"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground shadow-sm transition-colors hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-blue-100"
               onClick={() => setIsOpen((value) => !value)}
               aria-label={t("nav.menu")}
               aria-expanded={isOpen}
@@ -99,10 +105,10 @@ export const SiteHeader = () => {
             onClick={() => setIsOpen(false)}
             aria-label="Lourex home"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold/20 bg-white/[0.03] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
-              <img src="/logo.png" alt="Lourex" className="h-9 w-9 object-contain" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-white/[0.04] shadow-inner">
+              <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
             </span>
-            <span className="font-serif text-2xl font-bold tracking-wide text-foreground">LOUREX</span>
+            <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
           </Link>
 
           <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex" aria-label={t("nav.primaryNavigation")}>
@@ -110,10 +116,10 @@ export const SiteHeader = () => {
                 <NavLink
                     to="/dashboard"
                     className={({ isActive }) =>
-                        `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                        `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "text-gold drop-shadow-[0_0_8px_rgba(212,166,58,0.5)] shadow-[0_2px_0_0_var(--gold)]"
-                                : "text-slate-300 hover:bg-white/[0.03] hover:text-gold-light"
+                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
                         }`
                     }
                 >
@@ -126,10 +132,10 @@ export const SiteHeader = () => {
                     key={`${link.to}-${link.label}`}
                     to={link.to}
                     className={({ isActive }) =>
-                        `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                        `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "text-gold drop-shadow-[0_0_8px_rgba(212,166,58,0.5)] shadow-[0_2px_0_0_var(--gold)]"
-                                : "text-slate-300 hover:bg-white/[0.03] hover:text-gold-light"
+                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
                         }`
                     }
                 >
@@ -144,9 +150,9 @@ export const SiteHeader = () => {
                   <>
                     <Link
                         to="/profile"
-                        className="flex min-w-0 max-w-[170px] items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 transition-colors hover:border-gold/40 hover:bg-gold/10 2xl:max-w-[230px] 2xl:px-3"
+                        className="flex min-w-0 max-w-[170px] items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10 2xl:max-w-[230px] 2xl:px-3"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/15 text-sm font-bold text-gold ring-1 ring-gold/30">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-sm font-bold text-blue-100 ring-1 ring-blue-400/30">
                         {userName.slice(0, 1).toUpperCase()}
                       </div>
 
@@ -157,7 +163,7 @@ export const SiteHeader = () => {
                     </Link>
 
                     {profile?.role === "owner" ? (
-                        <Button variant="outline" asChild className="h-9 w-9 border-white/10 bg-white/[0.03] px-0 text-slate-200 hover:border-gold/40 hover:bg-gold/10 hover:text-white 2xl:w-auto 2xl:px-3">
+                        <Button variant="outline" asChild className="h-9 w-9 border-white/10 bg-white/[0.04] px-0 text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white 2xl:w-auto 2xl:px-3">
                           <Link to="/admin" aria-label={t("nav.admin")}>
                             <Shield className="h-4 w-4 2xl:me-2" />
                             <span className="hidden 2xl:inline">{t("nav.admin")}</span>
@@ -167,21 +173,19 @@ export const SiteHeader = () => {
 
                     {user ? <NotificationBell userId={user.id} /> : null}
                     <LanguageSwitcher />
+                    <ThemeToggle />
 
-                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-slate-300 hover:bg-white/[0.04] hover:text-white 2xl:w-auto 2xl:px-3">
+                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-slate-300 hover:bg-blue-500/10 hover:text-white 2xl:w-auto 2xl:px-3">
                       <LogOut className="h-4 w-4 2xl:me-2" />
                       <span className="hidden whitespace-nowrap 2xl:inline">{t("nav.signOut")}</span>
-                    </Button>
-                    
-                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-gold px-5 font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
-                      <Link to="/dashboard">ابدأ الآن</Link>
                     </Button>
                   </>
               ) : (
                   <>
                     <LanguageSwitcher />
-                    <Button variant="default" asChild className="ml-2 h-9 rounded-xl bg-gold px-5 font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
-                      <Link to="/auth">ابدأ الآن</Link>
+                    <ThemeToggle />
+                    <Button variant="default" asChild className="h-9 rounded-xl bg-blue-500 px-4 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
+                      <Link to="/auth">{t("nav.signIn")}</Link>
                     </Button>
                   </>
               )}
@@ -191,16 +195,16 @@ export const SiteHeader = () => {
         </div>
 
         {isOpen ? (
-            <div className="border-t border-white/[0.08] shadow-2xl xl:hidden" style={{ background: "rgba(11,18,32,0.98)", backdropFilter: "blur(16px)" }}>
+            <div className="border-t border-white/[0.06] shadow-2xl xl:hidden" style={{ background: "rgba(15,23,42,0.96)", backdropFilter: "blur(12px)" }}>
               <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-4 sm:px-6" dir={isRtl ? "rtl" : "ltr"}>
                 {isAuthenticated ? (
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-gold/40 hover:bg-gold/10"
+                        className="block rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold/15 text-base font-bold text-gold ring-1 ring-gold/30">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-base font-bold text-blue-100 ring-1 ring-blue-400/30">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
 
@@ -211,16 +215,17 @@ export const SiteHeader = () => {
                       </div>
 
                       {roleLabel ? (
-                          <p className="mt-3 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold">
+                          <p className="mt-3 rounded-xl bg-blue-500/10 px-3 py-2 text-xs text-blue-100">
                             {roleLabel}
                           </p>
                       ) : null}
                     </Link>
                 ) : null}
 
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
+                  <ThemeToggle />
                 </div>
 
                 <nav className="flex flex-col gap-1" aria-label={t("nav.mobileNavigation")}>
@@ -229,10 +234,10 @@ export const SiteHeader = () => {
                           to="/dashboard"
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                               isActive
-                                ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
-                                : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
+                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
                             }`
                           }
                       >
@@ -247,10 +252,10 @@ export const SiteHeader = () => {
                           to={link.to}
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                               isActive
-                                ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
-                                : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
+                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
                             }`
                           }
                       >
@@ -266,10 +271,10 @@ export const SiteHeader = () => {
                                 to="/admin"
                                 onClick={() => setIsOpen(false)}
                                 className={({ isActive }) =>
-                                  `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                                  `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                                     isActive
-                                      ? "bg-gold/15 text-gold ring-1 ring-gold/30 drop-shadow-[0_0_8px_rgba(212,166,58,0.5)]"
-                                      : "text-slate-300 hover:bg-white/[0.04] hover:text-gold-light"
+                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
                                   }`
                                 }
                             >
@@ -281,16 +286,16 @@ export const SiteHeader = () => {
                         <button
                             type="button"
                             onClick={() => void handleLogout()}
-                            className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+                            className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
                         >
                           <span>{signOutLabel}</span>
                           <LogOut className="h-4 w-4 opacity-70" />
                         </button>
                       </>
                   ) : (
-                      <Button variant="default" asChild className="mt-2 h-11 rounded-xl bg-gold font-semibold text-background shadow-[0_0_15px_rgba(212,166,58,0.25)] hover:bg-gold-light hover:shadow-[0_0_20px_rgba(212,166,58,0.4)] transition-all">
+                      <Button variant="default" asChild className="mt-2 h-11 rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
-                          ابدأ الآن
+                          {signInLabel}
                         </Link>
                       </Button>
                   )}
