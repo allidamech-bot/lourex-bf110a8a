@@ -72,7 +72,7 @@ export const SiteHeader = () => {
         className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
         dir={isRtl ? "rtl" : "ltr"}
       >
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 xl:hidden">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 lg:hidden">
           <div className="flex w-full items-center justify-between gap-4">
             <Link
               to="/"
@@ -98,7 +98,7 @@ export const SiteHeader = () => {
           </div>
         </div>
 
-        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 xl:grid" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid" dir={isRtl ? "rtl" : "ltr"}>
           <Link
             to="/"
             className="flex shrink-0 items-center gap-3"
@@ -111,7 +111,7 @@ export const SiteHeader = () => {
             <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
           </Link>
 
-          <nav className="hidden min-w-0 items-center justify-center gap-1 xl:flex" aria-label={t("nav.primaryNavigation")}>
+          <nav className="hidden min-w-0 items-center justify-center gap-1 lg:flex" aria-label={t("nav.primaryNavigation")}>
             {canSeeDashboardMenu ? (
                 <NavLink
                     to="/dashboard"
@@ -145,7 +145,7 @@ export const SiteHeader = () => {
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-2">
-            <div className="hidden shrink-0 items-center gap-2 xl:flex">
+            <div className="hidden shrink-0 items-center gap-2 lg:flex">
               {isAuthenticated ? (
                   <>
                     <Link
@@ -190,51 +190,62 @@ export const SiteHeader = () => {
                   </>
               )}
             </div>
-
           </div>
         </div>
 
         {isOpen ? (
-            <div className="border-t border-white/[0.06] shadow-2xl xl:hidden" style={{ background: "rgba(15,23,42,0.96)", backdropFilter: "blur(12px)" }}>
-              <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-4 sm:px-6" dir={isRtl ? "rtl" : "ltr"}>
+            <div className="fixed inset-0 z-[100] lg:hidden">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+              <div 
+                className={`absolute top-0 bottom-0 w-[280px] bg-card border-border/50 p-5 flex flex-col shadow-2xl transition-transform ${isRtl ? "right-0 border-l" : "left-0 border-r"}`}
+              >
+                <div className="mb-8 flex items-center justify-between">
+                  <Link
+                    to="/"
+                    className="flex shrink-0 items-center gap-3"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+                      <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+                    </span>
+                    <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
+                  </Link>
+                  <button onClick={() => setIsOpen(false)} className="rounded-lg p-2 hover:bg-white/5 text-slate-400">
+                    <X size={20} />
+                  </button>
+                </div>
+
                 {isAuthenticated ? (
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="block rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
+                        className="mb-6 block rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-base font-bold text-blue-100 ring-1 ring-blue-400/30">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
-
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
                           <p className="truncate text-xs text-slate-400">{roleLabel || userEmail || workspaceLabel}</p>
                         </div>
                       </div>
-
-                      {roleLabel ? (
-                          <p className="mt-3 rounded-xl bg-blue-500/10 px-3 py-2 text-xs text-blue-100">
-                            {roleLabel}
-                          </p>
-                      ) : null}
                     </Link>
                 ) : null}
 
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                   <ThemeToggle />
                 </div>
 
-                <nav className="flex flex-col gap-1" aria-label={t("nav.mobileNavigation")}>
+                <nav className="flex-1 overflow-y-auto space-y-1.5" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (
                       <NavLink
                           to="/dashboard"
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                            `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                               isActive
                                 ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
                                 : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -252,7 +263,7 @@ export const SiteHeader = () => {
                           to={link.to}
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                            `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                               isActive
                                 ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
                                 : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -263,43 +274,26 @@ export const SiteHeader = () => {
                         <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ))}
+                </nav>
 
+                <div className="mt-auto pt-6 border-t border-white/5">
                   {isAuthenticated ? (
-                      <>
-                        {profile?.role === "owner" ? (
-                            <NavLink
-                                to="/admin"
-                                onClick={() => setIsOpen(false)}
-                                className={({ isActive }) =>
-                                  `flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                                    isActive
-                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
-                                  }`
-                                }
-                            >
-                              <span>{t("nav.admin")}</span>
-                              <Shield className="h-4 w-4 opacity-70" />
-                            </NavLink>
-                        ) : null}
-
-                        <button
-                            type="button"
-                            onClick={() => void handleLogout()}
-                            className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
-                        >
-                          <span>{signOutLabel}</span>
-                          <LogOut className="h-4 w-4 opacity-70" />
-                        </button>
-                      </>
+                      <button
+                          type="button"
+                          onClick={() => void handleLogout()}
+                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+                      >
+                        <span>{signOutLabel}</span>
+                        <LogOut className="h-4 w-4 opacity-70" />
+                      </button>
                   ) : (
-                      <Button variant="default" asChild className="mt-2 h-11 rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
+                      <Button variant="default" asChild className="w-full h-11 rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
                           {signInLabel}
                         </Link>
                       </Button>
                   )}
-                </nav>
+                </div>
               </div>
             </div>
         ) : null}
