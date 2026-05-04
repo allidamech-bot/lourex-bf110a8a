@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BarChart3,
@@ -15,8 +15,10 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
+import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -423,34 +425,56 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="space-y-6 pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="space-y-5 pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+      {/* ── Hero Banner ── */}
       <BentoCard
         span="full"
-        className="rounded-[1.75rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.24),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-6 shadow-[0_28px_70px_-48px_rgba(59,130,246,0.9)] md:p-8"
+        className="rounded-2xl p-6 md:p-8"
+        style={{
+          background: "linear-gradient(135deg, rgba(30,58,138,0.18) 0%, rgba(15,23,42,0.95) 60%)",
+          border: "1px solid rgba(59,130,246,0.18)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 12px 40px rgba(59,130,246,0.08)",
+        } as React.CSSProperties}
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span
+            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200"
+            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.22)" }}
+          >
             {t("overview.heroEyebrow")}
           </span>
-          <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
+          <span
+            className="rounded-full px-3 py-1 text-[11px] text-slate-400"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
             {new Date().toLocaleDateString(locale)}
           </span>
         </div>
-        <div className="mt-5 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+        <div className="mt-5 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <h2 className="font-serif text-3xl font-bold md:text-4xl opacity-100 shadow-none rounded border-gold border-0">
+            <h2 className="font-serif text-3xl font-bold text-white md:text-4xl">
               {t("overview.heroTitle")}
             </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{t("overview.heroDescription")}</p>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">{t("overview.heroDescription")}</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="default" asChild className="rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
+          <div className="flex flex-wrap gap-2.5">
+            <Button
+              variant="default"
+              asChild
+              className="rounded-xl font-semibold"
+              style={{ background: "#3B82F6", color: "white", border: "1px solid rgba(96,165,250,0.3)" }}
+            >
               <Link to="/dashboard/requests">
                 {t("overview.openRequests")}
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="outline" asChild className="rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white">
+            <Button
+              variant="outline"
+              asChild
+              className="rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
+            >
               <Link to="/dashboard/deals">
                 {t("overview.openDeals")}
                 <ChevronRight className="h-4 w-4" />
@@ -460,51 +484,77 @@ export default function OverviewPage() {
         </div>
       </BentoCard>
 
+      {/* ── KPI Cards ── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {(loading ? loadingCards : metricCards).map((item, index) => (
-          <BentoCard
-            key={loading ? item : item.label}
-            delay={index * 0.05}
-            className="rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(6,17,31,0.9))] p-5"
-          >
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-12 w-12 rounded-2xl" />
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-4 w-28" />
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ring-1 ${item.accent}`}>
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <span className="rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold text-blue-100">
-                    {t("overview.liveFocus")}
-                  </span>
+        {(loading ? loadingCards : (metricCards as MetricCard[])).map((item, index) => {
+          const cardItem = loading ? null : item as MetricCard;
+          const Icon = cardItem?.icon;
+          return (
+            <BentoCard
+              key={loading ? index : cardItem!.label}
+              delay={index * 0.05}
+              className="rounded-2xl p-5"
+            >
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-11 w-11 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+                  <Skeleton className="h-8 w-20" style={{ background: "rgba(255,255,255,0.04)" }} />
+                  <Skeleton className="h-4 w-28" style={{ background: "rgba(255,255,255,0.03)" }} />
                 </div>
-                <p className="mt-2 font-serif text-xl font-bold border-none border-gold border-0 shadow opacity-80 text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-2 text-sm font-semibold text-slate-100">{item.label}</p>
-                <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-400">{item.helper}</p>
-              </>
-            )}
-          </BentoCard>
-        ))}
+              ) : cardItem ? (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${
+                        cardItem.accent
+                      }`}
+                    >
+                      {Icon ? <Icon className="h-5 w-5" /> : null}
+                    </div>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-blue-200"
+                      style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+                    >
+                      {t("overview.liveFocus")}
+                    </span>
+                  </div>
+                  <p className="mt-4 font-serif text-2xl font-bold text-white">
+                    {cardItem.value.toLocaleString(locale)}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-200">{cardItem.label}</p>
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{cardItem.helper}</p>
+                </>
+              ) : null}
+            </BentoCard>
+          );
+        })}
       </div>
 
       {isInternal ? (
-        <BentoCard span="full" className="rounded-[1.5rem] border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))] p-6 shadow-[0_22px_60px_-42px_rgba(59,130,246,0.9)] md:p-7">
+        <BentoCard span="full" className="rounded-2xl p-6 md:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-400/25 bg-blue-500/15 text-blue-100">
-                  <Sparkles className="h-5 w-5" />
-                </span>
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                  <motion.div
+                    className="absolute inset-0 rounded-xl"
+                    style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(37,99,235,0.4))" }}
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.6, 0.9, 0.6] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    className="absolute inset-0 rounded-xl"
+                    style={{ border: "1px solid rgba(96,165,250,0.5)" }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  />
+                  <Sparkles className="relative z-10 h-4 w-4 text-blue-200" />
+                </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-blue-200">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-blue-300/70">
                     {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
                   </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-400">
+                  <p className="mt-0.5 text-xs leading-5 text-slate-400">
                     {lang === "ar"
                       ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق لوركس."
                       : "AI output is advisory. Final decisions remain with the Lourex team."}
@@ -559,44 +609,68 @@ export default function OverviewPage() {
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
+        <BentoCard className="space-y-5 rounded-2xl">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-blue-200">{t("overview.priorityBoard")}</p>
-              <h3 className="mt-2 font-serif text-2xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("overview.priorityBoard")}</p>
+              <h3 className="mt-1.5 font-serif text-xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
             </div>
-            <div className="rounded-full border border-blue-400/25 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-100">{t("overview.liveFocus")}</div>
+            <span
+              className="rounded-full px-3 py-1 text-xs font-medium text-blue-200"
+              style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+            >
+              {t("overview.liveFocus")}
+            </span>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3">
             {[
               { label: t("overview.reviewLabel"), value: requestSummary.review, description: t("overview.reviewDescription") },
               { label: t("overview.readyLabel"), value: requestSummary.ready, description: t("overview.readyDescription") },
               { label: t("overview.editLabel"), value: pendingEditRequests, description: t("overview.editDescription") },
             ].map((item) => (
-              <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5 transition-colors hover:border-blue-400/30 hover:bg-blue-500/10">
+              <div
+                key={item.label}
+                className="rounded-xl p-4 transition-colors"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
                 <p className="text-xs font-medium text-slate-400">{item.label}</p>
-                <p className="mt-2 text-3xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-400">{item.description}</p>
+                <p className="mt-2 text-2xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
+                <p className="mt-1.5 text-xs leading-5 text-slate-400">{item.description}</p>
               </div>
             ))}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-4 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
-            <Receipt className="h-5 w-5" />
+        <BentoCard className="space-y-4 rounded-2xl">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-blue-200"
+            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}
+          >
+            <Receipt className="h-4 w-4" />
           </div>
-          <h3 className="font-serif text-2xl font-semibold text-white">{t("overview.currentOpsTitle")}</h3>
-          <div className="grid gap-3">
-            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+          <h3 className="font-serif text-xl font-semibold text-white">{t("overview.currentOpsTitle")}</h3>
+          <div className="grid gap-2.5">
+            <div
+              className="rounded-xl p-4"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
               <p className="text-xs font-medium text-slate-400">{t("overview.activeShipments")}</p>
-              <p className="mt-2 text-2xl font-bold text-white">{deliverySummary.active.toLocaleString(locale)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-white">{deliverySummary.active.toLocaleString(locale)}</p>
             </div>
-            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+            <div
+              className="rounded-xl p-4"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
               <p className="text-xs font-medium text-slate-400">{t("overview.deliveredShipments")}</p>
-              <p className="mt-2 text-2xl font-bold text-white">{deliverySummary.delivered.toLocaleString(locale)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-white">{deliverySummary.delivered.toLocaleString(locale)}</p>
             </div>
-            <div className="rounded-[1.25rem] border border-blue-400/20 bg-blue-500/10 p-4 text-sm leading-7 text-slate-300">
+            <div
+              className="rounded-xl p-3.5 text-xs leading-6 text-slate-300"
+              style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.14)" }}
+            >
               {t("overview.currentOpsDescription")}
             </div>
           </div>
@@ -604,59 +678,62 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <BentoCard span="1" className="rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))] p-0">
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-6 py-5">
+        <BentoCard span="1" className="rounded-2xl p-0">
+          <div
+            className="flex items-center justify-between gap-3 px-5 py-4"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          >
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-blue-200">{t("customers.activity")}</p>
-              <h3 className="mt-2 font-serif text-2xl font-semibold text-white">{t("overview.latestRequests")}</h3>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("customers.activity")}</p>
+              <h3 className="mt-1.5 font-serif text-xl font-semibold text-white">{t("overview.latestRequests")}</h3>
             </div>
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-blue-200"
+              style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+            >
               <Clock3 className="h-4 w-4" />
             </span>
           </div>
-          <div className="space-y-0">
+          <div className="px-5 pb-5 pt-2">
             {loading ? (
-              <div className="space-y-4 p-6">
+              <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-20 w-full rounded-2xl" />
+                  <Skeleton key={index} className="h-16 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
                 ))}
               </div>
             ) : recentActivity.length > 0 ? (
-              recentActivity.map((item) => (
-                <Link
-                  key={item.id}
-                  to={item.to}
-                  className="group block border-b border-white/10 px-6 py-4 transition-colors last:border-b-0 hover:bg-blue-500/10"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-blue-100 group-hover:border-blue-400/30">
-                        <item.icon className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-                        <p className="mt-1 truncate text-sm text-slate-400">{item.description || t("overview.genericRequest")}</p>
-                      </div>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-100">
-                      {item.badge}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">{new Date(item.date).toLocaleString(locale)}</p>
-                </Link>
-              ))
+              <TimelineFlow
+                items={recentActivity.map((item) => {
+                  let status: TimelineItem["status"] = "default";
+                  if (item.badge === t("overview.status.new")) status = "active";
+                  else if (item.badge === t("overview.status.completed")) status = "success";
+                  else if (item.badge === t("overview.status.pending")) status = "warning";
+
+                  return {
+                    id: item.id,
+                    title: item.title,
+                    description: item.description || t("overview.genericRequest"),
+                    timestamp: new Date(item.date).toLocaleString(locale),
+                    icon: item.icon,
+                    status,
+                  };
+                })}
+              />
             ) : (
-              <div className="px-6 py-10 text-sm text-slate-400">{t("overview.noRequests")}</div>
+              <div className="py-8 text-center text-sm text-slate-400">{t("overview.noRequests")}</div>
             )}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-4 rounded-[1.5rem] border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(6,17,31,0.88))]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
-            <FilePenLine className="h-5 w-5" />
+        <BentoCard className="space-y-4 rounded-2xl">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-blue-200"
+            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}
+          >
+            <FilePenLine className="h-4 w-4" />
           </div>
-          <h3 className="font-serif text-2xl font-semibold text-white">{t("overview.quickActions")}</h3>
-          <div className="grid gap-3">
+          <h3 className="font-serif text-xl font-semibold text-white">{t("overview.quickActions")}</h3>
+          <div className="grid gap-2">
             {[
               { label: t("overview.quickReview"), to: "/dashboard/requests" },
               { label: t("overview.quickDeals"), to: "/dashboard/deals" },
@@ -666,15 +743,24 @@ export default function OverviewPage() {
               <Link
                 key={item.label}
                 to={item.to}
-                className="group flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:border-blue-400/35 hover:bg-blue-500/10 hover:text-white"
+                className="group flex min-h-11 items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:text-white"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
               >
                 <span>{item.label}</span>
-                <ChevronRight className="h-4 w-4 text-slate-500 transition-colors group-hover:text-blue-100" />
+                <ChevronRight className="h-4 w-4 text-slate-500 transition-colors group-hover:text-blue-300" />
               </Link>
             ))}
           </div>
           {newestFinancialEntry ? (
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
+            <div
+              className="rounded-xl p-3.5 text-xs leading-6 text-emerald-200"
+              style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.16)" }}
+            >
               {t("reports.metrics.linkedEntries")}: {metrics.financialEntries.toLocaleString(locale)}
             </div>
           ) : null}
@@ -683,3 +769,4 @@ export default function OverviewPage() {
     </div>
   );
 }
+

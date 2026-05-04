@@ -99,74 +99,110 @@ export const DashboardLayout = () => {
   const visibleLinks = dashboardLinks.filter((link) => profile && link.roles.includes(profile.role));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: "#0F172A" }}>
       <SiteHeader />
-      <div className="container mx-auto grid gap-6 px-4 py-6 md:px-8 lg:grid-cols-[244px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-border/60 bg-card/80 p-3 shadow-sm lg:sticky lg:top-20 lg:self-start">
-          <div className="mb-4 rounded-xl bg-secondary/70 p-3">
-            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+      <div className="container mx-auto grid gap-5 px-4 py-5 md:px-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+
+        {/* ── Sidebar ── */}
+        <aside
+          className="glass-sidebar p-3 lg:sticky lg:top-[4.5rem] lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
+          aria-label="Sidebar"
+        >
+          {/* Workspace badge */}
+          <div
+            className="mb-3 rounded-xl p-3"
+            style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.12)" }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.22em] text-blue-400/70">
               {t("identity.labels.workspace")}
             </p>
-            <h2 className="mt-2 font-serif text-xl font-bold">
+            <h2 className="mt-1.5 font-serif text-base font-bold text-white leading-snug">
               {workspaceTitle}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {workspaceDescription}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <div className="rounded-full bg-background px-3 py-1 text-xs font-medium text-foreground">
+            {workspaceDescription ? (
+              <p className="mt-1.5 text-xs leading-5 text-slate-400 line-clamp-2">
+                {workspaceDescription}
+              </p>
+            ) : null}
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <span
+                className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-blue-200"
+                style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.18)" }}
+              >
                 {t("identity.labels.role")}: {roleLabel}
-              </div>
+              </span>
               {entityLabel ? (
-                <div className="rounded-full bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+                <span
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-medium text-slate-300"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
                   {t("identity.labels.entity")}: {entityLabel}
-                </div>
+                </span>
               ) : null}
             </div>
           </div>
-          <nav className="space-y-1" aria-label={t("nav.dashboardNavigation")}>
+
+          {/* Nav links */}
+          <nav className="space-y-0.5" aria-label={t("nav.dashboardNavigation")}>
             {visibleLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                  `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-400/25 shadow-sm"
+                      : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                   }`
                 }
               >
-                <link.icon className="h-4 w-4" />
-                {link.label}
+                <link.icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{link.label}</span>
               </NavLink>
             ))}
           </nav>
         </aside>
 
+        {/* ── Main content ── */}
         <main className="min-w-0 pb-12">
-          <div className="mb-5 rounded-2xl border border-primary/15 bg-[linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.9))] px-5 py-4 shadow-[0_24px_55px_-38px_rgba(0,0,0,0.32)] dark:shadow-[0_24px_55px_-38px_rgba(0,0,0,0.65)]">
+          {/* Workspace context header */}
+          <div
+            className="mb-5 rounded-2xl px-5 py-4"
+            style={{
+              background: "rgba(255,255,255,0.025)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-primary/80">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-blue-400/70">
                   {t("identity.labels.workspace")}
                 </p>
-                <h1 className="mt-2 font-serif text-2xl font-semibold">
+                <h1 className="mt-1.5 font-serif text-xl font-semibold text-white">
                   {workspaceTitle}
                 </h1>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  {workspaceDescription}
-                </p>
+                {workspaceDescription ? (
+                  <p className="mt-1.5 text-sm leading-6 text-slate-400">
+                    {workspaceDescription}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
-                <div className="rounded-full bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
+                <span
+                  className="rounded-full px-3.5 py-1.5 text-xs font-medium text-blue-200"
+                  style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+                >
                   {t("identity.labels.role")}: {roleLabel}
-                </div>
+                </span>
                 {entityLabel ? (
-                  <div className="rounded-full bg-secondary px-4 py-2 text-xs font-medium text-muted-foreground">
+                  <span
+                    className="rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-300"
+                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  >
                     {t("identity.labels.entity")}: {entityLabel}
-                  </div>
+                  </span>
                 ) : null}
               </div>
             </div>

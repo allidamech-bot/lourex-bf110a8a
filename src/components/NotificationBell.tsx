@@ -22,7 +22,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const navigate = useNavigate();
-  const { locale, t } = useI18n();
+  const { locale, t, lang } = useI18n();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -343,15 +343,23 @@ const NotificationBell = ({ userId }: { userId: string }) => {
 
   return (
     <div className="relative shrink-0">
+      {/* Bell button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-card text-muted-foreground transition-colors hover:border-primary/50 hover:bg-secondary hover:text-primary"
+        className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+          unreadCount > 0
+            ? "bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/22 hover:border-blue-400/45"
+            : "border border-white/[0.08] bg-white/[0.04] text-slate-400 hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-slate-200"
+        }`}
         aria-label={t("notifications.title")}
         aria-expanded={open}
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-[18px] w-[18px]" />
         {unreadCount > 0 ? (
-          <span className="absolute -end-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          <span
+            className="absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
+            style={{ background: "#3B82F6", boxShadow: "0 0 8px rgba(59,130,246,0.45)" }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
@@ -362,16 +370,21 @@ const NotificationBell = ({ userId }: { userId: string }) => {
       <AnimatePresence>
         {open ? (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="fixed inset-x-3 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-xl border border-border bg-card shadow-xl sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:max-h-96 sm:w-80"
+            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="glass-dropdown fixed inset-x-3 top-20 z-50 overflow-hidden sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:w-[340px]"
           >
-            <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-3.5"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+            >
               <div>
-                <h4 className="text-sm font-semibold">{t("notifications.title")}</h4>
+                <h4 className="text-sm font-semibold text-white">{t("notifications.title")}</h4>
                 {unreadCount > 0 ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-[11px] text-blue-300/70">
                     {t("notifications.unreadCount", { count: unreadCount })}
                   </p>
                 ) : null}
@@ -380,7 +393,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 <button
                   onClick={() => void markAllRead()}
                   disabled={loading}
-                  className="text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                  className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-blue-300 transition-colors hover:bg-blue-500/10 hover:text-blue-100 disabled:opacity-50"
                   aria-busy={loading}
                 >
                   {t("notifications.markAllRead")}
@@ -388,57 +401,87 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               ) : null}
             </div>
 
-            {loading && notifications.length === 0 ? (
-              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("common.loading")}
-              </div>
-            ) : loadError ? (
-              <div className="px-4 py-8 text-center text-sm text-destructive">
-                {loadError}
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                {t("notifications.empty")}
-              </div>
-            ) : (
-              latestNotifications.map((notification) => {
-                const display = getNotificationDisplay(notification);
+            {/* Body */}
+            <div className="max-h-[22rem] overflow-y-auto">
+              {loading && notifications.length === 0 ? (
+                <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
+                  {t("common.loading")}
+                </div>
+              ) : loadError ? (
+                <div className="px-4 py-10 text-center text-sm text-red-400">
+                  {loadError}
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-sm text-slate-400">
+                  <Bell className="h-8 w-8 opacity-20" />
+                  <p>{t("notifications.empty")}</p>
+                </div>
+              ) : (
+                latestNotifications.map((notification) => {
+                  const display = getNotificationDisplay(notification);
+                  const typeMap: Record<string, string> = {
+                    purchase_request_created: "info",
+                    purchase_request_approved: "success",
+                    purchase_request_cancelled: "error",
+                    purchase_request_ready_for_conversion: "success",
+                    request_conversion: "success",
+                    tracking_update: "info",
+                    financial_edit_request: "warning",
+                    financial_edit_request_review: notification.title.toLowerCase().includes("rejected") ? "error" : "success",
+                  };
+                  const notifType = typeMap[notification.type] ?? "info";
+                  const typeClass = `notif-${notifType}`;
 
-                return (
-                  <button
-                    key={notification.id}
-                    onClick={() => void handleClick(notification)}
-                    className={`w-full border-b border-border/30 px-4 py-3 text-start transition-colors hover:bg-secondary/30 ${
-                      !notification.isRead ? "bg-primary/5" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {!notification.isRead ? (
-                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                      ) : null}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{display.title}</p>
-                        <p className="line-clamp-2 text-xs text-muted-foreground">
-                          {display.message}
-                        </p>
-                        <p className="mt-1 text-[10px] text-muted-foreground/60">
-                          {new Date(notification.createdAt).toLocaleString(locale)}
-                        </p>
+                  const timeAgo = (() => {
+                    const diff = Date.now() - new Date(notification.createdAt).getTime();
+                    const mins = Math.floor(diff / 60000);
+                    if (mins < 1) return lang === "ar" ? "الآن" : "Just now";
+                    if (mins < 60) return lang === "ar" ? `منذ ${mins} د` : `${mins}m ago`;
+                    const hrs = Math.floor(mins / 60);
+                    if (hrs < 24) return lang === "ar" ? `منذ ${hrs} س` : `${hrs}h ago`;
+                    return new Date(notification.createdAt).toLocaleDateString(locale);
+                  })();
+
+                  return (
+                    <button
+                      key={notification.id}
+                      onClick={() => void handleClick(notification)}
+                      className={`w-full text-start transition-colors hover:bg-white/[0.03] ${typeClass} ${
+                        !notification.isRead ? "" : "opacity-75"
+                      }`}
+                      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <div className="px-4 py-3">
+                        <div className="flex items-start gap-2.5">
+                          {!notification.isRead ? (
+                            <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400 animate-soft-pulse" />
+                          ) : (
+                            <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/10" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-sm font-medium ${!notification.isRead ? "text-white" : "text-slate-300"}`}>
+                              {display.title}
+                            </p>
+                            <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-slate-400">
+                              {display.message}
+                            </p>
+                            <p className="mt-1.5 text-[10px] text-slate-500">{timeAgo}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })
-            )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
 
+            {/* Footer */}
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                navigate("/profile");
-              }}
-              className="w-full px-4 py-3 text-center text-xs font-medium text-primary transition-colors hover:bg-secondary/30"
+              onClick={() => { setOpen(false); navigate("/profile"); }}
+              className="w-full py-3 text-center text-[11px] font-medium text-blue-300 transition-colors hover:bg-blue-500/10 hover:text-blue-100"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
             >
               {t("notifications.viewAll")}
             </button>

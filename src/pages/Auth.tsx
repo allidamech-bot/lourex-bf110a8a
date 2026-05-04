@@ -7,13 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthStateScreen } from "@/components/auth/AuthStateScreen";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getDefaultRouteForRole } from "@/features/auth/rbac";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
 const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
-  const { lang, t } = useI18n();
+  const { lang: _lang, t } = useI18n();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -112,7 +110,6 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     setLoading(true);
 
     try {
-      // Check for missing Supabase config
       if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
         throw new Error("CONFIG_ERROR");
       }
@@ -174,77 +171,121 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
             : error?.message || t("auth.authError");
 
       toast.error(fallbackMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+    <div
+      className="flex min-h-screen items-center justify-center px-4"
+      style={{
+        background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, #0F172A 60%)",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-md"
+      >
+        {/* Logo */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 font-serif text-3xl font-bold tracking-wider text-gradient-gold">LOUREX</h1>
-          <p className="text-muted-foreground">
+          <h1 className="mb-1.5 font-serif text-3xl font-bold tracking-wider text-gradient-gold">LOUREX</h1>
+          <p className="text-sm text-slate-400">
             {isLogin ? t("auth.signInDescription") : t("auth.signUpDescription")}
           </p>
         </div>
 
-        <div className="glass-card rounded-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Glass login card */}
+        <div className="glass-panel px-7 py-8">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {!isLogin ? (
               <>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
                     placeholder={t("auth.fullName")}
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
-                    className="border-border bg-secondary pl-10"
+                    className="glass-input w-full px-3 py-2.5 pl-10 text-sm"
                     required
                   />
                 </div>
-                <div className="rounded-lg border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-7 text-muted-foreground">
+                <div
+                  className="rounded-xl px-4 py-3 text-xs leading-6 text-slate-400"
+                  style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.14)" }}
+                >
                   {t("auth.customerSignupNote")}
                 </div>
               </>
             ) : null}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input type="email" placeholder={t("auth.email")} value={email} onChange={(event) => setEmail(event.target.value)} className="border-border bg-secondary pl-10" required />
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="email"
+                placeholder={t("auth.email")}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="glass-input w-full px-3 py-2.5 pl-10 text-sm"
+                required
+              />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
                 type="password"
                 placeholder={t("auth.password")}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="border-border bg-secondary pl-10"
+                className="glass-input w-full px-3 py-2.5 pl-10 text-sm"
                 required
                 minLength={8}
               />
             </div>
 
-            <Button variant="gold" className="h-11 w-full" disabled={loading}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-1 h-11 w-full rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+              style={{
+                background: "linear-gradient(135deg, #3B82F6, #2563EB)",
+                border: "1px solid rgba(96,165,250,0.3)",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.25)",
+              }}
+            >
               {loading ? t("auth.submitting") : isLogin ? t("auth.signIn") : t("auth.signUp")}
-            </Button>
+            </button>
           </form>
 
-          <div className="mt-6 space-y-2 text-center">
-            <button onClick={() => setIsLogin((current) => !current)} className="block w-full text-sm text-muted-foreground transition-colors hover:text-primary">
+          <div className="mt-5 space-y-2 text-center">
+            <button
+              onClick={() => setIsLogin((current) => !current)}
+              className="block w-full text-sm text-slate-400 transition-colors hover:text-slate-200"
+            >
               {isLogin ? t("auth.noAccount") : t("auth.alreadyHaveAccount")}
             </button>
-            <div className="border-t border-border/50 pt-3">
-              <button onClick={() => navigate("/request")} className="block w-full text-sm font-medium text-primary transition-colors hover:text-primary/80">
+            <div className="pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+              <button
+                onClick={() => navigate("/request")}
+                className="block w-full text-sm font-medium text-blue-400 transition-colors hover:text-blue-200"
+              >
                 {t("auth.needSourcingSupport")}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border/60 bg-card/75 px-5 py-4 text-sm leading-7 text-muted-foreground">
-          <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
-            <Building2 className="h-4 w-4 text-primary" />
+        {/* Role-aware info card */}
+        <div
+          className="mt-4 rounded-2xl px-5 py-4 text-sm leading-7 text-slate-400"
+          style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div className="mb-1.5 flex items-center gap-2 font-medium text-slate-200">
+            <Building2 className="h-4 w-4 text-blue-400" />
             {t("auth.roleAwareTitle")}
           </div>
           {t("auth.roleAwareDescription")}

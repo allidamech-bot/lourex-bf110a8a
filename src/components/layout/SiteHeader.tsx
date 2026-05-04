@@ -69,7 +69,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-        className="sticky top-0 z-50 border-b border-white/10 bg-[#06111f]/95 shadow-[0_14px_40px_-28px_rgba(37,99,235,0.7)] backdrop-blur-xl"
+        className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
         dir={isRtl ? "rtl" : "ltr"}
       >
         <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 xl:hidden">
@@ -195,7 +195,7 @@ export const SiteHeader = () => {
         </div>
 
         {isOpen ? (
-            <div className="border-t border-white/10 bg-[#06111f] shadow-2xl xl:hidden">
+            <div className="border-t border-white/[0.06] shadow-2xl xl:hidden" style={{ background: "rgba(15,23,42,0.96)", backdropFilter: "blur(12px)" }}>
               <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-4 sm:px-6" dir={isRtl ? "rtl" : "ltr"}>
                 {isAuthenticated ? (
                     <Link
