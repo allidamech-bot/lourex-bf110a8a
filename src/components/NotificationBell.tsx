@@ -348,7 +348,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         onClick={() => setOpen((prev) => !prev)}
         className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
           unreadCount > 0
-            ? "bg-gold/15 border border-gold/30 text-gold hover:bg-gold/22 hover:border-gold/45 shadow-[0_0_12px_rgba(212,166,58,0.2)]"
+            ? "bg-blue-600/15 border border-blue-500/30 text-blue-400 hover:bg-blue-600/22 hover:border-blue-500/45 shadow-[0_0_12px_rgba(37,99,235,0.2)]"
             : "border border-white/[0.08] bg-white/[0.04] text-slate-400 hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-slate-200"
         }`}
         aria-label={t("notifications.title")}
@@ -357,8 +357,8 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         <Bell className="h-[18px] w-[18px]" />
         {unreadCount > 0 ? (
           <span
-            className="absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-background"
-            style={{ background: "var(--gold)", boxShadow: "0 0 10px rgba(212,166,58,0.6)" }}
+            className="absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
+            style={{ background: "#2563EB", boxShadow: "0 0 10px rgba(37,99,235,0.6)" }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
@@ -384,7 +384,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               <div>
                 <h4 className="text-sm font-semibold text-white">{t("notifications.title")}</h4>
                 {unreadCount > 0 ? (
-                  <p className="mt-0.5 text-[11px] text-gold/80">
+                  <p className="mt-0.5 text-[11px] text-blue-400/80">
                     {t("notifications.unreadCount", { count: unreadCount })}
                   </p>
                 ) : null}
@@ -393,7 +393,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
                 <button
                   onClick={() => void markAllRead()}
                   disabled={loading}
-                  className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-gold transition-colors hover:bg-gold/10 hover:text-gold-light disabled:opacity-50"
+                  className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-blue-400 transition-colors hover:bg-blue-600/10 hover:text-blue-300 disabled:opacity-50"
                   aria-busy={loading}
                 >
                   {t("notifications.markAllRead")}
@@ -405,7 +405,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
             <div className="max-h-[22rem] overflow-y-auto">
               {loading && notifications.length === 0 ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-400">
-                  <Loader2 className="h-4 w-4 animate-spin text-gold" />
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                   {t("common.loading")}
                 </div>
               ) : loadError ? (
