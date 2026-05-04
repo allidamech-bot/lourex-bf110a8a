@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ChevronRight, LogOut, Menu, Shield, X } from "lucide-react";
+import { ChevronRight, LogOut, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import NotificationBell from "@/components/NotificationBell";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
-
-// Removed getSafeLabel as t() should handle missing keys or fallbacks gracefully via i18n.tsx
 
 export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,11 +36,19 @@ export const SiteHeader = () => {
         { to: "/", label: t("nav.home") },
         { to: "/request", label: t("nav.purchaseRequest") },
         {
-          to: usesDashboardWorkspace ? "/dashboard/requests" : isCustomer ? "/customer-portal/requests#requests" : "/auth",
+          to: usesDashboardWorkspace
+              ? "/dashboard/requests"
+              : isCustomer
+                  ? "/customer-portal/requests#requests"
+                  : "/auth",
           label: t("customerPortal.actions.requests.title"),
         },
         {
-          to: usesDashboardWorkspace ? "/dashboard/tracking" : isCustomer ? "/customer-portal/tracking" : "/track",
+          to: usesDashboardWorkspace
+              ? "/dashboard/tracking"
+              : isCustomer
+                  ? "/customer-portal/tracking"
+                  : "/track",
           label: t("customerPortal.actions.tracking.title"),
         },
         { to: "/guidelines", label: t("nav.guidelines") },
@@ -69,49 +75,57 @@ export const SiteHeader = () => {
 
   return (
       <header
-        className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
-        dir={isRtl ? "rtl" : "ltr"}
+          className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+          dir={isRtl ? "rtl" : "ltr"}
       >
+        {/* Mobile header */}
         <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 lg:hidden">
           <div className="flex w-full items-center justify-between gap-4">
             <Link
-              to="/"
-              className="flex min-w-0 shrink-0 items-center gap-3"
-              onClick={() => setIsOpen(false)}
-              aria-label="Lourex home"
+                to="/"
+                className="flex min-w-0 shrink-0 items-center gap-3"
+                onClick={() => setIsOpen(false)}
+                aria-label="Lourex home"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
-                <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
-              </span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+              <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+            </span>
               <span className="truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
             </Link>
 
             <button
-              type="button"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground shadow-sm transition-colors hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-blue-100"
-              onClick={() => setIsOpen((value) => !value)}
-              aria-label={t("nav.menu")}
-              aria-expanded={isOpen}
+                type="button"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground shadow-sm transition-colors hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-blue-100"
+                onClick={() => setIsOpen((value) => !value)}
+                aria-label={t("nav.menu")}
+                aria-expanded={isOpen}
             >
               {isOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
 
-        <div className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid" dir={isRtl ? "rtl" : "ltr"}>
+        {/* Desktop header */}
+        <div
+            className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
+            dir={isRtl ? "rtl" : "ltr"}
+        >
           <Link
-            to="/"
-            className="flex shrink-0 items-center gap-3"
-            onClick={() => setIsOpen(false)}
-            aria-label="Lourex home"
+              to="/"
+              className="flex shrink-0 items-center gap-3"
+              onClick={() => setIsOpen(false)}
+              aria-label="Lourex home"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
-              <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
-            </span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+            <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+          </span>
             <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
           </Link>
 
-          <nav className="hidden min-w-0 items-center justify-center gap-1 lg:flex" aria-label={t("nav.primaryNavigation")}>
+          <nav
+              className="hidden min-w-0 items-center justify-center gap-1 lg:flex"
+              aria-label={t("nav.primaryNavigation")}
+          >
             {canSeeDashboardMenu ? (
                 <NavLink
                     to="/dashboard"
@@ -144,73 +158,76 @@ export const SiteHeader = () => {
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-2">
+          <div className="flex shrink-0 items-center justify-end gap-3">
             <div className="hidden shrink-0 items-center gap-2 lg:flex">
+              {user ? <NotificationBell userId={user.id} /> : null}
+
+              <LanguageSwitcher />
+              <ThemeToggle />
+
               {isAuthenticated ? (
                   <>
                     <Link
                         to="/profile"
-                        className="flex min-w-0 max-w-[170px] items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10 2xl:max-w-[230px] 2xl:px-3"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-400/20 bg-blue-500/15 text-sm font-bold text-blue-100 transition hover:border-blue-300/50 hover:bg-blue-500/25"
+                        title={userName}
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-sm font-bold text-blue-100 ring-1 ring-blue-400/30">
-                        {userName.slice(0, 1).toUpperCase()}
-                      </div>
-
-                      <div className="min-w-0 text-start">
-                        <p className="truncate text-sm font-semibold leading-5 text-foreground">{userName}</p>
-                        <p className="truncate text-xs leading-4 text-slate-400">{roleLabel || userEmail || workspaceLabel}</p>
-                      </div>
+                      {userName.slice(0, 1).toUpperCase()}
                     </Link>
 
-                    {profile?.role === "owner" ? (
-                        <Button variant="outline" asChild className="h-9 w-9 border-white/10 bg-white/[0.04] px-0 text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white 2xl:w-auto 2xl:px-3">
-                          <Link to="/admin" aria-label={t("nav.admin")}>
-                            <Shield className="h-4 w-4 2xl:me-2" />
-                            <span className="hidden 2xl:inline">{t("nav.admin")}</span>
-                          </Link>
-                        </Button>
-                    ) : null}
-
-                    {user ? <NotificationBell userId={user.id} /> : null}
-                    <LanguageSwitcher />
-                    <ThemeToggle />
-
-                    <Button variant="ghost" onClick={handleLogout} className="h-9 w-9 px-0 text-slate-300 hover:bg-blue-500/10 hover:text-white 2xl:w-auto 2xl:px-3">
-                      <LogOut className="h-4 w-4 2xl:me-2" />
-                      <span className="hidden whitespace-nowrap 2xl:inline">{t("nav.signOut")}</span>
+                    <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="h-10 rounded-xl px-3 text-slate-300 hover:bg-blue-500/10 hover:text-white"
+                        title={signOutLabel}
+                    >
+                      <LogOut className="h-4 w-4" />
                     </Button>
                   </>
               ) : (
-                  <>
-                    <LanguageSwitcher />
-                    <ThemeToggle />
-                    <Button variant="default" asChild className="h-9 rounded-xl bg-blue-500 px-4 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
-                      <Link to="/auth">{t("nav.signIn")}</Link>
-                    </Button>
-                  </>
+                  <Button
+                      variant="default"
+                      asChild
+                      className="h-10 rounded-xl bg-blue-600 px-5 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-500"
+                  >
+                    <Link to="/auth">{signInLabel}</Link>
+                  </Button>
               )}
             </div>
           </div>
         </div>
 
+        {/* Mobile drawer */}
         {isOpen ? (
             <div className="fixed inset-0 z-[100] lg:hidden">
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-              <div 
-                className={`absolute top-0 bottom-0 w-[280px] bg-card border-border/50 p-5 flex flex-col shadow-2xl transition-transform ${isRtl ? "right-0 border-l" : "left-0 border-r"}`}
+              <div
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setIsOpen(false)}
+              />
+
+              <div
+                  className={`absolute top-0 bottom-0 flex w-[280px] flex-col border-border/50 bg-card p-5 shadow-2xl transition-transform ${
+                      isRtl ? "right-0 border-l" : "left-0 border-r"
+                  }`}
               >
                 <div className="mb-8 flex items-center justify-between">
                   <Link
-                    to="/"
-                    className="flex shrink-0 items-center gap-3"
-                    onClick={() => setIsOpen(false)}
+                      to="/"
+                      className="flex shrink-0 items-center gap-3"
+                      onClick={() => setIsOpen(false)}
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
-                      <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
-                    </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+                  <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+                </span>
                     <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
                   </Link>
-                  <button onClick={() => setIsOpen(false)} className="rounded-lg p-2 hover:bg-white/5 text-slate-400">
+
+                  <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="rounded-lg p-2 text-slate-400 hover:bg-white/5"
+                      aria-label={t("common.close")}
+                  >
                     <X size={20} />
                   </button>
                 </div>
@@ -227,7 +244,9 @@ export const SiteHeader = () => {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                          <p className="truncate text-xs text-slate-400">{roleLabel || userEmail || workspaceLabel}</p>
+                          <p className="truncate text-xs text-slate-400">
+                            {roleLabel || userEmail || workspaceLabel}
+                          </p>
                         </div>
                       </div>
                     </Link>
@@ -239,17 +258,17 @@ export const SiteHeader = () => {
                   <ThemeToggle />
                 </div>
 
-                <nav className="flex-1 overflow-y-auto space-y-1.5" aria-label={t("nav.mobileNavigation")}>
+                <nav className="flex-1 space-y-1.5 overflow-y-auto" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (
                       <NavLink
                           to="/dashboard"
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                              isActive
-                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
-                            }`
+                              `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                  isActive
+                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                              }`
                           }
                       >
                         <span>{t("nav.dashboard")}</span>
@@ -263,11 +282,11 @@ export const SiteHeader = () => {
                           to={link.to}
                           onClick={() => setIsOpen(false)}
                           className={({ isActive }) =>
-                            `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                              isActive
-                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
-                            }`
+                              `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                  isActive
+                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                              }`
                           }
                       >
                         <span>{link.label}</span>
@@ -276,7 +295,7 @@ export const SiteHeader = () => {
                   ))}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-white/5">
+                <div className="mt-auto border-t border-white/5 pt-6">
                   {isAuthenticated ? (
                       <button
                           type="button"
@@ -287,7 +306,11 @@ export const SiteHeader = () => {
                         <LogOut className="h-4 w-4 opacity-70" />
                       </button>
                   ) : (
-                      <Button variant="default" asChild className="w-full h-11 rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400">
+                      <Button
+                          variant="default"
+                          asChild
+                          className="h-11 w-full rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400"
+                      >
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
                           {signInLabel}
                         </Link>
