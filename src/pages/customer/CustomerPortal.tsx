@@ -289,9 +289,9 @@ const CustomerPortal = () => {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+            className="mb-8 flex w-full max-w-full min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between"
         >
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
               {getSafeLabel(
                   t("customerPortal.eyebrow"),
@@ -299,14 +299,14 @@ const CustomerPortal = () => {
               )}
             </p>
 
-            <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">
+            <h1 className="mt-2 break-words font-serif text-2xl font-bold sm:text-3xl md:text-4xl">
               {getSafeLabel(t("customerPortal.welcome"), locale === "ar" ? "مرحباً" : "Welcome")}{" "}
               <span className="text-gradient-gold">
               {profile?.fullName || profile?.email || ""}
             </span>
             </h1>
 
-            <p className="mt-3 max-w-3xl text-muted-foreground">
+            <p className="mt-3 max-w-3xl break-words text-muted-foreground">
               {getSafeLabel(
                   t("customerPortal.description"),
                   locale === "ar"
@@ -318,6 +318,7 @@ const CustomerPortal = () => {
 
           <Button
               variant="outline"
+              className="w-full md:w-auto"
               onClick={() => void loadData("refresh")}
               disabled={loading || refreshing}
           >
@@ -333,13 +334,13 @@ const CustomerPortal = () => {
         </motion.div>
 
         {loadError ? (
-            <div className="mb-6 flex items-start gap-3 rounded-[1.5rem] border border-destructive/20 bg-destructive/10 px-5 py-4 text-sm text-destructive">
+            <div className="mb-6 flex w-full max-w-full items-start gap-3 rounded-[1.5rem] border border-destructive/20 bg-destructive/10 px-4 py-4 text-sm text-destructive sm:px-5">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{loadError}</span>
+              <span className="min-w-0 break-words">{loadError}</span>
             </div>
         ) : null}
 
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             {
               label: locale === "ar" ? "الطلبات" : "Requests",
@@ -363,10 +364,10 @@ const CustomerPortal = () => {
             },
           ].map((item) => (
               <BentoCard key={item.label} className="p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
+                <div className="flex min-w-0 items-center justify-between gap-4">
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="mt-2 text-2xl font-bold">{item.value}</p>
+                    <p className="mt-2 break-words text-2xl font-bold">{item.value}</p>
                   </div>
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <item.icon className="h-5 w-5" />
@@ -376,7 +377,7 @@ const CustomerPortal = () => {
           ))}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {menuItems.map((item, index) => (
               <motion.div
                   key={item.title}
@@ -384,7 +385,7 @@ const CustomerPortal = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
               >
-                <Link to={item.link}>
+                <Link to={item.link} className="block h-full min-w-0">
                   <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-primary/30 hover:shadow-lg">
                     <div
                         className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
@@ -392,11 +393,11 @@ const CustomerPortal = () => {
                       <item.icon className="h-6 w-6" />
                     </div>
 
-                    <h3 className="font-serif text-xl font-semibold transition-colors group-hover:text-primary">
+                    <h3 className="break-words font-serif text-xl font-semibold transition-colors group-hover:text-primary">
                       {item.title}
                     </h3>
 
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
                       {item.description}
                     </p>
 
@@ -411,13 +412,13 @@ const CustomerPortal = () => {
           ))}
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-2">
-          <BentoCard className="flex flex-col justify-center p-8">
-            <div className="mb-6 flex items-center gap-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
+            <div className="mb-6 flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-serif text-xl font-semibold">
+              <h3 className="min-w-0 break-words font-serif text-xl font-semibold">
                 {getSafeLabel(
                     t("customerPortal.financial.title"),
                     locale === "ar" ? "الملخص المالي" : "Financial summary",
@@ -442,7 +443,7 @@ const CustomerPortal = () => {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
                       <p className="text-xs text-muted-foreground">
                         {getSafeLabel(
                             t("customerPortal.financial.balance"),
@@ -450,7 +451,7 @@ const CustomerPortal = () => {
                         )}
                       </p>
                       <p
-                          className={`mt-2 text-2xl font-bold ${
+                          className={`mt-2 break-words text-2xl font-bold ${
                               customerData.financialBalance >= 0
                                   ? "text-emerald-500"
                                   : "text-rose-500"
@@ -460,7 +461,7 @@ const CustomerPortal = () => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
                       <p className="text-xs text-muted-foreground">
                         {getSafeLabel(
                             t("customerPortal.financial.operations"),
@@ -472,7 +473,7 @@ const CustomerPortal = () => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
                       <p className="text-xs text-muted-foreground">
                         {getSafeLabel(
                             t("customerPortal.financial.incomeTracked"),
@@ -484,7 +485,7 @@ const CustomerPortal = () => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.2rem] bg-secondary/15 p-5">
+                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
                       <p className="text-xs text-muted-foreground">
                         {getSafeLabel(
                             t("customerPortal.financial.expenseTracked"),
@@ -514,12 +515,12 @@ const CustomerPortal = () => {
             )}
           </BentoCard>
 
-          <BentoCard className="flex flex-col justify-center p-8">
-            <div className="mb-6 flex items-center gap-3">
+          <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
+            <div className="mb-6 flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <ClipboardList className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-serif text-xl font-semibold">
+              <h3 className="min-w-0 break-words font-serif text-xl font-semibold">
                 {getSafeLabel(
                     t("customerPortal.recent.title"),
                     locale === "ar" ? "آخر الطلبات" : "Recent requests",
@@ -552,26 +553,26 @@ const CustomerPortal = () => {
                         <Link
                             key={request.id}
                             to={`/customer-portal/requests?request=${request.id}`}
-                            className="block rounded-xl border border-border/40 bg-secondary/5 p-4 transition-colors hover:border-primary/25 hover:bg-secondary/15"
+                            className="block w-full max-w-full min-w-0 rounded-xl border border-border/40 bg-secondary/5 p-4 transition-colors hover:border-primary/25 hover:bg-secondary/15"
                         >
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0">
-                              <p className="text-sm font-medium">{request.requestNumber}</p>
-                              <p className="mt-1 max-w-[260px] truncate text-xs text-muted-foreground">
+                              <p className="break-words text-sm font-medium">{request.requestNumber}</p>
+                              <p className="mt-1 max-w-full break-words text-xs text-muted-foreground sm:max-w-[260px] sm:truncate">
                                 {request.productName ||
                                     (locale === "ar" ? "طلب شراء" : "Purchase request")}
                               </p>
 
                               {trackingCode ? (
-                                  <p className="mt-2 text-xs text-muted-foreground">
+                                  <p className="mt-2 break-words text-xs text-muted-foreground">
                                     {locale === "ar" ? "كود التتبع: " : "Tracking: "}
                                     {trackingCode}
                                   </p>
                               ) : null}
                             </div>
 
-                            <div className="shrink-0 text-start sm:text-end">
-                        <span className="inline-flex w-fit rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
+                            <div className="min-w-0 shrink-0 text-start sm:text-end">
+                        <span className="inline-flex max-w-full break-words rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
                           {statusCopy?.label || request.statusLabel || request.status}
                         </span>
                               <p className="mt-2 text-xs text-muted-foreground">

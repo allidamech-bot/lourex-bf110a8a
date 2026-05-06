@@ -884,8 +884,8 @@ export default function PurchaseRequestsPage() {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="w-full max-w-full min-w-0 space-y-4">
+            <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
                     <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("requests.inboxEyebrow")}</p>
@@ -893,21 +893,21 @@ export default function PurchaseRequestsPage() {
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("requests.inboxDescription")}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                             { label: t("requests.total"), value: requestMetrics.total },
                             { label: t("requests.review"), value: requestMetrics.review },
                             { label: t("requests.ready"), value: requestMetrics.ready },
                             { label: t("requests.converted"), value: requestMetrics.converted },
                         ].map((item) => (
-                            <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25">
+                            <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25">
                                 <p className="text-2xl font-bold text-white">{item.value}</p>
-                                <p className="mt-1 text-xs text-slate-400">{item.label}</p>
+                                <p className="mt-1 break-words text-xs text-slate-400">{item.label}</p>
                             </div>
                         ))}
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
                         <div className="relative">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -918,7 +918,7 @@ export default function PurchaseRequestsPage() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex w-full flex-wrap gap-2 md:w-auto">
                             <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => void refresh()}>
                                 {t("common.refresh")}
                             </Button>
@@ -963,7 +963,7 @@ export default function PurchaseRequestsPage() {
                                 return (
                                     <div
                                         key={row.id}
-                                        className={`rounded-[1.35rem] border transition-colors ${
+                                        className={`w-full max-w-full min-w-0 rounded-[1.35rem] border transition-colors ${
                                             isCancelled
                                                 ? isSelected
                                                     ? "border-slate-400/45 bg-slate-500/10 shadow-[0_18px_46px_-36px_rgba(148,163,184,0.75)]"
@@ -978,23 +978,23 @@ export default function PurchaseRequestsPage() {
                                             onClick={() => setSelectedRequest(row.id, true)}
                                             className="w-full px-4 py-4 text-start"
                                         >
-                                            <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
+                                            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="break-words text-xs uppercase tracking-[0.16em] text-slate-400">
                                                     {row.requestNumber}
                                                 </p>
-                                                <p className="mt-2 truncate text-base font-semibold text-foreground">
+                                                <p className="mt-2 break-words text-base font-semibold text-foreground sm:truncate">
                                                     {row.productName || t("requests.genericRequest")}
                                                 </p>
-                                                <p className="mt-1 truncate text-sm text-muted-foreground">{row.customer.fullName}</p>
+                                                <p className="mt-1 break-words text-sm text-muted-foreground sm:truncate">{row.customer.fullName}</p>
                                                 {isCancelled ? (
-                                                    <p className="mt-2 text-xs font-medium text-slate-300">
+                                                    <p className="mt-2 break-words text-xs font-medium text-slate-300">
                                                         {t("requests.dashboardActions.cancelledNotice")}
                                                     </p>
                                                 ) : null}
                                             </div>
 
-                                            <span className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
+                                            <span className={`max-w-full self-start break-words rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
                         {t(`statuses.${row.status}`)}
                       </span>
                                         </div>
@@ -1064,27 +1064,27 @@ export default function PurchaseRequestsPage() {
                 {selectedRow ? (
                     <BentoCard
                         ref={detailsPanelRef}
-                        className={`sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[1.5rem] p-0 xl:self-start ${
+                        className={`top-24 max-h-none overflow-y-visible rounded-[1.5rem] p-0 xl:sticky xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto ${
                             selectedRow.status === "cancelled"
                                 ? "border-slate-400/25 bg-[linear-gradient(180deg,rgba(30,41,59,0.88),rgba(15,23,42,0.88))]"
                                 : "border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))]"
                         }`}
                     >
-                        <div className="border-b border-white/10 p-6">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div>
+                        <div className="border-b border-white/10 p-4 sm:p-6">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                                <div className="min-w-0">
                                     <p className="text-xs uppercase tracking-[0.2em] text-blue-200">
                                         {selectedRow.requestNumber}
                                     </p>
-                                    <h2 className="mt-2 font-serif text-3xl font-semibold text-white">
+                                    <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-white sm:text-3xl">
                                         {selectedRow.productName || t("requests.genericRequest")}
                                     </h2>
-                                    <p className="mt-2 text-sm text-slate-400">
+                                    <p className="mt-2 break-words text-sm text-slate-400">
                                         {selectedRow.customer.fullName} • {selectedRow.customer.email}
                                     </p>
                                 </div>
 
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
                                     {isInternal && selectedRow.convertedDealNumber ? (
                                         <Button variant="outline" asChild>
                                             <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
@@ -1127,20 +1127,20 @@ export default function PurchaseRequestsPage() {
                             <div className="mt-4 flex flex-wrap gap-2">
                                 {(() => {
                                     return (
-                                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(selectedRow.status)}`}>
+                                        <span className={`max-w-full break-words rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(selectedRow.status)}`}>
             {t(`statuses.${selectedRow.status}`)}
         </span>
                                     );
                                 })()}
 
                                 {selectedRow.convertedDealNumber ? (
-                                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                    <span className="max-w-full break-words rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                     {t("requests.linkedDeal", { deal: selectedRow.convertedDealNumber })}
                   </span>
                                 ) : null}
 
                                 {selectedRow.isLegacyFallback ? (
-                                    <span className="rounded-full bg-secondary/25 px-3 py-1 text-xs font-medium text-muted-foreground">
+                                    <span className="max-w-full break-words rounded-full bg-secondary/25 px-3 py-1 text-xs font-medium text-muted-foreground">
                     {t("requests.legacy")}
                   </span>
                                 ) : null}
@@ -1152,7 +1152,7 @@ export default function PurchaseRequestsPage() {
                                 </div>
                             ) : null}
 
-                            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {[
                                     { label: t("requests.labels.requestNumber"), value: selectedRow.requestNumber },
                                     { label: t("requests.labels.status"), value: t(`statuses.${selectedRow.status}`) },
@@ -1165,8 +1165,8 @@ export default function PurchaseRequestsPage() {
                                         value: selectedRow.customer.fullName || t("common.notAvailable"),
                                     },
                                 ].map((item) => (
-                                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                                        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                                    <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                                        <p className="break-words text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
                                             {item.label}
                                         </p>
                                         <p className="mt-1 break-words text-sm font-semibold text-white">{item.value}</p>
@@ -1175,8 +1175,8 @@ export default function PurchaseRequestsPage() {
                             </div>
                         </div>
 
-                        <div className="grid gap-0 xl:grid-cols-[1.02fr_0.98fr]">
-                            <div className="border-b border-border/50 p-6 xl:border-b-0 xl:border-e">
+                        <div className="grid min-w-0 gap-0 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
+                            <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 xl:border-b-0 xl:border-e">
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
@@ -1191,7 +1191,7 @@ export default function PurchaseRequestsPage() {
                                         {t("requests.labels.details")}
                                     </p>
 
-                                    <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                         {[
                                             { label: t("requests.labels.customer"), value: selectedRow.customer.fullName },
                                             { label: t("requests.labels.email"), value: selectedRow.customer.email },
@@ -1230,8 +1230,8 @@ export default function PurchaseRequestsPage() {
                                             { label: t("requests.labels.color"), value: selectedRow.color || "—" },
                                             { label: t("requests.labels.reference"), value: selectedRow.referenceLink || t("requests.noReference") },
                                         ].map((item) => (
-                                            <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                                                <p className="text-xs text-slate-400">{item.label}</p>
+                                            <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                                                <p className="break-words text-xs text-slate-400">{item.label}</p>
                                                 <p className="mt-1 break-words text-sm font-medium text-white">{item.value}</p>
                                             </div>
                                         ))}
@@ -1242,7 +1242,7 @@ export default function PurchaseRequestsPage() {
                                             <ShieldCheck className="h-4 w-4 text-primary" />
                                             <p className="font-medium">{t("requests.labels.technicalSpecs")}</p>
                                         </div>
-                                        <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                                        <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
                                             {selectedRow.technicalSpecs || t("requests.noSpecs")}
                                         </p>
                                     </div>
@@ -1256,7 +1256,7 @@ export default function PurchaseRequestsPage() {
                                         {selectedRow.attachments.length === 0 ? (
                                             <p className="mt-3 text-sm text-muted-foreground">{t("requests.noAttachments")}</p>
                                         ) : (
-                                            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                                                 {selectedRow.attachments.map((attachment) => (
                                                     <a
                                                         key={attachment.id}
@@ -1276,10 +1276,10 @@ export default function PurchaseRequestsPage() {
                             </div>
 
                             {isInternal && (
-                                <div className="p-6">
+                            <div className="min-w-0 p-4 sm:p-6">
                                     <div className="space-y-5">
                                         {selectedRow.status === "transfer_proof_pending" && (
-                                            <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-6">
+                                            <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-4 sm:p-6">
                                                 <div className="flex items-center gap-3">
                                                     <FileImage className="h-5 w-5 text-primary" />
                                                     <h3 className="text-lg font-semibold">{t("requests.transferProof.title")}</h3>
@@ -1301,7 +1301,7 @@ export default function PurchaseRequestsPage() {
                                                 )}
 
                                                 <form className="mt-6 space-y-4" onSubmit={handleAcceptTransfer}>
-                                                    <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                                         <label className="space-y-1.5 text-sm">
                                                             <span className="text-muted-foreground">{transferPaymentLabels.paymentType}</span>
                                                             <select
@@ -1362,7 +1362,7 @@ export default function PurchaseRequestsPage() {
                                                         </label>
                                                     </div>
 
-                                                    <div className="flex flex-wrap gap-3">
+                                                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                                                         <Button
                                                             type="submit"
                                                             disabled={actingOnProof}
@@ -1391,9 +1391,9 @@ export default function PurchaseRequestsPage() {
                                         )}
 
                                         {selectedRow.status === "transfer_proof_rejected" && (
-                                            <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/10 p-6 text-rose-100">
+                                            <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/10 p-4 text-rose-100 sm:p-6">
                                                 <p className="font-bold">{t("requests.transferProof.rejected")}</p>
-                                                <p className="mt-1 text-sm">
+                                                <p className="mt-1 break-words text-sm">
                                                     {t("requests.transferProof.rejectionReason")} {selectedRow.transferRejectionReason}
                                                 </p>
                                             </div>
@@ -1406,7 +1406,7 @@ export default function PurchaseRequestsPage() {
                                         <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
                                             <div className="flex flex-wrap items-start justify-between gap-3">
                                                 <div className="min-w-0">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex min-w-0 items-center gap-2">
                                                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
                                                             <Sparkles className="h-4 w-4" />
                                                         </span>
@@ -1414,7 +1414,7 @@ export default function PurchaseRequestsPage() {
                                                             <p className="text-xs uppercase tracking-[0.18em] text-primary">
                                                                 {t("requests.ai.title")}
                                                             </p>
-                                                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                                                            <p className="mt-1 break-words text-xs leading-6 text-muted-foreground">
                                                                 {t("requests.ai.description")}
                                                             </p>
                                                         </div>
@@ -1448,7 +1448,7 @@ export default function PurchaseRequestsPage() {
                                                             ) : (
                                                                 <Sparkles className="me-2 h-4 w-4 shrink-0 text-primary" />
                                                             )}
-                                                            <span className="truncate">
+                                                        <span className="min-w-0 break-words sm:truncate">
                                                                 {lang === "ar" ? action.labelAr : action.label}
                                                             </span>
                                                         </Button>
@@ -1464,9 +1464,9 @@ export default function PurchaseRequestsPage() {
 
                                             {aiOutput ? (
                                                 <div className="mt-4 rounded-[1rem] border border-primary/20 bg-[#111111] p-4">
-                                                    <div className="mb-3 flex items-center justify-between gap-3">
-                                                        <p className="text-sm font-semibold text-primary">{aiOutputTitle}</p>
-                                                        <span className="rounded-full border border-primary/20 px-2.5 py-1 text-[11px] text-muted-foreground">
+                                                    <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                        <p className="break-words text-sm font-semibold text-primary">{aiOutputTitle}</p>
+                                                        <span className="max-w-full self-start break-words rounded-full border border-primary/20 px-2.5 py-1 text-[11px] text-muted-foreground">
                                                             {t("requests.ai.advisory")}
                                                         </span>
                                                     </div>

@@ -236,18 +236,18 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-full min-w-0 space-y-4">
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("reports.window")}</p>
             <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
           </div>
-          <div className="grid gap-3 md:grid-cols-6">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-3 xl:grid-cols-6">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
-              className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="monthly">{t("reports.ranges.monthly")}</option>
               <option value="quarterly">{t("reports.ranges.quarterly")}</option>
@@ -255,16 +255,16 @@ export default function ReportsPage() {
               <option value="annual">{t("reports.ranges.annual")}</option>
               <option value="custom">{t("reports.ranges.custom")}</option>
             </select>
-            <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            <button onClick={handleExport} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />{t("common.exportCsv")}</span>
+            <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <button onClick={handleExport} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex min-w-0 items-center gap-2"><Download className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.exportCsv")}</span></span>
             </button>
-            <button onClick={handleExportPdf} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />{t("common.exportPdf")}</span>
+            <button onClick={handleExportPdf} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.exportPdf")}</span></span>
             </button>
-            <button onClick={() => window.print()} className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex items-center gap-2"><Printer className="h-4 w-4" />{t("common.print")}</span>
+            <button onClick={() => window.print()} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.print")}</span></span>
             </button>
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function ReportsPage() {
         </div>
       </BentoCard>
 
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown("pending_requests") },
           { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
@@ -289,27 +289,27 @@ export default function ReportsPage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <item.icon className="h-5 w-5" />
             </div>
-            <div className="flex items-center justify-between">
-              <p className="font-serif text-4xl font-bold">{item.value}</p>
+            <div className="flex min-w-0 items-center justify-between">
+              <p className="break-words font-serif text-4xl font-bold">{item.value}</p>
               {item.action ? <ExternalLink className="h-4 w-4 text-muted-foreground" /> : null}
             </div>
-            <p className="text-sm text-muted-foreground">{item.label}</p>
+            <p className="break-words text-sm text-muted-foreground">{item.label}</p>
           </BentoCard>
         ))}
       </div>
 
       {drillDownData ? (
         <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl font-semibold capitalize">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="break-words font-serif text-xl font-semibold capitalize">
               {t(`reports.drilldowns.${drillDownData.type}`)} {t("reports.title")}
             </h2>
             <button onClick={() => setDrillDownData(null)} className="text-sm text-primary hover:underline">
               {t("common.close")}
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="-mx-1 overflow-x-auto px-1">
+            <table className="w-full min-w-[34rem] text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="pb-2 font-medium">{t("common.id")}</th>
@@ -335,13 +335,13 @@ export default function ReportsPage() {
         </BentoCard>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <BentoCard className="space-y-5">
           <div className="flex items-center gap-3">
             <BarChart3 className="h-5 w-5 text-primary" />
             <h2 className="font-serif text-2xl font-semibold">{t("reports.operationsRead")}</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
               { label: t("reports.metrics.audits"), value: metrics.audits, icon: ShieldCheck },
               { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
@@ -355,9 +355,9 @@ export default function ReportsPage() {
               { label: t("common.active"), value: snapshot?.operations.activeDeals || 0, icon: PackageSearch },
               { label: t("reports.metrics.avgTime"), value: `${Math.round(snapshot?.operations.averageProcessingTimeDays || 0)} ${t("common.days")}`, icon: Clock },
             ].map((item) => (
-              <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4">
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 text-2xl font-bold">{item.value}</p>
+              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-secondary/25 p-4">
+                <p className="break-words text-xs text-muted-foreground">{item.label}</p>
+                <p className="mt-1 break-words text-2xl font-bold">{item.value}</p>
               </div>
             ))}
           </div>
@@ -383,29 +383,29 @@ export default function ReportsPage() {
         </BentoCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+      <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <BentoCard className="space-y-4">
           <h2 className="font-serif text-2xl font-semibold">{t("reports.topCustomers")}</h2>
           <div className="space-y-3">
             {snapshot?.topCustomers.length ? (
               snapshot.topCustomers.map((customer) => (
                 <div key={customer.customerId} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{customer.fullName}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{customer.email}</p>
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">{customer.fullName}</p>
+                      <p className="mt-1 break-words text-sm text-muted-foreground">{customer.email}</p>
                     </div>
-                    <div className="text-end text-sm text-muted-foreground">
+                    <div className="text-start text-sm text-muted-foreground sm:text-end">
                       <div>{t("reports.requestsCount", { count: customer.requestsCount })}</div>
                       <div>{t("reports.dealsCount", { count: customer.dealsCount })}</div>
                     </div>
                   </div>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
+                    <div className="min-w-0 rounded-[1rem] bg-background/60 p-3 text-sm">
                       <p className="text-xs text-muted-foreground">{t("reports.labels.outstandingBalance")}</p>
-                      <p className="mt-1 font-semibold">{customer.outstandingBalance.toLocaleString()} SAR</p>
+                      <p className="mt-1 break-words font-semibold">{customer.outstandingBalance.toLocaleString()} SAR</p>
                     </div>
-                    <div className="rounded-[1rem] bg-background/60 p-3 text-sm">
+                    <div className="min-w-0 rounded-[1rem] bg-background/60 p-3 text-sm">
                       <p className="text-xs text-muted-foreground">{t("reports.labels.pendingEditRequests")}</p>
                       <p className="mt-1 font-semibold">{customer.pendingEditRequests}</p>
                     </div>
@@ -443,10 +443,10 @@ export default function ReportsPage() {
             ) : null}
             {snapshot?.topExpenseCategories.length ? (
               snapshot.topExpenseCategories.map((item) => (
-                <div key={item.category} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium">{item.category}</p>
-                    <p className="text-sm font-semibold">{Number(item.amount).toLocaleString()} SAR</p>
+                  <div key={item.category} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <p className="break-words font-medium">{item.category}</p>
+                    <p className="break-words text-sm font-semibold">{Number(item.amount).toLocaleString()} SAR</p>
                   </div>
                 </div>
               ))

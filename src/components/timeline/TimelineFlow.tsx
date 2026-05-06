@@ -19,7 +19,7 @@ interface TimelineFlowProps {
 
 export const TimelineFlow = ({ items, className }: TimelineFlowProps) => {
   return (
-    <div className={`space-y-0 ${className || ""}`}>
+    <div className={`w-full max-w-full min-w-0 space-y-0 ${className || ""}`}>
       {items.map((item, index) => (
         <motion.div
           key={item.id}

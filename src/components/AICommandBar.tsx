@@ -244,7 +244,7 @@ const AICommandBar = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setOpen(true)}
-            className={`fixed bottom-4 ${isRtl ? "left-4 sm:left-6" : "right-4 sm:right-6"} z-50 flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-gradient-gold text-primary-foreground shadow-[0_18px_40px_-20px_hsl(var(--gold)/0.75)] transition-shadow hover:shadow-[0_24px_48px_-18px_hsl(var(--gold)/0.85)] sm:bottom-6`}
+            className={`fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] ${isRtl ? "left-4 sm:left-6" : "right-4 sm:right-6"} z-50 flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-gradient-gold text-primary-foreground shadow-[0_18px_40px_-20px_hsl(var(--gold)/0.75)] transition-shadow hover:shadow-[0_24px_48px_-18px_hsl(var(--gold)/0.85)] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]`}
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.96 }}
             aria-label={lang === "ar" ? "افتح مساعد LOUREX AI" : "Open LOUREX AI Copilot"}
@@ -260,7 +260,7 @@ const AICommandBar = () => {
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
-            className={`fixed bottom-3 ${isRtl ? "left-3 sm:left-6" : "right-3 sm:right-6"} z-50 flex h-[min(620px,calc(100vh-1.5rem))] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-primary/30 bg-[#0b0b0b] shadow-2xl shadow-black/70 sm:bottom-6`}
+            className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] ${isRtl ? "left-3 sm:left-6" : "right-3 sm:right-6"} z-50 flex h-[min(620px,calc(100vh-1.5rem-env(safe-area-inset-bottom)))] w-[min(440px,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl border border-primary/30 bg-[#0b0b0b] shadow-2xl shadow-black/70 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]`}
             dir={dir}
           >
             <div className="border-b border-primary/20 bg-[linear-gradient(180deg,#151515,#0d0d0d)] px-4 py-3.5">
@@ -271,14 +271,14 @@ const AICommandBar = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-foreground">LOUREX AI Copilot</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 break-words text-xs text-muted-foreground">
                       {lang === "ar" ? "مساعد عمليات استشاري" : "Advisory operations assistant"}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                  <span className="max-w-[7rem] break-words rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:max-w-none">
                     {lang === "ar" ? contextLabel.ar : contextLabel.en}
                   </span>
                   <button
@@ -321,7 +321,7 @@ const AICommandBar = () => {
                         className="group flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-[#111111] px-3.5 py-3 text-start text-xs font-semibold text-muted-foreground transition-all hover:border-primary/45 hover:bg-primary/10 hover:text-foreground"
                       >
                         <cmd.icon className="h-4 w-4 shrink-0 text-primary/70 transition-colors group-hover:text-primary" />
-                        <span className="leading-5">{lang === "ar" ? cmd.labelAr : cmd.label}</span>
+                        <span className="min-w-0 break-words leading-5">{lang === "ar" ? cmd.labelAr : cmd.label}</span>
                       </button>
                     ))}
                   </div>
@@ -337,7 +337,7 @@ const AICommandBar = () => {
                         : "rounded-bl-md border border-primary/15 bg-secondary text-foreground"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
                   </div>
                 </div>
               ))}

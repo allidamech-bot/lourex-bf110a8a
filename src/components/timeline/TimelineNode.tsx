@@ -27,7 +27,7 @@ export const TimelineNode = ({ icon: Icon, title, description, timestamp, status
   };
 
   return (
-    <div className="relative flex gap-4 pb-6 last:pb-0">
+    <div className="relative flex w-full max-w-full min-w-0 gap-3 pb-6 last:pb-0 sm:gap-4">
       {!isLast && (
         <div className={cn("absolute left-[1.125rem] top-10 bottom-0 w-px", lineColors[status])} />
       )}
@@ -36,12 +36,12 @@ export const TimelineNode = ({ icon: Icon, title, description, timestamp, status
         <Icon className="h-4 w-4" />
       </div>
 
-      <div className="flex-1 pt-1">
-        <div className="flex items-center justify-between gap-3">
-          <h4 className="text-sm font-semibold text-white">{title}</h4>
-          <span className="text-[10px] font-medium text-slate-500">{timestamp}</span>
+      <div className="min-w-0 flex-1 pt-1">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <h4 className="break-words text-sm font-semibold text-white">{title}</h4>
+          <span className="shrink-0 break-words text-[10px] font-medium text-slate-500">{timestamp}</span>
         </div>
-        <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>
+        <p className="mt-1 break-words text-xs leading-5 text-slate-400">{description}</p>
       </div>
     </div>
   );

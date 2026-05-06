@@ -86,22 +86,22 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="glass-topbar sticky top-0 z-50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+          className="glass-topbar sticky top-0 z-50 w-full max-w-full overflow-x-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center px-4 sm:px-6 lg:hidden">
+        <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-4 sm:px-6 lg:hidden">
           <div className="flex w-full items-center justify-between gap-4">
             <Link
                 to="/"
-                className="flex min-w-0 shrink-0 items-center gap-3"
+                className="flex min-w-0 shrink items-center gap-3"
                 onClick={() => setIsOpen(false)}
                 aria-label="Lourex home"
             >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
               <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
             </span>
-              <span className="truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
+              <span className="min-w-0 truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
             </Link>
 
             <button
@@ -118,7 +118,7 @@ export const SiteHeader = () => {
 
         {/* Desktop header */}
         <div
-            className="mx-auto hidden h-16 max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
+            className="mx-auto hidden h-16 w-full max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
             dir={isRtl ? "rtl" : "ltr"}
         >
           <Link
@@ -211,17 +211,17 @@ export const SiteHeader = () => {
         {/* Mobile drawer */}
         {isOpen ? (
             <div className="fixed inset-0 z-[9999] h-[100vh] w-full overflow-y-auto border-l border-white/10 bg-[#0B1220]/95 shadow-2xl backdrop-blur-md lg:hidden">
-              <div className="flex min-h-full flex-col p-5">
+              <div className="flex min-h-full w-full max-w-full min-w-0 flex-col p-4 sm:p-5">
                 <div className="mb-8 flex items-center justify-between">
                   <Link
                       to="/"
-                      className="flex shrink-0 items-center gap-3"
+                      className="flex min-w-0 shrink items-center gap-3"
                       onClick={() => setIsOpen(false)}
                   >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
                   <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
                 </span>
-                    <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
+                    <span className="min-w-0 truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
                   </Link>
 
                   <button
@@ -238,9 +238,9 @@ export const SiteHeader = () => {
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="mb-6 block rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
+                        className="mb-6 block w-full max-w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-base font-bold text-blue-100 ring-1 ring-blue-400/30">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
@@ -254,13 +254,13 @@ export const SiteHeader = () => {
                     </Link>
                 ) : null}
 
-                <div className="mb-6 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                   <ThemeToggle />
                 </div>
 
-                <nav className="flex-1 space-y-1.5 overflow-y-auto" aria-label={t("nav.mobileNavigation")}>
+                <nav className="min-w-0 flex-1 space-y-1.5 overflow-y-auto" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (
                       <NavLink
                           to="/dashboard"
@@ -273,7 +273,7 @@ export const SiteHeader = () => {
                               }`
                           }
                       >
-                        <span>{t("nav.dashboard")}</span>
+                        <span className="min-w-0 break-words">{t("nav.dashboard")}</span>
                         <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ) : null}
@@ -291,7 +291,7 @@ export const SiteHeader = () => {
                               }`
                           }
                       >
-                        <span>{link.label}</span>
+                        <span className="min-w-0 break-words">{link.label}</span>
                         <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ))}

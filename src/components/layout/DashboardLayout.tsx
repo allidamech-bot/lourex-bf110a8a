@@ -99,13 +99,13 @@ export const DashboardLayout = () => {
   const visibleLinks = dashboardLinks.filter((link) => profile && link.roles.includes(profile.role));
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0F172A" }}>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden" style={{ backgroundColor: "#0F172A" }}>
       <SiteHeader />
-      <div className="container mx-auto grid gap-5 px-4 py-5 md:px-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-7xl gap-5 overflow-x-hidden px-4 py-5 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
 
         {/* ── Sidebar ── */}
         <aside
-          className="glass-sidebar p-3 lg:sticky lg:top-[4.5rem] lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
+          className="glass-sidebar w-full max-w-full min-w-0 p-3 lg:sticky lg:top-[4.5rem] lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
           aria-label="Sidebar"
         >
           {/* Workspace badge */}
@@ -116,7 +116,7 @@ export const DashboardLayout = () => {
             <p className="text-[10px] uppercase tracking-[0.22em] text-blue-400/70">
               {t("identity.labels.workspace")}
             </p>
-            <h2 className="mt-1.5 font-serif text-base font-bold text-white leading-snug">
+            <h2 className="mt-1.5 break-words font-serif text-base font-bold leading-snug text-white">
               {workspaceTitle}
             </h2>
             {workspaceDescription ? (
@@ -126,14 +126,14 @@ export const DashboardLayout = () => {
             ) : null}
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               <span
-                className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-blue-200"
+                className="max-w-full break-words rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-blue-200"
                 style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.18)" }}
               >
                 {t("identity.labels.role")}: {roleLabel}
               </span>
               {entityLabel ? (
                 <span
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-medium text-slate-300"
+                  className="max-w-full break-words rounded-full px-2.5 py-0.5 text-[10px] font-medium text-slate-300"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   {t("identity.labels.entity")}: {entityLabel}
@@ -143,14 +143,14 @@ export const DashboardLayout = () => {
           </div>
 
           {/* Nav links */}
-          <nav className="space-y-0.5" aria-label={t("nav.dashboardNavigation")}>
+          <nav className="w-full max-w-full min-w-0 space-y-0.5" aria-label={t("nav.dashboardNavigation")}>
             {visibleLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  `flex min-w-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-400/25 shadow-sm"
                       : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
@@ -165,10 +165,10 @@ export const DashboardLayout = () => {
         </aside>
 
         {/* ── Main content ── */}
-        <main className="min-w-0 pb-12">
+        <main className="w-full max-w-full min-w-0 overflow-x-hidden pb-24 lg:pb-12">
           {/* Workspace context header */}
           <div
-            className="mb-5 rounded-2xl px-5 py-4"
+            className="mb-5 w-full max-w-full min-w-0 rounded-2xl px-4 py-4 sm:px-5"
             style={{
               background: "rgba(255,255,255,0.025)",
               border: "1px solid rgba(255,255,255,0.07)",
@@ -176,29 +176,29 @@ export const DashboardLayout = () => {
             }}
           >
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-blue-400/70">
                   {t("identity.labels.workspace")}
                 </p>
-                <h1 className="mt-1.5 font-serif text-xl font-semibold text-white">
+                <h1 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">
                   {workspaceTitle}
                 </h1>
                 {workspaceDescription ? (
-                  <p className="mt-1.5 text-sm leading-6 text-slate-400">
+                  <p className="mt-1.5 break-words text-sm leading-6 text-slate-400">
                     {workspaceDescription}
                   </p>
                 ) : null}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-wrap gap-2">
                 <span
-                  className="rounded-full px-3.5 py-1.5 text-xs font-medium text-blue-200"
+                  className="max-w-full break-words rounded-full px-3.5 py-1.5 text-xs font-medium text-blue-200"
                   style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
                 >
                   {t("identity.labels.role")}: {roleLabel}
                 </span>
                 {entityLabel ? (
                   <span
-                    className="rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-300"
+                    className="max-w-full break-words rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-300"
                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
                   >
                     {t("identity.labels.entity")}: {entityLabel}

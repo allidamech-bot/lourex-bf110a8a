@@ -108,18 +108,18 @@ const ShipmentMetricCard = ({
   label: string;
   value: string | number;
 }) => (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25 hover:bg-blue-500/[0.06]">
+    <div className="w-full max-w-full min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25 hover:bg-blue-500/[0.06]">
       <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/25">
         {icon}
       </div>
       <p className="mt-3 text-2xl font-bold text-white">{value}</p>
-      <p className="mt-1 text-xs text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-xs text-slate-400">{label}</p>
     </div>
 );
 
 const ShipmentInfoTile = ({ label, value }: { label: string; value: string }) => (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors hover:border-blue-400/25">
-      <p className="text-[10px] uppercase tracking-wider text-slate-400">{label}</p>
+    <div className="w-full max-w-full min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors hover:border-blue-400/25">
+      <p className="break-words text-[10px] uppercase tracking-wider text-slate-400">{label}</p>
       <p className="mt-1 break-words text-sm font-medium text-white">{value}</p>
     </div>
 );
@@ -401,9 +401,9 @@ export default function CustomerTrackingPage() {
           </div>
         </BentoCard>
 
-        <div className="grid gap-4 lg:grid-cols-[0.84fr_1.16fr]">
+        <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
           <BentoCard className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2">
               <ShipmentMetricCard
                   icon={<Route className="h-4 w-4" />}
                   label={getSafeLabel(t("common.all"), locale === "ar" ? "الكل" : "All")}
@@ -449,20 +449,20 @@ export default function CustomerTrackingPage() {
                         key={row.id}
                         type="button"
                         onClick={() => setSelectedTracking(row.trackingId)}
-                        className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+                        className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
                             isSelected
                                 ? "border-primary/35 bg-primary/10"
                                 : "border-border/60 bg-secondary/15 hover:border-primary/25"
                         }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
+                      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
                           <p className="break-words text-xs uppercase tracking-[0.16em] text-muted-foreground">
                             {row.trackingId}
                           </p>
                           <p className="mt-2 break-words font-medium">{row.destination}</p>
                           {row.dealNumber ? (
-                              <p className="mt-1 text-sm text-muted-foreground">
+                              <p className="mt-1 break-words text-sm text-muted-foreground">
                                 {getSafeLabel(
                                     t("tracking.linkedDeal", { deal: row.dealNumber }),
                                     locale === "ar"
@@ -473,12 +473,12 @@ export default function CustomerTrackingPage() {
                           ) : null}
                         </div>
 
-                        <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                        <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                       {stageCopy?.label || getSafeLabel(t(`tracking.stages.${row.stage}`), row.stage)}
                     </span>
                       </div>
 
-                      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="mt-3 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                         <CalendarClock className="h-3.5 w-3.5" />
                         {formatDateTime(row.updatedAt, locale)}
                       </div>
@@ -488,11 +488,11 @@ export default function CustomerTrackingPage() {
             </div>
           </BentoCard>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {activeShipment ? (
               <>
-            <BentoCard className="space-y-6 rounded-[1.8rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.28),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-6 shadow-[0_28px_80px_-50px_rgba(59,130,246,0.9)] md:p-7">
-              <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <BentoCard className="space-y-6 rounded-[1.8rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.28),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-4 shadow-[0_28px_80px_-50px_rgba(59,130,246,0.9)] sm:p-6 md:p-7">
+              <div className="flex min-w-0 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.22em] text-blue-200">
                     {t("publicTracking.cta")}
@@ -500,12 +500,12 @@ export default function CustomerTrackingPage() {
                   <h2 className="mt-3 break-words font-serif text-4xl font-bold text-white md:text-5xl">
                     {activeShipment.trackingId}
                   </h2>
-                  <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded-2xl border border-blue-300/30 bg-blue-500/15 px-4 py-3 text-blue-50 shadow-[0_0_32px_rgba(59,130,246,0.22)]">
+                  <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded-2xl border border-blue-300/30 bg-blue-500/15 px-3 py-3 text-blue-50 shadow-[0_0_32px_rgba(59,130,246,0.22)] sm:px-4">
                     <span className="relative flex h-3 w-3 shrink-0">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-300 opacity-60" />
                       <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-200" />
                     </span>
-                    <span className="truncate text-lg font-bold md:text-2xl">
+                    <span className="min-w-0 break-words text-base font-bold sm:text-lg md:text-2xl">
                       {currentStage?.label ||
                           getSafeLabel(t("tracking.noStage"), locale === "ar" ? "مرحلة غير محددة" : "No stage")}
                     </span>
@@ -516,7 +516,7 @@ export default function CustomerTrackingPage() {
                   </p>
                 </div>
 
-                <div className="grid shrink-0 grid-cols-2 gap-3 sm:min-w-[18rem]">
+                <div className="grid w-full max-w-full shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:w-auto xl:min-w-[18rem]">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                     <p className="text-xs font-medium text-slate-400">
                       {t("tracking.progress")}
@@ -546,7 +546,7 @@ export default function CustomerTrackingPage() {
                 </p>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <ShipmentInfoTile
                     label={t("tracking.labels.trackingNumber")}
                     value={activeShipment.trackingId}
@@ -571,7 +571,7 @@ export default function CustomerTrackingPage() {
                   </span>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {shipmentStages.map((stage, index) => {
                     const stageCopy = getShipmentStageCopy(stage.code, lang);
                     const isDone = activeStageIndex > index;
@@ -600,7 +600,7 @@ export default function CustomerTrackingPage() {
                           >
                             {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
                           </span>
-                          <p className="min-w-0 truncate text-xs font-semibold">
+                          <p className="min-w-0 break-words text-xs font-semibold">
                             {stageCopy?.label || stage.label}
                           </p>
                         </div>
@@ -619,7 +619,7 @@ export default function CustomerTrackingPage() {
                 )}
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <ShipmentInfoTile
                     label={getSafeLabel(t("tracking.labels.destination"), locale === "ar" ? "الوجهة" : "Destination")}
                     value={activeShipment.destination}
@@ -689,25 +689,25 @@ export default function CustomerTrackingPage() {
                         key={event.id}
                         className="rounded-[1.25rem] border border-border/60 bg-secondary/10 px-4 py-3"
                       >
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
                             <p className="text-sm font-medium">
                               {getEventTypeLabel(event.eventType, locale)}
                             </p>
                             {fromStage || toStage ? (
-                              <p className="mt-1 text-sm text-muted-foreground">
+                              <p className="mt-1 break-words text-sm text-muted-foreground">
                                 {fromStage && toStage
                                   ? `${fromStage} → ${toStage}`
                                   : toStage || fromStage}
                               </p>
                             ) : null}
                           </div>
-                          <p className="shrink-0 text-xs text-muted-foreground">
+                          <p className="shrink-0 break-words text-xs text-muted-foreground">
                             {formatDateTime(event.createdAt, locale)}
                           </p>
                         </div>
                         {event.note ? (
-                          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                          <p className="mt-3 break-words text-sm leading-6 text-muted-foreground">
                             {event.note}
                           </p>
                         ) : null}

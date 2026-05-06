@@ -147,6 +147,21 @@
     @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
     background-color: #0F172A;
     width: 100%;
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  html,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  *,
+  *::before,
+  *::after {
+    min-width: 0;
   }
 
   html[dir="ltr"] body {
@@ -196,6 +211,19 @@
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
+  }
+
+  p,
+  span,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  td,
+  th {
+    max-width: 100%;
   }
 }
 
@@ -349,5 +377,26 @@
 
   .bg-gradient-hero {
     background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.07) 0%, #0F172A 70%);
+  }
+
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  [data-radix-toast-viewport] {
+    width: min(100vw, 420px) !important;
+    max-width: calc(100vw - 1rem) !important;
+    inset-inline: 0.5rem !important;
+  }
+
+  [data-sonner-toaster] {
+    width: min(100vw, 420px) !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  [data-sonner-toast] {
+    max-width: calc(100vw - 1rem) !important;
+    overflow-wrap: anywhere;
   }
 }

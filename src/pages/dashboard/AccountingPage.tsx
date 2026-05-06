@@ -286,24 +286,24 @@ export default function AccountingPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+    <div className="w-full max-w-full min-w-0 space-y-4">
+      <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <BentoCard>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Wallet className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold">{t("accounting.title")}</h2>
-              <p className="text-sm text-muted-foreground">{t("accounting.description")}</p>
+            <div className="min-w-0">
+              <h2 className="break-words font-serif text-2xl font-semibold">{t("accounting.title")}</h2>
+              <p className="break-words text-sm text-muted-foreground">{t("accounting.description")}</p>
             </div>
           </div>
         </BentoCard>
 
         <BentoCard>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("accounting.focusedContext")}</p>
-          <p className="mt-3 font-serif text-3xl font-bold">{focusDeal || t("accounting.global")}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-3 break-words font-serif text-2xl font-bold sm:text-3xl">{focusDeal || t("accounting.global")}</p>
+          <p className="mt-2 break-words text-sm text-muted-foreground">
             {focusDeal ? t("accounting.dealContext") : t("accounting.globalContext")}
           </p>
           {loadError ? (
@@ -314,23 +314,23 @@ export default function AccountingPage() {
         </BentoCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.96fr_1.04fr]">
-        <div className="space-y-4">
+      <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
+        <div className="min-w-0 space-y-4">
           <BentoCard className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <Receipt className="h-5 w-5 text-primary" />
-              <h2 className="font-serif text-2xl font-semibold">{t("accounting.financialSignals")}</h2>
+              <h2 className="min-w-0 break-words font-serif text-2xl font-semibold">{t("accounting.financialSignals")}</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 { label: t("accounting.labels.totalIncome"), value: totals.income },
                 { label: t("accounting.labels.totalExpense"), value: totals.expense },
                 { label: t("accounting.labels.net"), value: totals.net, className: totals.net >= 0 ? "text-emerald-400" : "text-rose-400" },
                 { label: t("accounting.labels.lockedEntries"), value: totals.lockedCount, hint: t("accounting.labels.totalEntries", { count: totals.count }) },
               ].map((item) => (
-                <div key={item.label} className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className={`mt-2 text-2xl font-bold ${item.className || ""}`}>
+                <div key={item.label} className="min-w-0 rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
+                  <p className="break-words text-xs text-muted-foreground">{item.label}</p>
+                  <p className={`mt-2 break-words text-2xl font-bold ${item.className || ""}`}>
                     {typeof item.value === "number" ? item.value.toLocaleString() : item.value} {item.hint ? "" : totals.currencyLabel}
                   </p>
                   {item.hint ? <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p> : null}
@@ -340,18 +340,18 @@ export default function AccountingPage() {
             {focusedDeal ? (
               <div className="space-y-4">
                 <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
                         {t("accounting.statementReadiness")}
                       </p>
-                      <p className="mt-2 font-serif text-2xl font-semibold">
+                      <p className="mt-2 break-words font-serif text-2xl font-semibold">
                         {statementSummary?.ready
                           ? t("accounting.readyForFinalReview")
                           : t("accounting.needsReviewBeforeIssue")}
                       </p>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    <span className={`max-w-full self-start break-words rounded-full px-3 py-1 text-xs font-medium ${
                       statementSummary?.ready
                         ? "bg-emerald-500/15 text-emerald-300"
                         : "bg-amber-500/15 text-amber-200"
@@ -387,10 +387,10 @@ export default function AccountingPage() {
                 </div>
 
                 <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-xs uppercase tracking-[0.18em] text-primary/80">{t("accounting.dealSignal")}</p>
-                    <p className="mt-2 font-serif text-2xl font-semibold">{focusedDeal.dealNumber}</p>
+                    <p className="mt-2 break-words font-serif text-2xl font-semibold">{focusedDeal.dealNumber}</p>
                   </div>
                   <div
                     className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
@@ -403,11 +403,11 @@ export default function AccountingPage() {
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-[1.15rem] bg-background/65 p-4">
                     <p className="text-xs text-muted-foreground">{t("accounting.referenceValue")}</p>
-                    <p className="mt-1 font-medium">{focusedDeal.totalValue.toLocaleString()} {focusedDeal.currency}</p>
+                    <p className="mt-1 break-words font-medium">{focusedDeal.totalValue.toLocaleString()} {focusedDeal.currency}</p>
                   </div>
                   <div className="rounded-[1.15rem] bg-background/65 p-4">
                     <p className="text-xs text-muted-foreground">{t("accounting.accountingReference")}</p>
-                    <p className="mt-1 font-medium">{focusedDeal.accountingReference || t("common.notSpecified")}</p>
+                    <p className="mt-1 break-words font-medium">{focusedDeal.accountingReference || t("common.notSpecified")}</p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-7 text-muted-foreground">
@@ -424,9 +424,9 @@ export default function AccountingPage() {
           </BentoCard>
 
           <BentoCard className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <FilePenLine className="h-5 w-5 text-primary" />
-              <h2 className="font-serif text-2xl font-semibold">{t("accounting.createTitle")}</h2>
+              <h2 className="min-w-0 break-words font-serif text-2xl font-semibold">{t("accounting.createTitle")}</h2>
             </div>
             <div className="rounded-[1.25rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
               <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
@@ -484,7 +484,7 @@ export default function AccountingPage() {
               <Label>{t("accounting.descriptionLabel")}</Label>
               <Textarea rows={5} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("accounting.descriptionPlaceholder")} />
             </div>
-            <Button variant="gold" onClick={handleCreateEntry} disabled={submitting || !canCreateAccountingEntries}>
+            <Button variant="gold" className="w-full sm:w-auto" onClick={handleCreateEntry} disabled={submitting || !canCreateAccountingEntries}>
               {submitting ? t("accounting.creating") : t("accounting.createLocked")}
             </Button>
             <div className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4 text-sm leading-7 text-muted-foreground">
@@ -500,10 +500,10 @@ export default function AccountingPage() {
               </div>
               <Link
                 to={`/dashboard/deals?deal=${focusDeal}`}
-                className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                className="flex min-w-0 items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
               >
                 <Route className="h-4 w-4" />
-                {t("accounting.openDeal")}
+                <span className="min-w-0 break-words">{t("accounting.openDeal")}</span>
               </Link>
             </BentoCard>
           ) : null}
@@ -511,14 +511,14 @@ export default function AccountingPage() {
 
           <BentoCard className="p-0">
             <div className="border-b border-border/60 px-6 py-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-serif text-2xl font-semibold">{t("accounting.entriesTitle")}</h2>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="break-words font-serif text-2xl font-semibold">{t("accounting.entriesTitle")}</h2>
+                <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                   {t("accounting.count", { count: totals.count })}
                 </span>
               </div>
               <div className="mt-4">
-                <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
                     <Input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
@@ -547,10 +547,10 @@ export default function AccountingPage() {
               </div>
             ) : (
               [...dealEntries, ...globalEntries].map((row) => (
-                <div key={row.id} className="border-b border-border/40 px-6 py-5 last:border-b-0">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{row.entryNumber}</p>
+                <div key={row.id} className="border-b border-border/40 px-4 py-5 last:border-b-0 sm:px-6">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">{row.entryNumber}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {row.scope === "deal"
                           ? `${t("accounting.scopeDeal")}: ${row.dealNumber || t("common.notSpecified")}`
@@ -559,26 +559,26 @@ export default function AccountingPage() {
                             : t("accounting.scopeGlobal")}
                       </p>
                     </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    <span className="max-w-full break-words rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                       {row.locked ? t("accounting.locked") : t("accounting.openState")}
                     </span>
                   </div>
-                  <div className="mt-4 grid gap-3 md:grid-cols-4">
-                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                    <div className="min-w-0 rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.type")}</p>
-                      <p className="mt-1 font-medium">{row.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense")}</p>
+                      <p className="mt-1 break-words font-medium">{row.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense")}</p>
                     </div>
-                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                    <div className="min-w-0 rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.amount")}</p>
-                      <p className="mt-1 font-medium">{`${row.amount.toLocaleString()} ${row.currency}`}</p>
+                      <p className="mt-1 break-words font-medium">{`${row.amount.toLocaleString()} ${row.currency}`}</p>
                     </div>
-                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                    <div className="min-w-0 rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.methodCounterparty")}</p>
-                      <p className="mt-1 font-medium">{row.method || "-"} / {row.counterparty || "-"}</p>
+                      <p className="mt-1 break-words font-medium">{row.method || "-"} / {row.counterparty || "-"}</p>
                     </div>
-                    <div className="rounded-[1.15rem] bg-secondary/25 p-4">
+                    <div className="min-w-0 rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.date")}</p>
-                      <p className="mt-1 font-medium">{new Date(row.entryDate).toLocaleDateString(locale)}</p>
+                      <p className="mt-1 break-words font-medium">{new Date(row.entryDate).toLocaleDateString(locale)}</p>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -586,7 +586,7 @@ export default function AccountingPage() {
                     <span>/</span>
                     <span>{t("accounting.labels.reference")}: {row.referenceLabel || t("accounting.noReference")}</span>
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>
+                  <p className="mt-4 break-words text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>
                   {row.locked ? (
                     <div className="mt-4 rounded-[1.15rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
                       <p className="font-medium">{t("accounting.lockedEntryTitle")}</p>

@@ -140,10 +140,10 @@ const RequestInfoTile = ({
   label: string;
   value: string;
 }) => (
-    <div className="rounded-[1rem] sm:rounded-[1.25rem] border border-border/50 bg-secondary/20 px-3 py-2.5 sm:px-4 sm:py-3">
-      <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
+    <div className="w-full max-w-full min-w-0 rounded-[1rem] border border-border/50 bg-secondary/20 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
+      <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
         <span className="text-primary">{icon}</span>
-        <span>{label}</span>
+        <span className="min-w-0 break-words">{label}</span>
       </div>
       <p className="mt-1 sm:mt-2 break-words text-[13px] sm:text-sm font-medium text-foreground">{value || "-"}</p>
     </div>
@@ -494,22 +494,22 @@ export default function CustomerRequestsPage() {
 
   return (
       <div className="space-y-4 pb-12">
-        <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-          <div id="requests" ref={listRef} className="scroll-mt-24">
-          <BentoCard className="flex flex-col gap-4 overflow-hidden">
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
+        <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <div id="requests" ref={listRef} className="w-full max-w-full min-w-0 scroll-mt-24">
+          <BentoCard className="flex max-w-full flex-col gap-4 overflow-hidden">
+            <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="min-w-0 max-w-full">
                 <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   {t("customerPortal.eyebrow")}
                 </p>
                 <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold">{t("customerPortal.title")}</h1>
               </div>
 
-              <div className="flex shrink-0 gap-2">
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
                 <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing}>
                   <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 </Button>
-                <Button variant="gold" size="sm" asChild>
+                <Button variant="gold" size="sm" asChild className="min-w-0 flex-1 sm:flex-none">
                   <Link to="/request">
                     <Plus className="me-2 h-4 w-4" />
                     {t("requests.new")}
@@ -525,16 +525,16 @@ export default function CustomerRequestsPage() {
                 </div>
             ) : null}
 
-            <div className="grid shrink-0 grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 { label: t("requests.total"), value: requestMetrics.total },
                 { label: t("requests.submitted"), value: requestMetrics.submitted },
                 { label: t("requests.review"), value: requestMetrics.review },
                 { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
-                  <div key={item.label} className="rounded-2xl bg-secondary/20 p-3 text-center">
+                  <div key={item.label} className="min-w-0 rounded-2xl bg-secondary/20 p-3 text-center">
                     <p className="text-lg sm:text-xl font-bold">{item.value}</p>
-                    <p className="mt-1 text-[11px] sm:text-[10px] text-muted-foreground leading-tight">{item.label}</p>
+                    <p className="mt-1 break-words text-[11px] leading-tight text-muted-foreground sm:text-[10px]">{item.label}</p>
                   </div>
               ))}
             </div>
@@ -550,14 +550,14 @@ export default function CustomerRequestsPage() {
                 />
               </div>
 
-              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+              <div className="no-scrollbar -mx-1 flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
                 {requestFilters.map((filter) => (
                     <Button
                         key={filter.key}
                         variant={activeFilter === filter.key ? "gold" : "outline"}
                         size="sm"
                         onClick={() => setActiveFilter(filter.key)}
-                        className="whitespace-nowrap"
+                        className="shrink-0 whitespace-nowrap"
                     >
                       {filter.label}
                     </Button>
@@ -565,7 +565,7 @@ export default function CustomerRequestsPage() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="min-w-0 flex-1 space-y-3 overflow-y-auto pe-1">
               {filteredRows.length === 0 ? (
                   <EmptyState
                       icon={ClipboardList}
@@ -593,14 +593,14 @@ export default function CustomerRequestsPage() {
                                 setSelectedRequest(row.id);
                               }
                             }}
-                            className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+                            className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-3 py-4 text-start transition-colors sm:px-4 ${
                                 isSelected
                                     ? "border-primary/35 bg-primary/10"
                                     : "border-border/60 bg-secondary/15 hover:border-primary/25"
                             }`}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
+                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0 flex-1">
                               <p className="break-words text-xs uppercase tracking-[0.16em] text-muted-foreground">
                                 {row.requestNumber}
                               </p>
@@ -609,13 +609,13 @@ export default function CustomerRequestsPage() {
                               </p>
                             </div>
 
-                            <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                            <span className={`max-w-full self-start break-words rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
                           {t(`statuses.${row.status}`)}
                         </span>
                           </div>
 
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-muted-foreground">
                               <div className="flex items-center gap-1.5">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {formatDate(row.createdAt, locale)}
@@ -626,7 +626,7 @@ export default function CustomerRequestsPage() {
                               </div>
                             </div>
                             
-                            <div className="flex gap-2">
+                            <div className="flex shrink-0 gap-2">
                               {canEditRequest(row.status) && (
                                 <Button 
                                   variant="ghost" 
@@ -665,10 +665,10 @@ export default function CustomerRequestsPage() {
 
           <div ref={detailsRef} className="min-w-0">
             {selectedRow ? (
-                <BentoCard className="flex flex-col gap-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                <BentoCard className="flex max-w-full flex-col gap-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <div className="min-w-0 max-w-full">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {selectedRow.requestNumber}
@@ -679,7 +679,7 @@ export default function CustomerRequestsPage() {
                       </h2>
                     </div>
 
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
                       {canResubmitRequest(selectedRow.status) && (
                           <Button
                               variant="gold"
@@ -714,29 +714,29 @@ export default function CustomerRequestsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${selectedStatusMeta?.tone}`}>
+                  <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <span className={`max-w-full break-words rounded-full px-3 py-1 text-xs font-medium ${selectedStatusMeta?.tone}`}>
                   {t(`statuses.${selectedRow.status}`)}
                 </span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                       <CalendarDays className="h-3.5 w-3.5" />
                       {t("requests.submittedAt", { value: formatDateTime(selectedRow.createdAt, locale) })}
                     </div>
                   </div>
 
                   {selectedStatusCopy && (
-                      <div className="rounded-[1.35rem] border border-primary/20 bg-primary/10 p-5 leading-7">
-                        <div className="flex items-center gap-3">
+                      <div className="w-full max-w-full rounded-[1.35rem] border border-primary/20 bg-primary/10 p-4 leading-7 sm:p-5">
+                        <div className="flex min-w-0 items-center gap-3">
                           <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
-                          <p className="font-medium text-foreground">{selectedStatusCopy.label}</p>
+                          <p className="min-w-0 break-words font-medium text-foreground">{selectedStatusCopy.label}</p>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
+                        <p className="mt-2 break-words text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
                       </div>
                   )}
 
                   {selectedPaymentSummary ? (
-                      <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-5">
-                        <div className="flex items-center gap-3">
+                      <div className="w-full max-w-full rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 sm:p-5">
+                        <div className="flex min-w-0 items-center gap-3">
                           <CreditCard className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium">
@@ -748,7 +748,7 @@ export default function CustomerRequestsPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                           <RequestInfoTile
                               icon={<CreditCard className="h-3.5 w-3.5" />}
                               label={locale === "ar" ? "المطلوب" : "Expected"}
@@ -769,14 +769,14 @@ export default function CustomerRequestsPage() {
                         {selectedPaymentSummary.payments.length ? (
                             <div className="mt-4 divide-y divide-border/50 rounded-[1.1rem] border border-border/50">
                               {selectedPaymentSummary.payments.map((payment) => (
-                                  <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
-                                    <div>
-                                      <p className="font-medium">{payment.referenceNumber}</p>
+                                  <div key={payment.id} className="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                      <p className="break-words font-medium">{payment.referenceNumber}</p>
                                       <p className="text-xs text-muted-foreground">
                                         {formatDateTime(payment.receivedAt || payment.createdAt, locale)}
                                       </p>
                                     </div>
-                                    <div className="text-end">
+                                    <div className="min-w-0 text-start sm:text-end">
                                       <p className="font-semibold">
                                         {formatMoney(payment.amount, payment.currency, locale)}
                                       </p>
@@ -793,7 +793,7 @@ export default function CustomerRequestsPage() {
                       </div>
                   ) : null}
 
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
                     <RequestInfoTile
                         icon={<Truck className="h-3.5 w-3.5" />}
                         label={t("requests.labels.shipping")}
@@ -827,7 +827,7 @@ export default function CustomerRequestsPage() {
                   </div>
 
                   <div className="grid gap-4 sm:gap-6 lg:grid-cols-1">
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
                       {[
                         {
                           label: t("requests.intake.productName"),
@@ -866,8 +866,8 @@ export default function CustomerRequestsPage() {
                           value: selectedRow.deliveryAddress,
                         },
                       ].map((item) => (
-                          <div key={item.label} className="rounded-[1rem] sm:rounded-[1.25rem] bg-secondary/25 px-3 py-2.5 sm:px-4 sm:py-3">
-                            <p className="text-[11px] sm:text-xs text-muted-foreground">{item.label}</p>
+                          <div key={item.label} className="min-w-0 rounded-[1rem] bg-secondary/25 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
+                            <p className="break-words text-[11px] text-muted-foreground sm:text-xs">{item.label}</p>
                             <p className="mt-1 break-words text-[13px] sm:text-sm font-medium">
                               {item.value || t("common.notAvailable")}
                             </p>
@@ -876,7 +876,7 @@ export default function CustomerRequestsPage() {
                     </div>
 
                     {selectedRow.technicalSpecs ? (
-                        <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                        <div className="w-full max-w-full rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
                           <p className="font-medium">
                             {t("requests.intake.technicalSpecs")}
                           </p>
@@ -887,7 +887,7 @@ export default function CustomerRequestsPage() {
                     ) : null}
 
                     {selectedRow.deliveryNotes || selectedRow.referenceLink ? (
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
                             <p className="font-medium">{t("requests.intake.deliveryNotes")}</p>
                             <p className="mt-2 break-words text-sm leading-7 text-muted-foreground">
@@ -916,8 +916,8 @@ export default function CustomerRequestsPage() {
                     ) : null}
 
                     {selectedRow.status === "ready_for_conversion" || selectedRow.status === "transfer_proof_rejected" ? (
-                        <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-6">
-                          <div className="flex items-center gap-3">
+                        <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-4 sm:p-6">
+                          <div className="flex min-w-0 items-center gap-3">
                             <Plus className="h-5 w-5 text-primary" />
                             <h3 className="text-lg font-semibold">{t("transferProof.title")}</h3>
                           </div>
@@ -941,12 +941,12 @@ export default function CustomerRequestsPage() {
                                 onChange={handleProofFileChange}
                                 disabled={uploadingProof}
                             />
-                            <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                               <Button
                                   asChild
                                   variant="outline"
                                   disabled={uploadingProof}
-                                  className="h-12 px-8"
+                                  className="h-12 w-full px-4 sm:w-auto sm:px-8"
                               >
                                 <label htmlFor="proof-upload" className="cursor-pointer">
                                   {t("transferProof.uploadButton")}
@@ -955,7 +955,7 @@ export default function CustomerRequestsPage() {
                               <Button
                                   onClick={handleSubmitProof}
                                   disabled={!selectedProofFile || uploadingProof}
-                                  className="h-12 px-8"
+                                  className="h-12 w-full px-4 sm:w-auto sm:px-8"
                               >
                                 {uploadingProof ? t("transferProof.uploading") : submitReceiptLabel}
                               </Button>
@@ -970,10 +970,10 @@ export default function CustomerRequestsPage() {
                     ) : null}
 
                     {selectedRow.status === "transfer_proof_pending" ? (
-                        <div className="rounded-[1.35rem] border border-indigo-500/20 bg-indigo-500/10 p-6 text-indigo-100">
-                          <div className="flex items-center gap-3">
+                        <div className="rounded-[1.35rem] border border-indigo-500/20 bg-indigo-500/10 p-4 text-indigo-100 sm:p-6">
+                          <div className="flex min-w-0 items-center gap-3">
                             <RotateCcw className="h-5 w-5 animate-spin text-indigo-400" />
-                            <p className="font-medium">{t("transferProof.statusPending")}</p>
+                            <p className="min-w-0 break-words font-medium">{t("transferProof.statusPending")}</p>
                           </div>
                         </div>
                     ) : null}
@@ -1009,7 +1009,7 @@ export default function CustomerRequestsPage() {
                                     href={attachment.fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="group flex items-center justify-between rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                                    className="group flex min-w-0 items-center justify-between gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
                                 >
                                   <div className="min-w-0">
                                     <p className="truncate font-medium group-hover:text-primary">

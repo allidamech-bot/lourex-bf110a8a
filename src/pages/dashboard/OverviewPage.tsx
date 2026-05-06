@@ -425,11 +425,11 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="space-y-5 pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="w-full max-w-full min-w-0 space-y-5 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* ── Hero Banner ── */}
       <BentoCard
         span="full"
-        className="rounded-2xl p-6 md:p-8"
+        className="rounded-2xl p-4 sm:p-6 md:p-8"
         style={{
           background: "linear-gradient(135deg, rgba(30,58,138,0.18) 0%, rgba(15,23,42,0.95) 60%)",
           border: "1px solid rgba(59,130,246,0.18)",
@@ -452,13 +452,13 @@ export default function OverviewPage() {
           </span>
         </div>
         <div className="mt-5 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <h2 className="font-serif text-3xl font-bold text-white md:text-4xl">
+          <div className="max-w-3xl min-w-0">
+            <h2 className="break-words font-serif text-2xl font-bold text-white sm:text-3xl md:text-4xl">
               {t("overview.heroTitle")}
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">{t("overview.heroDescription")}</p>
+            <p className="mt-3 max-w-2xl break-words text-sm leading-7 text-slate-400">{t("overview.heroDescription")}</p>
           </div>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap">
             <Button
               variant="default"
               asChild
@@ -503,7 +503,7 @@ export default function OverviewPage() {
                 </div>
               ) : cardItem ? (
                 <>
-                  <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start justify-between gap-3">
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${
                         cardItem.accent
@@ -521,8 +521,8 @@ export default function OverviewPage() {
                   <p className="mt-4 font-serif text-2xl font-bold text-white">
                     {cardItem.value.toLocaleString(locale)}
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-200">{cardItem.label}</p>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{cardItem.helper}</p>
+                  <p className="mt-1 break-words text-sm font-semibold text-slate-200">{cardItem.label}</p>
+                  <p className="mt-2 line-clamp-2 break-words text-xs leading-5 text-slate-400">{cardItem.helper}</p>
                 </>
               ) : null}
             </BentoCard>
@@ -534,7 +534,7 @@ export default function OverviewPage() {
         <BentoCard span="full" className="rounded-2xl p-6 md:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
                   <motion.div
                     className="absolute inset-0 rounded-xl"
@@ -550,11 +550,11 @@ export default function OverviewPage() {
                   />
                   <Sparkles className="relative z-10 h-4 w-4 text-blue-200" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-blue-300/70">
                     {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
                   </p>
-                  <p className="mt-0.5 text-xs leading-5 text-slate-400">
+                  <p className="mt-0.5 break-words text-xs leading-5 text-slate-400">
                     {lang === "ar"
                       ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق لوركس."
                       : "AI output is advisory. Final decisions remain with the Lourex team."}
@@ -566,7 +566,7 @@ export default function OverviewPage() {
             <Button
               type="button"
               variant="outline"
-              className="shrink-0 rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
+              className="w-full shrink-0 rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white sm:w-auto"
               disabled={briefingLoading || loading}
               onClick={() => void prepareDailyBriefing()}
               aria-label={lang === "ar" ? "تحديث الموجز اليومي" : "Refresh daily briefing"}
@@ -610,10 +610,10 @@ export default function OverviewPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <BentoCard className="space-y-5 rounded-2xl">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("overview.priorityBoard")}</p>
-              <h3 className="mt-1.5 font-serif text-xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
+              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
             </div>
             <span
               className="rounded-full px-3 py-1 text-xs font-medium text-blue-200"
@@ -622,7 +622,7 @@ export default function OverviewPage() {
               {t("overview.liveFocus")}
             </span>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {[
               { label: t("overview.reviewLabel"), value: requestSummary.review, description: t("overview.reviewDescription") },
               { label: t("overview.readyLabel"), value: requestSummary.ready, description: t("overview.readyDescription") },
@@ -636,9 +636,9 @@ export default function OverviewPage() {
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
-                <p className="text-xs font-medium text-slate-400">{item.label}</p>
+                <p className="break-words text-xs font-medium text-slate-400">{item.label}</p>
                 <p className="mt-2 text-2xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-1.5 text-xs leading-5 text-slate-400">{item.description}</p>
+                <p className="mt-1.5 break-words text-xs leading-5 text-slate-400">{item.description}</p>
               </div>
             ))}
           </div>
@@ -683,9 +683,9 @@ export default function OverviewPage() {
             className="flex items-center justify-between gap-3 px-5 py-4"
             style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("customers.activity")}</p>
-              <h3 className="mt-1.5 font-serif text-xl font-semibold text-white">{t("overview.latestRequests")}</h3>
+              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.latestRequests")}</h3>
             </div>
             <span
               className="flex h-9 w-9 items-center justify-center rounded-xl text-blue-200"
@@ -743,7 +743,7 @@ export default function OverviewPage() {
               <Link
                 key={item.label}
                 to={item.to}
-                className="group flex min-h-11 items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:text-white"
+                className="group flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:text-white"
                 style={{
                   background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(255,255,255,0.07)",
@@ -751,7 +751,7 @@ export default function OverviewPage() {
                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.08)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
               >
-                <span>{item.label}</span>
+                <span className="min-w-0 break-words">{item.label}</span>
                 <ChevronRight className="h-4 w-4 text-slate-500 transition-colors group-hover:text-blue-300" />
               </Link>
             ))}

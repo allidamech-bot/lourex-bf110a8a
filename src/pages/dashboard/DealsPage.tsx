@@ -212,7 +212,7 @@ export default function DealsPage() {
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+    <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
       <BentoCard className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -239,7 +239,7 @@ export default function DealsPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -265,24 +265,24 @@ export default function DealsPage() {
             <button
               key={row.id}
               onClick={() => setSearchParams({ deal: row.dealNumber })}
-              className={`w-full rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+              className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
                 selectedDeal?.id === row.id
                   ? "border-primary/30 bg-primary/10"
                   : "border-border/60 bg-secondary/15 hover:border-primary/20"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium">{row.dealNumber}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{row.customerName}</p>
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="break-words font-medium">{row.dealNumber}</p>
+                  <p className="mt-1 break-words text-sm text-muted-foreground">{row.customerName}</p>
                 </div>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
                   {getShipmentStageCopy(row.stage, lang).label}
                 </span>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">{row.operationTitle}</p>
+              <p className="mt-3 break-words text-xs text-muted-foreground">{row.operationTitle}</p>
               {isPartnerWorkspace ? (
-                <p className="mt-2 text-xs text-muted-foreground">{getShipmentStageCopy(row.stage, lang).description}</p>
+                <p className="mt-2 break-words text-xs text-muted-foreground">{getShipmentStageCopy(row.stage, lang).description}</p>
               ) : null}
             </button>
           ))}
@@ -292,15 +292,15 @@ export default function DealsPage() {
       {selectedDeal ? (
         <BentoCard className="p-0">
           <div className="border-b border-border/50 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   {t("deals.operationalCenter")}
                 </p>
-                <h2 className="mt-2 font-serif text-3xl font-semibold">{selectedDeal.dealNumber}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">{selectedDealHeaderMeta}</p>
+                <h2 className="mt-2 break-words font-serif text-2xl font-semibold sm:text-3xl">{selectedDeal.dealNumber}</h2>
+                <p className="mt-2 break-words text-sm text-muted-foreground">{selectedDealHeaderMeta}</p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
                 {selectedDeal.sourceRequestId ? (
                   <Button variant="outline" asChild>
                     <Link to={`/dashboard/requests?request=${selectedDeal.sourceRequestId}`}>
@@ -319,8 +319,8 @@ export default function DealsPage() {
             </div>
           </div>
 
-          <div className="grid gap-0 2xl:grid-cols-[1.02fr_0.98fr]">
-            <div className="border-b border-border/50 p-6 2xl:border-b-0 2xl:border-e">
+          <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
+            <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
               <div className="grid gap-3 md:grid-cols-2">
                 {[
                   {
@@ -364,9 +364,9 @@ export default function DealsPage() {
                     value: `${selectedDeal.totalValue.toLocaleString()} ${selectedDeal.currency || "SAR"}`,
                   },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-[1.25rem] bg-secondary/25 p-4">
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="mt-1 font-medium">{item.value}</p>
+                  <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-secondary/25 p-4">
+                    <p className="break-words text-xs text-muted-foreground">{item.label}</p>
+                    <p className="mt-1 break-words font-medium">{item.value}</p>
                   </div>
                 ))}
               </div>
@@ -388,7 +388,7 @@ export default function DealsPage() {
                   <Receipt className="h-4 w-4 text-primary" />
                   <p className="font-medium">{t("deals.labels.financialSummary")}</p>
                 </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
                   {[
                     {
                       label: t("deals.labels.totalIncome"),
@@ -411,16 +411,16 @@ export default function DealsPage() {
                       value: selectedDeal.accountingSummary.entriesCount,
                     },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-[1.15rem] bg-card p-4">
+                    <div key={item.label} className="min-w-0 rounded-[1.15rem] bg-card p-4">
                       <p className="text-xs text-muted-foreground">{item.label}</p>
-                      <p className={`mt-1 font-medium ${item.className || ""}`}>{item.value}</p>
+                      <p className={`mt-1 break-words font-medium ${item.className || ""}`}>{item.value}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="min-w-0 p-4 sm:p-6">
               <div className="space-y-5">
                 <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
                   <div className="flex items-center gap-3">
@@ -523,7 +523,7 @@ export default function DealsPage() {
                   />
 
                   <div className="mt-4 rounded-[1.2rem] border border-border/60 bg-card/60 p-4">
-                    <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
                       <Input
                         value={attachmentCategory}
                         onChange={(event) => setAttachmentCategory(event.target.value)}
@@ -556,11 +556,11 @@ export default function DealsPage() {
                           href={attachment.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="block rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                          className="block w-full max-w-full min-w-0 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-medium">{attachment.fileName}</p>
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="break-words font-medium">{attachment.fileName}</p>
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {attachment.category}
                               </p>
@@ -581,31 +581,31 @@ export default function DealsPage() {
                   <div className="mt-4 grid gap-3">
                     <Link
                       to={`/dashboard/tracking?deal=${selectedDeal.dealNumber}&tracking=${selectedDeal.trackingId || ""}`}
-                      className="flex items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                      className="flex min-w-0 items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
                     >
                       <Truck className="h-4 w-4" />
-                      {t("deals.openTrackingWorkspace")}
+                      <span className="min-w-0 break-words">{t("deals.openTrackingWorkspace")}</span>
                     </Link>
                     <Link
                       to={`/dashboard/accounting?deal=${selectedDeal.dealNumber}`}
-                      className="flex items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                      className="flex min-w-0 items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
                     >
                       <Receipt className="h-4 w-4" />
-                      {t("deals.openAccountingWorkspace")}
+                      <span className="min-w-0 break-words">{t("deals.openAccountingWorkspace")}</span>
                     </Link>
                     <Link
                       to={`/dashboard/edit-requests?deal=${selectedDeal.dealNumber}`}
-                      className="flex items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                      className="flex min-w-0 items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
                     >
                       <FileText className="h-4 w-4" />
-                      {t("deals.openEditRequests")}
+                      <span className="min-w-0 break-words">{t("deals.openEditRequests")}</span>
                     </Link>
                     <Link
                       to={`/dashboard/audit?deal=${selectedDeal.dealNumber}${selectedDeal.sourceRequestId ? `&request=${selectedDeal.sourceRequestId}` : ""}`}
-                      className="flex items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                      className="flex min-w-0 items-center gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
                     >
                       <Route className="h-4 w-4" />
-                      {t("deals.openAuditTrace")}
+                      <span className="min-w-0 break-words">{t("deals.openAuditTrace")}</span>
                     </Link>
                   </div>
                 </div>

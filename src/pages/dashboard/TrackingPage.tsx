@@ -165,7 +165,7 @@ export default function TrackingPage() {
     visibility === "customer_visible" ? t("tracking.visibilityCustomer") : t("tracking.visibilityInternal");
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[0.84fr_1.16fr]">
+    <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
       <BentoCard className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("tracking.contextEyebrow")}</p>
@@ -174,7 +174,7 @@ export default function TrackingPage() {
           {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-muted-foreground">{partnerWorkspaceHint}</p> : null}
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="relative">
             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -225,23 +225,23 @@ export default function TrackingPage() {
           ].map((item) => {
             if (item.label === t("tracking.labels.customer") && !isInternal) return null;
             return (
-              <div key={item.label} className="rounded-[1.2rem] bg-secondary/25 p-4">
+              <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-secondary/25 p-4">
                 <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 font-medium">{item.value}</p>
+                <p className="mt-1 break-words font-medium">{item.value}</p>
               </div>
             );
           })}
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
             { label: t("tracking.labels.completedStages"), value: Math.max(activeStageIndex, 0) },
             { label: t("tracking.labels.remainingStages"), value: activeStageIndex >= 0 ? shipmentStages.length - activeStageIndex - 1 : shipmentStages.length },
             { label: t("tracking.labels.loggedUpdates"), value: activeShipment.timeline.length },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.2rem] bg-secondary/20 p-4 text-center">
+            <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-secondary/20 p-4 text-center">
               <p className="text-2xl font-bold">{item.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+              <p className="mt-1 break-words text-xs text-muted-foreground">{item.label}</p>
             </div>
           ))}
         </div>
@@ -256,16 +256,16 @@ export default function TrackingPage() {
               <Link
                 key={row.id}
                 to={`/dashboard/tracking?deal=${row.dealNumber || ""}&tracking=${row.trackingId}`}
-                className={`block rounded-[1.3rem] border px-4 py-4 transition-colors ${
+                className={`block w-full max-w-full min-w-0 rounded-[1.3rem] border px-4 py-4 transition-colors ${
                   activeShipment.id === row.id ? "border-primary/30 bg-primary/10" : "border-border/60 bg-secondary/10 hover:border-primary/20"
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{row.trackingId}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{row.dealNumber || t("tracking.unlinked")}</p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="break-words font-medium">{row.trackingId}</p>
+                    <p className="mt-1 break-words text-sm text-muted-foreground">{row.dealNumber || t("tracking.unlinked")}</p>
                   </div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                  <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
                     {getShipmentStageCopy(row.stage, lang)?.label || row.stage}
                   </span>
                 </div>
@@ -299,12 +299,12 @@ export default function TrackingPage() {
               placeholder={t("tracking.customerPlaceholder")}
             />
 
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs leading-6 text-muted-foreground">
                 {trackingRuleText}
               </p>
 
-              <Button variant="gold" disabled={!canAdvance || submitting} onClick={handleAdvance}>
+              <Button variant="gold" className="w-full sm:w-auto" disabled={!canAdvance || submitting} onClick={handleAdvance}>
                 {submitting ? t("tracking.advancing") : t("tracking.advance", { stage: nextStage.label })}
               </Button>
             </div>
@@ -344,15 +344,15 @@ export default function TrackingPage() {
         </div>
       </BentoCard>
 
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         <BentoCard className="p-6">
-          <div className="mb-6 flex items-center gap-3">
+          <div className="mb-6 flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <PackageSearch className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold">{t("tracking.labels.officialTimeline")}</h2>
-              <p className="text-sm text-muted-foreground">{t("tracking.labels.officialTimelineDescription")}</p>
+            <div className="min-w-0">
+              <h2 className="break-words font-serif text-2xl font-semibold">{t("tracking.labels.officialTimeline")}</h2>
+              <p className="break-words text-sm text-muted-foreground">{t("tracking.labels.officialTimelineDescription")}</p>
             </div>
           </div>
 
@@ -381,9 +381,9 @@ export default function TrackingPage() {
                     key={event.id}
                     className="rounded-[1.3rem] border border-border/60 bg-secondary/10 p-4"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
+                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words font-medium">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{new Date(event.occurredAt).toLocaleString(locale)}</p>
                       </div>
 
@@ -395,7 +395,7 @@ export default function TrackingPage() {
                     </div>
 
                     {isInternal && (
-                      <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                      <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
                         {event.note || t("tracking.noInternalNote")}
                       </p>
                     )}
