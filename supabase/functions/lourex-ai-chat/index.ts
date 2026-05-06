@@ -1,14 +1,33 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+const LOCAL_DEV_ORIGIN = "http://localhost:5173";
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 4_000;
+
+const getAllowedOrigins = () =>
+  new Set(
+    [LOCAL_DEV_ORIGIN, ...(Deno.env.get("ALLOWED_ORIGIN") || "").split(",")]
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  );
+
+const getCorsHeaders = (req: Request) => {
+  const origin = req.headers.get("Origin");
+  const allowedOrigins = getAllowedOrigins();
+  const configuredOrigin = [...allowedOrigins][0] || LOCAL_DEV_ORIGIN;
+  const allowOrigin = origin && allowedOrigins.has(origin) ? origin : configuredOrigin;
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
 };
 
 type ChatMessage = {
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant";
   content: string;
 };
 
@@ -62,38 +81,52 @@ const dashboardAssistantModes: Record<string, string> = {
     "Generate a concise internal daily operations briefing with executive summary, priorities, request review needs, conversion readiness, clarification follow-ups, shipment risks, financial review items, and suggested next actions.",
 };
 
+const jsonResponse = (req: Request, body: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+  });
+
 const normalizeMessages = (messages: unknown, message: unknown): ChatMessage[] => {
   if (Array.isArray(messages) && messages.length > 0) {
     return messages
+      .slice(-MAX_MESSAGES)
       .filter((item): item is ChatMessage => {
         if (!item || typeof item !== "object") return false;
         const record = item as Record<string, unknown>;
-        return (
-          (record.role === "user" || record.role === "assistant" || record.role === "system") &&
-          typeof record.content === "string"
-        );
+        return (record.role === "user" || record.role === "assistant") && typeof record.content === "string";
       })
-      .map((item) => ({ role: item.role, content: item.content }));
+      .map((item) => ({ role: item.role, content: item.content.slice(0, MAX_MESSAGE_LENGTH) }))
+      .filter((item) => item.content.trim().length > 0);
   }
 
-  return [{ role: "user", content: typeof message === "string" ? message : "" }];
+  const content = typeof message === "string" ? message.slice(0, MAX_MESSAGE_LENGTH) : "";
+  return content.trim() ? [{ role: "user", content }] : [];
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      status: 200,
+    return new Response(null, {
+      status: 204,
       headers: corsHeaders,
     });
   }
 
+  if (req.method !== "POST") {
+    return jsonResponse(req, { error: "Method not allowed" }, 405);
+  }
+
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonResponse(req, { error: "Unauthorized" }, 401);
+    }
+
     const requestBody = await req.json();
     if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) {
-      return new Response(JSON.stringify({ error: "Invalid request body" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(req, { error: "Invalid request body" }, 400);
     }
 
     const {
@@ -102,62 +135,58 @@ serve(async (req) => {
       pageContext = "unknown",
       route = "unknown",
       locale = "en-US",
-      userRole: clientUserRole,
       analysisMode,
       formDraft,
       requestContext,
       dashboardContext,
     } = requestBody;
-    const safeMessages = Array.isArray(messages) ? messages : [];
-
-    if (!Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "messages must be an array" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI provider is not configured" }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(req, { error: "AI provider is not configured" }, 503);
     }
 
-    const authHeader = req.headers.get("Authorization");
     let userEmail: string | null = null;
-    let userRole = typeof clientUserRole === "string" ? clientUserRole : "guest";
+    let userRole = "customer";
     let userName = "";
     let companyName = "";
 
-    if (authHeader) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-
-      if (user) {
-        userEmail = user.email || null;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, company_name, role")
-          .eq("id", user.id)
-          .single();
-
-        if (profile) {
-          userName = profile.full_name || "";
-          companyName = profile.company_name || "";
-          userRole = profile.role || userRole || "guest";
-        }
-      }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) {
+      return jsonResponse(req, { error: "Authentication service is not configured" }, 503);
     }
 
-    const normalizedMessages = normalizeMessages(safeMessages, message);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return jsonResponse(req, { error: "Unauthorized" }, 401);
+    }
+
+    userEmail = user.email || null;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, company_name, role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      userName = profile.full_name || "";
+      companyName = profile.company_name || "";
+      userRole = profile.role || userRole;
+    }
+
+    const normalizedMessages = normalizeMessages(messages, message);
+    if (!normalizedMessages.length && analysisMode !== "purchase_request_analyzer") {
+      return jsonResponse(req, { error: "A non-empty message is required" }, 400);
+    }
+
     const normalizedContext = typeof pageContext === "string" ? pageContext : "unknown";
     const normalizedRoute = typeof route === "string" ? route : "unknown";
     const normalizedLocale = typeof locale === "string" ? locale : "en-US";
@@ -339,17 +368,11 @@ Rules:
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse(req, { error: "Rate limited. Please try again shortly." }, 429);
       }
 
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse(req, { error: "AI credits exhausted." }, 402);
       }
 
       throw new Error("AI gateway error");
@@ -358,14 +381,9 @@ Rules:
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "I couldn't generate a response.";
 
-    return new Response(JSON.stringify(isPurchaseRequestAnalyzer ? { reply, analysis: reply } : { reply }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse(req, isPurchaseRequestAnalyzer ? { reply, analysis: reply } : { reply });
   } catch (e) {
-    console.error("lourex-ai-chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("lourex-ai-chat error:", e instanceof Error ? e.name : "UnknownError");
+    return jsonResponse(req, { error: "Unable to process AI request" }, 500);
   }
 });

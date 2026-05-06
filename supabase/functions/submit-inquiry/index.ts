@@ -1,19 +1,37 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+const LOCAL_DEV_ORIGIN = "http://localhost:5173";
+
+const getAllowedOrigins = () =>
+  new Set(
+    [LOCAL_DEV_ORIGIN, ...(Deno.env.get("ALLOWED_ORIGIN") || "").split(",")]
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  );
+
+const getCorsHeaders = (req: Request) => {
+  const origin = req.headers.get("Origin");
+  const allowedOrigins = getAllowedOrigins();
+  const configuredOrigin = [...allowedOrigins][0] || LOCAL_DEV_ORIGIN;
+  const allowOrigin = origin && allowedOrigins.has(origin) ? origin : configuredOrigin;
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
 };
 
 const InquirySchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  email: z.string().trim().email().max(255),
+  name: z.string().trim().min(2).max(200),
+  email: z.string().trim().email().max(255).transform((value) => value.toLowerCase()),
   phone: z.string().trim().max(30).optional().default(""),
   company: z.string().trim().max(200).optional().default(""),
-  message: z.string().trim().max(2000).optional().default(""),
-  inquiry_type: z.string().trim().max(50).optional().default("general"),
+  message: z.string().trim().min(10).max(2000),
+  inquiry_type: z.string().trim().regex(/^[a-z0-9_-]{1,50}$/i).optional().default("general"),
   factory_name: z.string().trim().max(200).optional().default(""),
 });
 
@@ -34,8 +52,10 @@ function isRateLimited(ip: string): boolean {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
@@ -82,7 +102,7 @@ Deno.serve(async (req) => {
     const { error } = await supabase.from("inquiries").insert(parsed.data);
 
     if (error) {
-      console.error("Insert error:", error.message);
+      console.error("submit-inquiry insert error");
       return new Response(
         JSON.stringify({ error: "Failed to submit inquiry." }),
         {
@@ -97,7 +117,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Unexpected error:", err);
+    console.error("submit-inquiry unexpected error:", err instanceof Error ? err.name : "UnknownError");
     return new Response(
       JSON.stringify({ error: "An unexpected error occurred." }),
       {
