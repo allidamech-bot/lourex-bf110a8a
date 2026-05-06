@@ -101,7 +101,7 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden" style={{ backgroundColor: "#0F172A" }}>
       <SiteHeader />
-      <div className="mx-auto grid w-full max-w-7xl gap-5 overflow-x-hidden px-4 py-5 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-5 overflow-x-hidden px-4 pb-5 pt-16 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
 
         {/* ── Sidebar ── */}
         <aside

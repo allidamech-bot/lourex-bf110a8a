@@ -86,7 +86,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="glass-topbar sticky top-0 z-50 w-full max-w-full overflow-x-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+          className="glass-topbar sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
