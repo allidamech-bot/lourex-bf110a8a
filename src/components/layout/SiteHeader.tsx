@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ChevronRight, LogOut, Menu, X } from "lucide-react";
 import { toast } from "sonner";
@@ -65,6 +65,17 @@ export const SiteHeader = () => {
 
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : null;
   const canSeeDashboardMenu = Boolean(profile && profile.role !== "customer");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -199,17 +210,8 @@ export const SiteHeader = () => {
 
         {/* Mobile drawer */}
         {isOpen ? (
-            <div className="fixed inset-0 z-[100] lg:hidden">
-              <div
-                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                  onClick={() => setIsOpen(false)}
-              />
-
-              <div
-                  className={`absolute top-0 bottom-0 flex w-[280px] flex-col border-border/50 bg-card p-5 shadow-2xl transition-transform ${
-                      isRtl ? "right-0 border-l" : "left-0 border-r"
-                  }`}
-              >
+            <div className="fixed inset-0 z-[9999] h-[100vh] w-full overflow-y-auto border-l border-white/10 bg-[#0B1220]/95 shadow-2xl backdrop-blur-md lg:hidden">
+              <div className="flex min-h-full flex-col p-5">
                 <div className="mb-8 flex items-center justify-between">
                   <Link
                       to="/"
