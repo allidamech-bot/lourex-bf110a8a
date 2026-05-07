@@ -9,6 +9,7 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getDefaultRouteForRole } from "@/features/auth/rbac";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
+import { validatePassword } from "@/lib/validation";
 
 const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
   const { lang: _lang, t } = useI18n();
@@ -97,11 +98,12 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     );
   }
 
-  const validatePassword = (value: string) => {
-    if (value.length < 8) {
+  const getPasswordError = (value: string) => {
+    const validationError = validatePassword(value);
+    if (validationError && validationError === "Password must be at least 8 characters long") {
       return t("auth.passwordTooShort");
     }
-    return null;
+    return validationError;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -125,7 +127,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
         trackEvent("login_success", { flow: "auth", mode: "password" });
         toast.success(t("auth.signInSuccess"));
       } else {
-        const passwordError = validatePassword(password);
+        const passwordError = getPasswordError(password);
         if (passwordError) throw new Error(passwordError);
 
         const { error } = await supabase.auth.signUp({
