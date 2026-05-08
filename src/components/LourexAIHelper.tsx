@@ -16,7 +16,28 @@ const LourexAIHelper = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { t, dir } = useI18n();
+  const { dir, lang } = useI18n();
+  const copy = {
+    title: lang === "ar" ? "مساعد LOUREX AI" : "LOUREX AI Assistant",
+    description:
+      lang === "ar"
+        ? "اسأل عن التوريد أو الخدمات اللوجستية أو الأسعار أو التحليلات."
+        : "Ask about sourcing, logistics, pricing, or analytics.",
+    fallback:
+      lang === "ar"
+        ? "عذرًا، لا يمكنني معالجة هذا الطلب الآن."
+        : "I couldn't process that request.",
+    unavailable:
+      lang === "ar"
+        ? "عذرًا، مساعد LOUREX AI غير متاح مؤقتًا. حاول مرة أخرى."
+        : "Sorry, LOUREX AI is temporarily unavailable. Please try again.",
+    placeholder: lang === "ar" ? "اسأل LOUREX AI..." : "Ask LOUREX AI...",
+    suggestions:
+      lang === "ar"
+        ? ["ما المصانع التي تنتج السلع الاستهلاكية؟", "احسب تكلفة الشحن إلى الرياض", "اعرض أسعار الصرف"]
+        : ["What factories produce FMCG?", "Calculate shipping to Riyadh", "Show me exchange rates"],
+    languageInstruction: lang === "ar" ? "Respond in Arabic only." : "Respond in English only.",
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,14 +55,20 @@ const LourexAIHelper = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
-        body: { messages: allMessages },
+        body: {
+          messages: allMessages,
+          language: lang,
+          responseLanguage: lang === "ar" ? "Arabic" : "English",
+          languageInstruction: copy.languageInstruction,
+          pageContext: "floating_ai_helper",
+        },
       });
 
       if (error) throw error;
-      const reply = data?.reply || data?.choices?.[0]?.message?.content || "I couldn't process that request.";
+      const reply = data?.reply || data?.choices?.[0]?.message?.content || copy.fallback;
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err: unknown) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I'm temporarily unavailable. Please try again." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: copy.unavailable }]);
     } finally {
       setLoading(false);
     }
@@ -93,10 +120,10 @@ const LourexAIHelper = () => {
               {messages.length === 0 && (
                 <div className="text-center py-8">
                   <Sparkles className="w-10 h-10 mx-auto mb-3 text-primary/40" />
-                  <p className="text-sm font-medium text-foreground">LOUREX AI Assistant</p>
-                  <p className="text-xs text-muted-foreground mt-1">Ask about sourcing, logistics, pricing, or analytics.</p>
+                  <p className="text-sm font-medium text-foreground">{copy.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{copy.description}</p>
                   <div className="mt-4 flex flex-col gap-2">
-                    {["What factories produce FMCG?", "Calculate shipping to Riyadh", "Show me exchange rates"].map((q) => (
+                    {copy.suggestions.map((q) => (
                       <button
                         key={q}
                         onClick={() => { setInput(q); }}
@@ -141,7 +168,8 @@ const LourexAIHelper = () => {
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask LOUREX AI..."
+                  placeholder={copy.placeholder}
+                  dir={dir}
                   className="flex-1 bg-secondary border border-border/50 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground"
                   disabled={loading}
                 />

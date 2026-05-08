@@ -2723,15 +2723,15 @@ export const acceptTransferProofWithPayment = async (
 ) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile || !assertManagementUser(profile.role)) {
-    throw new Error("طµظ„ط§ط­ظٹط§طھظƒ ظ„ط§ طھط³ظ…ط­ ط¨ظ‚ط¨ظˆظ„ ط§ظ„طھط­ظˆظٹظ„ط§طھ.");
+    throw new Error("\u0635\u0644\u0627\u062d\u064a\u0627\u062a\u0643 \u0644\u0627 \u062a\u0633\u0645\u062d \u0628\u0642\u0628\u0648\u0644 \u0627\u0644\u062a\u062d\u0648\u064a\u0644\u0627\u062a.");
   }
 
   if (!payload.paymentType) {
-    throw new Error("نوع الدفع مطلوب.");
+    throw new Error("\u0646\u0648\u0639 \u0627\u0644\u062f\u0641\u0639 \u0645\u0637\u0644\u0648\u0628.");
   }
 
   if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-    throw new Error("يجب أن يكون المبلغ المستلم أكبر من صفر.");
+    throw new Error("\u064a\u062c\u0628 \u0623\u0646 \u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0645\u0633\u062a\u0644\u0645 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0635\u0641\u0631.");
   }
 
   const { data, error } = await (supabase as any).rpc("accept_transfer_proof_with_payment", {
@@ -2766,10 +2766,10 @@ export const acceptTransferProofWithPayment = async (
 export const rejectTransferProof = async (requestId: string, reason: string) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile || !assertManagementUser(profile.role)) {
-    throw new Error("صلاحياتك لا تسمح برفض التحويلات.");
+    throw new Error("\u0635\u0644\u0627\u062d\u064a\u0627\u062a\u0643 \u0644\u0627 \u062a\u0633\u0645\u062d \u0628\u0631\u0641\u0636 \u0627\u0644\u062a\u062d\u0648\u064a\u0644\u0627\u062a.");
   }
 
-  if (!reason) throw new Error("يجب تحديد سبب الرفض.");
+  if (!reason) throw new Error("\u064a\u062c\u0628 \u062a\u062d\u062f\u064a\u062f \u0633\u0628\u0628 \u0627\u0644\u0631\u0641\u0636.");
 
   const { data: request } = await (supabase as any)
     .from("purchase_requests")
@@ -2777,12 +2777,12 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
     .eq("id", requestId)
     .single();
 
-  if (!request) throw new Error("الطلب غير موجود.");
+  if (!request) throw new Error("\u0627\u0644\u0637\u0644\u0628 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f.");
   if (
     request.status !== "transfer_proof_pending" ||
     (request.transfer_proof_status && request.transfer_proof_status !== "pending")
   ) {
-    throw new Error("يمكن فقط رفض إثباتات الدفع المعلقة.");
+    throw new Error("\u064a\u0645\u0643\u0646 \u0641\u0642\u0637 \u0631\u0641\u0636 \u0625\u062b\u0628\u0627\u062a\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0645\u0639\u0644\u0642\u0629.");
   }
 
   const { error } = await (supabase as any)

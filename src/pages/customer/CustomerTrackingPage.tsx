@@ -84,6 +84,16 @@ const getRemainingStages = (currentStage: string) => {
 };
 
 const getEventTypeLabel = (eventType: string, locale: string) => {
+  if (locale === "ar") {
+    const arabicLabels: Record<string, string> = {
+      stage_changed: "تغيرت المرحلة",
+      note_added: "تمت إضافة ملاحظة",
+      system_created: "بدأ التتبع",
+    };
+
+    if (arabicLabels[eventType]) return arabicLabels[eventType];
+  }
+
   const labels: Record<string, { ar: string; en: string }> = {
     stage_changed: { ar: "تغيرت المرحلة", en: "Stage changed" },
     note_added: { ar: "تمت إضافة ملاحظة", en: "Note added" },
