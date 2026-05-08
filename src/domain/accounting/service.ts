@@ -20,30 +20,72 @@ import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { canManageAccounting, isValidRole } from "@/features/auth/rbac";
 import {
   hasMeaningfulFinancialEditChange,
+  isValidFinancialCurrency,
+  isValidFinancialEntryDate,
   normalizeFinancialCurrency,
   sanitizeFinancialEditProposal,
   validateFinancialEntryInput,
 } from "@/domain/accounting/utils";
 
-type ActiveFinancialEditRequestInsert = {
-  financial_entry_id: string;
-  deal_id: string | null;
-  customer_id: string | null;
-  requested_by_name: string;
-  requested_by_email: string;
-  reason: string;
-  old_value: Record<string, unknown>;
-  proposed_value: Record<string, unknown>;
-  created_by: string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
+const getSupabaseErrorMessage = (error: unknown) => {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String((error as { message?: unknown }).message || "");
+  }
+  return "";
 };
 
-const insertActiveFinancialEditRequest = async (payload: ActiveFinancialEditRequestInsert) =>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (supabase as any)
-    .from("financial_edit_requests")
-    .insert(payload as never)
-    .select("*")
-    .single();
+const assertValidFinancialEditProposal = (proposal: Record<string, unknown>) => {
+  if ("amount" in proposal && (!Number.isFinite(Number(proposal.amount)) || Number(proposal.amount) <= 0)) {
+    throw new Error("The financial amount must be greater than zero.");
+  }
+
+  if ("currency" in proposal && !isValidFinancialCurrency(String(proposal.currency || ""))) {
+    throw new Error("A valid 3-letter currency code is required.");
+  }
+
+  if ("entryDate" in proposal && !isValidFinancialEntryDate(String(proposal.entryDate || ""))) {
+    throw new Error("A valid financial entry date is required.");
+  }
+
+  if ("entry_date" in proposal && !isValidFinancialEntryDate(String(proposal.entry_date || ""))) {
+    throw new Error("A valid financial entry date is required.");
+  }
+};
+
+export const getFinancialOperationErrorMessage = (error: unknown) => {
+  const message = getSupabaseErrorMessage(error);
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("row-level security") || normalized.includes("unauthorized")) {
+    return "You do not have permission to complete this financial action.";
+  }
+
+  if (normalized.includes("append-only") || normalized.includes("locked financial entries cannot")) {
+    return "Locked financial entries cannot be edited directly. Submit an edit request for approval.";
+  }
+
+  if (normalized.includes("customer must match linked deal")) {
+    return "The selected customer does not match the linked deal.";
+  }
+
+  if (normalized.includes("financial entry linked deal does not exist") || normalized.includes("linked deal could not be found")) {
+    return "The linked deal could not be found for this financial entry.";
+  }
+
+  if (normalized.includes("financial entry amount") || normalized.includes("amount must")) {
+    return "The financial amount must be greater than zero.";
+  }
+
+  if (normalized.includes("financial entry date") || normalized.includes("invalid input syntax for type date")) {
+    return "A valid financial entry date is required.";
+  }
+
+  return message || "The financial action could not be completed.";
+};
 
 const assertAccountingActor = async (allowCustomerRead = false) => {
   const context = await getCurrentUserContext();
@@ -153,34 +195,25 @@ export const createFinancialEntry = async (input: {
   }
 
   const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-  const detailNote = [
-    normalizedNote,
-    `Method: ${normalizedMethod}`,
-    `Counterparty: ${normalizedCounterparty}`,
-    `Category: ${normalizedCategory}`,
-    normalizedReferenceLabel ? `Reference: ${normalizedReferenceLabel}` : "",
-    `Entry date: ${input.entryDate}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const relationType =
+    input.scope === "deal_linked" ? "deal_linked" : input.customerId ? "customer_linked" : "general";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const inserted = await (supabase as any)
-    .from("financial_entries")
-    .insert({
-      entry_number: entryNumber,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      type: input.type,
-      scope: input.scope,
-      amount: input.amount,
-      currency: normalizedCurrency,
-      note: detailNote,
-      created_by: user.id,
-      locked: true,
-    })
-    .select("*")
-    .single();
+  const inserted = await db.rpc("create_locked_financial_entry", {
+    p_entry_number: entryNumber,
+    p_deal_id: input.dealId || null,
+    p_customer_id: input.customerId || null,
+    p_type: input.type,
+    p_scope: input.scope,
+    p_relation_type: relationType,
+    p_amount: input.amount,
+    p_currency: normalizedCurrency,
+    p_note: normalizedNote,
+    p_entry_date: input.entryDate,
+    p_method: normalizedMethod,
+    p_counterparty: normalizedCounterparty,
+    p_category: normalizedCategory,
+    p_reference_label: normalizedReferenceLabel,
+  });
 
   if (inserted.error) {
     logOperationalError("financial_entry_create", inserted.error, {
@@ -191,22 +224,6 @@ export const createFinancialEntry = async (input: {
     throw inserted.error;
   }
 
-  await writeAuditLog({
-    action: "financial_entry.created",
-    tableName: "financial_entries",
-    recordId: inserted.data.id,
-    newValues: {
-      entry_number: entryNumber,
-      deal_id: input.dealId || null,
-      customer_id: input.customerId || null,
-      amount: input.amount,
-      currency: normalizedCurrency,
-      type: input.type,
-      summary: `إنشاء قيد مالي ${entryNumber}`,
-      entity_label: entryNumber,
-    },
-  });
-
   trackEvent("financial_entry_created", {
     flow: "accounting",
     dealId: input.dealId || null,
@@ -216,7 +233,7 @@ export const createFinancialEntry = async (input: {
     currency: normalizedCurrency,
   });
 
-  return inserted.data;
+  return { id: inserted.data, entry_number: entryNumber };
 };
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
@@ -246,14 +263,17 @@ export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[
       customerName: row.customer_id ? customerMap.get(row.customer_id)?.full_name : undefined,
       requestedBy: row.requested_by_name,
       requestedByEmail: row.requested_by_email,
-      reason: row.reason,
+      reason: row.request_reason || row.reason,
       status: row.status,
       submittedAt: row.created_at,
       reviewedAt: row.reviewed_at || null,
       reviewerName: row.reviewer_id ? profileMap.get(row.reviewer_id)?.full_name || "" : "",
       reviewNote: row.review_note || "",
       oldValue: (row.old_value as Record<string, unknown>) || {},
-      proposedValue: (row.proposed_value as Record<string, unknown>) || {},
+      proposedValue:
+        (row.proposed_changes as Record<string, unknown>) ||
+        (row.proposed_value as Record<string, unknown>) ||
+        {},
     }))
     .sort((a, b) => +new Date(b.submittedAt) - +new Date(a.submittedAt));
 };
@@ -288,6 +308,7 @@ export const createFinancialEditRequest = async (input: {
   if (!hasMeaningfulFinancialEditChange(input.oldValue, sanitizedProposal)) {
     throw new Error("The financial edit request must include a meaningful proposed change.");
   }
+  assertValidFinancialEditProposal(sanitizedProposal);
 
   const entryRows = await safeStructuredSelect<FinancialEntryRow>("financial_entries");
   const targetEntry = entryRows.find((row) => row.id === input.financialEntryId);
@@ -312,16 +333,12 @@ export const createFinancialEditRequest = async (input: {
     throw new Error("The edit request customer does not match the target financial entry.");
   }
 
-  const insertedRequest = await insertActiveFinancialEditRequest({
-    financial_entry_id: input.financialEntryId,
-    deal_id: input.dealId || targetEntry.deal_id || null,
-    customer_id: input.customerId || targetEntry.customer_id || null,
-    requested_by_name: normalizedRequester,
-    requested_by_email: normalizedEmail,
-    reason: normalizedReason,
-    old_value: sanitizeFinancialEditProposal(input.oldValue),
-    proposed_value: sanitizedProposal,
-    created_by: user.id,
+  const insertedRequest = await db.rpc("request_financial_entry_edit", {
+    p_financial_entry_id: input.financialEntryId,
+    p_reason: normalizedReason,
+    p_proposed_changes: sanitizedProposal,
+    p_requested_by_name: normalizedRequester,
+    p_requested_by_email: normalizedEmail,
   });
 
   if (insertedRequest.error) {
@@ -336,7 +353,7 @@ export const createFinancialEditRequest = async (input: {
   await writeAuditLog({
     action: "financial_entry.edit_requested",
     tableName: "financial_edit_requests",
-    recordId: insertedRequest.data.id,
+    recordId: insertedRequest.data,
     newValues: {
       financial_entry_id: input.financialEntryId,
       deal_id: input.dealId || targetEntry.deal_id || null,
@@ -370,7 +387,7 @@ export const createFinancialEditRequest = async (input: {
     hasCustomer: Boolean(input.customerId || targetEntry.customer_id),
   });
 
-  return insertedRequest.data;
+  return { id: insertedRequest.data };
 };
 
 export const updateFinancialEditRequestStatus = async (
@@ -388,23 +405,21 @@ export const updateFinancialEditRequestStatus = async (
   if (current.status !== "pending") throw new Error("لا يمكن مراجعة طلب تمت معالجته مسبقاً.");
 
   const normalizedReviewNote = reviewNote?.trim() || "";
-  const sanitizedProposal = sanitizeFinancialEditProposal((current.proposed_value as Record<string, unknown>) || {});
+  const sanitizedProposal = sanitizeFinancialEditProposal(
+    ((current.proposed_changes || current.proposed_value) as Record<string, unknown>) || {},
+  );
   if (status === "approved" && !hasMeaningfulFinancialEditChange((current.old_value as Record<string, unknown>) || {}, sanitizedProposal)) {
     throw new Error("This edit request no longer contains a valid financial change to approve.");
   }
+  if (status === "approved") {
+    assertValidFinancialEditProposal(sanitizedProposal);
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updated = await (supabase as any)
-    .from("financial_edit_requests")
-    .update({
-      status,
-      reviewer_id: user.id,
-      reviewed_at: new Date().toISOString(),
-      review_note: normalizedReviewNote,
-    })
-    .eq("id", id)
-    .select("*")
-    .single();
+  const updated = await db.rpc("review_financial_entry_edit_request", {
+    p_request_id: id,
+    p_status: status,
+    p_review_note: normalizedReviewNote,
+  });
 
   if (updated.error) {
     logOperationalError("financial_edit_request_review", updated.error, {
@@ -415,33 +430,13 @@ export const updateFinancialEditRequestStatus = async (
     throw updated.error;
   }
 
-  if (status === "approved" && updated.data.financial_entry_id) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const entryUpdate = await (supabase as any)
-      .from("financial_entries")
-      .update({
-        ...(sanitizedProposal as Record<string, unknown>),
-        locked: true,
-      })
-      .eq("id", updated.data.financial_entry_id)
-      .eq("locked", true);
-
-    if (entryUpdate.error) {
-      logOperationalError("financial_entry_apply_edit", entryUpdate.error, {
-        flow: "accounting",
-        id,
-        financialEntryId: updated.data.financial_entry_id,
-      });
-      throw entryUpdate.error;
-    }
-  }
-  const reviewedDealNumber = updated.data.deal_id
-    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === updated.data.deal_id)
+  const reviewedDealNumber = current.deal_id
+    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === current.deal_id)
         ?.dealNumber || null
     : null;
   const targetEntryNumber =
-    (await loadFinancialEntries()).find((entry) => entry.id === updated.data.financial_entry_id)?.entryNumber ||
-    updated.data.financial_entry_id ||
+    (await loadFinancialEntries()).find((entry) => entry.id === current.financial_entry_id)?.entryNumber ||
+    current.financial_entry_id ||
     id;
 
   await writeAuditLog({
@@ -451,8 +446,9 @@ export const updateFinancialEditRequestStatus = async (
     oldValues: { status: current.status || "pending" },
     newValues: {
       status,
-      financial_entry_id: updated.data.financial_entry_id,
-      deal_id: updated.data.deal_id,
+      financial_entry_id: current.financial_entry_id,
+      deal_id: current.deal_id,
+      correction_entry_id: updated.data || null,
       review_note: normalizedReviewNote,
       summary:
         status === "approved"
@@ -484,10 +480,10 @@ export const updateFinancialEditRequestStatus = async (
 
   trackEvent("financial_edit_request_reviewed", {
     flow: "accounting",
-    financialEntryId: updated.data.financial_entry_id || null,
-    dealId: updated.data.deal_id || null,
+    financialEntryId: current.financial_entry_id || null,
+    dealId: current.deal_id || null,
     status,
   });
 
-  return updated.data;
+  return { id, status, correctionEntryId: updated.data || null };
 };

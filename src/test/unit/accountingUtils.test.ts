@@ -51,6 +51,19 @@ describe("accounting utils", () => {
         entryDate: "2026-04-23",
       }),
     ).toContain("cannot include");
+
+    expect(
+      validateFinancialEntryInput({
+        scope: "global",
+        amount: 1500,
+        currency: "SAR",
+        note: "Customer payment",
+        method: "Bank transfer",
+        counterparty: "Customer",
+        category: "Payment",
+        entryDate: "2026-02-31",
+      }),
+    ).toContain("valid financial entry date");
   });
 
   it("detects only meaningful financial edit proposals", () => {
@@ -80,6 +93,16 @@ describe("accounting utils", () => {
     ).toEqual({
       amount: 500,
       method: "Bank",
+    });
+
+    expect(
+      sanitizeFinancialEditProposal({
+        reference_label: "INV-1",
+        entry_date: "2026-04-23",
+      }),
+    ).toEqual({
+      reference_label: "INV-1",
+      entry_date: "2026-04-23",
     });
   });
 
