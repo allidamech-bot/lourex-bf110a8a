@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   createFinancialEditRequest,
+  getFinancialOperationErrorMessage,
   loadFinancialEditRequests,
   loadFinancialEntries,
   updateFinancialEditRequestStatus,
@@ -167,7 +168,7 @@ export default function EditRequestsPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_edit_request_review", error, { id, status });
-      toast.error(t("editRequests.toasts.updateError"));
+      toast.error(getFinancialOperationErrorMessage(error));
     } finally {
       setUpdatingId(null);
     }
@@ -227,7 +228,7 @@ export default function EditRequestsPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_edit_request_submit", error, { financialEntryId: entry.id });
-      toast.error(t("editRequests.toasts.submitError"));
+      toast.error(getFinancialOperationErrorMessage(error));
     } finally {
       setSubmitting(false);
     }

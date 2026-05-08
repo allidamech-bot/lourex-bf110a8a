@@ -241,6 +241,8 @@ export type FinancialEditRequestRow = {
   customer_id?: string | null;
   requested_by_name: string;
   requested_by_email?: string | null;
+  requested_by?: string | null;
+  request_reason?: string | null;
   reason: string;
   status: FinancialEditRequest["status"];
   created_at: string;
@@ -248,6 +250,7 @@ export type FinancialEditRequestRow = {
   reviewer_id?: string | null;
   review_note?: string | null;
   old_value?: JsonObject | null;
+  proposed_changes?: JsonObject | null;
   proposed_value?: JsonObject | null;
   created_by?: string | null;
 };

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { createFinancialEntry, loadFinancialEntries } from "@/domain/accounting/service";
+import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialEntries } from "@/domain/accounting/service";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
@@ -164,7 +164,7 @@ export default function AccountingPage() {
       await refresh();
     } catch (error: unknown) {
       logOperationalError("financial_entry_create", error, { dealId: focusedDeal?.id || null });
-      const message = t("accounting.toasts.createError");
+      const message = getFinancialOperationErrorMessage(error);
       setLoadError(message);
       toast.error(message);
     } finally {

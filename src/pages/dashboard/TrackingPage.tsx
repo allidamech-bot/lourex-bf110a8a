@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRightLeft, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -17,10 +17,11 @@ import { useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
+import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 
 export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuthSession();
   const isInternal = isInternalRole(profile?.role);
   const isTurkishPartner = profile?.role === "turkish_partner";
@@ -36,6 +37,8 @@ export default function TrackingPage() {
   const [customerNote, setCustomerNote] = useState("");
   const selectedTracking = searchParams.get("tracking");
   const selectedDeal = searchParams.get("deal");
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const shouldRevealDetailsRef = useRef(Boolean(selectedTracking || selectedDeal));
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -63,10 +66,38 @@ export default function TrackingPage() {
     filteredRows[0] ||
     null;
 
+  const setSelectedTracking = useCallback(
+    (trackingId: string, dealNumber?: string | null, revealDetails = true, replace = false) => {
+      if (!trackingId) return;
+
+      shouldRevealDetailsRef.current = revealDetails;
+      let nextParams = setStableSearchParam(searchParams, "tracking", trackingId);
+      nextParams = setStableSearchParam(nextParams, "deal", dealNumber || null);
+      setSearchParams(nextParams, { replace });
+
+      if (trackingId === selectedTracking && revealDetails) {
+        shouldRevealDetailsRef.current = false;
+        revealActiveSection(detailsRef.current, { force: true, focus: true });
+      }
+    },
+    [searchParams, selectedTracking, setSearchParams],
+  );
+
+  useEffect(() => {
+    if (!filteredRows.length || selectedTracking || selectedDeal) return;
+    setSelectedTracking(filteredRows[0].trackingId, filteredRows[0].dealNumber, false, true);
+  }, [filteredRows, selectedDeal, selectedTracking, setSelectedTracking]);
+
+  useEffect(() => {
+    if (!activeShipment || !shouldRevealDetailsRef.current) return;
+    shouldRevealDetailsRef.current = false;
+    revealActiveSection(detailsRef.current, { force: true, focus: true });
+  }, [activeShipment]);
+
   useEffect(() => {
     setInternalNote("");
     setCustomerNote(activeShipment?.customerVisibleNote || "");
-  }, [activeShipment?.id]);
+  }, [activeShipment]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
@@ -253,10 +284,12 @@ export default function TrackingPage() {
             </div>
           ) : (
             filteredRows.map((row) => (
-              <Link
+              <button
                 key={row.id}
-                to={`/dashboard/tracking?deal=${row.dealNumber || ""}&tracking=${row.trackingId}`}
-                className={`block w-full max-w-full min-w-0 rounded-[1.3rem] border px-4 py-4 transition-colors ${
+                type="button"
+                aria-current={activeShipment.id === row.id ? "true" : undefined}
+                onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
+                className={`block w-full max-w-full min-w-0 rounded-[1.3rem] border px-4 py-4 text-start transition-colors ${
                   activeShipment.id === row.id ? "border-primary/30 bg-primary/10" : "border-border/60 bg-secondary/10 hover:border-primary/20"
                 }`}
               >
@@ -269,7 +302,7 @@ export default function TrackingPage() {
                     {getShipmentStageCopy(row.stage, lang)?.label || row.stage}
                   </span>
                 </div>
-              </Link>
+              </button>
             ))
           )}
         </div>
@@ -344,7 +377,7 @@ export default function TrackingPage() {
         </div>
       </BentoCard>
 
-      <div className="min-w-0 space-y-4">
+      <div ref={detailsRef} tabIndex={-1} className="min-w-0 space-y-4 scroll-mt-24 outline-none">
         <BentoCard className="p-6">
           <div className="mb-6 flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -37,6 +37,7 @@ import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { loadPurchaseRequests, requestStatusMeta } from "@/lib/operationsDomain";
+import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import type { PurchaseRequestStatus } from "@/types/lourex";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
@@ -168,6 +169,8 @@ export default function CustomerRequestsPage() {
 
   const selectedRequestId = searchParams.get("request");
   const listRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const shouldRevealDetailsRef = useRef(Boolean(selectedRequestId));
   const hasScrolledToListRef = useRef(false);
 
   const getStatusMeta = (status: PurchaseRequestStatus | "cancelled") => {
@@ -294,22 +297,6 @@ export default function CustomerRequestsPage() {
       locale === "ar" ? "تم إرسال الإيصال وهو قيد المراجعة" : "Receipt submitted and under review";
   const removeActionLabel = locale === "ar" ? "حذف من قائمتي" : "Remove from my list";
 
-  useEffect(() => {
-    if (!filteredRows.length) {
-      return;
-    }
-
-    const existsInFiltered = filteredRows.some((row) => row.id === selectedRequestId);
-
-    if (!existsInFiltered && selectedRequestId) {
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete("request");
-      setSearchParams(nextParams, { replace: true });
-    }
-  }, [filteredRows, searchParams, selectedRequestId, setSearchParams]);
-
-  const detailsRef = useRef<HTMLDivElement>(null);
-
   const requestMetrics = useMemo(
       () => ({
         total: rows.length,
@@ -320,11 +307,41 @@ export default function CustomerRequestsPage() {
       [rows],
   );
 
+  const setSelectedRequest = useCallback(
+    (requestId: string, revealDetails = true, replace = false) => {
+      if (!requestId) return;
+
+      shouldRevealDetailsRef.current = revealDetails;
+      setSearchParams(setStableSearchParam(searchParams, "request", requestId), { replace });
+
+      if (requestId === selectedRequestId && revealDetails) {
+        shouldRevealDetailsRef.current = false;
+        revealActiveSection(detailsRef.current, { force: true, focus: true });
+      }
+    },
+    [searchParams, selectedRequestId, setSearchParams],
+  );
+
   useEffect(() => {
-    if (selectedRequestId && detailsRef.current && window.innerWidth < 1280) {
-      detailsRef.current.scrollIntoView({ behavior: "smooth" });
+    if (!filteredRows.length) {
+      return;
     }
-  }, [selectedRequestId]);
+
+    const existsInFiltered = selectedRequestId
+      ? filteredRows.some((row) => row.id === selectedRequestId)
+      : false;
+
+    if (!existsInFiltered) {
+      setSelectedRequest(filteredRows[0].id, false, true);
+    }
+  }, [filteredRows, selectedRequestId, setSelectedRequest]);
+
+  useEffect(() => {
+    if (selectedRow && shouldRevealDetailsRef.current) {
+      shouldRevealDetailsRef.current = false;
+      revealActiveSection(detailsRef.current, { force: true, focus: true });
+    }
+  }, [selectedRow]);
 
   useEffect(() => {
     if (loading || location.hash !== "#requests" || hasScrolledToListRef.current) {
@@ -338,12 +355,6 @@ export default function CustomerRequestsPage() {
   useEffect(() => {
     setSelectedProofFile(null);
   }, [selectedRow?.id]);
-
-  const setSelectedRequest = (requestId: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("request", requestId);
-    setSearchParams(nextParams);
-  };
 
   const handleCancelRequest = async (request: CustomerRequestRow) => {
     if (!canCancelRequest(request.status)) {
@@ -383,9 +394,7 @@ export default function CustomerRequestsPage() {
       );
       setActiveFilter("all");
 
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set("request", request.id);
-      setSearchParams(nextParams, { replace: true });
+      setSelectedRequest(request.id, false, true);
     } catch (cancelError) {
       logOperationalError("customer_request_cancel", cancelError, { requestId: request.id });
       toast.error(
@@ -454,6 +463,7 @@ export default function CustomerRequestsPage() {
       toast.success(receiptSubmittedMessage);
       setSelectedProofFile(null);
       void loadRows("refresh");
+      setSelectedRequest(selectedRow.id, false, true);
     } catch (proofError) {
       logOperationalError("customer_transfer_proof_submit", proofError, {
         requestId: selectedRow.id,
@@ -479,6 +489,10 @@ export default function CustomerRequestsPage() {
       toast.error(t("requests.remove.failed"));
     } else {
       toast.success(t("requests.remove.success"));
+      const remainingRows = filteredRows.filter((row) => row.id !== request.id);
+      if (remainingRows[0]) {
+        setSelectedRequest(remainingRows[0].id, false, true);
+      }
       void loadRows("refresh");
     }
   };
@@ -582,6 +596,7 @@ export default function CustomerRequestsPage() {
                             key={row.id}
                             role="button"
                             tabIndex={0}
+                            aria-current={isSelected ? "true" : undefined}
                             onClick={() => setSelectedRequest(row.id)}
                             onKeyDown={(event) => {
                               if (event.target !== event.currentTarget) {
@@ -663,7 +678,7 @@ export default function CustomerRequestsPage() {
           </BentoCard>
           </div>
 
-          <div ref={detailsRef} className="min-w-0">
+          <div ref={detailsRef} tabIndex={-1} className="min-w-0 scroll-mt-24 outline-none">
             {selectedRow ? (
                 <BentoCard className="flex max-w-full flex-col gap-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">

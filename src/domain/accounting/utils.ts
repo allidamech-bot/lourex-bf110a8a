@@ -10,6 +10,15 @@ export const normalizeFinancialCurrency = (value: string) =>
 export const isValidFinancialCurrency = (value: string) =>
   /^[A-Z]{3}$/.test(normalizeFinancialCurrency(value));
 
+export const isValidFinancialEntryDate = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+};
+
 export const validateFinancialEntryInput = (input: {
   dealId?: string;
   customerId?: string;
@@ -26,8 +35,8 @@ export const validateFinancialEntryInput = (input: {
     return "The financial amount must be greater than zero.";
   }
 
-  if (!input.entryDate) {
-    return "The financial entry date is required.";
+  if (!isValidFinancialEntryDate(input.entryDate)) {
+    return "A valid financial entry date is required.";
   }
 
   if (!isValidFinancialCurrency(input.currency)) {
@@ -67,7 +76,18 @@ const normalizeEditableFinancialValue = (key: string, value: unknown) => {
 };
 
 export const sanitizeFinancialEditProposal = (proposal: Record<string, unknown>) => {
-  const allowedKeys = ["amount", "method", "counterparty", "category", "note", "referenceLabel", "currency", "entryDate"];
+  const allowedKeys = [
+    "amount",
+    "method",
+    "counterparty",
+    "category",
+    "note",
+    "referenceLabel",
+    "reference_label",
+    "currency",
+    "entryDate",
+    "entry_date",
+  ];
 
   return Object.fromEntries(
     Object.entries(proposal)
