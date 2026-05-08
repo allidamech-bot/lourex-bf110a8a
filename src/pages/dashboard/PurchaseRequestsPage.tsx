@@ -43,6 +43,7 @@ import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getSignedUrl } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
+import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -283,6 +284,17 @@ function getErrorMessage(error: unknown, fallback: string): string {
     return fallback;
 }
 
+function isAiQuotaError(error: unknown): boolean {
+    if (typeof error !== "object" || error === null) {
+        return false;
+    }
+
+    const status = (error as { status?: unknown }).status;
+    const message = (error as { message?: unknown }).message;
+
+    return status === 402 || (typeof message === "string" && message.includes("402"));
+}
+
 export default function PurchaseRequestsPage() {
     const { locale, t, lang } = useI18n();
     const { profile } = useAuthSession();
@@ -320,19 +332,7 @@ export default function PurchaseRequestsPage() {
     const shouldRevealDetailsRef = useRef(false);
 
     const revealDetailsPanel = useCallback(() => {
-        window.requestAnimationFrame(() => {
-            const detailsPanel = detailsPanelRef.current;
-            if (!detailsPanel) return;
-
-            const rect = detailsPanel.getBoundingClientRect();
-            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-            const safeTop = 80;
-            const isAlreadyVisible = rect.top >= safeTop && rect.top <= viewportHeight * 0.7;
-
-            if (!isAlreadyVisible) {
-                detailsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        });
+        revealActiveSection(detailsPanelRef.current, { force: true, focus: true });
     }, []);
 
     const statusActions: Array<{ value: PurchaseRequestStatus; label: string }> = [
@@ -389,18 +389,10 @@ export default function PurchaseRequestsPage() {
     ];
 
     const setSelectedRequest = useCallback(
-        (requestId: string | null, revealDetails = false) => {
+        (requestId: string | null, revealDetails = false, replace = false) => {
             shouldRevealDetailsRef.current = Boolean(requestId && revealDetails);
             setSelectedRequestId(requestId);
-            const nextParams = new URLSearchParams(searchParams);
-
-            if (requestId) {
-                nextParams.set("request", requestId);
-            } else {
-                nextParams.delete("request");
-            }
-
-            setSearchParams(nextParams);
+            setSearchParams(setStableSearchParam(searchParams, "request", requestId), { replace });
 
             if (requestId && revealDetails && requestId === selectedRequestId) {
                 shouldRevealDetailsRef.current = false;
@@ -426,7 +418,7 @@ export default function PurchaseRequestsPage() {
                 if (!preserveSelection) {
                     const requestedRowExists =
                         selectedRequestId !== null && data.some((row) => row.id === selectedRequestId);
-                    setSelectedRequest(requestedRowExists ? selectedRequestId : data[0]?.id ?? null);
+                    setSelectedRequest(requestedRowExists ? selectedRequestId : data[0]?.id ?? null, false, true);
                     return;
                 }
 
@@ -434,7 +426,7 @@ export default function PurchaseRequestsPage() {
                     return;
                 }
 
-                setSelectedRequest(data[0]?.id ?? null);
+                setSelectedRequest(data[0]?.id ?? null, false, true);
             } catch (error: unknown) {
                 const message = getErrorMessage(error, t("requests.toasts.loadError"));
                 setLoadError(message);
@@ -561,14 +553,14 @@ export default function PurchaseRequestsPage() {
             }
 
             setAiOutput(reply);
-        } catch (error: any) {
+        } catch (error: unknown) {
             logOperationalError("purchase_request_ai_review", error, {
                 requestId: selectedRow.id,
                 requestNumber: selectedRow.requestNumber,
                 mode,
             });
             
-            const isQuotaError = error?.status === 402 || error?.message?.includes("402");
+            const isQuotaError = isAiQuotaError(error);
             setAiUsedFallback(true);
             setAiOutput(buildLocalAiOutput(mode, selectedRow, lang));
             
@@ -975,6 +967,7 @@ export default function PurchaseRequestsPage() {
                                     >
                                         <button
                                             type="button"
+                                            aria-current={isSelected ? "true" : undefined}
                                             onClick={() => setSelectedRequest(row.id, true)}
                                             className="w-full px-4 py-4 text-start"
                                         >
@@ -1064,6 +1057,7 @@ export default function PurchaseRequestsPage() {
                 {selectedRow ? (
                     <BentoCard
                         ref={detailsPanelRef}
+                        tabIndex={-1}
                         className={`top-24 max-h-none overflow-y-visible rounded-[1.5rem] p-0 xl:sticky xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto ${
                             selectedRow.status === "cancelled"
                                 ? "border-slate-400/25 bg-[linear-gradient(180deg,rgba(30,41,59,0.88),rgba(15,23,42,0.88))]"

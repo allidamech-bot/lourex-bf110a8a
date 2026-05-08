@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CalendarClock,
@@ -23,6 +23,7 @@ import { loadShipments, loadPurchaseRequests } from "@/lib/operationsDomain";
 import { getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { useI18n, type Lang } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { toast } from "sonner";
 
 type CustomerShipmentRows = Awaited<ReturnType<typeof loadShipments>>;
@@ -135,6 +136,8 @@ export default function CustomerTrackingPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [trackInput, setTrackInput] = useState("");
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const shouldRevealDetailsRef = useRef(false);
 
   const selectedTracking = searchParams.get("tracking");
   const selectedDeal = searchParams.get("deal");
@@ -228,12 +231,33 @@ export default function CustomerTrackingPage() {
   const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
   const latestShipmentEvent = activeShipment?.shipmentEvents[activeShipment.shipmentEvents.length - 1] || null;
 
-  const setSelectedTracking = (trackingId: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("tracking", trackingId);
-    nextParams.delete("deal");
-    setSearchParams(nextParams);
-  };
+  const setSelectedTracking = useCallback(
+    (trackingId: string, revealDetails = true, replace = false) => {
+      if (!trackingId) return;
+
+      shouldRevealDetailsRef.current = revealDetails;
+      const nextParams = setStableSearchParam(searchParams, "tracking", trackingId);
+      nextParams.delete("deal");
+      setSearchParams(nextParams, { replace });
+
+      if (trackingId === selectedTracking && revealDetails) {
+        shouldRevealDetailsRef.current = false;
+        revealActiveSection(detailsRef.current, { force: true, focus: true });
+      }
+    },
+    [searchParams, selectedTracking, setSearchParams],
+  );
+
+  useEffect(() => {
+    if (!filteredRows.length || selectedTracking || selectedDeal) return;
+    setSelectedTracking(filteredRows[0].trackingId, false, true);
+  }, [filteredRows, selectedDeal, selectedTracking, setSelectedTracking]);
+
+  useEffect(() => {
+    if (!activeShipment || !shouldRevealDetailsRef.current) return;
+    shouldRevealDetailsRef.current = false;
+    revealActiveSection(detailsRef.current, { force: true, focus: true });
+  }, [activeShipment]);
 
   const handleTrackSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -448,6 +472,7 @@ export default function CustomerTrackingPage() {
                     <button
                         key={row.id}
                         type="button"
+                        aria-current={isSelected ? "true" : undefined}
                         onClick={() => setSelectedTracking(row.trackingId)}
                         className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
                             isSelected
@@ -488,7 +513,7 @@ export default function CustomerTrackingPage() {
             </div>
           </BentoCard>
 
-          <div className="min-w-0 space-y-4">
+          <div ref={detailsRef} tabIndex={-1} className="min-w-0 space-y-4 scroll-mt-24 outline-none">
             {activeShipment ? (
               <>
             <BentoCard className="space-y-6 rounded-[1.8rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.28),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-4 shadow-[0_28px_80px_-50px_rgba(59,130,246,0.9)] sm:p-6 md:p-7">
