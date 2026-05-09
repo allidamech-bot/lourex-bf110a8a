@@ -83,6 +83,8 @@ const purchaseRequestAssistantModes: Record<string, string> = {
     "Draft a structured supplier sourcing brief with product, specs, quantity, destination, packaging/certificate questions, and notes.",
   purchase_request_compliance_notes:
     "Draft advisory compliance notes only. Mention possible category-specific documents and final Lourex team review.",
+  purchase_request_risk_review:
+    "Review RFQ risks such as regulatory exposure, incomplete sourcing information, unclear shipping method, high sourcing complexity, import restrictions, and customer-safe next steps. Advisory only; do not approve or update records.",
 };
 
 const operationalAssistantModes: Record<string, string> = {

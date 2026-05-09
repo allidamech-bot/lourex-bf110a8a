@@ -1279,6 +1279,173 @@ export const updatePurchaseRequestStatus = async (
   return result;
 };
 
+const appendPurchaseRequestHistoryNote = (
+  existingNotes: string | null | undefined,
+  entry: {
+    type: "clarification_requested" | "customer_replied";
+    author: string;
+    message: string;
+    createdAt?: string;
+  },
+) => {
+  const timestamp = entry.createdAt || new Date().toISOString();
+  const title =
+    entry.type === "clarification_requested"
+      ? "Clarification requested"
+      : "Customer clarification reply";
+  const block = [`[${timestamp}] ${title} - ${entry.author}`, entry.message.trim()].join("\n");
+
+  return [existingNotes?.trim(), block].filter(Boolean).join("\n\n---\n\n");
+};
+
+export const requestPurchaseRequestClarification = async (requestId: string, message: string) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || !profile || !assertManagementUser(profile.role)) {
+    throw new Error("Your current role cannot request purchase request clarification.");
+  }
+
+  const cleanMessage = message.trim();
+  if (!cleanMessage) {
+    throw new Error("Clarification message is required.");
+  }
+
+  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
+  const current = currentRows.find((row) => row.id === requestId);
+  if (!current) throw new Error("Purchase request was not found.");
+  if (!canTransitionPurchaseRequestStatus(current.status, "awaiting_clarification")) {
+    throw new Error("This request cannot be moved into clarification from its current status.");
+  }
+
+  const now = new Date().toISOString();
+  const internalNotes = appendPurchaseRequestHistoryNote(current.internal_notes, {
+    type: "clarification_requested",
+    author: profile.full_name || profile.email || user.email || "Lourex team",
+    message: cleanMessage,
+    createdAt: now,
+  });
+
+  const result = await safeStructuredMutation(() =>
+    db
+      .from("purchase_requests")
+      .update({
+        status: "awaiting_clarification" satisfies PurchaseRequestStatus,
+        internal_notes: internalNotes,
+        last_reviewed_at: now,
+        reviewed_by: user.id,
+        updated_at: now,
+      })
+      .eq("id", requestId),
+  );
+
+  if (result.error) {
+    logOperationalError("purchase_request_clarification_request", result.error, { requestId });
+    return result;
+  }
+
+  await writeAuditLog({
+    action: "purchase_request.clarification_requested",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    oldValues: { status: current.status, internal_notes: current.internal_notes || "" },
+    newValues: {
+      request_id: requestId,
+      request_number: current.request_number,
+      status: "awaiting_clarification",
+      clarification_message: cleanMessage,
+      entity_label: current.product_name || current.request_number || "Purchase Request",
+    },
+  });
+
+  if (current.customer_id) {
+    await createNotifications([
+      {
+        userId: current.customer_id,
+        type: "purchase_request_clarification",
+        title: "Purchase request clarification requested",
+        message: `Lourex requested clarification for ${current.request_number}.`,
+        link: `/customer-portal/requests?request=${requestId}`,
+      },
+    ]);
+  }
+
+  return result;
+};
+
+export const submitPurchaseRequestClarificationReply = async (requestId: string, message: string) => {
+  const { user, profile } = await getCurrentUserContext();
+  if (!user || profile?.role !== "customer") {
+    throw new Error("Only the request customer can submit a clarification reply.");
+  }
+
+  const cleanMessage = message.trim();
+  if (!cleanMessage) {
+    throw new Error("Clarification reply is required.");
+  }
+
+  const customerRecord = await getCurrentCustomerRecord();
+  if (!customerRecord) {
+    throw new Error("Customer record was not found.");
+  }
+
+  const currentRows = await safeStructuredSelect<PurchaseRequestRow>("purchase_requests");
+  const current = currentRows.find((row) => row.id === requestId && row.customer_id === customerRecord.id);
+  if (!current) throw new Error("Purchase request was not found.");
+  if (!canTransitionPurchaseRequestStatus(current.status, "under_review")) {
+    throw new Error("This request is not waiting for clarification.");
+  }
+
+  const now = new Date().toISOString();
+  const internalNotes = appendPurchaseRequestHistoryNote(current.internal_notes, {
+    type: "customer_replied",
+    author: customerRecord.full_name || current.full_name || user.email || "Customer",
+    message: cleanMessage,
+    createdAt: now,
+  });
+
+  const result = await safeStructuredMutation(() =>
+    db
+      .from("purchase_requests")
+      .update({
+        status: "under_review" satisfies PurchaseRequestStatus,
+        internal_notes: internalNotes,
+        updated_at: now,
+      })
+      .eq("id", requestId),
+  );
+
+  if (result.error) {
+    logOperationalError("purchase_request_clarification_reply", result.error, { requestId });
+    return result;
+  }
+
+  await writeAuditLog({
+    action: "purchase_request.customer_replied",
+    tableName: "purchase_requests",
+    recordId: requestId,
+    oldValues: { status: current.status, internal_notes: current.internal_notes || "" },
+    newValues: {
+      request_id: requestId,
+      request_number: current.request_number,
+      status: "under_review",
+      clarification_reply: cleanMessage,
+      entity_label: current.product_name || current.request_number || "Purchase Request",
+    },
+  });
+
+  const recipients = await getInternalNotificationRecipients();
+  await createNotifications(
+    recipients.map((userId) => ({
+      userId,
+      type: "purchase_request_customer_reply",
+      title: "Customer replied to clarification",
+      message: `${current.full_name || "Customer"} replied to ${current.request_number}.`,
+      link: `/dashboard/requests?request=${requestId}`,
+    })),
+  );
+
+  return result;
+};
+
 export const updatePurchaseRequestInternalNotes = async (requestId: string, internalNotes: string) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile || !assertManagementUser(profile.role)) {

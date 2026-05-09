@@ -36,9 +36,10 @@ import { loadCustomerPaymentSummaries, type CustomerPaymentSummary } from "@/dom
 import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
-import { loadPurchaseRequests, requestStatusMeta } from "@/lib/operationsDomain";
+import { loadPurchaseRequests, requestStatusMeta, submitPurchaseRequestClarificationReply } from "@/lib/operationsDomain";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import type { PurchaseRequestStatus } from "@/types/lourex";
+import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
 type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
@@ -166,8 +167,11 @@ export default function CustomerRequestsPage() {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [selectedProofFile, setSelectedProofFile] = useState<File | null>(null);
   const [paymentSummaries, setPaymentSummaries] = useState<Map<string, CustomerPaymentSummary>>(new Map());
+  const [clarificationReply, setClarificationReply] = useState("");
+  const [clarificationReplyLoading, setClarificationReplyLoading] = useState(false);
 
   const selectedRequestId = searchParams.get("request");
+  const lang = locale === "ar" ? "ar" : "en";
   const listRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const shouldRevealDetailsRef = useRef(Boolean(selectedRequestId));
@@ -354,6 +358,7 @@ export default function CustomerRequestsPage() {
 
   useEffect(() => {
     setSelectedProofFile(null);
+    setClarificationReply("");
   }, [selectedRow?.id]);
 
   const handleCancelRequest = async (request: CustomerRequestRow) => {
@@ -494,6 +499,31 @@ export default function CustomerRequestsPage() {
         setSelectedRequest(remainingRows[0].id, false, true);
       }
       void loadRows("refresh");
+    }
+  };
+
+  const handleSubmitClarificationReply = async () => {
+    if (!selectedRow || clarificationReplyLoading || !clarificationReply.trim()) {
+      return;
+    }
+
+    setClarificationReplyLoading(true);
+
+    try {
+      const { error } = await submitPurchaseRequestClarificationReply(selectedRow.id, clarificationReply);
+      if (error) {
+        throw error;
+      }
+
+      toast.success(t("requests.smart.customerReplySent"));
+      setClarificationReply("");
+      await loadRows("refresh");
+      setSelectedRequest(selectedRow.id, false, true);
+    } catch (replyError) {
+      logOperationalError("customer_request_clarification_reply", replyError, { requestId: selectedRow.id });
+      toast.error(t("requests.smart.customerReplyError"));
+    } finally {
+      setClarificationReplyLoading(false);
     }
   };
 
@@ -748,6 +778,18 @@ export default function CustomerRequestsPage() {
                         <p className="mt-2 break-words text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
                       </div>
                   )}
+
+                  <SmartPurchaseRequestPanel
+                    request={selectedRow}
+                    lang={lang}
+                    t={t}
+                    showCustomerReply={selectedRow.status === "awaiting_clarification"}
+                    customerReply={clarificationReply}
+                    onCustomerReplyChange={setClarificationReply}
+                    onSubmitCustomerReply={() => void handleSubmitClarificationReply()}
+                    customerReplyBusy={clarificationReplyLoading}
+                    showInternalSections={false}
+                  />
 
                   {selectedPaymentSummary ? (
                       <div className="w-full max-w-full rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 sm:p-5">

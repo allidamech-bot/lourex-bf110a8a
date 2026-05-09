@@ -30,6 +30,7 @@ import {
     deletePurchaseRequestRecord,
     loadPurchaseRequests,
     rejectTransferProof,
+    requestPurchaseRequestClarification,
     updatePurchaseRequestInternalNotes,
     updatePurchaseRequestStatus,
 } from "@/lib/operationsDomain";
@@ -44,6 +45,7 @@ import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getSignedUrl } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
+import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -57,7 +59,8 @@ type PurchaseRequestAiMode =
     | "purchase_request_customer_reply"
     | "supplier_brief"
     | "purchase_request_supplier_brief"
-    | "purchase_request_compliance_notes";
+    | "purchase_request_compliance_notes"
+    | "purchase_request_risk_review";
 
 const purchaseRequestAiActions: Array<{
     mode: PurchaseRequestAiMode;
@@ -70,6 +73,7 @@ const purchaseRequestAiActions: Array<{
     { mode: "customer_reply_draft", label: "Customer Reply Draft", labelAr: "مسودة رد للعميل" },
     { mode: "supplier_brief", label: "Supplier Brief", labelAr: "مسودة للمورد" },
     { mode: "purchase_request_compliance_notes", label: "Compliance Notes", labelAr: "ملاحظات الامتثال" },
+    { mode: "purchase_request_risk_review", label: "RFQ Risk Review", labelAr: "مراجعة مخاطر RFQ" },
 ];
 
 const getAiActionLabel = (mode: PurchaseRequestAiMode, lang: string) =>
@@ -360,6 +364,8 @@ export default function PurchaseRequestsPage() {
     const [aiOutput, setAiOutput] = useState("");
     const [aiOutputTitle, setAiOutputTitle] = useState("");
     const [aiUsedFallback, setAiUsedFallback] = useState(false);
+    const [clarificationDraft, setClarificationDraft] = useState("");
+    const [clarificationBusy, setClarificationBusy] = useState(false);
     const initialLoadStartedRef = useRef(false);
 
     const selectedRequestIdFromParams = searchParams.get("request");
@@ -533,6 +539,7 @@ export default function PurchaseRequestsPage() {
         }
 
         setInternalNotesDraft(selectedRow.internalNotes || "");
+        setClarificationDraft("");
         setTransferPaymentType("first_payment");
         setTransferReceivedAmount("");
         setTransferCurrency("SAR");
@@ -673,6 +680,39 @@ export default function PurchaseRequestsPage() {
         } finally {
             setUpdatingStatusId(null);
         }
+    };
+
+    const handleSmartClarificationRequest = async () => {
+        if (!selectedRow || clarificationBusy || !clarificationDraft.trim()) {
+            return;
+        }
+
+        setClarificationBusy(true);
+
+        try {
+            const { error } = await requestPurchaseRequestClarification(selectedRow.id, clarificationDraft);
+            if (error) {
+                throw error;
+            }
+
+            toast.success(t("requests.smart.clarificationSent"));
+            setClarificationDraft("");
+            await refresh();
+            setSelectedRequest(selectedRow.id);
+        } catch (error: unknown) {
+            logOperationalError("purchase_request_smart_clarification", error, { requestId: selectedRow.id });
+            toast.error(getErrorMessage(error, t("requests.smart.clarificationError")));
+        } finally {
+            setClarificationBusy(false);
+        }
+    };
+
+    const handleSmartReadyForSourcing = async () => {
+        if (!selectedRow) {
+            return;
+        }
+
+        await handleStatusUpdate(selectedRow.id, "ready_for_conversion");
     };
 
     const handleCancelRequest = async (row: PurchaseRequestRow) => {
@@ -1432,6 +1472,22 @@ export default function PurchaseRequestsPage() {
                                         <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
                                             {t("requests.reviewPanel")}
                                         </div>
+
+                                        <SmartPurchaseRequestPanel
+                                            request={selectedRow}
+                                            lang={lang}
+                                            t={t}
+                                            clarificationDraft={clarificationDraft}
+                                            onClarificationDraftChange={setClarificationDraft}
+                                            clarificationBusy={clarificationBusy}
+                                            disabled={Boolean(
+                                                selectedRow.isLegacyFallback ||
+                                                    updatingStatusId === selectedRow.id ||
+                                                    selectedRow.convertedDealNumber,
+                                            )}
+                                            onRequestClarification={() => void handleSmartClarificationRequest()}
+                                            onMarkReady={() => void handleSmartReadyForSourcing()}
+                                        />
 
                                         <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
                                             <div className="flex flex-wrap items-start justify-between gap-3">
