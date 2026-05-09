@@ -50,11 +50,11 @@ export const canAdvanceShipmentStage = (input: {
   }
 
   if (input.role === "turkish_partner") {
-    return nextOrder >= 2 && nextOrder <= 6;
+    return nextOrder >= 2 && nextOrder <= 5;
   }
 
   if (input.role === "saudi_partner") {
-    return nextOrder >= 8;
+    return nextOrder >= 7 && nextOrder <= 10;
   }
 
   return false;

@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
 import { supabase } from "@/integrations/supabase/client";
+import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
 type JsonRecord = Record<string, unknown>;
@@ -97,7 +98,7 @@ type FinancialEntryRow = {
   created_at: string;
 };
 
-const adminDb = supabase as any;
+const adminDb = supabase as unknown as LooseDomainClient;
 
 const severityOptions = ["info", "warning", "error", "critical"] as const;
 

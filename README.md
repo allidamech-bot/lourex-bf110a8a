@@ -60,7 +60,7 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
    Create a `.env` file in the root directory:
    ```env
    VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 4. **Run development server**:
    ```bash
@@ -75,7 +75,32 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 | `npm run build`       | Production build |
 | `npm run preview`     | Preview the production build |
 | `npm run lint`        | Run ESLint |
+| `npm run typecheck`   | Run TypeScript without emitting files |
 | `npm run test`        | Run tests |
+| `npm run test:smoke`  | Run a production-build smoke check |
+
+---
+
+## Production Deployment
+
+Vercel is the primary production deployment target for the Lourex SPA. The included `vercel.json` routes all non-file requests to `index.html`, so browser refreshes and deep links under `/dashboard`, `/customer-portal`, and public pages resolve through React Router.
+
+Set these Vercel project environment variables:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+```
+
+Supabase Edge Functions also need server-side secrets configured in Supabase:
+
+```env
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+LOVABLE_API_KEY=your_ai_gateway_key
+ALLOWED_ORIGIN=https://www.lou-rex.com,https://lou-rex.com
+```
+
+`VITE_SUPABASE_ANON_KEY` is intentionally not used by the frontend. Use `VITE_SUPABASE_PUBLISHABLE_KEY` consistently for Vercel and local development.
 
 ---
 

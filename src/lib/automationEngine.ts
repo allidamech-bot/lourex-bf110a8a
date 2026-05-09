@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateTrackingId, syncShipmentStatusWithStage } from "@/lib/shipmentIdentity";
+import type { LooseDomainClient } from "@/lib/operationsDomain";
 import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
 
 type JsonPayload = Record<string, unknown>;
@@ -93,7 +94,7 @@ export type AutomationRunResult = {
   actions: AutomationActionResult[];
 };
 
-const db = supabase as any;
+const db = supabase as unknown as LooseDomainClient;
 
 export const automationRules: AutomationRule[] = [
   {

@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { AuthSessionProvider } from "@/features/auth/AuthSessionProvider";
+import { AuthSessionProvider, useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { isSupabaseConfigured, missingSupabaseEnvVars } from "@/integrations/supabase/client";
 
@@ -59,12 +59,16 @@ const PageLoader = () => (
     </div>
 );
 
-const PageWithAI = ({ component }: { component: React.ReactNode }) => (
-    <>
-        {component}
-        <AICommandBar />
-    </>
-);
+const PageWithAI = ({ component }: { component: React.ReactNode }) => {
+    const { user, loading } = useAuthSession();
+
+    return (
+        <>
+            {component}
+            {!loading && user ? <AICommandBar /> : null}
+        </>
+    );
+};
 
 const SupabaseSetupError = () => (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -83,7 +87,7 @@ const SupabaseSetupError = () => (
                 </ul>
             </div>
             <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                In Lovable Cloud, open the project, go to the Cloud tab, then add these values in the environment/secrets settings for the connected Supabase project. For local development, add them to your local .env file.
+                In Vercel, add these values in Project Settings &gt; Environment Variables. For local development, add them to your local .env file.
             </p>
         </div>
     </div>

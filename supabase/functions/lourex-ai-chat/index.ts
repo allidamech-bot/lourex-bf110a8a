@@ -2,12 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const LOCAL_DEV_ORIGIN = "http://localhost:5173";
+const DEFAULT_PRODUCTION_ORIGINS = ["https://www.lou-rex.com", "https://lou-rex.com"];
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_LENGTH = 4_000;
 
 const getAllowedOrigins = () =>
   new Set(
-    [LOCAL_DEV_ORIGIN, ...(Deno.env.get("ALLOWED_ORIGIN") || "").split(",")]
+    [LOCAL_DEV_ORIGIN, ...DEFAULT_PRODUCTION_ORIGINS, ...(Deno.env.get("ALLOWED_ORIGIN") || "").split(",")]
       .map((origin) => origin.trim())
       .filter(Boolean),
   );
@@ -110,7 +111,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 

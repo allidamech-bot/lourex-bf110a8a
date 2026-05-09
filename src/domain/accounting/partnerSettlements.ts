@@ -1,7 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries } from "@/domain/accounting/service";
-import { getCurrentUserContext, safeStructuredSelect, safeStructuredSelectWhereEq } from "@/lib/operationsDomain";
+import {
+  getCurrentUserContext,
+  safeStructuredSelect,
+  safeStructuredSelectWhereEq,
+  type LooseDomainClient,
+} from "@/lib/operationsDomain";
 import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import type { PartnerSettlement, PartnerSettlementRole } from "@/types/lourex";
 
@@ -44,7 +49,7 @@ type SettlementAmounts = {
   netDue: number;
 };
 
-const db = supabase as any;
+const db = supabase as unknown as LooseDomainClient;
 
 const assertSettlementActor = async () => {
   const context = await getCurrentUserContext();

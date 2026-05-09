@@ -76,11 +76,13 @@ interface DomainTableBuilder<T> {
   delete(): DomainMutationBuilder<T>;
 }
 
-interface LooseDomainClient {
+interface DomainRpcBuilder<T> extends PromiseLike<{ data: T | null; error: DomainError | null }> {
+  maybeSingle(): DomainSingleResult<T>;
+}
+
+export interface LooseDomainClient {
   from<T extends Record<string, unknown>>(table: string): DomainTableBuilder<T>;
-  rpc<TResult>(fn: string, args: Record<string, unknown>): {
-    maybeSingle(): DomainSingleResult<TResult>;
-  };
+  rpc<TResult>(fn: string, args?: Record<string, unknown>): DomainRpcBuilder<TResult>;
 }
 
 export type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
@@ -2221,7 +2223,7 @@ export const logShipmentEvent = async (input: {
     }
   }
 
-  const { data, error } = await (db as any).rpc("log_shipment_event", {
+  const { data, error } = await db.rpc<string>("log_shipment_event", {
     p_shipment_id: input.shipmentId,
     p_event_type: input.eventType,
     p_from_stage: input.fromStage ? normalizeShipmentStageCode(input.fromStage) : null,
@@ -2601,7 +2603,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
     throw new Error("لا يمكن للشركاء رفع إثباتات الدفع مباشرة.");
   }
 
-  const { data: request, error: requestError } = await (supabase as any)
+  const { data: request, error: requestError } = await db
     .from("purchase_requests")
     .select("id, status, customer_id")
     .eq("id", requestId)
@@ -2626,7 +2628,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
 
   const uploaded = await uploadFileToStorage("DOCUMENTS", fullPath, file);
 
-  const { error } = await (supabase as any).rpc("submit_transfer_proof_for_purchase_request", {
+  const { error } = await db.rpc("submit_transfer_proof_for_purchase_request", {
     request_id: requestId,
     proof_url: uploaded.path,
     proof_path: uploaded.path,
@@ -2654,7 +2656,7 @@ export const acceptTransferProof = async (requestId: string) => {
     throw new Error("صلاحياتك لا تسمح بقبول التحويلات.");
   }
 
-  const { data: request } = await (supabase as any)
+  const { data: request } = await db
     .from("purchase_requests")
     .select("*")
     .eq("id", requestId)
@@ -2668,7 +2670,7 @@ export const acceptTransferProof = async (requestId: string) => {
     throw new Error("يمكن فقط قبول إثباتات الدفع المعلقة.");
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await db
     .from("purchase_requests")
     .update({
       transfer_proof_status: "accepted",
@@ -2734,7 +2736,7 @@ export const acceptTransferProofWithPayment = async (
     throw new Error("\u064a\u062c\u0628 \u0623\u0646 \u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0645\u0633\u062a\u0644\u0645 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0635\u0641\u0631.");
   }
 
-  const { data, error } = await (supabase as any).rpc("accept_transfer_proof_with_payment", {
+  const { data, error } = await db.rpc("accept_transfer_proof_with_payment", {
     p_request_id: requestId,
     p_payment_type: payload.paymentType,
     p_amount: payload.amount,
@@ -2771,7 +2773,7 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
 
   if (!reason) throw new Error("\u064a\u062c\u0628 \u062a\u062d\u062f\u064a\u062f \u0633\u0628\u0628 \u0627\u0644\u0631\u0641\u0636.");
 
-  const { data: request } = await (supabase as any)
+  const { data: request } = await db
     .from("purchase_requests")
     .select("*")
     .eq("id", requestId)
@@ -2785,7 +2787,7 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
     throw new Error("\u064a\u0645\u0643\u0646 \u0641\u0642\u0637 \u0631\u0641\u0636 \u0625\u062b\u0628\u0627\u062a\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0645\u0639\u0644\u0642\u0629.");
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await db
     .from("purchase_requests")
     .update({
       transfer_proof_status: "rejected",

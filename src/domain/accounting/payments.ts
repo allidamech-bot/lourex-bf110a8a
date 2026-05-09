@@ -3,6 +3,7 @@ import {
   getCurrentUserContext,
   safeStructuredSelect,
   safeStructuredSelectWhereEq,
+  type LooseDomainClient,
 } from "@/lib/operationsDomain";
 import { canManageAccounting, isValidRole, type LourexRole } from "@/features/auth/rbac";
 import type {
@@ -55,7 +56,7 @@ export type CustomerPaymentSummary = {
   payments: PaymentRecord[];
 };
 
-const db = supabase as any;
+const db = supabase as unknown as LooseDomainClient;
 
 const mapPayment = (row: PaymentRow): PaymentRecord => ({
   id: row.id,
