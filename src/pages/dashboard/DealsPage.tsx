@@ -33,8 +33,12 @@ import { pickText, useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterDeals } from "@/lib/adminOperations";
+import { supabase } from "@/integrations/supabase/client";
+import { DealCommandCenterPanel } from "@/features/deals/components/DealCommandCenterPanel";
+import { analyzeDealHealth, buildDealAiContext } from "@/features/deals/lib/dealCommand";
 
 const HEADER_SEPARATOR = " | ";
+type DealAiMode = "deal_briefing" | "deal_risk_review";
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
@@ -57,6 +61,10 @@ export default function DealsPage() {
   const [operationalStatus, setOperationalStatus] =
     useState<DealOperationalStatus>("awaiting_assignment");
   const [attachmentCategory, setAttachmentCategory] = useState("reference");
+  const [aiModeLoading, setAiModeLoading] = useState<DealAiMode | null>(null);
+  const [aiOutput, setAiOutput] = useState("");
+  const [aiOutputTitle, setAiOutputTitle] = useState("");
+  const [aiUsedFallback, setAiUsedFallback] = useState(false);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDealNumber = searchParams.get("deal");
@@ -106,6 +114,10 @@ export default function DealsPage() {
     setSaudiPartnerId(selectedDeal.saudiPartnerId || "");
     setOperationalStatus(selectedDeal.operationalStatus);
     setAttachmentCategory("reference");
+    setAiModeLoading(null);
+    setAiOutput("");
+    setAiOutputTitle("");
+    setAiUsedFallback(false);
   }, [selectedDeal]);
 
   const turkishPartners = useMemo(
@@ -191,6 +203,108 @@ export default function DealsPage() {
     }
   };
 
+  const buildLocalDealAiOutput = (mode: DealAiMode) => {
+    if (!selectedDeal) return "";
+    const analysis = analyzeDealHealth(selectedDeal);
+    const riskLabels = analysis.riskFlags.map((flag) => t(`deals.command.risks.${flag}`));
+    const isArabic = lang === "ar";
+
+    if (mode === "deal_risk_review") {
+      return isArabic
+        ? [
+            `مراجعة مخاطر الصفقة ${selectedDeal.dealNumber}`,
+            `- الحالة الصحية: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
+            `- المخاطر: ${riskLabels.length ? riskLabels.join("، ") : t("deals.command.noRisks")}`,
+            `- الشحنة: ${selectedDeal.trackingId || t("deals.noTracking")}`,
+            `- الإشارة المالية: ${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
+            "- التوصية: راجع عناصر المخاطر يدوياً قبل أي اعتماد أو إغلاق أو تحديث مالي أو تغيير مرحلة شحن.",
+          ].join("\n")
+        : [
+            `Deal risk review for ${selectedDeal.dealNumber}`,
+            `- Health: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
+            `- Risks: ${riskLabels.length ? riskLabels.join(", ") : t("deals.command.noRisks")}`,
+            `- Shipment: ${selectedDeal.trackingId || t("deals.noTracking")}`,
+            `- Financial signal: ${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
+            "- Recommendation: review risk items manually before approval, closure, finance changes, or shipment stage changes.",
+          ].join("\n");
+    }
+
+    return isArabic
+      ? [
+          `موجز الصفقة ${selectedDeal.dealNumber}`,
+          `- العميل: ${selectedDeal.customerName || t("common.notSpecified")}`,
+          `- العملية: ${selectedDeal.operationTitle || t("common.notSpecified")}`,
+          `- الحالة التشغيلية: ${t(`statuses.${selectedDeal.operationalStatus}`)}`,
+          `- مرحلة الشحن: ${getShipmentStageCopy(selectedDeal.stage, lang).label}`,
+          `- الصحة: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
+          `- الإجراء التالي: ${riskLabels[0] || "متابعة التشغيل وفق المسار الحالي."}`,
+          "- هذا الموجز إرشادي فقط ولا ينفذ أي إجراء داخل النظام.",
+        ].join("\n")
+      : [
+          `Deal briefing for ${selectedDeal.dealNumber}`,
+          `- Customer: ${selectedDeal.customerName || t("common.notSpecified")}`,
+          `- Operation: ${selectedDeal.operationTitle || t("common.notSpecified")}`,
+          `- Operational status: ${t(`statuses.${selectedDeal.operationalStatus}`)}`,
+          `- Shipment stage: ${getShipmentStageCopy(selectedDeal.stage, lang).label}`,
+          `- Health: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
+          `- Next internal action: ${riskLabels[0] || "Continue normal operational follow-up."}`,
+          "- This briefing is advisory only and does not perform any system action.",
+        ].join("\n");
+  };
+
+  const handleDealAiAction = async (mode: DealAiMode) => {
+    if (!selectedDeal || aiModeLoading) return;
+
+    const title = mode === "deal_briefing" ? t("deals.command.aiBriefing") : t("deals.command.aiRiskReview");
+    const analysis = analyzeDealHealth(selectedDeal);
+    setAiModeLoading(mode);
+    setAiOutputTitle(title);
+    setAiOutput("");
+    setAiUsedFallback(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message:
+            lang === "ar"
+              ? `${title} للصفقة ${selectedDeal.dealNumber}. أجب بالعربية فقط.`
+              : `${title} for deal ${selectedDeal.dealNumber}. Respond in English only.`,
+          messages: [],
+          pageContext: "dashboard_deals",
+          route: window.location.pathname,
+          locale: lang === "ar" ? "ar-SA" : "en-US",
+          language: lang,
+          analysisMode: mode,
+          dashboardContext: {
+            deal: buildDealAiContext(selectedDeal, analysis),
+          },
+        },
+      });
+
+      if (error) throw error;
+      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!reply) throw new Error("Empty AI response");
+      setAiOutput(reply);
+    } catch (error) {
+      logOperationalError("deal_ai_briefing", error, { dealId: selectedDeal.id, mode });
+      setAiUsedFallback(true);
+      setAiOutput(buildLocalDealAiOutput(mode));
+    } finally {
+      setAiModeLoading(null);
+    }
+  };
+
+  const handleCopyAiOutput = async () => {
+    if (!aiOutput) return;
+    try {
+      await navigator.clipboard.writeText(aiOutput);
+      toast.success(t("requests.ai.copySuccess"));
+    } catch (error) {
+      logOperationalError("deal_ai_copy", error, { dealId: selectedDeal?.id });
+      toast.error(t("requests.ai.copyError"));
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4">
@@ -261,31 +375,40 @@ export default function DealsPage() {
             <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
               <EmptyState icon={Route} title={t("deals.emptyTitle")} description={t("deals.noMatches")} />
             </div>
-          ) : filteredRows.map((row) => (
-            <button
-              key={row.id}
-              onClick={() => setSearchParams({ deal: row.dealNumber })}
-              className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
-                selectedDeal?.id === row.id
-                  ? "border-primary/30 bg-primary/10"
-                  : "border-border/60 bg-secondary/15 hover:border-primary/20"
-              }`}
-            >
-              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="break-words font-medium">{row.dealNumber}</p>
-                  <p className="mt-1 break-words text-sm text-muted-foreground">{row.customerName}</p>
+          ) : filteredRows.map((row) => {
+            const rowHealth = analyzeDealHealth(row);
+
+            return (
+              <button
+                key={row.id}
+                onClick={() => setSearchParams({ deal: row.dealNumber })}
+                className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-4 py-4 text-start transition-colors ${
+                  selectedDeal?.id === row.id
+                    ? "border-primary/30 bg-primary/10"
+                    : "border-border/60 bg-secondary/15 hover:border-primary/20"
+                }`}
+              >
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="break-words font-medium">{row.dealNumber}</p>
+                    <p className="mt-1 break-words text-sm text-muted-foreground">{row.customerName}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                      {getShipmentStageCopy(row.stage, lang).label}
+                    </span>
+                    <span className="max-w-full self-start break-words rounded-full bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                      {t(`deals.command.health.${rowHealth.state}`)}
+                    </span>
+                  </div>
                 </div>
-                <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
-                  {getShipmentStageCopy(row.stage, lang).label}
-                </span>
-              </div>
-              <p className="mt-3 break-words text-xs text-muted-foreground">{row.operationTitle}</p>
-              {isPartnerWorkspace ? (
-                <p className="mt-2 break-words text-xs text-muted-foreground">{getShipmentStageCopy(row.stage, lang).description}</p>
-              ) : null}
-            </button>
-          ))}
+                <p className="mt-3 break-words text-xs text-muted-foreground">{row.operationTitle}</p>
+                {isPartnerWorkspace ? (
+                  <p className="mt-2 break-words text-xs text-muted-foreground">{getShipmentStageCopy(row.stage, lang).description}</p>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
       </BentoCard>
 
@@ -381,6 +504,21 @@ export default function DealsPage() {
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {t("deals.operationContext")}
                 </p>
+              </div>
+
+              <div className="mt-5">
+                <DealCommandCenterPanel
+                  deal={selectedDeal}
+                  lang={lang}
+                  t={t}
+                  aiOutput={aiOutput}
+                  aiOutputTitle={aiOutputTitle}
+                  aiLoading={Boolean(aiModeLoading)}
+                  aiUsedFallback={aiUsedFallback}
+                  onRunAiBriefing={() => void handleDealAiAction("deal_briefing")}
+                  onRunAiRiskReview={() => void handleDealAiAction("deal_risk_review")}
+                  onCopyAiOutput={() => void handleCopyAiOutput()}
+                />
               </div>
 
               <div className="mt-5 rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">

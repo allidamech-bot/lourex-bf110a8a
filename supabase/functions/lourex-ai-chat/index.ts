@@ -55,6 +55,8 @@ const pageContextGuide: Record<string, string> = {
   customer_requests: "Customer request status page. Explain statuses and draft clarification messages.",
   customer_tracking: "Customer tracking page. Explain shipment stage meaning and draft update requests.",
   dashboard_home: "Internal dashboard overview. Draft operational priorities and risk review checklists.",
+  dashboard_deals:
+    "Internal deals command center. Summarize deal state, responsibility, shipment risk, finance risk, and safe next actions.",
   dashboard_purchase_requests:
     "Internal purchase requests page. Summarize request information and draft customer or supplier communication.",
   dashboard_tracking: "Internal tracking page. Explain delay risks and draft customer-safe shipment updates.",
@@ -94,6 +96,10 @@ const operationalAssistantModes: Record<string, string> = {
     "Review shipment risk indicators such as stale activity, missing customer-visible notes, delayed stages, and draft a customer-safe update message.",
   finance_audit_review:
     "Review financial entries for suspicious or incomplete records, missing deal/customer references, weak notes, and locked-entry review risks.",
+  deal_briefing:
+    "Generate a concise internal deal briefing covering current deal state, responsibility, shipment state, finance signal, customer communication recommendation, and next best internal action.",
+  deal_risk_review:
+    "Review operational deal risks such as missing shipment, stale tracking, missing partner assignment, finance gaps, customer waiting signals, and blocked progress. Advisory only.",
 };
 
 const jsonResponse = (req: Request, body: Record<string, unknown>, status = 200) =>
@@ -346,6 +352,8 @@ Required behavior by mode:
 - dashboard_daily_briefing: include executive summary, operational priorities, request review needs, shipment/tracking risks, financial review items, and suggested next actions.
 - shipment_risk_review: include current shipment summary, stale/delay risks, missing customer-visible note concerns, internal follow-up checklist, and one customer-safe update draft.
 - finance_audit_review: include incomplete entries, suspicious values or descriptions, missing deal/customer references, locked-entry correction concerns, and review-only recommendations.
+- deal_briefing: include deal state, responsibility, shipment/tracking state, finance signal, customer-safe communication recommendation, and next internal action.
+- deal_risk_review: include operational risk flags, missing data, shipment risk, finance risk, blocked progress, and review-only recommendations.
 
 Rules:
 - Output is advisory only and final decisions remain with the Lourex team.
