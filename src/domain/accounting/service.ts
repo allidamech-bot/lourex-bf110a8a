@@ -5,6 +5,7 @@ import {
   getLourexDomainAvailability,
   getInternalNotificationRecipients,
   createNotifications,
+  loadDeals,
   safeStructuredSelect,
   safeStructuredSelectWhereEq,
 } from "@/lib/operationsDomain";
@@ -110,7 +111,7 @@ export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] 
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<FinancialEntryRow>("financial_entries", "customer_id", profile.id)
       : safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-    options.deals ? Promise.resolve(options.deals) : import("@/lib/operationsDomain").then((m) => m.loadDeals()),
+    options.deals ? Promise.resolve(options.deals) : loadDeals(),
     isCustomer && profile?.id
       ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
@@ -182,7 +183,6 @@ export const createFinancialEntry = async (input: {
   const normalizedReferenceLabel = input.referenceLabel?.trim() || "";
 
   if (input.dealId) {
-    const { loadDeals } = await import("@/lib/operationsDomain");
     const linkedDeal = (await loadDeals()).find((deal) => deal.id === input.dealId);
 
     if (!linkedDeal) {
@@ -242,7 +242,7 @@ export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[
   const [rows, entries, deals, customers, profiles] = await Promise.all([
     safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
     loadFinancialEntries(),
-    import("@/lib/operationsDomain").then((m) => m.loadDeals()),
+    loadDeals(),
     safeStructuredSelect<CustomerRow>("lourex_customers"),
     safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
   ]);
@@ -317,8 +317,7 @@ export const createFinancialEditRequest = async (input: {
   }
   const linkedDealId = input.dealId || targetEntry.deal_id || null;
   const linkedDealNumber = linkedDealId
-    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === linkedDealId)
-        ?.dealNumber || null
+    ? (await loadDeals()).find((deal) => deal.id === linkedDealId)?.dealNumber || null
     : null;
 
   if (!targetEntry.locked) {
@@ -431,8 +430,7 @@ export const updateFinancialEditRequestStatus = async (
   }
 
   const reviewedDealNumber = current.deal_id
-    ? (await import("@/lib/operationsDomain").then((m) => m.loadDeals())).find((deal) => deal.id === current.deal_id)
-        ?.dealNumber || null
+    ? (await loadDeals()).find((deal) => deal.id === current.deal_id)?.dealNumber || null
     : null;
   const targetEntryNumber =
     (await loadFinancialEntries()).find((entry) => entry.id === current.financial_entry_id)?.entryNumber ||

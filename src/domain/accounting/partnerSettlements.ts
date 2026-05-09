@@ -3,6 +3,7 @@ import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries } from "@/domain/accounting/service";
 import {
   getCurrentUserContext,
+  loadDeals,
   safeStructuredSelect,
   safeStructuredSelectWhereEq,
   type LooseDomainClient,
@@ -126,7 +127,6 @@ export const loadPartnerSettlements = async (): Promise<PartnerSettlement[]> => 
 export const calculatePartnerSettlement = async (
   input: SettlementCalculationInput,
 ): Promise<SettlementAmounts> => {
-  const { loadDeals } = await import("@/lib/operationsDomain");
   const [deals, entries] = await Promise.all([loadDeals(), loadFinancialEntries()]);
   const normalizedRate = input.commissionRate ?? 0.05;
   const periodPrefix = input.settlementPeriod.trim();

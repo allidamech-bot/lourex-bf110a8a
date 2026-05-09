@@ -65,7 +65,11 @@ const PageWithAI = ({ component }: { component: React.ReactNode }) => {
     return (
         <>
             {component}
-            {!loading && user ? <AICommandBar /> : null}
+            {!loading && user ? (
+                <Suspense fallback={null}>
+                    <AICommandBar />
+                </Suspense>
+            ) : null}
         </>
     );
 };
