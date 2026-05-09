@@ -102,6 +102,12 @@ const operationalAssistantModes: Record<string, string> = {
     "Review shipment document checklist signals, missing or recommended documents, customs exposure, and operational follow-up needs. Advisory only.",
   finance_audit_review:
     "Review financial entries for suspicious or incomplete records, missing deal/customer references, weak notes, and locked-entry review risks.",
+  customer_balance_review:
+    "Summarize customer balance situations, missing references, multi-currency caveats, pending corrections, and customer-safe statement notes.",
+  settlement_review:
+    "Review partner settlement visibility, pending or disputed settlement risks, unpaid approved settlements, and internal follow-up needs.",
+  accounting_risk_briefing:
+    "Generate an internal accounting risk briefing covering immutable-entry status, audit traceability gaps, duplicate-like entries, large balances, and review-only next actions.",
   deal_briefing:
     "Generate a concise internal deal briefing covering current deal state, responsibility, shipment state, finance signal, customer communication recommendation, and next best internal action.",
   deal_risk_review:
@@ -361,6 +367,9 @@ Required behavior by mode:
 - shipment_customer_update_draft: produce only a review-ready customer-safe draft plus a short internal note about what must be verified before sending.
 - shipment_document_review: include required/recommended document gaps, customs-sensitive items, and review-only follow-up checklist.
 - finance_audit_review: include incomplete entries, suspicious values or descriptions, missing deal/customer references, locked-entry correction concerns, and review-only recommendations.
+- customer_balance_review: include balance summary, statement caveats, missing deal/customer references, multi-currency warnings, and customer-safe explanation notes.
+- settlement_review: include partner settlement state, pending approval/payment/dispute risks, linked financial signals, and review-only follow-up checklist.
+- accounting_risk_briefing: include immutable accounting status, audit traceability gaps, duplicate-like risks, large or negative balances, and next internal review actions.
 - deal_briefing: include deal state, responsibility, shipment/tracking state, finance signal, customer-safe communication recommendation, and next internal action.
 - deal_risk_review: include operational risk flags, missing data, shipment risk, finance risk, blocked progress, and review-only recommendations.
 

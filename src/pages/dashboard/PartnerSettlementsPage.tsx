@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SettlementVisibilityPanel } from "@/features/accounting/components/SettlementVisibilityPanel";
+import { summarizeSettlementVisibility } from "@/features/accounting/lib/financeAuditPro";
 import {
   approvePartnerSettlement,
   calculatePartnerSettlement,
@@ -81,6 +83,7 @@ export default function PartnerSettlementsPage() {
     }),
     [settlements],
   );
+  const settlementVisibility = useMemo(() => summarizeSettlementVisibility(settlements), [settlements]);
 
   const handleCreate = async () => {
     if (!selectedPartner || submitting) return;
@@ -149,6 +152,8 @@ export default function PartnerSettlementsPage() {
           <p className="mt-3 text-3xl font-bold">{totals.disputed}</p>
         </BentoCard>
       </div>
+
+      <SettlementVisibilityPanel summary={settlementVisibility} t={t} formatMoney={formatMoney} />
 
       {canManage ? (
         <BentoCard className="space-y-4">

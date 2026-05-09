@@ -8,8 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialEntries } from "@/domain/accounting/service";
+import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialEditRequests, loadFinancialEntries } from "@/domain/accounting/service";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
+import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
+import {
+  analyzeFinancialRisk,
+  buildFinanceAuditCsv,
+  prepareFinanceAuditExportRows,
+} from "@/features/accounting/lib/financeAuditPro";
 import { loadDeals } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
@@ -21,6 +27,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 type FinanceAiContext = {
   focusDeal: string | null;
+  riskState?: string;
+  riskFlags?: string[];
+  pendingEditRequests?: number;
   totals: {
     income: number;
     expense: number;
@@ -44,6 +53,8 @@ type FinanceAiContext = {
     entryDate: string;
   }>;
 };
+
+type FinanceAiMode = "finance_audit_review" | "customer_balance_review" | "settlement_review" | "accounting_risk_briefing";
 
 const buildLocalFinanceReview = (context: FinanceAiContext, lang: string) => {
   const incomplete = context.entries.filter(
@@ -77,6 +88,7 @@ export default function AccountingPage() {
   const [searchParams] = useSearchParams();
   const focusDeal = searchParams.get("deal");
   const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
+  const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof loadFinancialEditRequests>>>([]);
   const [deals, setDeals] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +105,7 @@ export default function AccountingPage() {
   const deferredSearch = useDeferredValue(search);
   const [loadError, setLoadError] = useState("");
   const [aiReview, setAiReview] = useState("");
+  const [aiReviewTitle, setAiReviewTitle] = useState("");
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiUsedFallback, setAiUsedFallback] = useState(false);
 
@@ -100,8 +113,13 @@ export default function AccountingPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const [entriesData, dealsData] = await Promise.all([loadFinancialEntries(), loadDeals()]);
+      const [entriesData, editRequestData, dealsData] = await Promise.all([
+        loadFinancialEntries(),
+        loadFinancialEditRequests(),
+        loadDeals(),
+      ]);
       setEntries(entriesData);
+      setEditRequests(editRequestData);
       setDeals(dealsData);
     } catch (error) {
       logOperationalError("accounting_load", error);
@@ -141,6 +159,19 @@ export default function AccountingPage() {
   }, [deferredSearch, entries, focusDeal]);
   const dealEntries = visibleEntries.filter((row) => row.scope === "deal" || row.scope === "customer");
   const globalEntries = !focusDeal ? visibleEntries.filter((row) => row.scope === "global") : [];
+  const visibleEditRequests = useMemo(
+    () =>
+      editRequests.filter((request) => {
+        if (focusDeal && request.dealNumber !== focusDeal) return false;
+        const visibleEntryIds = new Set(visibleEntries.map((entry) => entry.id));
+        return request.financialEntryId ? visibleEntryIds.has(request.financialEntryId) : true;
+      }),
+    [editRequests, focusDeal, visibleEntries],
+  );
+  const financeRiskAnalysis = useMemo(
+    () => analyzeFinancialRisk(visibleEntries, visibleEditRequests),
+    [visibleEditRequests, visibleEntries],
+  );
 
   const totals = useMemo(() => {
     const summary = summarizeFinancialEntries(visibleEntries);
@@ -173,6 +204,9 @@ export default function AccountingPage() {
   const financeAiContext = useMemo<FinanceAiContext>(
     () => ({
       focusDeal,
+      riskState: financeRiskAnalysis.state,
+      riskFlags: financeRiskAnalysis.riskFlags,
+      pendingEditRequests: financeRiskAnalysis.pendingEditRequests,
       totals,
       entries: visibleEntries.slice(0, 20).map((entry) => ({
         entryNumber: entry.entryNumber,
@@ -189,12 +223,13 @@ export default function AccountingPage() {
         entryDate: entry.entryDate,
       })),
     }),
-    [focusDeal, totals, visibleEntries],
+    [financeRiskAnalysis, focusDeal, totals, visibleEntries],
   );
 
-  const handleFinanceAiReview = async () => {
+  const handleFinanceAiReview = async (mode: FinanceAiMode = "finance_audit_review") => {
     if (aiReviewLoading) return;
 
+    setAiReviewTitle(t(`accounting.pro.aiActions.${mode}`));
     setAiReviewLoading(true);
     setAiUsedFallback(false);
 
@@ -214,7 +249,7 @@ export default function AccountingPage() {
           responseLanguage,
           languageInstruction: `Respond in ${responseLanguage} only.`,
           userRole: profile?.role,
-          analysisMode: "finance_audit_review",
+          analysisMode: mode,
           financeContext: financeAiContext,
         },
       });
@@ -322,6 +357,29 @@ export default function AccountingPage() {
         ? `${t("accounting.toasts.exportSuccess")} ${focusDeal}`
         : t("accounting.toasts.exportSuccess"),
     );
+  };
+
+  const handleExportAuditCsv = () => {
+    if (visibleEntries.length === 0) {
+      const message = t("accounting.toasts.exportEmpty");
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
+
+    const exported = downloadCsv(
+      `lourex-finance-audit-${focusDeal || "all"}.csv`,
+      buildFinanceAuditCsv(prepareFinanceAuditExportRows(visibleEntries, visibleEditRequests)),
+    );
+
+    if (!exported) {
+      const message = t("accounting.toasts.exportUnavailable");
+      setLoadError(message);
+      toast.error(message);
+      return;
+    }
+
+    toast.success(t("accounting.pro.auditExported"));
   };
 
   const handleExportPdf = () => {
@@ -538,6 +596,8 @@ export default function AccountingPage() {
                 {t("accounting.globalHint")}
               </div>
             )}
+
+            <FinanceAuditProPanel analysis={financeRiskAnalysis} t={t} locale={locale} />
           </BentoCard>
 
           <BentoCard className="space-y-4">
@@ -553,16 +613,24 @@ export default function AccountingPage() {
                   </p>
                 </div>
               </div>
-              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview()}>
+              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview("finance_audit_review")}>
                 {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Sparkles className="me-2 h-4 w-4" />}
                 {lang === "ar" ? "راجع القيود" : "Review entries"}
               </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(["customer_balance_review", "settlement_review", "accounting_risk_briefing"] as const).map((mode) => (
+                <Button key={mode} type="button" variant="outline" size="sm" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview(mode)}>
+                  {t(`accounting.pro.aiActions.${mode}`)}
+                </Button>
+              ))}
             </div>
             {aiUsedFallback ? (
               <div className="rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
                 {lang === "ar" ? "مساعد LOUREX AI غير متاح الآن. تم استخدام مراجعة محلية." : "LOUREX AI is unavailable right now. A local review was used."}
               </div>
             ) : null}
+            {aiReviewTitle ? <p className="text-xs font-semibold text-muted-foreground">{aiReviewTitle}</p> : null}
             {aiReview ? (
               <pre className="max-h-[24rem] whitespace-pre-wrap break-words rounded-[1rem] border border-primary/15 bg-secondary/15 p-4 font-sans text-sm leading-7 text-foreground">
                 {aiReview}
@@ -665,7 +733,7 @@ export default function AccountingPage() {
                 </span>
               </div>
               <div className="mt-4">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
                     <Input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
@@ -679,6 +747,9 @@ export default function AccountingPage() {
                   </Button>
                   <Button variant="outline" onClick={handleExportPdf}>
                     {t("common.exportPdf")}
+                  </Button>
+                  <Button variant="outline" onClick={handleExportAuditCsv}>
+                    {t("accounting.pro.exportAuditCsv")}
                   </Button>
                 </div>
               </div>
@@ -734,6 +805,16 @@ export default function AccountingPage() {
                     <span>{t("accounting.labels.reference")}: {row.referenceLabel || t("accounting.noReference")}</span>
                   </div>
                   <p className="mt-4 break-words text-sm leading-7 text-muted-foreground">{row.note || t("accounting.noNotes")}</p>
+                  <div className="mt-4 grid gap-3 rounded-[1.15rem] border border-border/50 bg-secondary/10 p-4 text-xs text-muted-foreground sm:grid-cols-3">
+                    <span>{t("accounting.pro.createdBy")}: {row.createdBy || t("common.notSpecified")}</span>
+                    <span>{t("accounting.pro.createdAt")}: {new Date(row.createdAt).toLocaleString(locale)}</span>
+                    <span>
+                      {t("accounting.pro.editRequestState")}:{" "}
+                      {visibleEditRequests.some((request) => request.financialEntryId === row.id && request.status === "pending")
+                        ? t("accounting.pro.states.pending_correction")
+                        : t("accounting.pro.states.locked")}
+                    </span>
+                  </div>
                   {row.locked ? (
                     <div className="mt-4 rounded-[1.15rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
                       <p className="font-medium">{t("accounting.lockedEntryTitle")}</p>
