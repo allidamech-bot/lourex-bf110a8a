@@ -65,21 +65,33 @@ const pageContextGuide: Record<string, string> = {
 };
 
 const purchaseRequestAssistantModes: Record<string, string> = {
+  purchase_request_analysis:
+    "Analyze readiness score, missing fields, customer questions, supplier brief needs, and risk notes for the selected purchase request.",
   purchase_request_summary:
     "Generate a short operational summary with product/category guess, customer need, current status, and recommended next action.",
+  missing_information_checklist:
+    "Identify missing or weak request details and produce a checklist of customer clarification questions.",
   purchase_request_missing_info:
     "Identify missing or weak request details, clarification questions for the customer, and optional low/medium/high severity notes.",
+  customer_reply_draft:
+    "Draft a professional customer-facing reply asking for missing details without promises or approvals.",
   purchase_request_customer_reply:
     "Draft a professional customer-facing reply that asks for missing details without promising exact price, delivery date, approval, or completion.",
+  supplier_brief:
+    "Draft a structured supplier sourcing brief with product, specs, quantity, destination, packaging/certificate questions, and notes.",
   purchase_request_supplier_brief:
     "Draft a structured supplier sourcing brief with product, specs, quantity, destination, packaging/certificate questions, and notes.",
   purchase_request_compliance_notes:
     "Draft advisory compliance notes only. Mention possible category-specific documents and final Lourex team review.",
 };
 
-const dashboardAssistantModes: Record<string, string> = {
+const operationalAssistantModes: Record<string, string> = {
   dashboard_daily_briefing:
     "Generate a concise internal daily operations briefing with executive summary, priorities, request review needs, conversion readiness, clarification follow-ups, shipment risks, financial review items, and suggested next actions.",
+  shipment_risk_review:
+    "Review shipment risk indicators such as stale activity, missing customer-visible notes, delayed stages, and draft a customer-safe update message.",
+  finance_audit_review:
+    "Review financial entries for suspicious or incomplete records, missing deal/customer references, weak notes, and locked-entry review risks.",
 };
 
 const jsonResponse = (req: Request, body: Record<string, unknown>, status = 200) =>
@@ -140,6 +152,8 @@ serve(async (req) => {
       formDraft,
       requestContext,
       dashboardContext,
+      shipmentContext,
+      financeContext,
     } = requestBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -184,7 +198,7 @@ serve(async (req) => {
     }
 
     const normalizedMessages = normalizeMessages(messages, message);
-    if (!normalizedMessages.length && analysisMode !== "purchase_request_analyzer") {
+    if (!normalizedMessages.length && typeof analysisMode !== "string") {
       return jsonResponse(req, { error: "A non-empty message is required" }, 400);
     }
 
@@ -194,12 +208,12 @@ serve(async (req) => {
     const isPurchaseRequestAnalyzer = analysisMode === "purchase_request_analyzer";
     const normalizedAnalysisMode = typeof analysisMode === "string" ? analysisMode : "general_chat";
     const isPurchaseRequestAssistantMode = normalizedAnalysisMode in purchaseRequestAssistantModes;
-    const isDashboardAssistantMode = normalizedAnalysisMode in dashboardAssistantModes;
+    const isOperationalAssistantMode = normalizedAnalysisMode in operationalAssistantModes;
     const analysisModeLabel = isPurchaseRequestAnalyzer
       ? "purchase_request_analyzer"
       : isPurchaseRequestAssistantMode
         ? normalizedAnalysisMode
-        : isDashboardAssistantMode
+        : isOperationalAssistantMode
           ? normalizedAnalysisMode
           : "general_chat";
 
@@ -312,25 +326,24 @@ Rules:
 - Use the user's locale/language when clear: ${normalizedLocale}. If Arabic is appropriate, use clear Modern Standard Arabic.
 - Keep the output compact and operational.`;
 
-    const dashboardAssistantPrompt = `You are LOUREX AI Daily Briefing assistant for the internal LOUREX dashboard home page.
+    const operationalAssistantPrompt = `You are LOUREX AI Brain v1, a read-only operational review assistant for internal LOUREX workflows.
 
-Return concise markdown/plain text for the dashboard_daily_briefing mode.
+Return concise markdown/plain text for the selected mode only.
 
 Action mode:
-- ${normalizedAnalysisMode}: ${dashboardAssistantModes[normalizedAnalysisMode] || "General dashboard briefing."}
+- ${normalizedAnalysisMode}: ${operationalAssistantModes[normalizedAnalysisMode] || "General operational review."}
 
-Safe aggregated dashboard context:
-${JSON.stringify(dashboardContext || {})}
+Safe context:
+${JSON.stringify({
+  dashboardContext: dashboardContext || null,
+  shipmentContext: shipmentContext || null,
+  financeContext: financeContext || null,
+})}
 
-Required sections:
-- Executive summary
-- Operational priorities
-- Requests needing review
-- Requests ready for conversion
-- Requests awaiting clarification
-- Shipment/tracking risks if available
-- Financial review items if available
-- Suggested next actions
+Required behavior by mode:
+- dashboard_daily_briefing: include executive summary, operational priorities, request review needs, shipment/tracking risks, financial review items, and suggested next actions.
+- shipment_risk_review: include current shipment summary, stale/delay risks, missing customer-visible note concerns, internal follow-up checklist, and one customer-safe update draft.
+- finance_audit_review: include incomplete entries, suspicious values or descriptions, missing deal/customer references, locked-entry correction concerns, and review-only recommendations.
 
 Rules:
 - Output is advisory only and final decisions remain with the Lourex team.
@@ -358,10 +371,10 @@ Rules:
                 { role: "system", content: systemPrompt },
                 { role: "user", content: purchaseRequestAssistantPrompt },
               ]
-            : isDashboardAssistantMode
+            : isOperationalAssistantMode
               ? [
                   { role: "system", content: systemPrompt },
-                  { role: "user", content: dashboardAssistantPrompt },
+                  { role: "user", content: operationalAssistantPrompt },
                 ]
               : [{ role: "system", content: systemPrompt }, ...normalizedMessages],
       }),

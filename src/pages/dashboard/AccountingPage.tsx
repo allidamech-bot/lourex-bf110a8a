@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { FilePenLine, Info, Receipt, Route, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { FilePenLine, Info, Loader2, Receipt, Route, Sparkles, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,9 +17,61 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildAccountingEntriesCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting } from "@/features/auth/rbac";
+import { supabase } from "@/integrations/supabase/client";
+
+type FinanceAiContext = {
+  focusDeal: string | null;
+  totals: {
+    income: number;
+    expense: number;
+    net: number;
+    lockedCount: number;
+    count: number;
+    currencyLabel: string;
+  };
+  entries: Array<{
+    entryNumber: string;
+    dealNumber?: string | null;
+    customerName?: string | null;
+    scope: string;
+    type: string;
+    amount: number;
+    currency: string;
+    locked: boolean;
+    category?: string | null;
+    counterparty?: string | null;
+    note?: string | null;
+    entryDate: string;
+  }>;
+};
+
+const buildLocalFinanceReview = (context: FinanceAiContext, lang: string) => {
+  const incomplete = context.entries.filter(
+    (entry) => !entry.dealNumber && entry.scope !== "global" || !entry.category || !entry.counterparty || !entry.note,
+  );
+  const highValue = context.entries.filter((entry) => entry.amount >= 50_000);
+
+  return lang === "ar"
+    ? [
+        "مراجعة مالية إرشادية",
+        `- عدد القيود ضمن النطاق: ${context.totals.count}`,
+        `- القيود الناقصة أو الضعيفة: ${incomplete.length}`,
+        `- قيود عالية القيمة تحتاج مراجعة: ${highValue.length}`,
+        `- القيود المقفلة: ${context.totals.lockedCount}. أي تصحيح يجب أن يمر عبر طلب تعديل، وليس تعديلا مباشرا.`,
+        "- توصية: تحقق من ربط الصفقة/العميل، وصف القيد، الطرف المقابل، والفئة قبل إصدار أي كشف نهائي.",
+      ].join("\n")
+    : [
+        "Advisory finance review",
+        `- Entries in scope: ${context.totals.count}`,
+        `- Incomplete or weak entries: ${incomplete.length}`,
+        `- High-value entries needing review: ${highValue.length}`,
+        `- Locked entries: ${context.totals.lockedCount}. Corrections should go through edit requests, not direct mutation.`,
+        "- Recommendation: verify deal/customer links, entry notes, counterparty, and category before issuing any final statement.",
+      ].join("\n");
+};
 
 export default function AccountingPage() {
-  const { locale, t } = useI18n();
+  const { lang, locale, t } = useI18n();
   const { profile } = useAuthSession();
   const canCreateAccountingEntries = profile?.role ? canManageAccounting(profile.role) : false;
   const [searchParams] = useSearchParams();
@@ -40,6 +92,9 @@ export default function AccountingPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [loadError, setLoadError] = useState("");
+  const [aiReview, setAiReview] = useState("");
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
+  const [aiUsedFallback, setAiUsedFallback] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -114,6 +169,68 @@ export default function AccountingPage() {
     () => (focusedDeal ? buildDealStatementSummary(focusedDeal, focusedDealEntries) : null),
     [focusedDeal, focusedDealEntries],
   );
+
+  const financeAiContext = useMemo<FinanceAiContext>(
+    () => ({
+      focusDeal,
+      totals,
+      entries: visibleEntries.slice(0, 20).map((entry) => ({
+        entryNumber: entry.entryNumber,
+        dealNumber: entry.dealNumber,
+        customerName: entry.customerName,
+        scope: entry.scope,
+        type: entry.type,
+        amount: entry.amount,
+        currency: entry.currency,
+        locked: entry.locked,
+        category: entry.category,
+        counterparty: entry.counterparty,
+        note: entry.note,
+        entryDate: entry.entryDate,
+      })),
+    }),
+    [focusDeal, totals, visibleEntries],
+  );
+
+  const handleFinanceAiReview = async () => {
+    if (aiReviewLoading) return;
+
+    setAiReviewLoading(true);
+    setAiUsedFallback(false);
+
+    try {
+      const responseLanguage = lang === "ar" ? "Arabic" : "English";
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message:
+            lang === "ar"
+              ? "راجع القيود المالية الحالية باللغة العربية فقط دون تعديل أي بيانات."
+              : "Review the current financial entries in English only without modifying any data.",
+          messages: [],
+          pageContext: "dashboard_accounting",
+          route: window.location.pathname,
+          locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
+          userRole: profile?.role,
+          analysisMode: "finance_audit_review",
+          financeContext: financeAiContext,
+        },
+      });
+
+      if (error) throw error;
+      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!reply) throw new Error("Empty finance audit review");
+      setAiReview(reply);
+    } catch (error) {
+      logOperationalError("finance_ai_audit_review", error, { focusDeal });
+      setAiUsedFallback(true);
+      setAiReview(buildLocalFinanceReview(financeAiContext, lang));
+    } finally {
+      setAiReviewLoading(false);
+    }
+  };
 
   const handleCreateEntry = async () => {
     if (submitting) return;
@@ -421,6 +538,36 @@ export default function AccountingPage() {
                 {t("accounting.globalHint")}
               </div>
             )}
+          </BentoCard>
+
+          <BentoCard className="space-y-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <h2 className="break-words font-serif text-2xl font-semibold">
+                    {lang === "ar" ? "مراجعة مالية بالذكاء الاصطناعي" : "AI finance audit review"}
+                  </h2>
+                  <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
+                    {lang === "ar" ? "مراجعة إرشادية فقط ولا تنشئ أو تعدل قيودا مالية." : "Read-only review. It never creates or edits financial entries."}
+                  </p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview()}>
+                {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Sparkles className="me-2 h-4 w-4" />}
+                {lang === "ar" ? "راجع القيود" : "Review entries"}
+              </Button>
+            </div>
+            {aiUsedFallback ? (
+              <div className="rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+                {lang === "ar" ? "مساعد LOUREX AI غير متاح الآن. تم استخدام مراجعة محلية." : "LOUREX AI is unavailable right now. A local review was used."}
+              </div>
+            ) : null}
+            {aiReview ? (
+              <pre className="max-h-[24rem] whitespace-pre-wrap break-words rounded-[1rem] border border-primary/15 bg-secondary/15 p-4 font-sans text-sm leading-7 text-foreground">
+                {aiReview}
+              </pre>
+            ) : null}
           </BentoCard>
 
           <BentoCard className="space-y-4">

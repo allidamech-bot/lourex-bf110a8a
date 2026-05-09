@@ -49,9 +49,13 @@ type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
 type TransferPaymentType = "first_payment" | "second_payment" | "full_payment";
 type PurchaseRequestAiMode =
+    | "purchase_request_analysis"
     | "purchase_request_summary"
+    | "missing_information_checklist"
     | "purchase_request_missing_info"
+    | "customer_reply_draft"
     | "purchase_request_customer_reply"
+    | "supplier_brief"
     | "purchase_request_supplier_brief"
     | "purchase_request_compliance_notes";
 
@@ -60,16 +64,24 @@ const purchaseRequestAiActions: Array<{
     label: string;
     labelAr: string;
 }> = [
+    { mode: "purchase_request_analysis", label: "Readiness Analysis", labelAr: "تحليل الجاهزية" },
     { mode: "purchase_request_summary", label: "AI Summary", labelAr: "ملخص ذكي" },
-    { mode: "purchase_request_missing_info", label: "Missing Info", labelAr: "المعلومات الناقصة" },
-    { mode: "purchase_request_customer_reply", label: "Generate Customer Reply", labelAr: "صياغة رد للعميل" },
-    { mode: "purchase_request_supplier_brief", label: "Supplier Brief", labelAr: "مسودة للمورد" },
+    { mode: "missing_information_checklist", label: "Missing Info", labelAr: "المعلومات الناقصة" },
+    { mode: "customer_reply_draft", label: "Customer Reply Draft", labelAr: "مسودة رد للعميل" },
+    { mode: "supplier_brief", label: "Supplier Brief", labelAr: "مسودة للمورد" },
     { mode: "purchase_request_compliance_notes", label: "Compliance Notes", labelAr: "ملاحظات الامتثال" },
 ];
 
 const getAiActionLabel = (mode: PurchaseRequestAiMode, lang: string) =>
     purchaseRequestAiActions.find((action) => action.mode === mode)?.[lang === "ar" ? "labelAr" : "label"] ||
     purchaseRequestAiActions[0].label;
+
+const normalizePurchaseRequestAiMode = (mode: PurchaseRequestAiMode): PurchaseRequestAiMode => {
+    if (mode === "missing_information_checklist") return "purchase_request_missing_info";
+    if (mode === "customer_reply_draft") return "purchase_request_customer_reply";
+    if (mode === "supplier_brief") return "purchase_request_supplier_brief";
+    return mode;
+};
 
 const valueOrDash = (value: unknown) => {
     if (typeof value === "string") return value.trim() || "-";
@@ -179,11 +191,35 @@ const inferComplianceNotes = (row: PurchaseRequestRow, lang: string) => {
 };
 
 const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow, lang: string) => {
+    const normalizedMode = normalizePurchaseRequestAiMode(mode);
     const missing = findMissingRequestInfo(row, lang);
     const compliance = inferComplianceNotes(row, lang);
     const isArabic = lang === "ar";
 
-    if (mode === "purchase_request_summary") {
+    if (normalizedMode === "purchase_request_analysis") {
+        const readinessScore = Math.max(0, Math.min(100, 100 - missing.length * 10));
+        return isArabic
+            ? [
+                  `تحليل جاهزية الطلب ${row.requestNumber}`,
+                  `- درجة الجاهزية: ${readinessScore}/100`,
+                  `- الحقول الناقصة: ${missing.length ? missing.join("، ") : "لا توجد فجوات واضحة"}`,
+                  `- أسئلة مقترحة للعميل: تأكيد المواصفات الفنية، التغليف، الشهادات المطلوبة، والسعر المستهدف إن وجد.`,
+                  `- موجز للمورد: المنتج ${valueOrDash(row.productName)}، الكمية ${valueOrDash(row.quantity)}، الوجهة ${valueOrDash(row.destination)}، والمرفقات ${row.attachments.length}.`,
+                  `- ملاحظات مخاطر: ${compliance[0]}`,
+                  `- هذا التحليل إرشادي فقط ولا يعتمد أو يغير حالة الطلب.`,
+              ].join("\n")
+            : [
+                  `Readiness analysis for ${row.requestNumber}`,
+                  `- Readiness score: ${readinessScore}/100`,
+                  `- Missing fields: ${missing.length ? missing.join(", ") : "No obvious gaps"}`,
+                  `- Suggested customer questions: confirm technical specs, packaging, required certificates, and target price if available.`,
+                  `- Supplier brief seed: product ${valueOrDash(row.productName)}, quantity ${valueOrDash(row.quantity)}, destination ${valueOrDash(row.destination)}, attachments ${row.attachments.length}.`,
+                  `- Risk notes: ${compliance[0]}`,
+                  `- This is advisory only and does not approve or change the request status.`,
+              ].join("\n");
+    }
+
+    if (normalizedMode === "purchase_request_summary") {
         return isArabic
             ? [
                   `ملخص تشغيلي للطلب ${row.requestNumber}`,
@@ -207,14 +243,14 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
               ].join("\n");
     }
 
-    if (mode === "purchase_request_missing_info") {
+    if (normalizedMode === "purchase_request_missing_info") {
         const list = missing.length ? missing : [isArabic ? "لا توجد فجوات واضحة، لكن يفضل تأكيد المواصفات النهائية مع العميل." : "No obvious gaps, but final specifications should still be confirmed with the customer."];
         return isArabic
             ? [`المعلومات الناقصة أو الضعيفة:`, ...list.map((item) => `- ${item}`), `\nأسئلة مقترحة:`, `- هل توجد مواصفات فنية أو معيار جودة محدد؟`, `- هل توجد متطلبات تغليف أو شهادات مطلوبة؟`, `- هل لدى العميل سعر مستهدف أو موعد توريد مفضل؟`].join("\n")
             : [`Missing or weak information:`, ...list.map((item) => `- ${item}`), `\nSuggested questions:`, `- Are there technical specifications or a target quality standard?`, `- Are packaging requirements or certificates required?`, `- Does the customer have a target price or preferred supply date?`].join("\n");
     }
 
-    if (mode === "purchase_request_customer_reply") {
+    if (normalizedMode === "purchase_request_customer_reply") {
         const missingText = missing.length ? missing.join(", ") : isArabic ? "تأكيد المواصفات النهائية" : "final specification confirmation";
         return isArabic
             ? [
@@ -231,7 +267,7 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
               ].join("\n\n");
     }
 
-    if (mode === "purchase_request_supplier_brief") {
+    if (normalizedMode === "purchase_request_supplier_brief") {
         return isArabic
             ? [
                   `مسودة brief للمورد`,

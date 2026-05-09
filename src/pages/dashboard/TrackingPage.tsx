@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck } from "lucide-react";
+import { ArrowRightLeft, Loader2, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck, Sparkles } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -18,6 +18,73 @@ import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
+import { supabase } from "@/integrations/supabase/client";
+
+type ShipmentAiContext = {
+  trackingId: string;
+  dealNumber?: string | null;
+  stage: string;
+  nextStage?: string | null;
+  destination: string;
+  lastUpdated: string;
+  customerVisibleNote?: string | null;
+  timelineCount: number;
+  recentTimeline: Array<{
+    stageCode: string;
+    visibility: string;
+    customerNote?: string;
+    occurredAt: string;
+  }>;
+};
+
+const buildShipmentAiContext = (
+  shipment: Awaited<ReturnType<typeof loadShipments>>[number],
+  nextStageCode: string | null,
+): ShipmentAiContext => ({
+  trackingId: shipment.trackingId,
+  dealNumber: shipment.dealNumber,
+  stage: shipment.stage,
+  nextStage: nextStageCode,
+  destination: shipment.destination,
+  lastUpdated: shipment.updatedAt,
+  customerVisibleNote: shipment.customerVisibleNote,
+  timelineCount: shipment.timeline.length,
+  recentTimeline: shipment.timeline.slice(-5).map((event) => ({
+    stageCode: event.stageCode,
+    visibility: event.visibility,
+    customerNote: event.customerNote,
+    occurredAt: event.occurredAt,
+  })),
+});
+
+const buildLocalShipmentReview = (context: ShipmentAiContext, lang: string) => {
+  const daysStale = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(context.lastUpdated).getTime()) / 86_400_000),
+  );
+  const hasCustomerNote = Boolean(context.customerVisibleNote?.trim()) ||
+    context.recentTimeline.some((event) => event.visibility === "customer_visible" && event.customerNote?.trim());
+
+  return lang === "ar"
+    ? [
+        `مراجعة مخاطر الشحنة ${context.trackingId}`,
+        `- المرحلة الحالية: ${context.stage}`,
+        `- المرحلة التالية: ${context.nextStage || "لا توجد مرحلة تالية"}`,
+        `- آخر تحديث منذ ${daysStale} يوم/أيام.`,
+        `- ملاحظة للعميل: ${hasCustomerNote ? "متوفرة" : "غير متوفرة وتحتاج صياغة آمنة"}.`,
+        `- توصية مراجعة: تحقق من سبب التأخير قبل تحديث العميل، ولا تغير المرحلة إلا بعد تأكيد تشغيلي.`,
+        `- مسودة رسالة آمنة للعميل: نتابع شحنتكم حالياً في مرحلة ${context.stage}، وسنشارككم أي تحديث مؤكد فور توفره.`,
+      ].join("\n")
+    : [
+        `Shipment risk review for ${context.trackingId}`,
+        `- Current stage: ${context.stage}`,
+        `- Next stage: ${context.nextStage || "No next stage"}`,
+        `- Last update was ${daysStale} day(s) ago.`,
+        `- Customer-visible note: ${hasCustomerNote ? "present" : "missing and should be drafted safely"}.`,
+        `- Review recommendation: verify the delay reason before customer updates, and do not advance the stage without operational confirmation.`,
+        `- Customer-safe draft: We are currently following your shipment at the ${context.stage} stage and will share confirmed updates as soon as available.`,
+      ].join("\n");
+};
 
 export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
@@ -35,6 +102,9 @@ export default function TrackingPage() {
   const deferredSearch = useDeferredValue(search);
   const [internalNote, setInternalNote] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  const [aiReview, setAiReview] = useState("");
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
+  const [aiUsedFallback, setAiUsedFallback] = useState(false);
   const selectedTracking = searchParams.get("tracking");
   const selectedDeal = searchParams.get("deal");
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -127,6 +197,47 @@ export default function TrackingPage() {
   const searchPlaceholder = isPartnerWorkspace
     ? t("tracking.searchAssignedPlaceholder")
     : t("tracking.searchPlaceholder");
+
+  const handleShipmentRiskReview = async () => {
+    if (!activeShipment || aiReviewLoading) return;
+
+    const shipmentContext = buildShipmentAiContext(activeShipment, nextStageCode);
+    setAiReviewLoading(true);
+    setAiUsedFallback(false);
+
+    try {
+      const responseLanguage = lang === "ar" ? "Arabic" : "English";
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message:
+            lang === "ar"
+              ? `راجع مخاطر الشحنة ${activeShipment.trackingId} باللغة العربية فقط.`
+              : `Review shipment risk for ${activeShipment.trackingId} in English only.`,
+          messages: [],
+          pageContext: "dashboard_tracking",
+          route: window.location.pathname,
+          locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
+          userRole: profile?.role,
+          analysisMode: "shipment_risk_review",
+          shipmentContext,
+        },
+      });
+
+      if (error) throw error;
+      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!reply) throw new Error("Empty shipment risk review");
+      setAiReview(reply);
+    } catch (error) {
+      logOperationalError("shipment_ai_risk_review", error, { trackingId: activeShipment.trackingId });
+      setAiUsedFallback(true);
+      setAiReview(buildLocalShipmentReview(shipmentContext, lang));
+    } finally {
+      setAiReviewLoading(false);
+    }
+  };
 
   const handleAdvance = async () => {
     if (!activeShipment || !nextStageCode || !nextStage) return;
@@ -243,6 +354,38 @@ export default function TrackingPage() {
           <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentStage?.description}</p>
           {currentStage?.owner ? <p className="mt-3 text-sm font-medium text-primary/90">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
         </div>
+
+        {isInternal ? (
+          <div className="rounded-[1.35rem] border border-primary/20 bg-[#080808] p-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold">
+                    {lang === "ar" ? "مراجعة مخاطر الشحنة بالذكاء الاصطناعي" : "AI shipment risk review"}
+                  </p>
+                  <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                    {lang === "ar" ? "مراجعة إرشادية فقط ولا تغيّر مراحل الشحن." : "Read-only review. It never advances shipment stages."}
+                  </p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" size="sm" disabled={aiReviewLoading} onClick={() => void handleShipmentRiskReview()}>
+                {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Sparkles className="me-2 h-4 w-4" />}
+                {lang === "ar" ? "راجع المخاطر" : "Review risk"}
+              </Button>
+            </div>
+            {aiUsedFallback ? (
+              <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+                {lang === "ar" ? "مساعد LOUREX AI غير متاح الآن. تم استخدام مراجعة محلية." : "LOUREX AI is unavailable right now. A local review was used."}
+              </div>
+            ) : null}
+            {aiReview ? (
+              <pre className="mt-4 max-h-[22rem] whitespace-pre-wrap break-words rounded-[1rem] border border-primary/15 bg-secondary/15 p-4 font-sans text-sm leading-7 text-foreground">
+                {aiReview}
+              </pre>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="space-y-3">
           {[
