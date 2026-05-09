@@ -14,6 +14,8 @@ import { useSearchParams } from "react-router-dom";
 
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ShipmentIntelligencePanel } from "@/features/shipments/components/ShipmentIntelligencePanel";
+import { analyzeShipmentIntelligence } from "@/features/shipments/lib/shipmentIntelligence";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -240,6 +242,10 @@ export default function CustomerTrackingPage() {
       : -1;
   const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
   const latestShipmentEvent = activeShipment?.shipmentEvents[activeShipment.shipmentEvents.length - 1] || null;
+  const shipmentAnalysis = useMemo(
+      () => (activeShipment ? analyzeShipmentIntelligence(activeShipment) : null),
+      [activeShipment],
+  );
 
   const setSelectedTracking = useCallback(
     (trackingId: string, revealDetails = true, replace = false) => {
@@ -696,6 +702,18 @@ export default function CustomerTrackingPage() {
                   </div>
               )}
             </BentoCard>
+
+            {shipmentAnalysis ? (
+              <BentoCard>
+                <ShipmentIntelligencePanel
+                  shipment={activeShipment}
+                  analysis={shipmentAnalysis}
+                  lang={lang}
+                  locale={locale}
+                  t={t}
+                />
+              </BentoCard>
+            ) : null}
 
             <BentoCard>
               <ShipmentTimeline

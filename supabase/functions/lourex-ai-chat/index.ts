@@ -94,6 +94,12 @@ const operationalAssistantModes: Record<string, string> = {
     "Generate a concise internal daily operations briefing with executive summary, priorities, request review needs, conversion readiness, clarification follow-ups, shipment risks, financial review items, and suggested next actions.",
   shipment_risk_review:
     "Review shipment risk indicators such as stale activity, missing customer-visible notes, delayed stages, and draft a customer-safe update message.",
+  shipment_briefing:
+    "Generate a concise internal shipment briefing covering current stage, health signal, stale-stage risk, document checklist needs, customer communication recommendation, and next best internal action.",
+  shipment_customer_update_draft:
+    "Draft a concise customer-safe shipment update based only on confirmed stage/context. Do not imply that the message was sent or that a stage was updated.",
+  shipment_document_review:
+    "Review shipment document checklist signals, missing or recommended documents, customs exposure, and operational follow-up needs. Advisory only.",
   finance_audit_review:
     "Review financial entries for suspicious or incomplete records, missing deal/customer references, weak notes, and locked-entry review risks.",
   deal_briefing:
@@ -351,6 +357,9 @@ ${JSON.stringify({
 Required behavior by mode:
 - dashboard_daily_briefing: include executive summary, operational priorities, request review needs, shipment/tracking risks, financial review items, and suggested next actions.
 - shipment_risk_review: include current shipment summary, stale/delay risks, missing customer-visible note concerns, internal follow-up checklist, and one customer-safe update draft.
+- shipment_briefing: include current stage, health state, stale-stage signal, document checklist concerns, customer-safe communication recommendation, and next internal action.
+- shipment_customer_update_draft: produce only a review-ready customer-safe draft plus a short internal note about what must be verified before sending.
+- shipment_document_review: include required/recommended document gaps, customs-sensitive items, and review-only follow-up checklist.
 - finance_audit_review: include incomplete entries, suspicious values or descriptions, missing deal/customer references, locked-entry correction concerns, and review-only recommendations.
 - deal_briefing: include deal state, responsibility, shipment/tracking state, finance signal, customer-safe communication recommendation, and next internal action.
 - deal_risk_review: include operational risk flags, missing data, shipment risk, finance risk, blocked progress, and review-only recommendations.

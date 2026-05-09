@@ -3,6 +3,12 @@ import { ArrowRightLeft, Loader2, PackageSearch, RefreshCcw, Route, Search, Send
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ShipmentIntelligencePanel } from "@/features/shipments/components/ShipmentIntelligencePanel";
+import {
+  analyzeShipmentIntelligence,
+  buildShipmentIntelligenceAiContext,
+  type ShipmentIntelligenceAnalysis,
+} from "@/features/shipments/lib/shipmentIntelligence";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,6 +92,51 @@ const buildLocalShipmentReview = (context: ShipmentAiContext, lang: string) => {
       ].join("\n");
 };
 
+type ShipmentIntelligenceAiMode = "shipment_briefing" | "shipment_customer_update_draft" | "shipment_document_review";
+
+const buildLocalShipmentIntelligenceReview = (
+  shipment: Awaited<ReturnType<typeof loadShipments>>[number],
+  analysis: ShipmentIntelligenceAnalysis,
+  mode: ShipmentIntelligenceAiMode,
+  lang: string,
+) => {
+  if (lang === "ar") {
+    const heading =
+      mode === "shipment_customer_update_draft"
+        ? "مسودة تحديث آمن للعميل"
+        : mode === "shipment_document_review"
+          ? "مراجعة مستندات الشحنة"
+          : "موجز ذكاء الشحنة";
+
+    return [
+      `${heading}: ${shipment.trackingId}`,
+      `- الحالة الصحية: ${analysis.healthState}`,
+      `- درجة الصحة: ${analysis.healthScore}%.`,
+      `- آخر تحديث تشغيلي منذ ${analysis.staleDays} يوم/أيام.`,
+      `- إشارات المراجعة: ${analysis.riskFlags.length ? analysis.riskFlags.join(", ") : "لا توجد إشارات حرجة"}.`,
+      "- الإجراء الداخلي التالي: راجع إشارات المخاطر والمستندات قبل أي تحديث مرحلة أو رسالة للعميل.",
+      "- مسودة آمنة للعميل: نتابع شحنتكم حالياً في المرحلة المسجلة، وسنشارك أي تحديث مؤكد فور توفره.",
+    ].join("\n");
+  }
+
+  const heading =
+    mode === "shipment_customer_update_draft"
+      ? "Customer-safe shipment update draft"
+      : mode === "shipment_document_review"
+        ? "Shipment document review"
+        : "Shipment intelligence briefing";
+
+  return [
+    `${heading}: ${shipment.trackingId}`,
+    `- Health state: ${analysis.healthState}`,
+    `- Health score: ${analysis.healthScore}%.`,
+    `- Last operational update was ${analysis.staleDays} day(s) ago.`,
+    `- Review flags: ${analysis.riskFlags.length ? analysis.riskFlags.join(", ") : "no critical flags"}.`,
+    "- Next internal action: review risk and document signals before any stage update or customer message.",
+    "- Customer-safe draft: We are following your shipment at the current confirmed stage and will share verified updates as soon as they are available.",
+  ].join("\n");
+};
+
 export default function TrackingPage() {
   const { lang, locale, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -103,6 +154,7 @@ export default function TrackingPage() {
   const [internalNote, setInternalNote] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const [aiReview, setAiReview] = useState("");
+  const [aiReviewTitle, setAiReviewTitle] = useState("");
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiUsedFallback, setAiUsedFallback] = useState(false);
   const selectedTracking = searchParams.get("tracking");
@@ -170,6 +222,10 @@ export default function TrackingPage() {
   }, [activeShipment]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
+  const shipmentAnalysis = useMemo(
+    () => (activeShipment ? analyzeShipmentIntelligence(activeShipment) : null),
+    [activeShipment],
+  );
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
   const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
   const nextStageCode = nextStageDefinition?.code || null;
@@ -202,6 +258,7 @@ export default function TrackingPage() {
     if (!activeShipment || aiReviewLoading) return;
 
     const shipmentContext = buildShipmentAiContext(activeShipment, nextStageCode);
+    setAiReviewTitle(lang === "ar" ? "مراجعة مخاطر الشحنة" : "Shipment risk review");
     setAiReviewLoading(true);
     setAiUsedFallback(false);
 
@@ -234,6 +291,51 @@ export default function TrackingPage() {
       logOperationalError("shipment_ai_risk_review", error, { trackingId: activeShipment.trackingId });
       setAiUsedFallback(true);
       setAiReview(buildLocalShipmentReview(shipmentContext, lang));
+    } finally {
+      setAiReviewLoading(false);
+    }
+  };
+
+  const handleShipmentIntelligenceAi = async (mode: ShipmentIntelligenceAiMode) => {
+    if (!activeShipment || !shipmentAnalysis || aiReviewLoading) return;
+
+    const shipmentContext = buildShipmentIntelligenceAiContext(activeShipment, shipmentAnalysis);
+    const responseLanguage = lang === "ar" ? "Arabic" : "English";
+    setAiReviewTitle(t(`tracking.intelligence.aiActions.${mode}`));
+    setAiReviewLoading(true);
+    setAiUsedFallback(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+        body: {
+          message:
+            lang === "ar"
+              ? `راجع ذكاء الشحنة ${activeShipment.trackingId} باللغة العربية فقط.`
+              : `Review shipment intelligence for ${activeShipment.trackingId} in English only.`,
+          messages: [],
+          pageContext: "dashboard_tracking",
+          route: window.location.pathname,
+          locale,
+          language: lang,
+          responseLanguage,
+          languageInstruction: `Respond in ${responseLanguage} only.`,
+          userRole: profile?.role,
+          analysisMode: mode,
+          shipmentContext,
+        },
+      });
+
+      if (error) throw error;
+      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!reply) throw new Error("Empty shipment intelligence review");
+      setAiReview(reply);
+    } catch (error) {
+      logOperationalError("shipment_ai_intelligence_review", error, {
+        trackingId: activeShipment.trackingId,
+        mode,
+      });
+      setAiUsedFallback(true);
+      setAiReview(buildLocalShipmentIntelligenceReview(activeShipment, shipmentAnalysis, mode, lang));
     } finally {
       setAiReviewLoading(false);
     }
@@ -354,6 +456,22 @@ export default function TrackingPage() {
           <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentStage?.description}</p>
           {currentStage?.owner ? <p className="mt-3 text-sm font-medium text-primary/90">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
         </div>
+
+        {isInternal && shipmentAnalysis ? (
+          <ShipmentIntelligencePanel
+            shipment={activeShipment}
+            analysis={shipmentAnalysis}
+            lang={lang}
+            locale={locale}
+            t={t}
+            internal
+            aiOutput={aiReview}
+            aiOutputTitle={aiReviewTitle}
+            aiLoading={aiReviewLoading}
+            aiUsedFallback={aiUsedFallback}
+            onRunAi={(mode) => void handleShipmentIntelligenceAi(mode)}
+          />
+        ) : null}
 
         {isInternal ? (
           <div className="rounded-[1.35rem] border border-primary/20 bg-[#080808] p-4">

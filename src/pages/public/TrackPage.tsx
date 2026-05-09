@@ -2,9 +2,11 @@ import { AlertCircle, CheckCircle2, Clock3, MapPin, Search, ShieldCheck, Truck }
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { ShipmentIntelligencePanel } from "@/features/shipments/components/ShipmentIntelligencePanel";
+import { analyzeShipmentIntelligence } from "@/features/shipments/lib/shipmentIntelligence";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
 import { useI18n } from "@/lib/i18n";
-import { lookupPublicTracking } from "@/lib/operationsDomain";
+import { lookupPublicTracking, type OperationalShipment } from "@/lib/operationsDomain";
 import { getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 
@@ -26,6 +28,30 @@ export default function TrackPage() {
   const publicTimeline = useMemo(
     () => (result?.timeline || []).filter((event) => event.visibility === "customer_visible" || event.customerNote),
     [result],
+  );
+  const publicShipment = useMemo<OperationalShipment | null>(() => {
+    if (!result) return null;
+
+    return {
+      id: result.trackingId,
+      trackingId: result.trackingId,
+      clientName: result.clientName,
+      destination: result.destination,
+      pallets: 0,
+      weight: 0,
+      dealId: null,
+      dealNumber: result.dealNumber,
+      requestNumber: result.requestNumber,
+      stage: result.currentStage,
+      updatedAt: result.lastUpdated,
+      customerVisibleNote: result.customerNote,
+      timeline: publicTimeline,
+      shipmentEvents: [],
+    };
+  }, [publicTimeline, result]);
+  const publicShipmentAnalysis = useMemo(
+    () => (publicShipment ? analyzeShipmentIntelligence(publicShipment) : null),
+    [publicShipment],
   );
 
   const handleLookup = useCallback(async (value?: string) => {
@@ -228,6 +254,18 @@ export default function TrackPage() {
                 </div>
               )}
             </div>
+
+            {publicShipment && publicShipmentAnalysis ? (
+              <div className="rounded-[1.8rem] border border-white/10 bg-white/[0.04] p-5">
+                <ShipmentIntelligencePanel
+                  shipment={publicShipment}
+                  analysis={publicShipmentAnalysis}
+                  lang={lang}
+                  locale={locale}
+                  t={t}
+                />
+              </div>
+            ) : null}
           </section>
         ) : !error && !loading ? (
           <div className="mx-auto mt-10 max-w-2xl rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] px-6 py-10 text-center">
