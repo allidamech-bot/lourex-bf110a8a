@@ -21,6 +21,9 @@ import BentoCard from "@/components/BentoCard";
 import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AIOperationsCenter } from "@/features/ai-ops/components/AIOperationsCenter";
+import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
+import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
 import {
   fetchAuditCount,
   fetchDeals,
@@ -34,6 +37,7 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
 import { supabase } from "@/integrations/supabase/client";
 import { logOperationalError } from "@/lib/monitoring";
+import type { PartnerSettlement } from "@/types/lourex";
 
 interface OverviewMetrics {
   requests: number;
@@ -196,6 +200,7 @@ export default function OverviewPage() {
   const [shipments, setShipments] = useState<Awaited<ReturnType<typeof fetchShipments>>>([]);
   const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof fetchFinancialEditRequests>>>([]);
   const [financialEntries, setFinancialEntries] = useState<DashboardFinancialEntries>([]);
+  const [settlements, setSettlements] = useState<PartnerSettlement[]>([]);
   const [loading, setLoading] = useState(true);
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [briefingText, setBriefingText] = useState("");
@@ -207,13 +212,14 @@ export default function OverviewPage() {
 
       try {
         const canReadAccountingManagement = profile?.role ? canManageAccounting(profile.role) : false;
-        const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain, financialEntriesDomain] = await Promise.all([
+        const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain, financialEntriesDomain, settlementRows] = await Promise.all([
           fetchRequests(),
           fetchDeals(),
           fetchShipments(),
           fetchAuditCount(),
           canReadAccountingManagement ? fetchFinancialEditRequests() : Promise.resolve([]),
           canReadAccountingManagement ? fetchFinancialEntries() : Promise.resolve([]),
+          canReadAccountingManagement ? loadAvailableSettlements() : Promise.resolve([]),
         ]);
 
         const activeDeals = dealsDomain.filter(
@@ -236,6 +242,7 @@ export default function OverviewPage() {
         setShipments(shipmentsDomain);
         setEditRequests(editsDomain);
         setFinancialEntries(financialEntriesDomain);
+        setSettlements(settlementRows);
       } catch (error) {
         logOperationalError("dashboard_overview_load", error, { role: profile?.role });
         setMetrics({ requests: 0, deals: 0, shipments: 0, audits: 0, financialEntries: 0 });
@@ -245,6 +252,7 @@ export default function OverviewPage() {
         setShipments([]);
         setEditRequests([]);
         setFinancialEntries([]);
+        setSettlements([]);
       } finally {
         setLoading(false);
       }
@@ -265,6 +273,21 @@ export default function OverviewPage() {
   const dashboardContext = useMemo(
     () => buildDashboardContext(requests, shipments, editRequests, metrics),
     [requests, shipments, editRequests, metrics],
+  );
+
+  const aiOpsResult = useMemo(
+    () =>
+      buildOperationsAdvisor(
+        {
+          shipments,
+          deals,
+          financialEntries,
+          financialEditRequests: editRequests,
+          settlements,
+        },
+        lang === "ar" ? "ar" : "en",
+      ),
+    [deals, editRequests, financialEntries, lang, settlements, shipments],
   );
 
   const deliverySummary = useMemo(
@@ -529,6 +552,10 @@ export default function OverviewPage() {
           );
         })}
       </div>
+
+      {isInternal && !loading ? (
+        <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+      ) : null}
 
       {isInternal ? (
         <BentoCard span="full" className="rounded-2xl p-6 md:p-7">
