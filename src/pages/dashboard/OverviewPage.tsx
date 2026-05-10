@@ -47,6 +47,9 @@ const WorkflowIntelligenceCenter = React.lazy(() =>
 const OperationsEventCenter = React.lazy(() =>
   import("@/features/event-system/components/OperationsEventCenter"),
 );
+const RuntimeInfrastructureCenter = React.lazy(() =>
+  import("@/features/runtime-infra/components/RuntimeInfrastructureCenter"),
+);
 
 interface OverviewMetrics {
   requests: number;
@@ -610,6 +613,23 @@ export default function OverviewPage() {
           }
         >
           <OperationsEventCenter
+            dataset={eventSystemDataset}
+            language={lang === "ar" ? "ar" : "en"}
+            locale={locale}
+          />
+        </React.Suspense>
+      ) : null}
+
+      {isInternal && !loading ? (
+        <React.Suspense
+          fallback={
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
+            </div>
+          }
+        >
+          <RuntimeInfrastructureCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
