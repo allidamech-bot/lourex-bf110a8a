@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AIOperationsCenter } from "@/features/ai-ops/components/AIOperationsCenter";
 import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
 import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
+import type { EventSystemDataset } from "@/features/event-system/types/eventTypes";
 import type { WorkflowIntelligenceDataset } from "@/features/workflow-intelligence/types/workflowTypes";
 import {
   fetchAuditCount,
@@ -42,6 +43,9 @@ import type { PartnerSettlement } from "@/types/lourex";
 
 const WorkflowIntelligenceCenter = React.lazy(() =>
   import("@/features/workflow-intelligence/components/WorkflowIntelligenceCenter"),
+);
+const OperationsEventCenter = React.lazy(() =>
+  import("@/features/event-system/components/OperationsEventCenter"),
 );
 
 interface OverviewMetrics {
@@ -305,6 +309,11 @@ export default function OverviewPage() {
       settlements,
     }),
     [deals, editRequests, financialEntries, requests, settlements, shipments],
+  );
+
+  const eventSystemDataset = useMemo<EventSystemDataset>(
+    () => workflowIntelligenceDataset,
+    [workflowIntelligenceDataset],
   );
 
   const deliverySummary = useMemo(
@@ -585,6 +594,23 @@ export default function OverviewPage() {
         >
           <WorkflowIntelligenceCenter
             dataset={workflowIntelligenceDataset}
+            language={lang === "ar" ? "ar" : "en"}
+            locale={locale}
+          />
+        </React.Suspense>
+      ) : null}
+
+      {isInternal && !loading ? (
+        <React.Suspense
+          fallback={
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
+            </div>
+          }
+        >
+          <OperationsEventCenter
+            dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
