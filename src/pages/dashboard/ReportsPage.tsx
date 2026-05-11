@@ -23,6 +23,8 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -41,6 +43,7 @@ const getRangeStart = (range: ReportRange, customStart?: string) => {
 
 export default function ReportsPage() {
   const { lang, locale, t } = useI18n();
+  const { profile } = useAuthSession();
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<ReportRange>("monthly");
   const [customStart, setCustomStart] = useState("");
@@ -237,6 +240,7 @@ export default function ReportsPage() {
 
   return (
     <div className="w-full max-w-full min-w-0 space-y-4">
+      <PageHelpBox pageKey="reports" role={profile?.role} />
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>

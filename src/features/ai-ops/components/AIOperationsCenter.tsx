@@ -1,7 +1,8 @@
-import { BrainCircuit } from "lucide-react";
+﻿import { BrainCircuit } from "lucide-react";
 import { ExecutiveRiskOverview } from "@/features/ai-ops/components/ExecutiveRiskOverview";
 import { ShipmentIntelligencePanel } from "@/features/ai-ops/components/ShipmentIntelligencePanel";
 import { SmartRecommendationsFeed } from "@/features/ai-ops/components/SmartRecommendationsFeed";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { InsightLanguage, OperationsAdvisorResult } from "@/features/ai-ops/types/aiOpsTypes";
 
 const labels = {
@@ -13,7 +14,7 @@ const labels = {
   ar: {
     eyebrow: "ذكاء العمليات",
     title: "مركز ذكاء العمليات",
-    description: "تحليلات إرشادية مشتقة لمخاطر الشحنات، والانكشاف المالي، واختناقات المراحل، والخطوات التنفيذية التالية.",
+    description: "تحليلات إرشادية لمخاطر الشحنات والانكشاف المالي واختناقات المراحل والخطوات التنفيذية التالية.",
   },
 } as const;
 
@@ -30,6 +31,7 @@ export function AIOperationsCenter({
 
   return (
     <section className="space-y-4">
+      <PageHelpBox pageKey="ai_operations" />
       <div className="rounded-2xl border border-blue-400/20 bg-[linear-gradient(135deg,rgba(37,99,235,0.16),rgba(15,23,42,0.92))] p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-400/25 bg-blue-500/10 text-blue-100">
@@ -56,3 +58,4 @@ export function AIOperationsCenter({
     </section>
   );
 }
+

@@ -16,10 +16,10 @@ export function AgentCoordinationBoard({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-indigo-200">
-            {language === "ar" ? "ظ†ط³ظٹط¬ ط§ظ„طھظ†ط³ظٹظ‚" : "Coordination Fabric"}
+            {language === "ar" ? "نسيج التنسيق" : "Coordination Fabric"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ط¥ط´ط§ط±ط§طھ ظˆط³ط¬ظ„ط§طھ ط§ظ„طھظ†ط³ظٹظ‚" : "Signals and coordination records"}
+            {language === "ar" ? "إشارات وسجلات التنسيق" : "Signals and coordination records"}
           </h3>
         </div>
       </div>

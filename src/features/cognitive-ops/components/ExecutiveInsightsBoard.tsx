@@ -16,10 +16,10 @@ export function ExecutiveInsightsBoard({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200">
-            {language === "ar" ? "ط±ط¤ظ‰ طھظ†ظپظٹط°ظٹط©" : "Executive Insights"}
+            {language === "ar" ? "رؤى تنفيذية" : "Executive Insights"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ظ…ظ„ط®طµط§طھ ظˆظ…ط®ط§ط·ط± ط§ط³طھط±ط§طھظٹط¬ظٹط©" : "Operational briefs and strategic risk"}
+            {language === "ar" ? "ملخصات تشغيلية ومخاطر استراتيجية" : "Operational briefs and strategic risk"}
           </h3>
         </div>
       </div>

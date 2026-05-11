@@ -25,6 +25,7 @@ import { getRoleDisplayName } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import type { PartnerSettlementRole } from "@/types/lourex";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 
 type PartnerProfile = Awaited<ReturnType<typeof loadPartnerProfiles>>[number];
 
@@ -138,6 +139,7 @@ export default function PartnerSettlementsPage() {
 
   return (
     <div className="space-y-4">
+      <PageHelpBox pageKey="partner_settlements" role={profile?.role} />
       <div className="grid gap-4 xl:grid-cols-3">
         <BentoCard>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("partnerSettlements.metrics.unpaid")}</p>

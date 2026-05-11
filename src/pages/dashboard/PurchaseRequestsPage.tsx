@@ -39,6 +39,7 @@ import { isInternalRole } from "@/features/auth/rbac";
 import { canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import { resubmitPurchaseRequest } from "@/domain/operations/service";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
@@ -953,6 +954,7 @@ export default function PurchaseRequestsPage() {
 
     return (
         <div className="w-full max-w-full min-w-0 space-y-4">
+            <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
             <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
                     <div>

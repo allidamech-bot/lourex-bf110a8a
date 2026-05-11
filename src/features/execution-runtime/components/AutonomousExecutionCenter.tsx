@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Cpu } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { ApprovalWorkflowBoard } from "@/features/execution-runtime/components/ApprovalWorkflowBoard";
 import { ExecutionAuditTimeline } from "@/features/execution-runtime/components/ExecutionAuditTimeline";
 import { ExecutionQueuePanel } from "@/features/execution-runtime/components/ExecutionQueuePanel";
@@ -48,6 +49,7 @@ export function AutonomousExecutionCenter({
 
   return (
     <section className="space-y-4">
+      <PageHelpBox pageKey="ai_operations" />
       <div className="rounded-2xl border border-indigo-400/20 bg-[linear-gradient(135deg,rgba(99,102,241,0.16),rgba(15,23,42,0.94))] p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-indigo-400/25 bg-indigo-500/10 text-indigo-100">
@@ -80,3 +82,4 @@ export function AutonomousExecutionCenter({
 }
 
 export default AutonomousExecutionCenter;
+

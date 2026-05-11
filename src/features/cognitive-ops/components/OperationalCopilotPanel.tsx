@@ -16,10 +16,10 @@ export function OperationalCopilotPanel({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-violet-200">
-            {language === "ar" ? "ظ…ط³ط§ط¹ط¯ظˆظ† طھط´ط؛ظٹظ„ظٹظˆظ†" : "Operational Copilots"}
+            {language === "ar" ? "مساعدون تشغيليون" : "Operational Copilots"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "طھظˆطµظٹط§طھ ظ…ظپط³ط±ط©" : "Explainable recommendations"}
+            {language === "ar" ? "توصيات مفسرة" : "Explainable recommendations"}
           </h3>
         </div>
       </div>

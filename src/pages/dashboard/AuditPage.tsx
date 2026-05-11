@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { useI18n } from "@/lib/i18n";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 
 type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
 type JsonObject = { [key: string]: Json | undefined };
@@ -121,6 +123,7 @@ const getRowLink = (row: AuditLogRow) => {
 
 export default function AuditPage() {
   const { locale, t } = useI18n();
+  const { profile } = useAuthSession();
   const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditLogRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,6 +205,7 @@ export default function AuditPage() {
 
   return (
     <div className="space-y-4">
+      <PageHelpBox pageKey="audit" role={profile?.role} />
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">

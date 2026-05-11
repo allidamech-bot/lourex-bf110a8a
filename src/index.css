@@ -183,6 +183,45 @@
   html[dir="rtl"] h5,
   html[dir="rtl"] h6 {
     font-family: 'Tajawal', serif;
+    letter-spacing: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  html[dir="rtl"] p,
+  html[dir="rtl"] span,
+  html[dir="rtl"] a,
+  html[dir="rtl"] button,
+  html[dir="rtl"] label,
+  html[dir="rtl"] div,
+  html[dir="rtl"] th,
+  html[dir="rtl"] td {
+    letter-spacing: 0;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  html[dir="rtl"] .break-words,
+  html[dir="rtl"] .break-all,
+  html[dir="rtl"] .overflow-wrap-anywhere {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  html[dir="rtl"] .text-xs,
+  html[dir="rtl"] .text-sm,
+  html[dir="rtl"] .text-base {
+    line-height: 1.75;
+  }
+
+  html[dir="rtl"] [class*="grid-cols-4"],
+  html[dir="rtl"] [class*="grid-cols-5"],
+  html[dir="rtl"] [class*="grid-cols-6"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  }
+
+  html[dir="rtl"] [class*="tracking-"] {
+    letter-spacing: 0 !important;
   }
 
   /* RTL layout flip */

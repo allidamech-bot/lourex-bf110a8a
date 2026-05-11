@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import {
   AlertCircle,
   ClipboardList,
@@ -17,6 +17,7 @@ import BentoCard from "@/components/BentoCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
@@ -206,7 +207,7 @@ const CustomerPortal = () => {
       description: getSafeLabel(
           t("customerPortal.actions.newRequest.description"),
           locale === "ar"
-              ? "أرسل طلب شراء جديد مع الصور والمواصفات."
+              ? "أرسل طلب شراء جديداً مع الصور والمواصفات."
               : "Submit a new purchase request with images and specifications.",
       ),
       icon: PlusCircle,
@@ -286,6 +287,7 @@ const CustomerPortal = () => {
 
   return (
       <>
+        <PageHelpBox pageKey="customer_portal" role={profile?.role} className="mb-6" />
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -310,7 +312,7 @@ const CustomerPortal = () => {
               {getSafeLabel(
                   t("customerPortal.description"),
                   locale === "ar"
-                      ? "تابع طلبات الشراء، الشحنات، والحسابات التشغيلية من مكان واحد."
+                      ? "تابع طلبات الشراء والشحنات والحسابات التشغيلية من مكان واحد."
                       : "Manage purchase requests, shipments, and operational accounting from one place.",
               )}
             </p>
@@ -325,7 +327,7 @@ const CustomerPortal = () => {
             <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing
                 ? locale === "ar"
-                    ? "جارٍ التحديث..."
+                    ? "جاري التحديث..."
                     : "Refreshing..."
                 : locale === "ar"
                     ? "تحديث"
@@ -358,7 +360,7 @@ const CustomerPortal = () => {
               icon: Wallet,
             },
             {
-              label: locale === "ar" ? "آخر الطلبات" : "Recent",
+              label: locale === "ar" ? "الأحدث" : "Recent",
               value: formatNumber(portalMetrics.recent, locale),
               icon: ShieldCheck,
             },
@@ -489,7 +491,7 @@ const CustomerPortal = () => {
                       <p className="text-xs text-muted-foreground">
                         {getSafeLabel(
                             t("customerPortal.financial.expenseTracked"),
-                            locale === "ar" ? "المصاريف المسجلة" : "Expense tracked",
+                            locale === "ar" ? "المصروفات المسجلة" : "Expense tracked",
                         )}
                       </p>
                       <p className="mt-2 text-2xl font-bold text-rose-500">
@@ -618,3 +620,5 @@ const CustomerPortal = () => {
 };
 
 export default CustomerPortal;
+
+

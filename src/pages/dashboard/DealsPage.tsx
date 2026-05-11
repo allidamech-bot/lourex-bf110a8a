@@ -24,6 +24,7 @@ import {
   updateDealStatus,
 } from "@/domain/operations/service";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import {
   operationalStatusMeta,
   uploadDealAttachment,
@@ -326,7 +327,9 @@ export default function DealsPage() {
   }
 
   return (
-    <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+    <div className="w-full max-w-full min-w-0 space-y-4">
+      <PageHelpBox pageKey="deals" role={profile?.role} />
+      <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
       <BentoCard className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -752,6 +755,7 @@ export default function DealsPage() {
           </div>
         </BentoCard>
       ) : null}
+      </div>
     </div>
   );
 }

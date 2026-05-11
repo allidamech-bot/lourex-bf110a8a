@@ -18,10 +18,10 @@ export function DelegationFlowPanel({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
-            {language === "ar" ? "طھظپظˆظٹط¶ ظˆطھط®ط·ظٹط·" : "Delegation Flow"}
+            {language === "ar" ? "تفويض وتخطيط" : "Delegation Flow"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ظ…ط³ط§ط±ط§طھ طھظپظˆظٹط¶ ظ…ط­ظƒظˆظ…ط©" : "Guarded delegation and planning"}
+            {language === "ar" ? "مسارات تفويض محكومة" : "Guarded delegation and planning"}
           </h3>
         </div>
       </div>

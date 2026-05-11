@@ -22,6 +22,7 @@ import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineF
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AIOperationsCenter } from "@/features/ai-ops/components/AIOperationsCenter";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
 import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
 import type { EventSystemDataset } from "@/features/event-system/types/eventTypes";
@@ -496,6 +497,7 @@ export default function OverviewPage() {
 
   return (
     <div className="w-full max-w-full min-w-0 space-y-5 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+      <PageHelpBox pageKey="dashboard_overview" role={profile?.role} />
       {/* ── Hero Banner ── */}
       <BentoCard
         span="full"

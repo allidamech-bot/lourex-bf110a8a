@@ -1,10 +1,11 @@
-import { SEO } from "@/components/seo/SEO";
+﻿import { SEO } from "@/components/seo/SEO";
 import { ClipboardList, PackageSearch, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { PurchaseRequestForm } from "@/features/purchase-requests/components/PurchaseRequestForm";
 import { fetchRequests } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { OperationsRequest } from "@/domain/operations/types";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -90,6 +91,7 @@ export default function RequestPage() {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.08),transparent_30%)]" />
         <div className="container relative mx-auto px-4 py-12 md:px-8 md:py-16">
+          <PageHelpBox pageKey="request" className="mb-8" />
           <div className="grid gap-10 xl:grid-cols-[0.95fr_1.05fr]">
             <div className="space-y-6">
               <SectionHeading
@@ -132,3 +134,4 @@ export default function RequestPage() {
     </div>
   );
 }
+

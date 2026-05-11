@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { loadShipments, loadPurchaseRequests } from "@/lib/operationsDomain";
 import { getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -394,6 +395,7 @@ export default function CustomerTrackingPage() {
 
   return (
       <div className="space-y-4">
+        <PageHelpBox pageKey="customer_tracking" role={profile?.role} />
         <BentoCard className="space-y-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

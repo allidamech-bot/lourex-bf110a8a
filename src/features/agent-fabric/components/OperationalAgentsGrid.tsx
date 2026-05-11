@@ -16,10 +16,10 @@ export function OperationalAgentsGrid({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-200">
-            {language === "ar" ? "ظˆظƒظ„ط§ط، طھط´ط؛ظٹظ„ظٹظˆظ†" : "Operational Agents"}
+            {language === "ar" ? "وكلاء تشغيليون" : "Operational Agents"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ط³ط¬ظ„ ط§ظ„ظˆظƒظ„ط§ط، ط§ظ„ظ…طھط®طµطµظٹظ†" : "Specialized agent registry"}
+            {language === "ar" ? "سجل الوكلاء المتخصصين" : "Specialized agent registry"}
           </h3>
         </div>
       </div>

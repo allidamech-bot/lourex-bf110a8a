@@ -20,10 +20,10 @@ export function OperationalMemoryTimeline({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
-            {language === "ar" ? "ط°ط§ظƒط±ط© طھط´ط؛ظٹظ„ظٹط©" : "Operational Memory"}
+            {language === "ar" ? "ذاكرة تشغيلية" : "Operational Memory"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ط®ط· ط²ظ…ظ†ظٹ ط؛ظٹط± ظ‚ط§ط¨ظ„ ظ„ظ„طھط؛ظٹظٹط±" : "Immutable memory timeline"}
+            {language === "ar" ? "خط زمني غير قابل للتغيير" : "Immutable memory timeline"}
           </h3>
         </div>
       </div>

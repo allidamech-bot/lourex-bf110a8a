@@ -16,10 +16,10 @@ export function CognitivePlanningPanel({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-sky-200">
-            {language === "ar" ? "طھط®ط·ظٹط· ظ…ط¹ط±ظپظٹ" : "Cognitive Planning"}
+            {language === "ar" ? "تخطيط معرفي" : "Cognitive Planning"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "طھط³ظ„ط³ظ„ ط¥ط¬ط±ط§ط،ط§طھ ط¨ط§ظ„ظ…ظˆط§ظپظ‚ط©" : "Approval-aware action sequencing"}
+            {language === "ar" ? "تسلسل إجراءات مرتبط بالموافقة" : "Approval-aware action sequencing"}
           </h3>
         </div>
       </div>

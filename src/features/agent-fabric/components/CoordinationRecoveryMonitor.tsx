@@ -18,10 +18,10 @@ export function CoordinationRecoveryMonitor({
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200">
-            {language === "ar" ? "ط§ط³طھط±ط¯ط§ط¯ ط§ظ„طھظ†ط³ظٹظ‚" : "Coordination Recovery"}
+            {language === "ar" ? "استرداد التنسيق" : "Coordination Recovery"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">
-            {language === "ar" ? "ط§ط³طھط¹ط§ط¯ط© ظˆطھط±ط·ظٹط¨ ط§ظ„ط­ط§ظ„ط©" : "Replay recovery and hydration"}
+            {language === "ar" ? "استعادة وترطيب الحالة" : "Replay recovery and hydration"}
           </h3>
         </div>
       </div>

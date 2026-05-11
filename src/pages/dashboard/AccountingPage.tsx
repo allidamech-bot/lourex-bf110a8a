@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialEditRequests, loadFinancialEntries } from "@/domain/accounting/service";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import {
   analyzeFinancialRisk,
   buildFinanceAuditCsv,
@@ -462,6 +463,7 @@ export default function AccountingPage() {
 
   return (
     <div className="w-full max-w-full min-w-0 space-y-4">
+      <PageHelpBox pageKey="accounting" role={profile?.role} />
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <BentoCard>
           <div className="flex min-w-0 items-center gap-3">
