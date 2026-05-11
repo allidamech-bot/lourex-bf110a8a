@@ -62,6 +62,9 @@ const DistributedRuntimeCenter = React.lazy(() =>
 const AutonomousExecutionCenter = React.lazy(() =>
   import("@/features/execution-runtime/components/AutonomousExecutionCenter"),
 );
+const CognitiveOperationsCenter = React.lazy(() =>
+  import("@/features/cognitive-ops/components/CognitiveOperationsCenter"),
+);
 
 interface OverviewMetrics {
   requests: number;
@@ -710,6 +713,23 @@ export default function OverviewPage() {
           }
         >
           <AutonomousExecutionCenter
+            dataset={eventSystemDataset}
+            language={lang === "ar" ? "ar" : "en"}
+            locale={locale}
+          />
+        </React.Suspense>
+      ) : null}
+
+      {isInternal && !loading ? (
+        <React.Suspense
+          fallback={
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
+            </div>
+          }
+        >
+          <CognitiveOperationsCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
