@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import BentoCard from "@/components/BentoCard";
+import { ReadableInfoCard, ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
@@ -342,7 +343,7 @@ const CustomerPortal = () => {
             </div>
         ) : null}
 
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <ResponsiveInfoGrid className="mb-6" min="minmax(min(100%,11rem),1fr)">
           {[
             {
               label: locale === "ar" ? "الطلبات" : "Requests",
@@ -365,21 +366,11 @@ const CustomerPortal = () => {
               icon: ShieldCheck,
             },
           ].map((item) => (
-              <BentoCard key={item.label} className="p-5">
-                <div className="flex min-w-0 items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="mt-2 break-words text-2xl font-bold">{item.value}</p>
-                  </div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </BentoCard>
+              <ReadableMetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} />
           ))}
-        </div>
+        </ResponsiveInfoGrid>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <ResponsiveInfoGrid className="gap-6" min="minmax(min(100%,13rem),1fr)">
           {menuItems.map((item, index) => (
               <motion.div
                   key={item.title}
@@ -412,7 +403,7 @@ const CustomerPortal = () => {
                 </Link>
               </motion.div>
           ))}
-        </div>
+        </ResponsiveInfoGrid>
 
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
@@ -443,62 +434,38 @@ const CustomerPortal = () => {
                   <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
                     {statementNotice}
                   </div>
+                  <SectionHelpBox
+                    title={locale === "ar" ? "ماذا يعني الملخص المالي؟" : "What does this financial summary mean?"}
+                    body={
+                      locale === "ar"
+                        ? "الرصيد يوضح الفرق بين المدفوعات والمصروفات المسجلة على عملياتك. إذا ظهر مبلغ متبقٍ فهذا يعني أنه يحتاج دفعاً أو مراجعة من الإدارة."
+                        : "The balance shows the difference between payments and expenses recorded for your operations."
+                    }
+                    example={
+                      locale === "ar"
+                        ? "مثال: إذا كان المتبقي 100$ فهذا يعني أن العميل لم يدفع هذا المبلغ بعد أو أنه لم تتم مراجعته نهائياً."
+                        : "Example: if 100 USD remains, that amount is not yet paid or not finally reviewed."
+                    }
+                  />
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
-                      <p className="text-xs text-muted-foreground">
-                        {getSafeLabel(
-                            t("customerPortal.financial.balance"),
-                            locale === "ar" ? "الرصيد" : "Balance",
-                        )}
-                      </p>
-                      <p
-                          className={`mt-2 break-words text-2xl font-bold ${
-                              customerData.financialBalance >= 0
-                                  ? "text-emerald-500"
-                                  : "text-rose-500"
-                          }`}
-                      >
-                        {formatMoney(customerData.financialBalance, locale)}
-                      </p>
-                    </div>
-
-                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
-                      <p className="text-xs text-muted-foreground">
-                        {getSafeLabel(
-                            t("customerPortal.financial.operations"),
-                            locale === "ar" ? "العمليات" : "Operations",
-                        )}
-                      </p>
-                      <p className="mt-2 text-2xl font-bold">
-                        {formatNumber(customerData.dealsCount, locale)}
-                      </p>
-                    </div>
-
-                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
-                      <p className="text-xs text-muted-foreground">
-                        {getSafeLabel(
-                            t("customerPortal.financial.incomeTracked"),
-                            locale === "ar" ? "الإيرادات المسجلة" : "Income tracked",
-                        )}
-                      </p>
-                      <p className="mt-2 text-2xl font-bold text-emerald-500">
-                        {formatMoney(customerData.financialIncome, locale)}
-                      </p>
-                    </div>
-
-                    <div className="min-w-0 rounded-[1.2rem] bg-secondary/15 p-5">
-                      <p className="text-xs text-muted-foreground">
-                        {getSafeLabel(
-                            t("customerPortal.financial.expenseTracked"),
-                            locale === "ar" ? "المصروفات المسجلة" : "Expense tracked",
-                        )}
-                      </p>
-                      <p className="mt-2 text-2xl font-bold text-rose-500">
-                        {formatMoney(customerData.financialExpense, locale)}
-                      </p>
-                    </div>
-                  </div>
+                  <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
+                    <ReadableInfoCard
+                      label={getSafeLabel(t("customerPortal.financial.balance"), locale === "ar" ? "الرصيد" : "Balance")}
+                      value={<span className={customerData.financialBalance >= 0 ? "text-emerald-500" : "text-rose-500"}>{formatMoney(customerData.financialBalance, locale)}</span>}
+                    />
+                    <ReadableInfoCard
+                      label={getSafeLabel(t("customerPortal.financial.operations"), locale === "ar" ? "العمليات" : "Operations")}
+                      value={formatNumber(customerData.dealsCount, locale)}
+                    />
+                    <ReadableInfoCard
+                      label={getSafeLabel(t("customerPortal.financial.incomeTracked"), locale === "ar" ? "الإيرادات المسجلة" : "Income tracked")}
+                      value={<span className="text-emerald-500">{formatMoney(customerData.financialIncome, locale)}</span>}
+                    />
+                    <ReadableInfoCard
+                      label={getSafeLabel(t("customerPortal.financial.expenseTracked"), locale === "ar" ? "المصروفات المسجلة" : "Expense tracked")}
+                      value={<span className="text-rose-500">{formatMoney(customerData.financialExpense, locale)}</span>}
+                    />
+                  </ResponsiveInfoGrid>
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">

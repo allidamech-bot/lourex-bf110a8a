@@ -40,6 +40,8 @@ import { loadPurchaseRequests, requestStatusMeta, submitPurchaseRequestClarifica
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import type { PurchaseRequestStatus } from "@/types/lourex";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
+import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
+import { SectionHelpBox } from "@/components/readable/ReadableCards";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
 type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
@@ -538,12 +540,13 @@ export default function CustomerRequestsPage() {
 
   return (
       <div className="space-y-4 pb-12">
+        <PageHelpBox pageKey="purchase_requests" role="customer" />
         <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div id="requests" ref={listRef} className="w-full max-w-full min-w-0 scroll-mt-24">
           <BentoCard className="flex max-w-full flex-col gap-4 overflow-hidden">
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0 max-w-full">
-                <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-[10px] font-semibold text-muted-foreground sm:text-xs">
                   {t("customerPortal.eyebrow")}
                 </p>
                 <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold">{t("customerPortal.title")}</h1>
@@ -569,7 +572,7 @@ export default function CustomerRequestsPage() {
                 </div>
             ) : null}
 
-            <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid shrink-0 grid-cols-1 gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               {[
                 { label: t("requests.total"), value: requestMetrics.total },
                 { label: t("requests.submitted"), value: requestMetrics.submitted },
@@ -582,6 +585,19 @@ export default function CustomerRequestsPage() {
                   </div>
               ))}
             </div>
+            <SectionHelpBox
+              title={lang === "ar" ? "كيف أقرأ طلباتي؟" : "How do I read my requests?"}
+              body={
+                lang === "ar"
+                  ? "هذه البطاقات تعرض عدد الطلبات وحالتها حتى تعرف ما يحتاج متابعة أو توضيح أو إثبات دفع."
+                  : "These cards show request counts and status so you know what needs follow-up, clarification, or payment proof."
+              }
+              example={
+                lang === "ar"
+                  ? "إذا ظهر طلب بانتظار توضيح، افتح التفاصيل وأرسل الرد المطلوب قبل إنشاء طلب جديد مشابه."
+                  : "If a request is awaiting clarification, open its details and send the needed reply before creating a similar new request."
+              }
+            />
 
             <div className="shrink-0 space-y-3">
               <div className="relative">
@@ -646,7 +662,7 @@ export default function CustomerRequestsPage() {
                         >
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="break-words text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                              <p className="whitespace-normal break-words text-xs font-semibold text-muted-foreground">
                                 {row.requestNumber}
                               </p>
                               <p className="mt-2 break-words font-medium">
@@ -715,7 +731,7 @@ export default function CustomerRequestsPage() {
                     <div className="min-w-0 max-w-full">
                       <div className="flex min-w-0 items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
-                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                           {selectedRow.requestNumber}
                         </p>
                       </div>
@@ -884,7 +900,7 @@ export default function CustomerRequestsPage() {
                   </div>
 
                   <div className="grid gap-4 sm:gap-6 lg:grid-cols-1">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))] sm:gap-3">
                       {[
                         {
                           label: t("requests.intake.productName"),

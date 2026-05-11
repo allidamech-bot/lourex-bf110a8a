@@ -26,7 +26,7 @@ export function HelpDrawer({
         <DrawerHeader className={isArabic ? "text-right" : "text-left"}>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{content.eyebrow}</p>
+              <p className={`text-xs font-semibold text-sky-200 ${isArabic ? "tracking-normal" : "uppercase tracking-[0.18em]"}`}>{content.eyebrow}</p>
               <DrawerTitle className="mt-2 whitespace-normal text-2xl leading-8 text-white">{content.title}</DrawerTitle>
               <p className="mt-2 whitespace-normal text-sm leading-7 text-slate-400">{content.summary}</p>
             </div>

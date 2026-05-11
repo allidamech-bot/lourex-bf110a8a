@@ -19,7 +19,7 @@ const labels = {
   ar: {
     eyebrow: "العمليات المعرفية",
     title: "طبقة مساعدي الذكاء التشغيلي",
-    description: "ذاكرة تشغيلية حتمية، استدلال سياقي، تخطيط مرتبط بالموافقة، وتوصيات مساعد حسب الدور.",
+    description: "ذاكرة تشغيلية حتمية واستدلال سياقي وتخطيط مرتبط بالموافقة وتوصيات مساعد حسب الدور.",
     loading: "جاري تحضير لقطة العمليات المعرفية...",
   },
 } as const;
@@ -54,7 +54,7 @@ export function CognitiveOperationsCenter({
             <BrainCircuit className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-teal-200">{t.eyebrow}</p>
+            <p className={`text-[11px] text-teal-200 ${language === "ar" ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>{t.eyebrow}</p>
             <h2 className="mt-1 break-words font-serif text-2xl font-semibold text-white">{t.title}</h2>
             <p className="mt-1 text-sm leading-6 text-slate-400">{t.description}</p>
           </div>

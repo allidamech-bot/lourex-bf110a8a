@@ -1428,7 +1428,7 @@ export const PurchaseRequestForm = ({
             <FieldError text={fieldErrors.uploads} />
 
             {existingImages.length > 0 || uploads.length > 0 ? (
-                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))]">
                   {existingImages.map((image) => (
                       <div
                           key={image.id}

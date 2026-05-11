@@ -211,6 +211,9 @@ const translations: Record<Lang, TranslationTree> = {
         paidTotal: "Paid total",
         pendingCount: "Pending review",
         approvedUnpaidCount: "Approved unpaid",
+        helpTitle: "How do partner settlements work?",
+        helpBody: "A settlement compares what the partner earned, what was paid, and what is still waiting for review or payment.",
+        helpExample: "If the approved unpaid amount is high, confirm the reviewed items before marking the settlement as paid.",
         states: {
           ready_for_review: "Ready for review",
           pending_settlement: "Pending settlement",
@@ -1967,6 +1970,9 @@ const translations: Record<Lang, TranslationTree> = {
         paidTotal: "إجمالي المدفوع",
         pendingCount: "قيد المراجعة",
         approvedUnpaidCount: "معتمد غير مدفوع",
+        helpTitle: "كيف أفهم تسويات الشركاء؟",
+        helpBody: "التسوية تعني مراجعة المبالغ بين الشريك والإدارة والتأكد من المدفوع والمتبقي وما يحتاج اعتمادا.",
+        helpExample: "إذا كان المعتمد غير المدفوع مرتفعا، راجع البنود المعتمدة قبل تحديد التسوية كمدفوعة.",
         states: {
           ready_for_review: "جاهزة للمراجعة",
           pending_settlement: "تسوية معلقة",

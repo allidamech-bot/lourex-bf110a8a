@@ -1,4 +1,5 @@
 import { Activity, AlertTriangle, CircleDollarSign, Scale } from "lucide-react";
+import { ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import type { ExecutiveMetrics, InsightLanguage } from "@/features/ai-ops/types/aiOpsTypes";
 
 const labels = {
@@ -9,6 +10,9 @@ const labels = {
     delayed: "Delayed orders",
     customers: "High-risk customers",
     settlements: "Pending settlements",
+    helpTitle: "How should I read AI risk?",
+    helpBody: "These cards group the highest-impact operational risks so managers can review delays, exposure, and pending settlements before approving action.",
+    helpExample: "If delayed orders or pending settlements rise, review the cause first, then decide whether approval or escalation is needed.",
   },
   ar: {
     title: "نظرة تنفيذية على المخاطر",
@@ -17,6 +21,9 @@ const labels = {
     delayed: "طلبات متأخرة",
     customers: "عملاء عالي الخطورة",
     settlements: "تسويات معلقة",
+    helpTitle: "كيف أقرأ مخاطر الذكاء التشغيلي؟",
+    helpBody: "هذه البطاقات تجمع أهم مؤشرات الخطر حتى تعرف أين تحتاج العملية إلى مراجعة أو قرار إداري.",
+    helpExample: "إذا ارتفع عدد الطلبات المتأخرة أو التسويات المعلقة، ابدأ بمراجعة السبب ثم حدد هل تحتاج موافقة أو تصعيد.",
   },
 } as const;
 
@@ -38,24 +45,18 @@ export function ExecutiveRiskOverview({
         <Activity className="h-5 w-5 text-blue-200" />
         <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
       </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-5">
+      <SectionHelpBox className="mt-4" title={t.helpTitle} body={t.helpBody} example={t.helpExample} />
+      <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
         {[
           { label: t.health, value: `${metrics.aiOperationalHealthScore.toLocaleString(locale)}%`, icon: Activity },
           { label: t.exposure, value: money, icon: CircleDollarSign },
           { label: t.delayed, value: metrics.delayedOrdersCount.toLocaleString(locale), icon: AlertTriangle },
           { label: t.customers, value: metrics.highRiskCustomersCount.toLocaleString(locale), icon: AlertTriangle },
           { label: t.settlements, value: metrics.pendingSettlementsCount.toLocaleString(locale), icon: Scale },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={item.label} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
-              <Icon className="h-4 w-4 text-blue-200" />
-              <p className="mt-3 text-xs text-slate-400">{item.label}</p>
-              <p className="mt-1 break-words text-lg font-bold text-white">{item.value}</p>
-            </div>
-          );
-        })}
-      </div>
+        ].map((item) => (
+          <ReadableMetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} />
+        ))}
+      </ResponsiveInfoGrid>
     </div>
   );
 }

@@ -1,9 +1,28 @@
 import { ShieldCheck } from "lucide-react";
+import { ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import type { DistributedLanguage, RuntimeConsistencyReport } from "@/features/distributed-runtime/types/distributedTypes";
 
 const labels = {
-  en: { title: "Runtime consistency", score: "Health score", stale: "Stale", isolated: "Isolated", conflicts: "Conflicts" },
-  ar: { title: "اتساق التشغيل", score: "درجة الصحة", stale: "خامدة", isolated: "معزولة", conflicts: "تعارضات" },
+  en: {
+    title: "Runtime consistency",
+    score: "Health score",
+    stale: "Stale",
+    isolated: "Isolated",
+    conflicts: "Conflicts",
+    helpTitle: "What does runtime consistency mean?",
+    helpBody: "This checks whether distributed runtime replicas agree and whether any replica is stale, isolated, or conflicting.",
+    helpExample: "If conflicts appear, review the affected replica before approving recovery or replay.",
+  },
+  ar: {
+    title: "اتساق التشغيل",
+    score: "درجة الصحة",
+    stale: "نسخ خامدة",
+    isolated: "نسخ معزولة",
+    conflicts: "تعارضات",
+    helpTitle: "ماذا يعني اتساق التشغيل؟",
+    helpBody: "هذا القسم يوضح هل نسخ التشغيل الموزعة متفقة أم توجد نسخة خامدة أو معزولة أو بها تعارض.",
+    helpExample: "عند ظهور تعارضات، راجع النسخة المتأثرة قبل الموافقة على الاسترداد أو إعادة التشغيل.",
+  },
 } as const;
 
 export function RuntimeConsistencyMonitor({ consistency, language, locale }: { consistency: RuntimeConsistencyReport; language: DistributedLanguage; locale: string }) {
@@ -20,14 +39,12 @@ export function RuntimeConsistencyMonitor({ consistency, language, locale }: { c
         <ShieldCheck className="h-5 w-5 text-emerald-200" />
         <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+      <SectionHelpBox className="mt-4" title={t.helpTitle} body={t.helpBody} example={t.helpExample} />
+      <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
-            <p className="text-xs text-slate-400">{card.label}</p>
-            <p className="mt-2 break-words text-lg font-bold text-white">{card.value}</p>
-          </div>
+          <ReadableMetricCard key={card.label} label={card.label} value={card.value} />
         ))}
-      </div>
+      </ResponsiveInfoGrid>
     </div>
   );
 }

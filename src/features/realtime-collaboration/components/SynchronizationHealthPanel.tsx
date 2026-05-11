@@ -1,4 +1,5 @@
 import { RefreshCcwDot } from "lucide-react";
+import { ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import type { CollaborationLanguage, SynchronizationResult } from "@/features/realtime-collaboration/types/collaborationTypes";
 
 const labels = {
@@ -8,6 +9,9 @@ const labels = {
     applied: "Applied patches",
     skipped: "Skipped replays",
     conflicts: "Conflicts resolved",
+    helpTitle: "What does synchronization health mean?",
+    helpBody: "This shows whether live workflow updates were applied safely and whether replay-safe updates were skipped correctly.",
+    helpExample: "If conflicts were resolved, review the related workflow before making another manual update.",
   },
   ar: {
     title: "صحة المزامنة",
@@ -15,6 +19,9 @@ const labels = {
     applied: "التحديثات المطبقة",
     skipped: "الإعادات المتجاوزة",
     conflicts: "التعارضات المعالجة",
+    helpTitle: "ماذا تعني صحة المزامنة؟",
+    helpBody: "هذا القسم يوضح هل تم تطبيق تحديثات سير العمل المباشرة بأمان وهل تم تجاوز الإعادات المتكررة بشكل صحيح.",
+    helpExample: "إذا تمت معالجة تعارضات، راجع سير العمل المرتبط قبل تنفيذ تعديل يدوي جديد.",
   },
 } as const;
 
@@ -29,10 +36,10 @@ export function SynchronizationHealthPanel({
 }) {
   const t = labels[language];
   const cards = [
-    { label: t.signals, value: result.signals.length },
-    { label: t.applied, value: result.appliedPatches.length },
-    { label: t.skipped, value: result.skippedReplayKeys.length },
-    { label: t.conflicts, value: result.conflictsResolved },
+    { label: t.signals, value: result.signals.length.toLocaleString(locale) },
+    { label: t.applied, value: result.appliedPatches.length.toLocaleString(locale) },
+    { label: t.skipped, value: result.skippedReplayKeys.length.toLocaleString(locale) },
+    { label: t.conflicts, value: result.conflictsResolved.toLocaleString(locale) },
   ];
 
   return (
@@ -41,14 +48,12 @@ export function SynchronizationHealthPanel({
         <RefreshCcwDot className="h-5 w-5 text-cyan-200" />
         <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+      <SectionHelpBox className="mt-4" title={t.helpTitle} body={t.helpBody} example={t.helpExample} />
+      <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
-            <p className="text-xs text-slate-400">{card.label}</p>
-            <p className="mt-2 text-lg font-bold text-white">{card.value.toLocaleString(locale)}</p>
-          </div>
+          <ReadableMetricCard key={card.label} label={card.label} value={card.value} />
         ))}
-      </div>
+      </ResponsiveInfoGrid>
     </div>
   );
 }

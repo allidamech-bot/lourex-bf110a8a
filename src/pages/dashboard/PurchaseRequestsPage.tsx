@@ -958,12 +958,12 @@ export default function PurchaseRequestsPage() {
             <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("requests.inboxEyebrow")}</p>
+                        <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("requests.inboxEyebrow")}</p>
                         <h2 className="mt-2 font-serif text-2xl font-semibold">{t("requests.inboxTitle")}</h2>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("requests.inboxDescription")}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
                         {[
                             { label: t("requests.total"), value: requestMetrics.total },
                             { label: t("requests.review"), value: requestMetrics.review },
@@ -1051,7 +1051,7 @@ export default function PurchaseRequestsPage() {
                                         >
                                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <p className="break-words text-xs uppercase tracking-[0.16em] text-slate-400">
+                                                <p className="whitespace-normal break-words text-xs font-semibold text-slate-400">
                                                     {row.requestNumber}
                                                 </p>
                                                 <p className="mt-2 break-words text-base font-semibold text-foreground sm:truncate">
@@ -1145,7 +1145,7 @@ export default function PurchaseRequestsPage() {
                         <div className="border-b border-white/10 p-4 sm:p-6">
                             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                                 <div className="min-w-0">
-                                    <p className="text-xs uppercase tracking-[0.2em] text-blue-200">
+                                    <p className="whitespace-normal text-xs font-semibold text-blue-200">
                                         {selectedRow.requestNumber}
                                     </p>
                                     <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-white sm:text-3xl">
@@ -1224,7 +1224,7 @@ export default function PurchaseRequestsPage() {
                                 </div>
                             ) : null}
 
-                            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="mt-5 grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
                                 {[
                                     { label: t("requests.labels.requestNumber"), value: selectedRow.requestNumber },
                                     { label: t("requests.labels.status"), value: t(`statuses.${selectedRow.status}`) },
@@ -1251,7 +1251,7 @@ export default function PurchaseRequestsPage() {
                             <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 xl:border-b-0 xl:border-e">
                                 <div className="space-y-5">
                                     <div className="space-y-2">
-                                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                                        <p className="whitespace-normal text-xs font-semibold text-primary">
                                             {t("requests.intake.productTitle")}
                                         </p>
                                         <p className="text-sm leading-7 text-muted-foreground">
@@ -1259,7 +1259,7 @@ export default function PurchaseRequestsPage() {
                                         </p>
                                     </div>
 
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                    <p className="whitespace-normal text-xs font-semibold text-slate-400">
                                         {t("requests.labels.details")}
                                     </p>
 

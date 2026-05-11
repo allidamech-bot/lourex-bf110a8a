@@ -412,7 +412,7 @@ export default function TrackingPage() {
     <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
       <BentoCard className="space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("tracking.contextEyebrow")}</p>
+          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("tracking.contextEyebrow")}</p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("tracking.contextTitle")}</h2>
           {activeShipment.dealNumber ? <p className="mt-2 text-sm text-muted-foreground">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
           {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-muted-foreground">{partnerWorkspaceHint}</p> : null}
@@ -441,7 +441,7 @@ export default function TrackingPage() {
         ) : null}
 
         <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-5">
-          <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{t("tracking.currentStage")}</p>
+          <p className="whitespace-normal text-xs font-semibold text-primary/80">{t("tracking.currentStage")}</p>
           <p className="mt-2 font-serif text-2xl font-semibold">{currentStage?.label || t("tracking.noStage")}</p>
           <p className="mt-2 text-xs text-muted-foreground">
             {t("tracking.labels.stageCode")}: {activeShipment.stage}

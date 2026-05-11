@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BarChart3,
@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
+import { ReadableMetricCard, ResponsiveInfoGrid } from "@/components/readable/ReadableCards";
 import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -151,7 +152,7 @@ const buildLocalDailyBriefing = (dashboardContext: ReturnType<typeof buildDashbo
   add(
     requests.readyForConversion > 0,
     `Review ${requests.readyForConversion} ready purchase request(s) and convert qualified ones to deals.`,
-    `راجع ${requests.readyForConversion} طلب/طلبات جاهزة للتحويل وحوّل المؤهل منها إلى صفقات.`,
+    `راجع ${requests.readyForConversion} طلب/طلبات جاهزة للتحويل وحول المؤهل منها إلى صفقات.`,
   );
   add(
     requests.awaitingClarification > 0,
@@ -190,7 +191,7 @@ const buildLocalDailyBriefing = (dashboardContext: ReturnType<typeof buildDashbo
   return isArabic
     ? [
         "## الملخص التنفيذي",
-        `يوجد حالياً ${dashboardContext.totals.purchaseRequests} طلب شراء، و${dashboardContext.totals.deals} صفقة، و${dashboardContext.shipments.active} شحنة نشطة.`,
+        `يوجد حاليا ${dashboardContext.totals.purchaseRequests} طلب شراء، و${dashboardContext.totals.deals} صفقة، و${dashboardContext.shipments.active} شحنة نشطة.`,
         "",
         "## الأولويات التشغيلية",
         ...priorities.map((item) => `- ${item}`),
@@ -498,7 +499,7 @@ export default function OverviewPage() {
   return (
     <div className="w-full max-w-full min-w-0 space-y-5 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHelpBox pageKey="dashboard_overview" role={profile?.role} />
-      {/* ── Hero Banner ── */}
+      {/* Hero Banner */}
       <BentoCard
         span="full"
         className="rounded-2xl p-4 sm:p-6 md:p-8"
@@ -556,52 +557,33 @@ export default function OverviewPage() {
         </div>
       </BentoCard>
 
-      {/* ── KPI Cards ── */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* KPI Cards */}
+            <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
         {(loading ? loadingCards : (metricCards as MetricCard[])).map((item, index) => {
           const cardItem = loading ? null : item as MetricCard;
-          const Icon = cardItem?.icon;
           return (
-            <BentoCard
-              key={loading ? index : cardItem!.label}
-              delay={index * 0.05}
-              className="rounded-2xl p-5"
-            >
+            <div key={loading ? index : cardItem!.label}>
               {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-11 w-11 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-                  <Skeleton className="h-8 w-20" style={{ background: "rgba(255,255,255,0.04)" }} />
-                  <Skeleton className="h-4 w-28" style={{ background: "rgba(255,255,255,0.03)" }} />
-                </div>
-              ) : cardItem ? (
-                <>
-            <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${
-                        cardItem.accent
-                      }`}
-                    >
-                      {Icon ? <Icon className="h-5 w-5" /> : null}
-                    </div>
-                    <span
-                      className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-blue-200"
-                      style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
-                    >
-                      {t("overview.liveFocus")}
-                    </span>
+                <BentoCard delay={index * 0.05} className="rounded-2xl p-5">
+                  <div className="space-y-4">
+                    <Skeleton className="h-11 w-11 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+                    <Skeleton className="h-8 w-20" style={{ background: "rgba(255,255,255,0.04)" }} />
+                    <Skeleton className="h-4 w-28" style={{ background: "rgba(255,255,255,0.03)" }} />
                   </div>
-                  <p className="mt-4 font-serif text-2xl font-bold text-white">
-                    {cardItem.value.toLocaleString(locale)}
-                  </p>
-                  <p className="mt-1 break-words text-sm font-semibold text-slate-200">{cardItem.label}</p>
-                  <p className="mt-2 line-clamp-2 break-words text-xs leading-5 text-slate-400">{cardItem.helper}</p>
-                </>
+                </BentoCard>
+              ) : cardItem ? (
+                <ReadableMetricCard
+                  label={cardItem.label}
+                  value={cardItem.value.toLocaleString(locale)}
+                  helper={cardItem.helper}
+                  icon={cardItem.icon}
+                  className="h-full"
+                />
               ) : null}
-            </BentoCard>
+            </div>
           );
         })}
-      </div>
-
+      </ResponsiveInfoGrid>
       {isInternal && !loading ? (
         <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
       ) : null}
@@ -780,12 +762,12 @@ export default function OverviewPage() {
                   <Sparkles className="relative z-10 h-4 w-4 text-blue-200" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-blue-300/70">
+                  <p className={`text-[11px] text-blue-300/70 ${lang === "ar" ? "tracking-normal" : "uppercase tracking-[0.22em]"}`}>
                     {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
                   </p>
                   <p className="mt-0.5 break-words text-xs leading-5 text-slate-400">
                     {lang === "ar"
-                      ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق لوركس."
+                      ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق Lourex."
                       : "AI output is advisory. Final decisions remain with the Lourex team."}
                   </p>
                 </div>
@@ -813,7 +795,7 @@ export default function OverviewPage() {
           {briefingUsedFallback ? (
             <div className="mt-5 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
               {lang === "ar"
-                ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء موجز تشغيلي محلي بدلاً من ذلك."
+                ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء موجز تشغيلي محلي بدلا من ذلك."
                 : "LOUREX AI is unavailable right now. A local operational briefing was generated instead."}
             </div>
           ) : null}
@@ -822,7 +804,7 @@ export default function OverviewPage() {
             {briefingLoading ? (
               <div className="flex items-center gap-3 text-sm text-slate-400">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-200" />
-                {lang === "ar" ? "جارٍ تجهيز الموجز اليومي..." : "Preparing daily briefing..."}
+                {lang === "ar" ? "جاري تجهيز الموجز اليومي..." : "Preparing daily briefing..."}
               </div>
             ) : briefingText ? (
               <pre className="max-h-[28rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-100">{briefingText}</pre>
@@ -998,4 +980,5 @@ export default function OverviewPage() {
     </div>
   );
 }
+
 

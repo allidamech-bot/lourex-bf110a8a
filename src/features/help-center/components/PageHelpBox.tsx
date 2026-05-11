@@ -33,7 +33,7 @@ export function PageHelpBox({
               <HelpCircle className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="whitespace-normal text-xs font-semibold uppercase tracking-[0.16em] text-sky-200">{content.eyebrow}</p>
+              <p className={`whitespace-normal text-xs font-semibold text-sky-200 ${isArabic ? "tracking-normal" : "uppercase tracking-[0.16em]"}`}>{content.eyebrow}</p>
               <h2 className="mt-1 whitespace-normal break-normal text-lg font-semibold leading-7 text-white">{content.title}</h2>
               <p className="mt-1 whitespace-normal text-sm leading-6 text-slate-300">{content.summary}</p>
             </div>

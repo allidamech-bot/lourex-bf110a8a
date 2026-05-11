@@ -209,7 +209,7 @@ export default function AuditPage() {
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
               {t("audit.explorer")}
             </p>
             <h2 className="font-serif text-3xl font-semibold">{t("audit.title")}</h2>
@@ -267,7 +267,7 @@ export default function AuditPage() {
         </div>
       </BentoCard>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[
           { label: t("audit.metrics.total"), value: metrics.total },
           { label: t("audit.metrics.approvals"), value: metrics.approvals },
@@ -328,7 +328,7 @@ export default function AuditPage() {
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
                   <div className="rounded-[1.15rem] bg-secondary/20 p-4">
                     <p className="text-xs text-muted-foreground">{t("audit.reference")}</p>
                     <p className="mt-1 font-medium">

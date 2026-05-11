@@ -78,7 +78,7 @@ export const SmartPurchaseRequestPanel = ({
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[
           { label: t("requests.smart.readinessScore"), value: `${analysis.readinessScore}/100` },
           { label: t("requests.smart.completenessScore"), value: `${analysis.completenessScore}/100` },

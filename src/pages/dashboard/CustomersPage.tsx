@@ -146,7 +146,7 @@ export default function CustomersPage() {
     <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
       <div className="space-y-4">
         <BentoCard className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
             {t("customers.directory")}
           </p>
           <h2 className="font-serif text-2xl font-semibold">{t("customers.title")}</h2>
@@ -203,7 +203,7 @@ export default function CustomersPage() {
           <BentoCard>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                   {t("customers.relationship")}
                 </p>
                 <h2 className="font-serif text-3xl font-semibold">{selectedCustomer.fullName}</h2>
@@ -231,7 +231,7 @@ export default function CustomersPage() {
             </div>
           </BentoCard>
 
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
             {[
               { label: t("customers.metrics.activeRequests"), value: selectedRequests.length },
               { label: t("customers.metrics.linkedDeals"), value: selectedDeals.length },

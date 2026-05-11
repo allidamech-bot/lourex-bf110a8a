@@ -342,7 +342,7 @@ export default function CustomerTrackingPage() {
           <BentoCard className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                   {t("customerPortal.actions.tracking.title")}
                 </p>
                 <h1 className="mt-2 font-serif text-3xl font-semibold">
@@ -399,7 +399,7 @@ export default function CustomerTrackingPage() {
         <BentoCard className="space-y-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                 {t("customerPortal.actions.tracking.title")}
               </p>
               <h1 className="mt-2 font-serif text-3xl font-semibold">
@@ -445,7 +445,7 @@ export default function CustomerTrackingPage() {
 
         <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
           <BentoCard className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <ShipmentMetricCard
                   icon={<Route className="h-4 w-4" />}
                   label={getSafeLabel(t("common.all"), locale === "ar" ? "الكل" : "All")}
@@ -500,7 +500,7 @@ export default function CustomerTrackingPage() {
                     >
                       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="break-words text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                          <p className="whitespace-normal break-words text-xs font-semibold text-muted-foreground">
                             {row.trackingId}
                           </p>
                           <p className="mt-2 break-words font-medium">{row.destination}</p>
@@ -537,7 +537,7 @@ export default function CustomerTrackingPage() {
             <BentoCard className="space-y-6 rounded-[1.8rem] border-blue-400/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.28),transparent_34%),linear-gradient(180deg,rgba(6,17,31,0.98),rgba(8,12,22,0.94))] p-4 shadow-[0_28px_80px_-50px_rgba(59,130,246,0.9)] sm:p-6 md:p-7">
               <div className="flex min-w-0 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.22em] text-blue-200">
+                  <p className="whitespace-normal text-xs font-semibold text-blue-200">
                     {t("publicTracking.cta")}
                   </p>
                   <h2 className="mt-3 break-words font-serif text-4xl font-bold text-white md:text-5xl">
@@ -576,7 +576,7 @@ export default function CustomerTrackingPage() {
               </div>
 
               <div className="hidden">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                   {activeShipment.trackingId}
                 </p>
                 <h2 className="mt-2 font-serif text-2xl font-semibold">
@@ -725,7 +725,7 @@ export default function CustomerTrackingPage() {
 
             <BentoCard className="space-y-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                   {t("tracking.shipmentTimeline")}
                 </p>
                 <h3 className="mt-2 text-lg font-semibold">

@@ -5,10 +5,7 @@ import { DecisionQueuePanel } from "@/features/workflow-intelligence/components/
 import { EscalationMonitor } from "@/features/workflow-intelligence/components/EscalationMonitor";
 import { WorkflowHealthPanel } from "@/features/workflow-intelligence/components/WorkflowHealthPanel";
 import { buildWorkflowIntelligence } from "@/features/workflow-intelligence/orchestrators/workflowOrchestrator";
-import type {
-  WorkflowIntelligenceDataset,
-  WorkflowLanguage,
-} from "@/features/workflow-intelligence/types/workflowTypes";
+import type { WorkflowIntelligenceDataset, WorkflowLanguage } from "@/features/workflow-intelligence/types/workflowTypes";
 
 const labels = {
   en: {
@@ -19,7 +16,7 @@ const labels = {
   ar: {
     eyebrow: "ذكاء سير العمل",
     title: "طبقة قيادة سير العمل الذاتية",
-    description: "تنسيق حتمي وإرشادي للتنبيهات، ومسارات التصعيد، وقوائم الاسترداد، وشفافية سياسات الأتمتة.",
+    description: "تنسيق حتمي وإرشادي للتنبيهات ومسارات التصعيد وقوائم الاسترداد وشفافية سياسات الأتمتة.",
   },
 } as const;
 
@@ -43,7 +40,7 @@ export function WorkflowIntelligenceCenter({
             <Workflow className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-200">{t.eyebrow}</p>
+            <p className={`text-[11px] text-cyan-200 ${language === "ar" ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>{t.eyebrow}</p>
             <h2 className="mt-1 break-words font-serif text-2xl font-semibold text-white">{t.title}</h2>
             <p className="mt-1 text-sm leading-6 text-slate-400">{t.description}</p>
           </div>

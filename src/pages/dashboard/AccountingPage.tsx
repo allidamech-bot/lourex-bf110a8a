@@ -478,7 +478,7 @@ export default function AccountingPage() {
         </BentoCard>
 
         <BentoCard>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("accounting.focusedContext")}</p>
+          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("accounting.focusedContext")}</p>
           <p className="mt-3 break-words font-serif text-2xl font-bold sm:text-3xl">{focusDeal || t("accounting.global")}</p>
           <p className="mt-2 break-words text-sm text-muted-foreground">
             {focusDeal ? t("accounting.dealContext") : t("accounting.globalContext")}
@@ -498,7 +498,7 @@ export default function AccountingPage() {
               <Receipt className="h-5 w-5 text-primary" />
               <h2 className="min-w-0 break-words font-serif text-2xl font-semibold">{t("accounting.financialSignals")}</h2>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               {[
                 { label: t("accounting.labels.totalIncome"), value: totals.income },
                 { label: t("accounting.labels.totalExpense"), value: totals.expense },
@@ -783,7 +783,7 @@ export default function AccountingPage() {
                       {row.locked ? t("accounting.locked") : t("accounting.openState")}
                     </span>
                   </div>
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
                     <div className="min-w-0 rounded-[1.15rem] bg-secondary/25 p-4">
                       <p className="text-xs text-muted-foreground">{t("accounting.labels.type")}</p>
                       <p className="mt-1 break-words font-medium">{row.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense")}</p>

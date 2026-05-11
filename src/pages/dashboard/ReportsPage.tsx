@@ -244,10 +244,10 @@ export default function ReportsPage() {
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("reports.window")}</p>
+            <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("reports.window")}</p>
             <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
           </div>
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid w-full grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))] lg:w-auto">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
@@ -282,7 +282,7 @@ export default function ReportsPage() {
         </div>
       </BentoCard>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[
           { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown("pending_requests") },
           { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },

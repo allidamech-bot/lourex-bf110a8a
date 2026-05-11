@@ -20,8 +20,8 @@ const labels = {
   ar: {
     eyebrow: "بنية التشغيل",
     title: "مخزن الأحداث الدائم وتشغيل التسليم",
-    description: "سجل تشغيلي دائم، واسترداد آمن للإعادة، وقوائم تسليم الإشعارات، وتتبع الحالة.",
-    loading: "جار استرداد حالة التشغيل...",
+    description: "سجل تشغيلي دائم واسترداد آمن للإعادة وقوائم تسليم الإشعارات وتتبع الحالة.",
+    loading: "جاري استرداد حالة التشغيل...",
   },
 } as const;
 
@@ -56,7 +56,7 @@ export function RuntimeInfrastructureCenter({
             <ServerCog className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-violet-200">{t.eyebrow}</p>
+            <p className={`text-[11px] text-violet-200 ${language === "ar" ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>{t.eyebrow}</p>
             <h2 className="mt-1 break-words font-serif text-2xl font-semibold text-white">{t.title}</h2>
             <p className="mt-1 text-sm leading-6 text-slate-400">{t.description}</p>
           </div>
@@ -73,10 +73,12 @@ export function RuntimeInfrastructureCenter({
           <RuntimeRecoveryPanel recovery={result.recovery} language={language} locale={locale} />
           <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
             <NotificationDeliveryCenter queue={result.deliveryQueue} language={language} />
-            <DeliveryStatusMonitor history={result.deliveryHistory} language={language} />
+            <DeliveryStatusMonitor events={result.deliveryEvents} language={language} locale={locale} />
           </div>
-          <PersistentEventTimeline timeline={result.recovery.timeline} language={language} locale={locale} />
-          <OperationalHistoryExplorer records={result.recovery.restoredEvents} language={language} />
+          <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+            <PersistentEventTimeline records={result.persistedEvents} language={language} locale={locale} />
+            <OperationalHistoryExplorer records={result.persistedEvents} language={language} />
+          </div>
         </>
       )}
     </section>

@@ -332,7 +332,7 @@ export default function DealsPage() {
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
       <BentoCard className="space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
             {t("deals.inboxEyebrow")}
           </p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("deals.inboxTitle")}</h2>
@@ -420,7 +420,7 @@ export default function DealsPage() {
           <div className="border-b border-border/50 p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
                   {t("deals.operationalCenter")}
                 </p>
                 <h2 className="mt-2 break-words font-serif text-2xl font-semibold sm:text-3xl">{selectedDeal.dealNumber}</h2>
@@ -529,7 +529,7 @@ export default function DealsPage() {
                   <Receipt className="h-4 w-4 text-primary" />
                   <p className="font-medium">{t("deals.labels.financialSummary")}</p>
                 </div>
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                <div className="mt-4 grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
                   {[
                     {
                       label: t("deals.labels.totalIncome"),

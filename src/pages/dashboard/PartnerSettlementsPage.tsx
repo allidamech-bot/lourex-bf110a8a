@@ -3,6 +3,7 @@ import { CheckCircle2, CircleDollarSign, RefreshCcw, Scale, ShieldAlert } from "
 import { toast } from "sonner";
 
 import BentoCard from "@/components/BentoCard";
+import { ReadableInfoCard, ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,20 +141,11 @@ export default function PartnerSettlementsPage() {
   return (
     <div className="space-y-4">
       <PageHelpBox pageKey="partner_settlements" role={profile?.role} />
-      <div className="grid gap-4 xl:grid-cols-3">
-        <BentoCard>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("partnerSettlements.metrics.unpaid")}</p>
-          <p className="mt-3 text-3xl font-bold">{formatMoney(totals.unpaid)} SAR</p>
-        </BentoCard>
-        <BentoCard>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("partnerSettlements.metrics.paid")}</p>
-          <p className="mt-3 text-3xl font-bold">{formatMoney(totals.paid)} SAR</p>
-        </BentoCard>
-        <BentoCard>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("partnerSettlements.metrics.disputed")}</p>
-          <p className="mt-3 text-3xl font-bold">{totals.disputed}</p>
-        </BentoCard>
-      </div>
+      <ResponsiveInfoGrid min="minmax(min(100%, 11rem), 1fr)">
+        <ReadableMetricCard label={t("partnerSettlements.metrics.unpaid")} value={`${formatMoney(totals.unpaid)} SAR`} />
+        <ReadableMetricCard label={t("partnerSettlements.metrics.paid")} value={`${formatMoney(totals.paid)} SAR`} />
+        <ReadableMetricCard label={t("partnerSettlements.metrics.disputed")} value={totals.disputed.toLocaleString(lang)} />
+      </ResponsiveInfoGrid>
 
       <SettlementVisibilityPanel summary={settlementVisibility} t={t} formatMoney={formatMoney} />
 
@@ -163,7 +155,8 @@ export default function PartnerSettlementsPage() {
             <Scale className="h-5 w-5 text-primary" />
             <h2 className="font-serif text-2xl font-semibold">{t("partnerSettlements.createTitle")}</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-4">
+          <SectionHelpBox title={t("partnerSettlements.pro.helpTitle")} body={t("partnerSettlements.pro.helpBody")} example={t("partnerSettlements.pro.helpExample")} />
+          <div className="grid gap-4 md:grid-cols-[minmax(12rem,1.2fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_auto]">
             <div>
               <Label>{t("partnerSettlements.partner")}</Label>
               <select
@@ -226,19 +219,16 @@ export default function PartnerSettlementsPage() {
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
                 {[
                   { label: t("partnerSettlements.gross"), value: settlement.grossAmount },
                   { label: t("partnerSettlements.commission"), value: settlement.partnerCommission },
                   { label: t("partnerSettlements.expenses"), value: settlement.expenses },
                   { label: t("partnerSettlements.netDue"), value: settlement.netDue },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="mt-1 font-medium">{formatMoney(item.value)} SAR</p>
-                  </div>
+                  <ReadableInfoCard key={item.label} label={item.label} value={`${formatMoney(item.value)} SAR`} />
                 ))}
-              </div>
+              </ResponsiveInfoGrid>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {canManage && ["draft", "pending_review", "disputed"].includes(settlement.status) ? (
