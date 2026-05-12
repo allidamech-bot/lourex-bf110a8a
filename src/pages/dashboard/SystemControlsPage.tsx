@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
-import { supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
@@ -108,6 +108,23 @@ const getDayKey = (value: string | null | undefined) => (value ? value.slice(0, 
 
 const dateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString() : "Not recorded");
 
+const optionalTableMessage = "Optional Lovable Cloud table is not configured yet.";
+
+const optionalQuery = async <T,>(
+  runner: () => PromiseLike<{ data: T[] | null; error: unknown | null }>,
+  feature: string,
+) => {
+  const result = await runner();
+  if (result.error) {
+    if (isOptionalBackendUnavailable(result.error)) {
+      console.info(`${feature}: ${optionalTableMessage}`);
+      return [] as T[];
+    }
+    throw result.error;
+  }
+  return result.data || [];
+};
+
 const statusBadgeClass = (value: string) => {
   if (["critical", "rejected", "error"].includes(value)) return "border-rose-500/30 bg-rose-500/10 text-rose-300";
   if (["warning", "pending"].includes(value)) return "border-amber-500/30 bg-amber-500/10 text-amber-300";
@@ -172,44 +189,36 @@ export default function SystemControlsPage() {
 
     try {
       const [
-        rulesResult,
-        securityResult,
-        systemResult,
-        healthResult,
-        financialRequestsResult,
-        financialCorrectionsResult,
+        nextRules,
+        nextSecurityEvents,
+        nextSystemEvents,
+        nextHealthSnapshots,
+        nextFinancialRequests,
+        nextFinancialCorrections,
       ] = await Promise.all([
-        adminDb.from("business_rules").select("*").order("rule_group").order("rule_key"),
-        adminDb.from("security_audit_events").select("*").order("created_at", { ascending: false }).limit(200),
-        adminDb.from("system_events").select("*").order("created_at", { ascending: false }).limit(200),
-        adminDb.from("system_health_snapshots").select("*").order("created_at", { ascending: false }).limit(30),
-        adminDb.from("financial_edit_requests").select("*").order("created_at", { ascending: false }).limit(100),
-        adminDb
-          .from("financial_entries")
-          .select("id, entry_number, deal_id, customer_id, amount, currency, category, note, created_at")
-          .ilike("entry_number", "FE-CORR-%")
-          .order("created_at", { ascending: false })
-          .limit(100),
+        optionalQuery<BusinessRuleRow>(() => adminDb.from("business_rules").select("*").order("rule_group").order("rule_key"), "business_rules"),
+        optionalQuery<SecurityAuditEventRow>(() => adminDb.from("security_audit_events").select("*").order("created_at", { ascending: false }).limit(200), "security_audit_events"),
+        optionalQuery<SystemEventRow>(() => adminDb.from("system_events").select("*").order("created_at", { ascending: false }).limit(200), "system_events"),
+        optionalQuery<SystemHealthSnapshotRow>(() => adminDb.from("system_health_snapshots").select("*").order("created_at", { ascending: false }).limit(30), "system_health_snapshots"),
+        optionalQuery<FinancialEditRequestRow>(() => adminDb.from("financial_edit_requests").select("*").order("created_at", { ascending: false }).limit(100), "financial_edit_requests"),
+        optionalQuery<FinancialEntryRow>(
+          () =>
+            adminDb
+              .from("financial_entries")
+              .select("id, entry_number, deal_id, customer_id, amount, currency, category, note, created_at")
+              .ilike("entry_number", "FE-CORR-%")
+              .order("created_at", { ascending: false })
+              .limit(100),
+          "financial_entries",
+        ),
       ]);
 
-      const failed = [
-        rulesResult.error,
-        securityResult.error,
-        systemResult.error,
-        healthResult.error,
-        financialRequestsResult.error,
-        financialCorrectionsResult.error,
-      ].find(Boolean);
-
-      if (failed) throw failed;
-
-      const nextRules = (rulesResult.data || []) as BusinessRuleRow[];
       setRules(nextRules);
-      setSecurityEvents((securityResult.data || []) as SecurityAuditEventRow[]);
-      setSystemEvents((systemResult.data || []) as SystemEventRow[]);
-      setHealthSnapshots((healthResult.data || []) as SystemHealthSnapshotRow[]);
-      setFinancialRequests((financialRequestsResult.data || []) as FinancialEditRequestRow[]);
-      setFinancialCorrections((financialCorrectionsResult.data || []) as FinancialEntryRow[]);
+      setSecurityEvents(nextSecurityEvents);
+      setSystemEvents(nextSystemEvents);
+      setHealthSnapshots(nextHealthSnapshots);
+      setFinancialRequests(nextFinancialRequests);
+      setFinancialCorrections(nextFinancialCorrections);
       setRuleDrafts(
         nextRules.reduce<Record<string, { severity: BusinessRuleRow["severity"]; config: string }>>((drafts, rule) => {
           drafts[rule.id] = {
@@ -244,7 +253,7 @@ export default function SystemControlsPage() {
       toast.success("Business rule updated.");
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update business rule.");
+      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : "Failed to update business rule.");
     } finally {
       setSavingRuleId(null);
     }
@@ -277,7 +286,7 @@ export default function SystemControlsPage() {
       toast.success("System health snapshot captured.");
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to capture health snapshot.");
+      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : "Failed to capture health snapshot.");
     } finally {
       setCapturingHealth(false);
     }

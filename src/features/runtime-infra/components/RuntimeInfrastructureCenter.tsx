@@ -72,12 +72,12 @@ export function RuntimeInfrastructureCenter({
         <>
           <RuntimeRecoveryPanel recovery={result.recovery} language={language} locale={locale} />
           <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-            <NotificationDeliveryCenter queue={result.deliveryQueue} language={language} />
-            <DeliveryStatusMonitor events={result.deliveryEvents} language={language} locale={locale} />
+            <NotificationDeliveryCenter queue={result.deliveryQueue ?? []} language={language} />
+            <DeliveryStatusMonitor history={result.deliveryHistory ?? []} language={language} />
           </div>
           <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-            <PersistentEventTimeline records={result.persistedEvents} language={language} locale={locale} />
-            <OperationalHistoryExplorer records={result.persistedEvents} language={language} />
+            <PersistentEventTimeline timeline={result.recovery?.timeline ?? []} language={language} locale={locale} />
+            <OperationalHistoryExplorer records={result.persistedEvents ?? []} language={language} />
           </div>
         </>
       )}

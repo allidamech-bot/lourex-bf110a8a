@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, optionalBackendUnavailableMessage } from "@/integrations/supabase/client";
 import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries } from "@/domain/accounting/service";
 import {
@@ -51,6 +52,13 @@ type SettlementAmounts = {
 };
 
 const db = supabase as unknown as LooseDomainClient;
+
+const throwOptionalSettlementUnavailable = (error: unknown): never => {
+  if (isOptionalBackendUnavailable(error)) {
+    throw new Error(optionalBackendUnavailableMessage);
+  }
+  throw error;
+};
 
 const assertSettlementActor = async () => {
   const context = await getCurrentUserContext();
@@ -172,7 +180,7 @@ export const createPartnerSettlement = async (input: SettlementCalculationInput 
     p_partner_commission: amounts.partnerCommission,
     p_expenses: amounts.expenses,
   });
-  if (error) throw error;
+  if (error) throwOptionalSettlementUnavailable(error);
 
   await writeAuditLog({
     action: "partner_settlement.created",
@@ -196,7 +204,7 @@ export const recalculatePartnerSettlement = async (
     p_partner_commission: amounts.partnerCommission,
     p_expenses: amounts.expenses,
   });
-  if (error) throw error;
+  if (error) throwOptionalSettlementUnavailable(error);
   await writeAuditLog({
     action: "partner_settlement.recalculated",
     tableName: "partner_settlements",
@@ -209,7 +217,7 @@ export const approvePartnerSettlement = async (settlementId: string) => {
   const { profile } = await assertSettlementActor();
   if (!canManageAccounting(profile.role as LourexRole)) throw new Error("Only owner or operations can approve partner settlements.");
   const { error } = await db.rpc("approve_partner_settlement", { p_settlement_id: settlementId });
-  if (error) throw error;
+  if (error) throwOptionalSettlementUnavailable(error);
   await writeAuditLog({ action: "partner_settlement.approved", tableName: "partner_settlements", recordId: settlementId });
 };
 
@@ -217,7 +225,7 @@ export const markPartnerSettlementPaid = async (settlementId: string) => {
   const { profile } = await assertSettlementActor();
   if (!canManageAccounting(profile.role as LourexRole)) throw new Error("Only owner or operations can mark partner settlements paid.");
   const { error } = await db.rpc("mark_partner_settlement_paid", { p_settlement_id: settlementId });
-  if (error) throw error;
+  if (error) throwOptionalSettlementUnavailable(error);
   await writeAuditLog({ action: "partner_settlement.marked_paid", tableName: "partner_settlements", recordId: settlementId });
 };
 
@@ -235,7 +243,7 @@ export const disputePartnerSettlement = async (settlementId: string, reason = ""
     p_settlement_id: settlementId,
     p_reason: reason,
   });
-  if (error) throw error;
+  if (error) throwOptionalSettlementUnavailable(error);
   await writeAuditLog({
     action: "partner_settlement.disputed",
     tableName: "partner_settlements",

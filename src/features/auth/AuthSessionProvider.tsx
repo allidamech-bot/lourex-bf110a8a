@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import {
   type LourexProfile,
   type LourexRole,
@@ -147,6 +147,11 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true;
 
     const bootstrap = async () => {
+      if (!isSupabaseConfigured) {
+        setLoading(false);
+        return;
+      }
+
       const {
         data: { session: currentSession },
       } = await supabase.auth.getSession();
@@ -171,6 +176,13 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   }, [loadSessionState]);
 
   const refreshProfile = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setSession(null);
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession();
@@ -183,6 +195,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
     setProfileError(false);
     setProfileMissing(false);
+    if (!isSupabaseConfigured) return;
     await supabase.auth.signOut();
   }, []);
 

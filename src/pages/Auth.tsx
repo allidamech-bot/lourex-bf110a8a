@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building2, Lock, Mail, User } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { AuthStateScreen } from "@/components/auth/AuthStateScreen";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getDefaultRouteForRole } from "@/features/auth/rbac";
@@ -112,7 +112,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
     setLoading(true);
 
     try {
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+      if (!isSupabaseConfigured) {
         throw new Error("CONFIG_ERROR");
       }
 

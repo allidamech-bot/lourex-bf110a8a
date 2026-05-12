@@ -1,6 +1,6 @@
 import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import {
   canManageUsers,
@@ -49,6 +49,7 @@ type DomainSingleResult<T> = Promise<{
 
 interface DomainSelectBuilder<T> extends PromiseLike<{ data: T[] | null; error: DomainError | null }> {
   eq(column: string, value: unknown): DomainSelectBuilder<T>;
+  ilike(column: string, pattern: string): DomainSelectBuilder<T>;
   in(column: string, values: unknown[]): DomainSelectBuilder<T>;
   limit(count: number): DomainSelectBuilder<T>;
   order(column: string, options?: { ascending?: boolean }): DomainSelectBuilder<T>;
@@ -316,6 +317,10 @@ export const isMissingSchemaError = (error: unknown) => {
 
 export const getLourexDomainAvailability = async () => {
   if (lourexDomainAvailable !== null) return lourexDomainAvailable;
+  if (!isSupabaseConfigured) {
+    lourexDomainAvailable = false;
+    return lourexDomainAvailable;
+  }
 
   const { error } = await db.from("purchase_requests").select("id").limit(1);
   lourexDomainAvailable = !error || !isMissingSchemaError(error);
@@ -323,6 +328,10 @@ export const getLourexDomainAvailability = async () => {
 };
 
 export const safeStructuredSelect = async <T extends Record<string, unknown>>(table: string, query?: string) => {
+  if (!isSupabaseConfigured) {
+    return [] as T[];
+  }
+
   if (table === "purchase_requests" && !(await getLourexDomainAvailability())) {
     logOperationalError("domain_select_unavailable", new Error(`Table ${table} is not available in current schema`), { table });
     return [] as T[];
@@ -344,6 +353,10 @@ export const safeStructuredSelectWhereEq = async <T extends Record<string, unkno
   value: unknown,
   query?: string,
 ) => {
+  if (!isSupabaseConfigured) {
+    return [] as T[];
+  }
+
   if (table === "purchase_requests" && !(await getLourexDomainAvailability())) {
     return [] as T[];
   }
@@ -361,6 +374,10 @@ const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
   values: unknown[],
   query?: string,
 ) => {
+  if (!isSupabaseConfigured) {
+    return [] as T[];
+  }
+
   if (values.length === 0 || (table === "purchase_requests" && !(await getLourexDomainAvailability()))) {
     return [] as T[];
   }
@@ -380,6 +397,10 @@ const safeStructuredSelectWhereInEq = async <T extends Record<string, unknown>>(
   eqValue: unknown,
   query?: string,
 ) => {
+  if (!isSupabaseConfigured) {
+    return [] as T[];
+  }
+
   if (values.length === 0 || (table === "purchase_requests" && !(await getLourexDomainAvailability()))) {
     return [] as T[];
   }
@@ -396,7 +417,7 @@ const safeStructuredMutation = async <T>(
 ) => {
   const available = await getLourexDomainAvailability();
   if (!available) {
-    const error = { message: "الخدمة غير متوفرة حالياً (قاعدة البيانات غير جاهزة)." };
+    const error = { message: "الخدمة غير متوفرة حاليا في إعدادات Lovable Cloud." };
     logOperationalError("domain_mutation_unavailable", new Error(error.message));
     return { data: null as T | null, error };
   }

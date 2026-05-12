@@ -14,6 +14,7 @@ export function DeliveryStatusMonitor({
   language: RuntimeLanguage;
 }) {
   const t = labels[language];
+  const safeHistory = Array.isArray(history) ? history : [];
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
@@ -22,7 +23,7 @@ export function DeliveryStatusMonitor({
         <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
       </div>
       <div className="mt-4 space-y-3">
-        {history.slice(0, 7).map((item) => (
+        {safeHistory.slice(0, 7).map((item) => (
           <div key={item.id} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
@@ -33,7 +34,7 @@ export function DeliveryStatusMonitor({
             </div>
           </div>
         ))}
-        {history.length === 0 ? (
+        {safeHistory.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-slate-950/35 p-4 text-sm text-slate-400">{t.empty}</p>
         ) : null}
       </div>

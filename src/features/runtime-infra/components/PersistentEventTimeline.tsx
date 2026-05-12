@@ -17,6 +17,7 @@ export function PersistentEventTimeline({
   locale: string;
 }) {
   const t = labels[language];
+  const safeTimeline = Array.isArray(timeline) ? timeline : [];
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
@@ -25,7 +26,7 @@ export function PersistentEventTimeline({
         <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
       </div>
       <div className="mt-4 space-y-3">
-        {timeline.slice(0, 7).map((item) => (
+        {safeTimeline.slice(0, 7).map((item) => (
           <div key={item.id} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
@@ -39,7 +40,7 @@ export function PersistentEventTimeline({
             </div>
           </div>
         ))}
-        {timeline.length === 0 ? (
+        {safeTimeline.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-slate-950/35 p-4 text-sm text-slate-400">{t.empty}</p>
         ) : null}
       </div>

@@ -12,9 +12,49 @@ export const missingSupabaseEnvVars = [
 
 export const isSupabaseConfigured = missingSupabaseEnvVars.length === 0;
 
+export const optionalBackendTables = new Set([
+  "partner_settlements",
+  "payments",
+  "payment_allocations",
+  "business_rules",
+  "security_audit_events",
+  "system_health_snapshots",
+  "system_events",
+]);
+
+export const optionalBackendUnavailableMessage =
+  "This optional backend feature is not available in the current Lovable Cloud configuration.";
+
+export const isMissingBackendResourceError = (error: unknown) => {
+  if (!error || typeof error !== "object") return false;
+  const record = error as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown; status?: unknown };
+  const message = String(record.message || "").toLowerCase();
+  const details = String(record.details || "").toLowerCase();
+  const hint = String(record.hint || "").toLowerCase();
+  const code = String(record.code || "");
+
+  return (
+    record.status === 404 ||
+    ["42P01", "42703", "42883", "PGRST204", "PGRST205", "PGRST202"].includes(code) ||
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("relation") ||
+    message.includes("function") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    hint.includes("could not find")
+  );
+};
+
+export const isOptionalBackendUnavailable = (error: unknown) =>
+  !isSupabaseConfigured || isMissingBackendResourceError(error);
+
+const runtimeSupabaseUrl =
+  SUPABASE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost");
+
 export const supabase = createClient<Database>(
-    SUPABASE_URL || "https://missing-supabase-url.supabase.co",
-    SUPABASE_PUBLISHABLE_KEY || "missing-supabase-publishable-key",
+    runtimeSupabaseUrl,
+    SUPABASE_PUBLISHABLE_KEY || "lovable-cloud-runtime-not-configured",
     {
       auth: {
         storage: localStorage,

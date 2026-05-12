@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, optionalBackendUnavailableMessage } from "@/integrations/supabase/client";
 import {
   getCurrentUserContext,
   safeStructuredSelect,
@@ -57,6 +58,13 @@ export type CustomerPaymentSummary = {
 };
 
 const db = supabase as unknown as LooseDomainClient;
+
+const throwOptionalPaymentUnavailable = (error: unknown): never => {
+  if (isOptionalBackendUnavailable(error)) {
+    throw new Error(optionalBackendUnavailableMessage);
+  }
+  throw error;
+};
 
 const mapPayment = (row: PaymentRow): PaymentRecord => ({
   id: row.id,
@@ -128,14 +136,14 @@ export const createPayment = async (input: {
     p_currency: input.currency || "SAR",
     p_payment_method: input.paymentMethod || "bank_transfer",
   });
-  if (error) throw error;
+  if (error) throwOptionalPaymentUnavailable(error);
   return data as string;
 };
 
 export const confirmPayment = async (paymentId: string) => {
   await assertPaymentActor();
   const { data, error } = await db.rpc("confirm_payment", { p_payment_id: paymentId });
-  if (error) throw error;
+  if (error) throwOptionalPaymentUnavailable(error);
   return data as string;
 };
 
@@ -145,7 +153,7 @@ export const rejectPayment = async (paymentId: string, reason = "") => {
     p_payment_id: paymentId,
     p_reason: reason,
   });
-  if (error) throw error;
+  if (error) throwOptionalPaymentUnavailable(error);
 };
 
 export const allocatePayment = async (paymentId: string, financialEntryId: string, allocatedAmount: number) => {
@@ -155,7 +163,7 @@ export const allocatePayment = async (paymentId: string, financialEntryId: strin
     p_financial_entry_id: financialEntryId,
     p_allocated_amount: allocatedAmount,
   });
-  if (error) throw error;
+  if (error) throwOptionalPaymentUnavailable(error);
   return data as string;
 };
 
@@ -168,7 +176,7 @@ export const getOutstandingBalance = async (
     p_entity_type: entityType,
     p_entity_id: entityId,
   });
-  if (error) throw error;
+  if (error) throwOptionalPaymentUnavailable(error);
   const row = Array.isArray(data) ? data[0] : data;
   return {
     expectedAmount: Number(row?.expected_amount || 0),
