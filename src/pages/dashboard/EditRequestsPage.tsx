@@ -241,7 +241,7 @@ export default function EditRequestsPage() {
     <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
       <BentoCard className="space-y-5">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("editRequests.newRequest")}</p>
+          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("editRequests.newRequest")}</p>
           <h2 className="mt-2 font-serif text-2xl font-semibold">{t("editRequests.title")}</h2>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("editRequests.description")}</p>
         </div>

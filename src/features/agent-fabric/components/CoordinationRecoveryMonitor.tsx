@@ -26,7 +26,7 @@ export function CoordinationRecoveryMonitor({
           <RefreshCw className="h-4 w-4" />
         </div>
         <div>
-          <p className={`text-[11px] text-amber-200 ${isArabic ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>
+          <p className={`whitespace-normal break-words text-[11px] font-semibold text-amber-200 ${isArabic ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>
             {isArabic ? "استرداد التنسيق" : "Coordination Recovery"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">

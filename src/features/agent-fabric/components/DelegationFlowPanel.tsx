@@ -17,7 +17,7 @@ export function DelegationFlowPanel({
           <GitBranch className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
+          <p className="whitespace-normal text-[11px] font-semibold text-emerald-200">
             {language === "ar" ? "تفويض وتخطيط" : "Delegation Flow"}
           </p>
           <h3 className="mt-1 font-serif text-xl font-semibold text-white">

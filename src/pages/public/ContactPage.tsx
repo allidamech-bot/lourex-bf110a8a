@@ -323,14 +323,14 @@ export default function ContactPage() {
                           href={publicContactInfo.websiteUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-2 block break-all font-medium text-primary hover:underline"
+                          className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
                         >
                           {item.value}
                         </a>
                       ) : item.label === t("contact.labels.email") ? (
                         <a
                           href={`mailto:${publicContactInfo.email}`}
-                          className="mt-2 block break-all font-medium text-primary hover:underline"
+                          className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
                         >
                           {item.value}
                         </a>

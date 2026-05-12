@@ -18,11 +18,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { ProductionFallbackCard, ProductionSectionSkeleton } from "@/components/production/ProductionFallbacks";
 import { ReadableMetricCard, ResponsiveInfoGrid } from "@/components/readable/ReadableCards";
 import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AIOperationsCenter } from "@/features/ai-ops/components/AIOperationsCenter";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
 import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
@@ -43,6 +44,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { logOperationalError } from "@/lib/monitoring";
 import type { PartnerSettlement } from "@/types/lourex";
 
+const AIOperationsCenter = React.lazy(() =>
+  import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
+);
 const WorkflowIntelligenceCenter = React.lazy(() =>
   import("@/features/workflow-intelligence/components/WorkflowIntelligenceCenter"),
 );
@@ -88,6 +92,12 @@ interface MetricCard {
 }
 
 const loadingCards = Array.from({ length: 4 }, (_, index) => index);
+
+const ProductionLazySection = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary fallback={<ProductionFallbackCard kind="lazyError" />}>
+    <React.Suspense fallback={<ProductionSectionSkeleton />}>{children}</React.Suspense>
+  </ErrorBoundary>
+);
 
 type DashboardRequests = Awaited<ReturnType<typeof fetchRequests>>;
 type DashboardDeals = Awaited<ReturnType<typeof fetchDeals>>;
@@ -585,160 +595,99 @@ export default function OverviewPage() {
         })}
       </ResponsiveInfoGrid>
       {isInternal && !loading ? (
-        <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+        <ProductionLazySection>
+          <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <WorkflowIntelligenceCenter
             dataset={workflowIntelligenceDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <OperationsEventCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <RuntimeInfrastructureCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <RealtimeOperationsCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <LiveOperationsCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <DistributedRuntimeCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <AutonomousExecutionCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <CognitiveOperationsCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal && !loading ? (
-        <React.Suspense
-          fallback={
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <Skeleton className="h-8 w-64 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-              <Skeleton className="mt-4 h-24 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
-            </div>
-          }
-        >
+        <ProductionLazySection>
           <MultiAgentOperationsCenter
             dataset={eventSystemDataset}
             language={lang === "ar" ? "ar" : "en"}
             locale={locale}
           />
-        </React.Suspense>
+        </ProductionLazySection>
       ) : null}
 
       {isInternal ? (
@@ -823,7 +772,7 @@ export default function OverviewPage() {
         <BentoCard className="space-y-5 rounded-2xl">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("overview.priorityBoard")}</p>
+              <p className="whitespace-normal text-[11px] font-semibold text-blue-300/70">{t("overview.priorityBoard")}</p>
               <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
             </div>
             <span
@@ -895,7 +844,7 @@ export default function OverviewPage() {
             style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
           >
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-blue-300/70">{t("customers.activity")}</p>
+              <p className="whitespace-normal text-[11px] font-semibold text-blue-300/70">{t("customers.activity")}</p>
               <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.latestRequests")}</h3>
             </div>
             <span

@@ -11,6 +11,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
+import { ProductionFallbackCard } from "@/components/production/ProductionFallbacks";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
-import { isOptionalBackendUnavailable, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, isSupabaseConfigured, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
@@ -344,10 +345,11 @@ export default function SystemControlsPage() {
 
   return (
     <div className="space-y-5">
+      {!isSupabaseConfigured ? <ProductionFallbackCard kind="backend" /> : null}
       <BentoCard className="space-y-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-primary/80">Admin systems</p>
+            <p className="whitespace-normal text-xs font-semibold text-primary/80">Admin systems</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold">Security, Rules, Audit, and Health</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
               Monitor protected backend systems, review operational events, and manage configurable business rules.
@@ -358,7 +360,7 @@ export default function SystemControlsPage() {
             Refresh
           </Button>
         </div>
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <MetricTile icon={SlidersHorizontal} label="Rules" value={rules.length} />
           <MetricTile icon={ShieldCheck} label="Security events" value={securityEvents.length} />
           <MetricTile icon={Activity} label="System events" value={systemEvents.length} />
@@ -394,7 +396,7 @@ export default function SystemControlsPage() {
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_220px_minmax(260px,0.9fr)_auto] xl:items-start">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="break-all font-mono text-sm font-semibold">{rule.rule_key}</p>
+                          <p className="break-words font-mono text-sm font-semibold [overflow-wrap:anywhere]">{rule.rule_key}</p>
                           <Badge variant="outline">{rule.rule_group}</Badge>
                           <Badge className={statusBadgeClass(rule.severity)} variant="outline">
                             {rule.severity}
@@ -476,7 +478,7 @@ export default function SystemControlsPage() {
               title="Security Audit Events"
               description="Review security-sensitive RPC actions and protected customer operations."
             />
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <FilterInput
                 value={securityFilters.action}
                 onChange={(value) => setSecurityFilters((current) => ({ ...current, action: value }))}
@@ -534,7 +536,7 @@ export default function SystemControlsPage() {
               title="System Events"
               description="Inspect application and database events recorded by the observability system."
             />
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <Select
                 value={systemFilters.severity}
                 onValueChange={(value) => setSystemFilters((current) => ({ ...current, severity: value }))}
@@ -671,7 +673,7 @@ export default function SystemControlsPage() {
                   {filteredFinancialRequests.map((request) => (
                     <div key={request.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="break-all font-mono text-sm font-semibold">{request.financial_entry_id || request.id}</p>
+                        <p className="break-words font-mono text-sm font-semibold [overflow-wrap:anywhere]">{request.financial_entry_id || request.id}</p>
                         <Badge className={statusBadgeClass(request.status)} variant="outline">
                           {request.status}
                         </Badge>

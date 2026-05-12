@@ -56,7 +56,7 @@ export function RuntimeInfrastructureCenter({
             <ServerCog className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className={`text-[11px] text-violet-200 ${language === "ar" ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>{t.eyebrow}</p>
+            <p className={`whitespace-normal break-words text-[11px] font-semibold text-violet-200 ${language === "ar" ? "tracking-normal" : "uppercase tracking-[0.2em]"}`}>{t.eyebrow}</p>
             <h2 className="mt-1 break-words font-serif text-2xl font-semibold text-white">{t.title}</h2>
             <p className="mt-1 text-sm leading-6 text-slate-400">{t.description}</p>
           </div>

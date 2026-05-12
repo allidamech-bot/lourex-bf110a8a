@@ -94,7 +94,7 @@ export default function Admin() {
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("admin.ownerControl")}</p>
+                <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("admin.ownerControl")}</p>
                 <h1 className="mt-2 font-serif text-3xl font-semibold">{t("admin.title")}</h1>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{t("admin.description")}</p>
               </div>
@@ -102,7 +102,7 @@ export default function Admin() {
           </BentoCard>
 
           <BentoCard>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("admin.runtimeStatus")}</p>
+            <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("admin.runtimeStatus")}</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {[
                 { label: t("admin.requestsMetric"), value: activation?.purchaseRequests || 0 },
