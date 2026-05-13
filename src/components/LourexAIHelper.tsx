@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Sparkles, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, getAiUnavailableMessage, invokeLourexAi } from "@/lib/aiClient";
 
 interface Message {
   role: "user" | "assistant";
@@ -54,7 +54,9 @@ const LourexAIHelper = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error, unavailableMessage } = await invokeLourexAi({
+        lang,
+        area: "floating_ai_helper",
         body: {
           messages: allMessages,
           language: lang,
@@ -64,11 +66,11 @@ const LourexAIHelper = () => {
         },
       });
 
-      if (error) throw error;
-      const reply = data?.reply || data?.choices?.[0]?.message?.content || copy.fallback;
+      if (error) throw new Error(unavailableMessage || getAiUnavailableMessage(lang));
+      const reply = getAiReplyText(data) || copy.fallback;
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err: unknown) {
-      setMessages(prev => [...prev, { role: "assistant", content: copy.unavailable }]);
+      setMessages(prev => [...prev, { role: "assistant", content: getAiUnavailableMessage(lang) }]);
     } finally {
       setLoading(false);
     }

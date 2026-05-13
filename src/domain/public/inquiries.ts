@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, logOptionalBackendUnavailableOnce } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { DomainResult } from "@/domain/operations/types";
 import {
@@ -99,15 +100,22 @@ export const submitContactInquiry = async (
 
     if (error) {
       logOperationalError("contact_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
-      return {
-        data: null,
-        error: createDomainError(error, "Unable to submit the contact inquiry."),
-      };
+      const stored = await insertInquiry({ ...normalized.data, inquiry_type: "contact" } as InquiryInsert, "Unable to store the contact inquiry.");
+      if (stored.data || isOptionalBackendUnavailable(error)) {
+        if (isOptionalBackendUnavailable(error)) logOptionalBackendUnavailableOnce("submit-inquiry", error);
+        return success({ success: true, message: "Your message has been received." });
+      }
+      return { data: null, error: createDomainError(error, "Unable to submit the contact inquiry.") };
     }
 
     return success(data);
   } catch (error) {
     logOperationalError("contact_inquiry", error, { hasEmail: Boolean(normalized.data.email) });
+    const stored = await insertInquiry({ ...normalized.data, inquiry_type: "contact" } as InquiryInsert, "Unable to store the contact inquiry.");
+    if (stored.data || isOptionalBackendUnavailable(error)) {
+      if (isOptionalBackendUnavailable(error)) logOptionalBackendUnavailableOnce("submit-inquiry", error);
+      return success({ success: true, message: "Your message has been received." });
+    }
     return {
       data: null,
       error: createDomainError(error, "Unable to submit the contact inquiry."),

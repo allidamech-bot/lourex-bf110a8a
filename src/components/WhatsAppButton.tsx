@@ -1,12 +1,9 @@
 import { forwardRef } from "react";
 import { MessageCircle } from "lucide-react";
+import { getWhatsAppUrl } from "@/lib/contactInfo";
 
 const WhatsAppButton = forwardRef<HTMLAnchorElement>((_props, ref) => {
-  const phone = "905392411642";
-  const message = encodeURIComponent(
-    "Hello LOUREX, I'm interested in sourcing from Turkish factories."
-  );
-  const url = `https://wa.me/${phone}?text=${message}`;
+  const url = getWhatsAppUrl("Hello LOUREX, I'm interested in sourcing from Turkish factories.");
 
   return (
     <a ref={ref}

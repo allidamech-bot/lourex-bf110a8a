@@ -14,6 +14,8 @@ const sanitizePayload = (payload: MonitoringPayload = {}) =>
 const getCurrentPage = () =>
   typeof window !== "undefined" ? window.location.pathname : "server";
 
+const repeatedErrorKeys = new Set<string>();
+
 const withBaseContext = (payload: MonitoringPayload = {}) =>
   sanitizePayload({
     page: getCurrentPage(),
@@ -43,10 +45,16 @@ export const logOperationalError = (
 ) => {
   const message = error instanceof Error && error.message ? error.message : "Unknown error";
   const payload = withBaseContext({ area, message, ...context });
+  const logKey = `${area}:${message}:${JSON.stringify(context)}`;
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("lourex:error", { detail: payload }));
   }
 
+  if (repeatedErrorKeys.has(logKey)) {
+    return;
+  }
+
+  repeatedErrorKeys.add(logKey);
   console.error("[lourex:error]", area, payload, error);
 };

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Globe } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { publicContactInfo, getWhatsAppUrl } from "@/lib/contactInfo";
 
 const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const { t, lang } = useI18n();
@@ -9,7 +10,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const navLinks = [
     { label: t("nav.about"), href: "/about" },
     { label: t("nav.whyLourex"), href: "/why-lourex" },
-    { label: lang === "ar" ? "تواصل معنا" : "Contact", href: "/contact" },
+    { label: t("nav.contact"), href: "/contact" },
   ];
 
   const legalLinks = [
@@ -18,8 +19,14 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   ];
 
   const platformLinks = [
-    { label: lang === "ar" ? "طلب شراء" : "Purchase Request", href: "/request" },
-    { label: lang === "ar" ? "تتبع الشحن" : "Track Shipment", href: "/track" },
+    { label: t("nav.purchaseRequest"), href: "/request" },
+    { label: t("nav.trackShipment"), href: "/track" },
+  ];
+
+  const contactLinks = [
+    { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}` },
+    { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}` },
+    { label: "WhatsApp", href: getWhatsAppUrl("Hello LOUREX, I need support.") },
   ];
 
   return (
@@ -30,7 +37,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             <img src="/logo.png" alt="LOUREX" className="h-8 w-auto" />
             <p className="text-sm leading-relaxed text-muted-foreground">
               {lang === "ar"
-                ? "منصة وساطة وتشغيل ذكية تربط العميل بصفقات شراء وتتبع ومحاسبة منضبطة."
+                ? "منصة عمليات ذكية تربط العملاء بطلبات الشراء والتتبع والمحاسبة المنضبطة."
                 : "Smart operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
             </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -39,34 +46,26 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
             </div>
           </div>
 
+          <FooterColumn title={lang === "ar" ? "المنصة" : "Platform"} links={platformLinks} />
+          <FooterColumn title={lang === "ar" ? "الشركة" : "Company"} links={navLinks} />
+
           <div>
-            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "المنصة" : "Platform"}</h4>
+            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "تواصل" : "Contact"}</h4>
             <ul className="space-y-2.5">
-              {platformLinks.map((link) => (
+              {contactLinks.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
+                  <a
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                    target={link.label === "WhatsApp" ? "_blank" : undefined}
+                    rel={link.label === "WhatsApp" ? "noreferrer" : undefined}
+                  >
                     {link.label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "الشركة" : "Company"}</h4>
-            <ul className="space-y-2.5">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 text-sm font-semibold">{lang === "ar" ? "قانوني" : "Legal"}</h4>
+            <h4 className="mb-3 mt-5 text-sm font-semibold">{lang === "ar" ? "قانوني" : "Legal"}</h4>
             <ul className="space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
@@ -91,6 +90,21 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
     </footer>
   );
 });
+
+const FooterColumn = ({ title, links }: { title: string; links: Array<{ label: string; href: string }> }) => (
+  <div>
+    <h4 className="mb-4 text-sm font-semibold">{title}</h4>
+    <ul className="space-y-2.5">
+      {links.map((link) => (
+        <li key={link.href}>
+          <Link to={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
+            {link.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 Footer.displayName = "Footer";
 

@@ -23,6 +23,7 @@ import { useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
+import { getCustomerNotificationCopy, recordNotificationReadiness } from "@/domain/notifications/readiness";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -365,6 +366,15 @@ export default function TrackingPage() {
       toast.success(
         `${activeShipment.trackingId}: ${t("tracking.toasts.advanced", { stage: nextStage.label })}`,
       );
+      void recordNotificationReadiness({
+        eventType: "shipment_status_changed",
+        orderId: activeShipment.dealId,
+        trackingId: activeShipment.trackingId,
+        metadata: { nextStage: nextStageCode },
+      }).catch((notificationError) => {
+        logOperationalError("shipment_notification_readiness", notificationError, { trackingId: activeShipment.trackingId });
+      });
+      toast.info(getCustomerNotificationCopy(lang));
       await refresh();
     } catch (error: unknown) {
       logOperationalError("tracking_advance", error, {

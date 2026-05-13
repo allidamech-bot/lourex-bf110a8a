@@ -1,6 +1,6 @@
 import { writeAuditLog } from "@/domain/audit/service";
 import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
-import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendTables, supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import {
   canManageUsers,
@@ -340,6 +340,10 @@ export const safeStructuredSelect = async <T extends Record<string, unknown>>(ta
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder;
   if (error && isMissingSchemaError(error)) {
+    if (optionalBackendTables.has(table)) {
+      logOptionalBackendUnavailableOnce(table, error);
+      return [] as T[];
+    }
     logOperationalError("domain_select_schema_error", error, { table });
     return [] as T[];
   }
@@ -363,7 +367,10 @@ export const safeStructuredSelectWhereEq = async <T extends Record<string, unkno
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.eq(column, value);
-  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error && isMissingSchemaError(error)) {
+    if (optionalBackendTables.has(table)) logOptionalBackendUnavailableOnce(table, error);
+    return [] as T[];
+  }
   if (error) throw error;
   return data || [];
 };
@@ -384,7 +391,10 @@ const safeStructuredSelectWhereIn = async <T extends Record<string, unknown>>(
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.in(column, values);
-  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error && isMissingSchemaError(error)) {
+    if (optionalBackendTables.has(table)) logOptionalBackendUnavailableOnce(table, error);
+    return [] as T[];
+  }
   if (error) throw error;
   return data || [];
 };

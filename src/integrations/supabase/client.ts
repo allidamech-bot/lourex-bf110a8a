@@ -4,6 +4,7 @@ import type { Database } from "./types";
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 export const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
+export const EXPECTED_SUPABASE_PROJECT_REF = "qezrzwoiyhbjrrxnrqra";
 
 export const missingSupabaseEnvVars = [
   !SUPABASE_URL ? "VITE_SUPABASE_URL" : null,
@@ -20,10 +21,20 @@ export const optionalBackendTables = new Set([
   "security_audit_events",
   "system_health_snapshots",
   "system_events",
+  "support_conversations",
+  "notification_events",
 ]);
 
 export const optionalBackendUnavailableMessage =
   "This optional backend feature is not available in the current Lovable Cloud configuration.";
+
+const warnedOptionalBackendKeys = new Set<string>();
+
+export const logOptionalBackendUnavailableOnce = (feature: string, error?: unknown) => {
+  if (!import.meta.env.DEV || warnedOptionalBackendKeys.has(feature)) return;
+  warnedOptionalBackendKeys.add(feature);
+  console.info(`[lourex:optional-backend] ${feature} is not configured yet.`, error);
+};
 
 export const isMissingBackendResourceError = (error: unknown) => {
   if (!error || typeof error !== "object") return false;
@@ -51,6 +62,29 @@ export const isOptionalBackendUnavailable = (error: unknown) =>
 
 const runtimeSupabaseUrl =
   SUPABASE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost");
+
+const getProjectRefFromUrl = (url: string | undefined) => {
+  if (!url) return "";
+  try {
+    const hostname = new URL(url).hostname;
+    const match = hostname.match(/^([a-z0-9-]+)\.supabase\.co$/i);
+    return match?.[1] || "";
+  } catch {
+    return "";
+  }
+};
+
+export const detectedSupabaseProjectRef = getProjectRefFromUrl(SUPABASE_URL);
+
+if (
+  import.meta.env.PROD &&
+  detectedSupabaseProjectRef &&
+  detectedSupabaseProjectRef !== EXPECTED_SUPABASE_PROJECT_REF
+) {
+  console.warn(
+    `[lourex:supabase] Expected project ref ${EXPECTED_SUPABASE_PROJECT_REF}, detected ${detectedSupabaseProjectRef}. Check VITE_SUPABASE_URL.`,
+  );
+}
 
 export const supabase = createClient<Database>(
     runtimeSupabaseUrl,

@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
-import { isOptionalBackendUnavailable, isSupabaseConfigured, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
@@ -118,7 +118,7 @@ const optionalQuery = async <T,>(
   const result = await runner();
   if (result.error) {
     if (isOptionalBackendUnavailable(result.error)) {
-      console.info(`${feature}: ${optionalTableMessage}`);
+      logOptionalBackendUnavailableOnce(feature, result.error);
       return [] as T[];
     }
     throw result.error;

@@ -12,7 +12,9 @@ import {
   Hash,
   ImagePlus,
   Loader2,
+  PlaneTakeoff,
   ShieldCheck,
+  Ship,
   Sparkles,
   Truck,
   Upload,
@@ -35,7 +37,7 @@ import {
 import type { OperationsRequest, PurchaseRequestImageUpload } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 
 type PurchaseRequestFormState = {
   fullName: string;
@@ -342,6 +344,12 @@ const FieldError = ({ text }: { text?: string }) => {
   );
 };
 
+const shipmentMethodIcons = {
+  air: PlaneTakeoff,
+  sea: Ship,
+  land: Truck,
+} as const;
+
 const LoginRequiredCard = ({ lang }: { lang: "en" | "ar" }) => (
   <div className="rounded-[1.8rem] border border-primary/25 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,#111111,#080808)] p-5 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.78)]">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -421,6 +429,7 @@ export const PurchaseRequestForm = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const fieldRefs = useRef<Partial<Record<keyof PurchaseRequestFormState | "uploads", HTMLElement | null>>>({});
   const existingImages = useMemo(
       () =>
           initialRequest
@@ -512,6 +521,24 @@ export const PurchaseRequestForm = ({
         behavior: "smooth",
         block: "center",
       });
+    });
+  };
+
+  const scrollToFirstInvalidField = (errors: PurchaseRequestFieldErrors) => {
+    const firstField = Object.keys(errors)[0] as keyof PurchaseRequestFieldErrors | undefined;
+    if (!firstField) {
+      scrollToErrorSummary();
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const target = fieldRefs.current[firstField] || errorSummaryRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLButtonElement) {
+        target.focus({ preventScroll: true });
+      } else {
+        target?.querySelector<HTMLElement>("input, textarea, button, [tabindex]")?.focus({ preventScroll: true });
+      }
     });
   };
 
@@ -699,7 +726,10 @@ export const PurchaseRequestForm = ({
 
     try {
       const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "purchase_request_analyzer",
+        context: { route: location.pathname, userRole: profile?.role ?? "guest" },
         body: {
           message:
             lang === "ar"
@@ -727,7 +757,7 @@ export const PurchaseRequestForm = ({
         throw error;
       }
 
-      const rawReply = data?.analysis || data?.reply || data;
+      const rawReply = (data as { analysis?: unknown } | null)?.analysis || getAiReplyText(data) || data;
       const parsed = parseAnalyzerResponse(rawReply);
 
       if (!parsed) {
@@ -771,7 +801,7 @@ export const PurchaseRequestForm = ({
       setFieldErrors(nextErrors);
       setErrorMessage(message);
       toast.error(message);
-      scrollToErrorSummary();
+      scrollToFirstInvalidField(nextErrors);
       return;
     }
 
@@ -1009,6 +1039,7 @@ export const PurchaseRequestForm = ({
               <div className="md:col-span-2">
                 <Label>{t("common.fullName") || "Full Name"} *</Label>
                 <Input
+                    ref={(node) => { fieldRefs.current.fullName = node; }}
                     value={form.fullName}
                     onChange={(event) => updateField("fullName", event.target.value)}
                     aria-invalid={Boolean(fieldErrors.fullName)}
@@ -1019,6 +1050,7 @@ export const PurchaseRequestForm = ({
               <div>
                 <Label>{t("common.email") || "Email"} *</Label>
                 <Input
+                    ref={(node) => { fieldRefs.current.email = node; }}
                     type="email"
                     value={form.email}
                     onChange={(event) => updateField("email", event.target.value)}
@@ -1030,6 +1062,7 @@ export const PurchaseRequestForm = ({
               <div>
                 <Label>{t("common.phone") || "Phone"} *</Label>
                 <Input
+                    ref={(node) => { fieldRefs.current.phone = node; }}
                     value={form.phone}
                     onChange={(event) => updateField("phone", event.target.value)}
                     aria-invalid={Boolean(fieldErrors.phone)}
@@ -1051,6 +1084,7 @@ export const PurchaseRequestForm = ({
                   <div className="md:col-span-2">
                     <Label>{t("common.fullName") || "Full Name"} *</Label>
                     <Input
+                        ref={(node) => { fieldRefs.current.fullName = node; }}
                         value={form.fullName}
                         onChange={(event) => updateField("fullName", event.target.value)}
                         aria-invalid={Boolean(fieldErrors.fullName)}
@@ -1063,6 +1097,7 @@ export const PurchaseRequestForm = ({
                   <div>
                     <Label>{t("common.email") || "Email"} *</Label>
                     <Input
+                        ref={(node) => { fieldRefs.current.email = node; }}
                         type="email"
                         value={form.email}
                         onChange={(event) => updateField("email", event.target.value)}
@@ -1076,6 +1111,7 @@ export const PurchaseRequestForm = ({
                   <div>
                     <Label>{t("common.phone") || "Phone"} *</Label>
                     <Input
+                        ref={(node) => { fieldRefs.current.phone = node; }}
                         value={form.phone}
                         onChange={(event) => updateField("phone", event.target.value)}
                         aria-invalid={Boolean(fieldErrors.phone)}
@@ -1093,6 +1129,7 @@ export const PurchaseRequestForm = ({
           <div className="md:col-span-2">
             <Label>{t("requests.intake.productName")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.productName = node; }}
                 value={form.productName}
                 onChange={(event) => updateField("productName", event.target.value)}
                 aria-invalid={Boolean(fieldErrors.productName)}
@@ -1104,6 +1141,7 @@ export const PurchaseRequestForm = ({
           <div className="md:col-span-2">
             <Label>{t("requests.intake.productDescriptionLabel")} *</Label>
             <Textarea
+                ref={(node) => { fieldRefs.current.productDescription = node; }}
                 rows={4}
                 value={form.productDescription}
                 onChange={(event) =>
@@ -1118,6 +1156,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.quantity")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.quantity = node; }}
                 inputMode="numeric"
                 value={form.quantity}
                 onChange={(event) => updateField("quantity", event.target.value)}
@@ -1131,6 +1170,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.dimensions")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.sizeDimensions = node; }}
                 value={form.sizeDimensions}
                 onChange={(event) => updateField("sizeDimensions", event.target.value)}
                 placeholder={t("requests.intake.dimensionsPlaceholder")}
@@ -1142,6 +1182,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.color")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.color = node; }}
                 value={form.color}
                 onChange={(event) => updateField("color", event.target.value)}
                 aria-invalid={Boolean(fieldErrors.color)}
@@ -1152,6 +1193,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.material")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.material = node; }}
                 value={form.material}
                 onChange={(event) => updateField("material", event.target.value)}
                 aria-invalid={Boolean(fieldErrors.material)}
@@ -1196,6 +1238,7 @@ export const PurchaseRequestForm = ({
           <div className="md:col-span-2">
             <Label>{t("requests.intake.technicalSpecs")} *</Label>
             <Textarea
+                ref={(node) => { fieldRefs.current.technicalSpecs = node; }}
                 rows={4}
                 value={form.technicalSpecs}
                 onChange={(event) => updateField("technicalSpecs", event.target.value)}
@@ -1237,6 +1280,7 @@ export const PurchaseRequestForm = ({
           <div className="md:col-span-2">
             <Label>{t("requests.intake.referenceLink")}</Label>
             <Input
+                ref={(node) => { fieldRefs.current.referenceLink = node; }}
                 value={form.referenceLink}
                 onChange={(event) => updateField("referenceLink", event.target.value)}
                 placeholder="https://..."
@@ -1406,6 +1450,7 @@ export const PurchaseRequestForm = ({
             />
 
             <button
+                ref={(node) => { fieldRefs.current.uploads = node; }}
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={submitting || uploads.length + existingImages.length >= MAX_UPLOADS}
@@ -1479,7 +1524,7 @@ export const PurchaseRequestForm = ({
             )}
           </div>
 
-          <div className="md:col-span-2">
+          <div className="md:col-span-2" ref={(node) => { fieldRefs.current.preferredShippingMethod = node; }}>
             <Label>{t("requests.intake.preferredShippingMethod")} *</Label>
 
             <RadioGroup
@@ -1487,8 +1532,10 @@ export const PurchaseRequestForm = ({
                 onValueChange={(value) => updateField("preferredShippingMethod", value)}
                 className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3"
             >
-              {["air", "sea", "land"].map((method) => (
-                  <div key={method}>
+              {(["air", "sea", "land"] as const).map((method) => {
+                const MethodIcon = shipmentMethodIcons[method];
+                return (
+                  <div key={method} data-invalid={Boolean(fieldErrors.preferredShippingMethod)}>
                     <RadioGroupItem
                         value={method}
                         id={`ship-${method}`}
@@ -1498,19 +1545,14 @@ export const PurchaseRequestForm = ({
                         htmlFor={`ship-${method}`}
                         className="flex cursor-pointer flex-col items-center justify-between rounded-2xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
-                      <Truck
-                          className={
-                            method === "air"
-                                ? "mb-2 h-6 w-6 rotate-[-15deg]"
-                                : "mb-2 h-6 w-6"
-                          }
-                      />
+                      <MethodIcon className="mb-2 h-6 w-6" />
                       <span className="text-xs font-semibold capitalize">
                     {method === "air" ? t("common.air") : method === "sea" ? t("common.sea") : t("common.land")}
                   </span>
                     </Label>
                   </div>
-              ))}
+                );
+              })}
             </RadioGroup>
 
             <FieldError text={fieldErrors.preferredShippingMethod} />
@@ -1519,6 +1561,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.destination")} *</Label>
             <Input
+                ref={(node) => { fieldRefs.current.destination = node; }}
                 value={form.destination}
                 onChange={(event) => updateField("destination", event.target.value)}
                 placeholder={t("requests.intake.destination")}
@@ -1530,6 +1573,7 @@ export const PurchaseRequestForm = ({
           <div>
             <Label>{t("requests.intake.expectedSupplyDate")}</Label>
             <Input
+                ref={(node) => { fieldRefs.current.expectedSupplyDate = node; }}
                 type="date"
                 min={getTodayDateString()}
                 value={form.expectedSupplyDate}

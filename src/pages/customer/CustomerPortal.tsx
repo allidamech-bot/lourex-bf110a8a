@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import BentoCard from "@/components/BentoCard";
+import { SupportConversationWidget } from "@/components/SupportConversationWidget";
 import { ReadableInfoCard, ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -406,6 +407,8 @@ const CustomerPortal = () => {
         </ResponsiveInfoGrid>
 
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SupportConversationWidget compact />
+
           <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
             <div className="mb-6 flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">

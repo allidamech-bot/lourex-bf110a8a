@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, getAiUnavailableMessage, invokeLourexAi } from "@/lib/aiClient";
 
 type PageContext =
   | "public_home"
@@ -185,10 +185,7 @@ const AICommandBar = () => {
     }
   }, [open]);
 
-  const fallbackMessage =
-    lang === "ar"
-      ? "مساعد LOUREX AI غير متاح الآن. يمكنك المتابعة يدويا."
-      : "LOUREX AI is unavailable right now. You can continue manually.";
+  const fallbackMessage = getAiUnavailableMessage(lang);
 
   const sendMessage = async (text?: string) => {
     const msg = (text ?? input).trim();
@@ -203,7 +200,10 @@ const AICommandBar = () => {
 
     try {
       const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error: invokeError } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error: invokeError, unavailableMessage } = await invokeLourexAi({
+        lang,
+        area: "ai_command_bar",
+        context: { pageContext, route: location.pathname, userRole: profile?.role ?? "guest" },
         body: {
           message: lang === "ar" ? `${msg}\n\nأجب باللغة العربية فقط.` : `${msg}\n\nRespond in English only.`,
           messages: allMessages,
@@ -217,11 +217,10 @@ const AICommandBar = () => {
         },
       });
 
-      if (invokeError) throw invokeError;
+      if (invokeError) throw new Error(unavailableMessage || fallbackMessage);
 
       const reply =
-        data?.reply ||
-        data?.choices?.[0]?.message?.content ||
+        getAiReplyText(data) ||
         (lang === "ar"
           ? "لم أتمكن من إنشاء رد مناسب الآن."
           : "I couldn't generate a useful response right now.");

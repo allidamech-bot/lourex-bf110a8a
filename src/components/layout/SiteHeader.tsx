@@ -134,7 +134,7 @@ export const SiteHeader = () => {
           </Link>
 
           <nav
-              className="hidden min-w-0 items-center justify-center gap-1 lg:flex"
+              className="hidden min-w-0 items-center justify-center gap-1.5 lg:flex"
               aria-label={t("nav.primaryNavigation")}
           >
             {canSeeDashboardMenu ? (
@@ -169,8 +169,8 @@ export const SiteHeader = () => {
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-3">
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-s border-white/10 ps-4">
+            <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
               {user ? <NotificationBell userId={user.id} /> : null}
 
               <LanguageSwitcher />

@@ -1,4 +1,5 @@
 import { SEO } from "@/components/seo/SEO";
+import { SupportConversationWidget } from "@/components/SupportConversationWidget";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { z } from "zod";
 import {
@@ -336,7 +337,7 @@ export default function ContactPage() {
                         </a>
                       ) : item.label === t("contact.labels.phone") ? (
                         <a
-                          href={`tel:${publicContactInfo.phone.replace(/[^+\d]/g, "")}`}
+                          href={`tel:${publicContactInfo.phoneTel}`}
                           className="mt-2 block font-medium text-primary hover:underline"
                         >
                           {item.value}
@@ -350,6 +351,10 @@ export default function ContactPage() {
               ))}
             </section>
           </div>
+        </div>
+
+        <div className="mt-8">
+          <SupportConversationWidget />
         </div>
       </main>
     </div>

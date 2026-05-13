@@ -1,6 +1,9 @@
 export const publicContactInfo = {
-  email: "ops@lou-rex.com",
-  phone: "+90 (500) 000 0000",
+  company: "LOUREX",
+  email: "alidamish@lou-rex.com",
+  phone: "00905392411642",
+  phoneTel: "+905392411642",
+  whatsappNumber: "905392411642",
   website: "www.lou-rex.com",
   websiteUrl: "https://www.lou-rex.com",
   location: {
@@ -16,3 +19,6 @@ export const publicContactInfo = {
     ar: "الأحد إلى الخميس، 09:00 - 18:00 (GMT+3)",
   },
 } as const;
+
+export const getWhatsAppUrl = (message: string) =>
+  `https://wa.me/${publicContactInfo.whatsappNumber}?text=${encodeURIComponent(message)}`;
