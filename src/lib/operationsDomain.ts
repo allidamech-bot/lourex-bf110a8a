@@ -1584,6 +1584,9 @@ export const convertRequestToDeal = async (
   }
 
   const customer = await ensureCustomer(request);
+  if (!customer?.id) {
+    throw new Error("لا يمكن تحويل الطلب قبل ربطه بسجل عميل صالح. يرجى مراجعة بيانات العميل ثم المحاولة مرة أخرى.");
+  }
   if (!customer) throw new Error("تعذر إنشاء سجل العميل.");
 
   const domainAvailable = await getLourexDomainAvailability();
@@ -1592,7 +1595,8 @@ export const convertRequestToDeal = async (
     const legacyDealNumber = `DL-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
     const legacyInsert = await supabase.from("deals").insert({
       deal_number: legacyDealNumber,
-      client_id: user.id,
+      client_id: customer.id,
+      customer_id: customer.id,
       status: "in_progress",
       destination_country: request.customer.country || null,
       origin_country: "Turkey",
@@ -1753,7 +1757,7 @@ export const convertRequestToDeal = async (
     .from<DealRow>("deals")
     .insert({
       deal_number: dealNumber,
-      client_id: user.id,
+      client_id: customer.id,
       customer_id: customer.id,
       source_request_id: requestId,
       accounting_reference: accountingReference,

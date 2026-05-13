@@ -34,7 +34,7 @@ import { pickText, useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterDeals } from "@/lib/adminOperations";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { DealCommandCenterPanel } from "@/features/deals/components/DealCommandCenterPanel";
 import { analyzeDealHealth, buildDealAiContext } from "@/features/deals/lib/dealCommand";
 
@@ -264,7 +264,10 @@ export default function DealsPage() {
     setAiUsedFallback(false);
 
     try {
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "deal_ai_briefing",
+        context: { dealId: selectedDeal.id, mode },
         body: {
           message:
             lang === "ar"
@@ -283,7 +286,7 @@ export default function DealsPage() {
       });
 
       if (error) throw error;
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      const reply = getAiReplyText(data);
       if (!reply) throw new Error("Empty AI response");
       setAiOutput(reply);
     } catch (error) {

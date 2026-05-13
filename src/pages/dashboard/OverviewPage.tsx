@@ -40,8 +40,8 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
-import { supabase } from "@/integrations/supabase/client";
 import { logOperationalError } from "@/lib/monitoring";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import type { PartnerSettlement } from "@/types/lourex";
 
 const AIOperationsCenter = React.lazy(() =>
@@ -406,7 +406,10 @@ export default function OverviewPage() {
 
     try {
       const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "dashboard_ai_daily_briefing",
+        context: { role: profile?.role || null },
         body: {
           message:
             lang === "ar"
@@ -429,7 +432,7 @@ export default function OverviewPage() {
         throw error;
       }
 
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      const reply = getAiReplyText(data);
       if (!reply) {
         throw new Error("Empty daily briefing response");
       }

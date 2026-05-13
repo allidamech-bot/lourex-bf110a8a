@@ -59,7 +59,7 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 3. **Configure Environment Variables**:
    Create a `.env` file in the root directory:
    ```env
-   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 4. **Run development server**:
@@ -88,7 +88,7 @@ Vercel is the primary production deployment target for the Lourex SPA. The inclu
 Set these Vercel project environment variables:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 

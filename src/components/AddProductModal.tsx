@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,6 +94,9 @@ const AddProductModal = ({ open, onOpenChange, factoryId, userId, onSuccess }: A
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">{lang === "ar" ? "إضافة منتج جديد" : "Add New Product"}</DialogTitle>
+          <DialogDescription>
+            {lang === "ar" ? "أدخل تفاصيل المنتج والصورة قبل حفظه في كتالوج المورد." : "Enter product details and an image before saving it to the supplier catalog."}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {/* Image upload */}

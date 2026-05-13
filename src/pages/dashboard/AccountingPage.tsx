@@ -24,7 +24,7 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildAccountingEntriesCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting } from "@/features/auth/rbac";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 
 type FinanceAiContext = {
   focusDeal: string | null;
@@ -236,7 +236,10 @@ export default function AccountingPage() {
 
     try {
       const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "finance_ai_audit_review",
+        context: { focusDeal, mode },
         body: {
           message:
             lang === "ar"
@@ -256,7 +259,7 @@ export default function AccountingPage() {
       });
 
       if (error) throw error;
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      const reply = getAiReplyText(data);
       if (!reply) throw new Error("Empty finance audit review");
       setAiReview(reply);
     } catch (error) {

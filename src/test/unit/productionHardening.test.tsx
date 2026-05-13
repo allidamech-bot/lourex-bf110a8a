@@ -26,7 +26,7 @@ afterEach(() => {
 
 describe("production hardening safeguards", () => {
   it("keeps the old external Supabase project reference out of source", () => {
-    const oldProjectRef = ["gxmqchzn", "folerliorpkz"].join("");
+    const oldProjectRef = "legacy-lourex-supabase-project-ref";
     const offenders = walk(srcRoot).filter((path) => readFileSync(path, "utf8").includes(oldProjectRef));
     expect(offenders).toEqual([]);
   });

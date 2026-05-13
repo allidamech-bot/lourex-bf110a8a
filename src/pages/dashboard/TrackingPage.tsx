@@ -25,7 +25,7 @@ import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
 import { getCustomerNotificationCopy, recordNotificationReadiness } from "@/domain/notifications/readiness";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 
 type ShipmentAiContext = {
   trackingId: string;
@@ -265,7 +265,10 @@ export default function TrackingPage() {
 
     try {
       const responseLanguage = lang === "ar" ? "Arabic" : "English";
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "shipment_ai_risk_review",
+        context: { trackingId: activeShipment.trackingId },
         body: {
           message:
             lang === "ar"
@@ -285,7 +288,7 @@ export default function TrackingPage() {
       });
 
       if (error) throw error;
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      const reply = getAiReplyText(data);
       if (!reply) throw new Error("Empty shipment risk review");
       setAiReview(reply);
     } catch (error) {
@@ -307,7 +310,10 @@ export default function TrackingPage() {
     setAiUsedFallback(false);
 
     try {
-      const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+      const { data, error } = await invokeLourexAi({
+        lang,
+        area: "shipment_ai_intelligence_review",
+        context: { trackingId: activeShipment.trackingId, mode },
         body: {
           message:
             lang === "ar"
@@ -327,7 +333,7 @@ export default function TrackingPage() {
       });
 
       if (error) throw error;
-      const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+      const reply = getAiReplyText(data);
       if (!reply) throw new Error("Empty shipment intelligence review");
       setAiReview(reply);
     } catch (error) {

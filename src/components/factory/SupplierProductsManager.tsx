@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -62,7 +62,7 @@ const emptyForm: FormState = {
 };
 
 export const SupplierProductsManager = ({ factoryId, userId, products, onChanged }: Props) => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SellerProduct | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -308,6 +308,9 @@ export const SupplierProductsManager = ({ factoryId, userId, products, onChanged
             <DialogTitle className="font-serif">
               {editing ? t("seller.editProduct") : t("seller.addNewProduct")}
             </DialogTitle>
+            <DialogDescription>
+              {lang === "ar" ? "أدخل تفاصيل المنتج والسعر والصورة قبل الحفظ." : "Enter product details, pricing, and image information before saving."}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">

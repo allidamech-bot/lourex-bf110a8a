@@ -44,7 +44,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getSignedUrl } from "@/lib/storage";
-import { supabase } from "@/integrations/supabase/client";
+import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 
@@ -568,7 +568,14 @@ export default function PurchaseRequestsPage() {
 
         try {
             const responseLanguage = lang === "ar" ? "Arabic" : "English";
-            const { data, error } = await supabase.functions.invoke("lourex-ai-chat", {
+            const { data, error } = await invokeLourexAi({
+                lang,
+                area: "purchase_request_ai_review",
+                context: {
+                    requestId: selectedRow.id,
+                    requestNumber: selectedRow.requestNumber,
+                    mode,
+                },
                 body: {
                     message:
                         lang === "ar"
@@ -591,7 +598,7 @@ export default function PurchaseRequestsPage() {
                 throw error;
             }
 
-            const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+            const reply = getAiReplyText(data);
             if (!reply) {
                 throw new Error("Empty AI response");
             }

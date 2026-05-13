@@ -367,6 +367,14 @@ const createDealIfMissing = async (payload: AutomationPayload): Promise<Automati
   const operationTitle = payload.productName || request.product_name || requestNumber;
   const customerId = payload.customerId || request.customer_id || null;
 
+  if (!customerId) {
+    return {
+      action: "create_deal_if_missing",
+      status: "skipped",
+      reason: "Purchase request is missing customer_id; deal conversion is blocked until the request is linked to a customer.",
+    };
+  }
+
   const { data: insertedDeal, error: insertError } = await db
     .from("deals")
     .insert({
