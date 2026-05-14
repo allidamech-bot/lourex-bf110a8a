@@ -21,6 +21,7 @@ export const optionalBackendTables = new Set([
   "security_audit_events",
   "system_health_snapshots",
   "system_events",
+  "tracking_updates",
   "support_conversations",
   "notification_events",
 ]);

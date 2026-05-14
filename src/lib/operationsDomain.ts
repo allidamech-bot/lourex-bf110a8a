@@ -417,7 +417,10 @@ const safeStructuredSelectWhereInEq = async <T extends Record<string, unknown>>(
 
   const builder = query ? db.from<T>(table).select(query) : db.from<T>(table).select("*");
   const { data, error } = await builder.in(inColumn, values).eq(eqColumn, eqValue);
-  if (error && isMissingSchemaError(error)) return [] as T[];
+  if (error && isMissingSchemaError(error)) {
+    if (optionalBackendTables.has(table)) logOptionalBackendUnavailableOnce(table, error);
+    return [] as T[];
+  }
   if (error) throw error;
   return data || [];
 };
