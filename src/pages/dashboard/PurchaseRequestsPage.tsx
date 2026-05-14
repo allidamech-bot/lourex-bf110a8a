@@ -47,6 +47,7 @@ import { getSignedUrl } from "@/lib/storage";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
+import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -674,7 +675,7 @@ export default function PurchaseRequestsPage() {
         setUpdatingStatusId(requestId);
 
         try {
-            const { error } = await updatePurchaseRequestStatus(requestId, status, internalNotesDraft);
+            const { error } = await updatePurchaseRequestStatus(requestId, status, internalNotesDraft, lang);
             if (error) {
                 throw error;
             }
@@ -1496,6 +1497,16 @@ export default function PurchaseRequestsPage() {
                                             )}
                                             onRequestClarification={() => void handleSmartClarificationRequest()}
                                             onMarkReady={() => void handleSmartReadyForSourcing()}
+                                        />
+
+                                        <OfficialOrderConversationBox
+                                            requestId={selectedRow.id}
+                                            requestNumber={selectedRow.requestNumber}
+                                            dealId={selectedRow.convertedDealId}
+                                            customerId={selectedRow.customer.id}
+                                            status={selectedRow.status}
+                                            role="admin"
+                                            assignedAdminId={profile?.id}
                                         />
 
                                         <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">

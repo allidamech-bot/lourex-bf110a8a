@@ -5,7 +5,9 @@ export type CustomerNotificationEvent =
   | "order_stage_changed"
   | "shipment_status_changed"
   | "customer_update_added"
-  | "admin_message_sent";
+  | "admin_message_sent"
+  | "official_conversation_opened"
+  | "official_conversation_message";
 
 export type NotificationReadinessInput = {
   eventType: CustomerNotificationEvent;

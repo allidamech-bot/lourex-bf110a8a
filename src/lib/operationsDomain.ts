@@ -17,6 +17,7 @@ import { buildCustomerFinancialSummary } from "@/domain/accounting/utils";
 import { isAssignedPartnerForDeal } from "@/domain/operations/guards";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { runAutomation } from "@/lib/automationEngine";
+import { ensureOfficialOrderConversation } from "@/domain/support/orderConversations";
 import type {
   AttachmentRecord,
   CustomerAccount,
@@ -1243,6 +1244,7 @@ export const updatePurchaseRequestStatus = async (
   requestId: string,
   status: PurchaseRequestStatus,
   internalNotes?: string,
+  conversationLang: "ar" | "en" = "en",
 ) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile || !assertManagementUser(profile.role)) {
@@ -1289,6 +1291,15 @@ export const updatePurchaseRequestStatus = async (
 
     if (status === "ready_for_conversion") {
       const automationPayload = buildPurchaseRequestAutomationPayload({ ...current, status }, user.id);
+
+      await ensureOfficialOrderConversation({
+        requestId,
+        requestNumber: current.request_number,
+        dealId: current.converted_deal_id,
+        customerId: current.customer_id,
+        assignedAdminId: user.id,
+        lang: conversationLang,
+      });
 
       try {
         await runAutomation(
@@ -2887,6 +2898,15 @@ export const acceptTransferProof = async (requestId: string) => {
 
   if (error) throw error;
 
+  await ensureOfficialOrderConversation({
+    requestId,
+    requestNumber: request.request_number,
+    dealId: request.converted_deal_id,
+    customerId: request.customer_id,
+    assignedAdminId: user.id,
+    lang: "en",
+  });
+
   await writeAuditLog({
     action: "purchase_request.transfer_proof_accepted",
     tableName: "purchase_requests",
@@ -2952,6 +2972,20 @@ export const acceptTransferProofWithPayment = async (
   });
 
   if (error) throw error;
+
+  const requestRows = await safeStructuredSelectWhereEq<PurchaseRequestRow>("purchase_requests", "id", requestId);
+  const request = requestRows[0];
+
+  if (request) {
+    await ensureOfficialOrderConversation({
+      requestId,
+      requestNumber: request.request_number,
+      dealId: request.converted_deal_id,
+      customerId: request.customer_id,
+      assignedAdminId: user.id,
+      lang: "en",
+    });
+  }
 
   await writeAuditLog({
     action: "purchase_request.transfer_proof_accepted_with_payment",

@@ -42,6 +42,7 @@ import type { PurchaseRequestStatus } from "@/types/lourex";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { SectionHelpBox } from "@/components/readable/ReadableCards";
+import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
 type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
@@ -805,6 +806,15 @@ export default function CustomerRequestsPage() {
                     onSubmitCustomerReply={() => void handleSubmitClarificationReply()}
                     customerReplyBusy={clarificationReplyLoading}
                     showInternalSections={false}
+                  />
+
+                  <OfficialOrderConversationBox
+                    requestId={selectedRow.id}
+                    requestNumber={selectedRow.requestNumber}
+                    dealId={selectedRow.convertedDealId}
+                    customerId={selectedRow.customer.id}
+                    status={selectedRow.status}
+                    role="customer"
                   />
 
                   {selectedPaymentSummary ? (

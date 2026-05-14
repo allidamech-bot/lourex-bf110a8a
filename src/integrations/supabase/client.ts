@@ -23,6 +23,7 @@ export const optionalBackendTables = new Set([
   "system_events",
   "tracking_updates",
   "support_conversations",
+  "conversation_messages",
   "notification_events",
 ]);
 
