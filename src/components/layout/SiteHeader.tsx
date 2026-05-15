@@ -210,8 +210,17 @@ export const SiteHeader = () => {
 
         {/* Mobile drawer */}
         {isOpen ? (
-            <div className="fixed inset-0 z-[9999] h-[100vh] w-full overflow-y-auto border-l border-white/10 bg-[#0B1220]/95 shadow-2xl backdrop-blur-md lg:hidden">
-              <div className="flex min-h-full w-full max-w-full min-w-0 flex-col p-4 sm:p-5">
+            <div className="fixed inset-0 z-[10000] lg:hidden" role="dialog" aria-modal="true" aria-label={t("nav.mobileNavigation")}>
+              <button
+                  type="button"
+                  className="absolute inset-0 h-full w-full bg-black/65 backdrop-blur-sm"
+                  aria-label={t("common.close")}
+                  onClick={() => setIsOpen(false)}
+              />
+              <div
+                  className={`absolute inset-y-0 ${isRtl ? "left-0" : "right-0"} flex h-[100dvh] w-[min(100vw,26rem)] max-w-full overflow-hidden border-white/10 bg-[#0B1220] shadow-2xl ${isRtl ? "border-r" : "border-l"}`}
+              >
+              <div className="flex h-full w-full max-w-full min-w-0 flex-col overflow-y-auto overscroll-contain p-4 sm:p-5">
                 <div className="mb-8 flex items-center justify-between">
                   <Link
                       to="/"
@@ -260,7 +269,7 @@ export const SiteHeader = () => {
                   <ThemeToggle />
                 </div>
 
-                <nav className="min-w-0 flex-1 space-y-1.5 overflow-y-auto" aria-label={t("nav.mobileNavigation")}>
+                <nav className="min-w-0 flex-1 space-y-1.5" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (
                       <NavLink
                           to="/dashboard"
@@ -273,7 +282,7 @@ export const SiteHeader = () => {
                               }`
                           }
                       >
-                        <span className="min-w-0 break-words">{t("nav.dashboard")}</span>
+                        <span className="min-w-0 truncate">{t("nav.dashboard")}</span>
                         <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ) : null}
@@ -291,7 +300,7 @@ export const SiteHeader = () => {
                               }`
                           }
                       >
-                        <span className="min-w-0 break-words">{link.label}</span>
+                        <span className="min-w-0 truncate">{link.label}</span>
                         <ChevronRight className={`h-4 w-4 opacity-60 ${isRtl ? "rotate-180" : ""}`} />
                       </NavLink>
                   ))}
@@ -319,6 +328,7 @@ export const SiteHeader = () => {
                       </Button>
                   )}
                 </div>
+              </div>
               </div>
             </div>
         ) : null}

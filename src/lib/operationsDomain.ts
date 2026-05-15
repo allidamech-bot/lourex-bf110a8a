@@ -692,17 +692,34 @@ const getCurrentCustomerRecord = async () => {
     return null;
   }
 
+  const byEmail = await db
+    .from<CustomerRow>("lourex_customers")
+    .select("*")
+    .eq("email", userEmail)
+    .maybeSingle();
+
   const upsertedCustomer = await db
     .rpc<CurrentCustomerUpsertRow>("upsert_current_customer_record", {
-      p_full_name: user.user_metadata?.full_name || "",
+      p_full_name: user.user_metadata?.full_name || byEmail.data?.full_name || "",
       p_email: userEmail,
-      p_phone: "",
-      p_country: "",
-      p_city: "",
+      p_phone: byEmail.data?.phone || "",
+      p_country: byEmail.data?.country || "",
+      p_city: byEmail.data?.city || "",
     })
     .maybeSingle();
 
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+    logOptionalBackendUnavailableOnce("upsert_current_customer_record", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"));
+
+    if (byEmail.data) {
+      trackEvent("customer_profile_resolution", {
+        flow: "customer_request",
+        authenticated: true,
+        method: "email_fallback_customer_record",
+      });
+      return byEmail.data;
+    }
+
     logOperationalError("customer_profile_resolution", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"), {
       flow: "customer_request",
     });
@@ -716,6 +733,10 @@ const getCurrentCustomerRecord = async () => {
     .maybeSingle();
 
   if (!upserted.data) {
+    if (byEmail.data) {
+      return byEmail.data;
+    }
+
     logOperationalError("customer_profile_resolution", new Error("Customer upsert succeeded but record was not selectable"), {
       flow: "customer_request",
     });
@@ -2895,7 +2916,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
 
   const { data: request, error: requestError } = await db
     .from("purchase_requests")
-    .select("id, status, customer_id, converted_deal_id")
+    .select("id, status, customer_id, converted_deal_id, email")
     .eq("id", requestId)
     .single();
 
@@ -2904,7 +2925,14 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   // Customer ownership check
   if (profile.role === "customer") {
     const customer = await getCurrentCustomerRecord();
-    if (!customer || request.customer_id !== customer.id) {
+    const userEmail = user.email?.trim().toLowerCase() || "";
+    const requestEmail = String(request.email || "").trim().toLowerCase();
+    const ownsRequest =
+      request.customer_id === user.id ||
+      (customer?.id ? request.customer_id === customer.id : false) ||
+      (Boolean(userEmail) && requestEmail === userEmail);
+
+    if (!ownsRequest) {
       throw new Error("ليس لديك صلاحية لرفع إثبات دفع لهذا الطلب.");
     }
   }
@@ -2930,7 +2958,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
     const { error: proofLogError } = await db.from("transfer_proofs").insert({
       request_id: requestId,
       deal_id: request.converted_deal_id || null,
-      customer_id: request.customer_id,
+      customer_id: request.customer_id || user.id,
       uploaded_by: user.id,
       file_path: uploaded.path,
       file_name: file.name,

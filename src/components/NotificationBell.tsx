@@ -365,7 +365,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
         ) : null}
       </button>
 
-      {open ? <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} /> : null}
+      {open ? <div className="fixed inset-0 z-[10010] bg-black/35 sm:bg-transparent" onClick={() => setOpen(false)} /> : null}
 
       <AnimatePresence>
         {open ? (
@@ -374,7 +374,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="glass-dropdown fixed inset-x-3 top-20 z-50 overflow-hidden sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:w-[340px]"
+            className="glass-dropdown fixed inset-x-3 top-[4.75rem] z-[10020] max-h-[calc(100dvh-6rem)] overflow-hidden rounded-2xl sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:w-[340px]"
           >
             {/* Header */}
             <div
@@ -402,7 +402,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
             </div>
 
             {/* Body */}
-            <div className="max-h-[22rem] overflow-y-auto">
+            <div className="max-h-[calc(100dvh-13rem)] overflow-y-auto sm:max-h-[22rem]">
               {loading && notifications.length === 0 ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-400">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
