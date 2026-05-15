@@ -167,14 +167,14 @@ export const OfficialOrderConversationBox = ({
 
   if (!isEligible) {
     return (
-      <section className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm text-muted-foreground" dir={dir}>
+    <section className="min-w-0 rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm text-muted-foreground" dir={dir}>
         {copy.notOpen}
       </section>
     );
   }
 
   return (
-    <section className="rounded-[1.35rem] border border-primary/25 bg-primary/5 p-4 shadow-[0_18px_42px_-34px_rgba(0,0,0,0.55)]" dir={dir}>
+    <section className="min-w-0 rounded-[1.35rem] border border-primary/25 bg-primary/5 p-4 shadow-[0_18px_42px_-34px_rgba(0,0,0,0.55)]" dir={dir}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -182,17 +182,17 @@ export const OfficialOrderConversationBox = ({
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-serif text-lg font-semibold">{copy.title}</h3>
-              <span className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+              <h3 className="font-serif text-lg font-semibold leading-tight">{copy.title}</h3>
+              <span className="max-w-full truncate rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
                 {copy.title}
               </span>
             </div>
-            {requestNumber ? <p className="mt-1 text-xs text-muted-foreground">{requestNumber}</p> : null}
+            {requestNumber ? <p className="mt-1 whitespace-nowrap text-xs text-muted-foreground">{requestNumber}</p> : null}
           </div>
         </div>
 
         {unreadCount > 0 ? (
-          <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs text-amber-100">
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs text-amber-100">
             {unreadCount} {copy.unread}
           </span>
         ) : null}
@@ -221,7 +221,7 @@ export const OfficialOrderConversationBox = ({
                 ref={index === messages.length - 1 ? latestRef : undefined}
               >
                 <div
-                  className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm leading-6 ${
+                  className={`max-w-full rounded-2xl px-3 py-2 text-sm leading-6 sm:max-w-[88%] ${
                     systemMessage
                       ? "border border-primary/20 bg-primary/10 text-primary"
                       : ownMessage
@@ -256,7 +256,7 @@ export const OfficialOrderConversationBox = ({
           rows={3}
           disabled={!conversation || sending}
         />
-        <Button type="button" variant="gold" onClick={() => void handleSend()} disabled={!conversation || sending || !draft.trim()}>
+        <Button type="button" variant="gold" className="min-w-fit whitespace-nowrap" onClick={() => void handleSend()} disabled={!conversation || sending || !draft.trim()}>
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           {sending ? copy.sending : copy.send}
         </Button>

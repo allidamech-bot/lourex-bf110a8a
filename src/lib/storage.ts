@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const STORAGE_BUCKETS = {
   PRODUCT_IMAGES: "product-images",
   DOCUMENTS: "documents",
+  TRANSFER_PROOFS: "transfer-proofs",
 } as const;
 
 /**
@@ -33,6 +34,7 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
+  "application/pdf": "pdf",
 };
 
 const sanitizePathSegment = (value: string) => {
@@ -132,6 +134,10 @@ const validateUploadFile = (file: File) => {
 
   if (file.type.startsWith("image/") && !ALLOWED_IMAGE_TYPES.has(file.type)) {
     throw new Error("Only JPG, PNG, WEBP, or GIF images are supported.");
+  }
+
+  if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+    throw new Error("Only PNG, JPG, WEBP, or PDF files are supported.");
   }
 };
 

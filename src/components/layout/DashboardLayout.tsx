@@ -101,11 +101,11 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden" style={{ backgroundColor: "#0F172A" }}>
       <SiteHeader />
-      <div className="mx-auto grid w-full max-w-7xl gap-5 overflow-x-hidden px-4 pb-5 pt-16 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1500px] gap-5 overflow-x-hidden px-4 pb-5 pt-16 sm:px-6 lg:px-8 xl:grid-cols-[260px_minmax(0,1fr)]">
 
         {/* ── Sidebar ── */}
         <aside
-          className="glass-sidebar w-full max-w-full min-w-0 p-3 lg:sticky lg:top-[4.5rem] lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
+          className="glass-sidebar w-full max-w-full min-w-0 p-3 xl:sticky xl:top-[4.5rem] xl:self-start"
           aria-label="Sidebar"
         >
           {/* Workspace badge */}
@@ -143,14 +143,14 @@ export const DashboardLayout = () => {
           </div>
 
           {/* Nav links */}
-          <nav className="w-full max-w-full min-w-0 space-y-0.5" aria-label={t("nav.dashboardNavigation")}>
+          <nav className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1 xl:block xl:space-y-0.5 xl:overflow-visible xl:pb-0" aria-label={t("nav.dashboardNavigation")}>
             {visibleLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex min-w-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  `flex min-w-fit items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 xl:min-w-0 ${
                     isActive
                       ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-400/25 shadow-sm"
                       : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
@@ -158,7 +158,7 @@ export const DashboardLayout = () => {
                 }
               >
                 <link.icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{link.label}</span>
+                <span className="whitespace-nowrap xl:truncate">{link.label}</span>
               </NavLink>
             ))}
           </nav>

@@ -48,6 +48,7 @@ import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
+import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -550,7 +551,10 @@ export default function PurchaseRequestsPage() {
         setTransferInternalNote("");
 
         if (selectedRow.transferProofUrl) {
-            void getSignedUrl("DOCUMENTS", selectedRow.transferProofUrl).then((url) => setProofSignedUrl(url));
+            void getSignedUrl("TRANSFER_PROOFS", selectedRow.transferProofUrl)
+                .catch(() => getSignedUrl("DOCUMENTS", selectedRow.transferProofUrl))
+                .then((url) => setProofSignedUrl(url))
+                .catch(() => setProofSignedUrl(null));
         } else {
             setProofSignedUrl(null);
         }
@@ -963,7 +967,7 @@ export default function PurchaseRequestsPage() {
     return (
         <div className="w-full max-w-full min-w-0 space-y-4">
             <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
-            <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(24rem,0.82fr)_minmax(0,1.18fr)]">
                 <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
                     <div>
                         <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("requests.inboxEyebrow")}</p>
@@ -980,7 +984,7 @@ export default function PurchaseRequestsPage() {
                         ].map((item) => (
                             <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25">
                                 <p className="text-2xl font-bold text-white">{item.value}</p>
-                                <p className="mt-1 break-words text-xs text-slate-400">{item.label}</p>
+                                <p className="mt-1 whitespace-normal text-xs leading-tight text-slate-400">{item.label}</p>
                             </div>
                         ))}
                     </div>
@@ -997,7 +1001,7 @@ export default function PurchaseRequestsPage() {
                         </div>
 
                         <div className="flex w-full flex-wrap gap-2 md:w-auto">
-                            <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => void refresh()}>
+                            <Button variant="outline" size="sm" className="h-10 min-w-fit rounded-xl whitespace-nowrap" onClick={() => void refresh()}>
                                 {t("common.refresh")}
                             </Button>
                             {requestFilters.map((filter) => (
@@ -1005,7 +1009,7 @@ export default function PurchaseRequestsPage() {
                                     key={filter.key}
                                     variant={activeFilter === filter.key ? "gold" : "outline"}
                                     size="sm"
-                                    className="h-10 rounded-xl"
+                                    className="h-10 min-w-fit rounded-xl whitespace-nowrap"
                                     onClick={() => setActiveFilter(filter.key)}
                                 >
                                     <Filter className="me-2 h-4 w-4" />
@@ -1059,13 +1063,13 @@ export default function PurchaseRequestsPage() {
                                         >
                                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <p className="whitespace-normal break-words text-xs font-semibold text-slate-400">
+                                                <p className="whitespace-nowrap text-xs font-semibold text-slate-400">
                                                     {row.requestNumber}
                                                 </p>
-                                                <p className="mt-2 break-words text-base font-semibold text-foreground sm:truncate">
+                                                <p className="mt-2 text-base font-semibold text-foreground sm:truncate">
                                                     {row.productName || t("requests.genericRequest")}
                                                 </p>
-                                                <p className="mt-1 break-words text-sm text-muted-foreground sm:truncate">{row.customer.fullName}</p>
+                                                <p className="mt-1 text-sm text-muted-foreground sm:truncate">{row.customer.fullName}</p>
                                                 {isCancelled ? (
                                                     <p className="mt-2 break-words text-xs font-medium text-slate-300">
                                                         {t("requests.dashboardActions.cancelledNotice")}
@@ -1073,7 +1077,7 @@ export default function PurchaseRequestsPage() {
                                                 ) : null}
                                             </div>
 
-                                            <span className={`max-w-full self-start break-words rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
+                                            <span className={`max-w-full self-start truncate rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
                         {t(`statuses.${row.status}`)}
                       </span>
                                         </div>
@@ -1090,7 +1094,7 @@ export default function PurchaseRequestsPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 rounded-lg border-white/10 bg-white/[0.03] px-2.5 text-xs hover:border-blue-400/35 hover:bg-blue-500/10"
+                                                className="h-8 min-w-fit rounded-lg border-white/10 bg-white/[0.03] px-2.5 text-xs whitespace-nowrap hover:border-blue-400/35 hover:bg-blue-500/10"
                                                 onClick={() => setSelectedRequest(row.id, true)}
                                             >
                                                 <Eye className="me-1.5 h-3.5 w-3.5" />
@@ -1100,7 +1104,7 @@ export default function PurchaseRequestsPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 rounded-lg border-amber-400/25 bg-amber-400/10 px-2.5 text-xs text-amber-100 hover:bg-amber-400/15"
+                                                className="h-8 min-w-fit rounded-lg border-amber-400/25 bg-amber-400/10 px-2.5 text-xs text-amber-100 whitespace-nowrap hover:bg-amber-400/15"
                                                 disabled={isBusy || !canResubmit}
                                                 onClick={() => void handleResubmitRequest(row)}
                                                 title={!canResubmit ? requestResubmitLabels.unavailable : undefined}
@@ -1113,7 +1117,7 @@ export default function PurchaseRequestsPage() {
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 hover:bg-slate-500/15"
+                                                    className="h-8 min-w-fit rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 whitespace-nowrap hover:bg-slate-500/15"
                                                     disabled={isBusy || !canCancel}
                                                     onClick={() => void handleCancelRequest(row)}
                                                 >
@@ -1125,7 +1129,7 @@ export default function PurchaseRequestsPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 rounded-lg border-rose-400/25 bg-rose-500/10 px-2.5 text-xs text-rose-100 hover:bg-rose-500/15"
+                                                className="h-8 min-w-fit rounded-lg border-rose-400/25 bg-rose-500/10 px-2.5 text-xs text-rose-100 whitespace-nowrap hover:bg-rose-500/15"
                                                 disabled={isBusy}
                                                 onClick={() => void handleArchiveRequest(row)}
                                             >
@@ -1144,7 +1148,7 @@ export default function PurchaseRequestsPage() {
                     <BentoCard
                         ref={detailsPanelRef}
                         tabIndex={-1}
-                        className={`top-24 max-h-none overflow-y-visible rounded-[1.5rem] p-0 xl:sticky xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto ${
+                        className={`rounded-[1.5rem] p-0 ${
                             selectedRow.status === "cancelled"
                                 ? "border-slate-400/25 bg-[linear-gradient(180deg,rgba(30,41,59,0.88),rgba(15,23,42,0.88))]"
                                 : "border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))]"
@@ -1255,8 +1259,8 @@ export default function PurchaseRequestsPage() {
                             </div>
                         </div>
 
-                        <div className="grid min-w-0 gap-0 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
-                            <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 xl:border-b-0 xl:border-e">
+                        <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
+                            <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <p className="whitespace-normal text-xs font-semibold text-primary">
@@ -1507,6 +1511,13 @@ export default function PurchaseRequestsPage() {
                                             status={selectedRow.status}
                                             role="admin"
                                             assignedAdminId={profile?.id}
+                                        />
+
+                                        <OrderFollowupTimeline
+                                            requestId={selectedRow.id}
+                                            dealId={selectedRow.convertedDealId}
+                                            customerId={selectedRow.customer.id}
+                                            mode="admin"
                                         />
 
                                         <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">

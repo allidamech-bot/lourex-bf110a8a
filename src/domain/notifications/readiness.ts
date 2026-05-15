@@ -7,7 +7,10 @@ export type CustomerNotificationEvent =
   | "customer_update_added"
   | "admin_message_sent"
   | "official_conversation_opened"
-  | "official_conversation_message";
+  | "official_conversation_message"
+  | "transfer_receipt_uploaded"
+  | "transfer_receipt_reviewed"
+  | "order_followup_added";
 
 export type NotificationReadinessInput = {
   eventType: CustomerNotificationEvent;

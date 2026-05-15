@@ -43,6 +43,7 @@ import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/componen
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { SectionHelpBox } from "@/components/readable/ReadableCards";
 import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
+import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
 type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
@@ -131,6 +132,9 @@ const formatMoney = (amount: number, currency: string, locale: string) =>
 const getTrackingCode = (row: CustomerRequestRow) => {
   return row.trackingCode || "-";
 };
+
+const ACCEPTED_TRANSFER_PROOF_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+const MAX_TRANSFER_PROOF_SIZE = 8 * 1024 * 1024;
 
 const normalizeSearchValue = (value: string | undefined | null) => {
   return (value || "").trim().toLowerCase();
@@ -454,7 +458,31 @@ export default function CustomerRequestsPage() {
 
   const handleProofFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setSelectedProofFile(file || null);
+    selectProofFile(file || null);
+  };
+
+  const selectProofFile = (file: File | null) => {
+    if (!file) {
+      setSelectedProofFile(null);
+      return;
+    }
+
+    if (!ACCEPTED_TRANSFER_PROOF_TYPES.has(file.type)) {
+      toast.error(locale === "ar" ? "يرجى رفع صورة PNG/JPG/WEBP أو ملف PDF." : "Please upload a PNG, JPG, WEBP, or PDF receipt.");
+      return;
+    }
+
+    if (file.size > MAX_TRANSFER_PROOF_SIZE) {
+      toast.error(locale === "ar" ? "يجب ألا يتجاوز حجم الإيصال 8 ميجابايت." : "Receipt file must be 8 MB or less.");
+      return;
+    }
+
+    setSelectedProofFile(file);
+  };
+
+  const handleProofDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    selectProofFile(event.dataTransfer.files?.[0] || null);
   };
 
   const handleSubmitProof = async () => {
@@ -532,7 +560,7 @@ export default function CustomerRequestsPage() {
 
   if (loading) {
     return (
-        <div className="grid gap-4 lg:grid-cols-[400px_1fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <Skeleton className="h-[600px] rounded-[2rem]" />
           <Skeleton className="h-[600px] rounded-[2rem]" />
         </div>
@@ -542,7 +570,7 @@ export default function CustomerRequestsPage() {
   return (
       <div className="space-y-4 pb-12">
         <PageHelpBox pageKey="purchase_requests" role="customer" />
-        <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(22rem,0.85fr)_minmax(0,1.15fr)]">
           <div id="requests" ref={listRef} className="w-full max-w-full min-w-0 scroll-mt-24">
           <BentoCard className="flex max-w-full flex-col gap-4 overflow-hidden">
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -582,7 +610,7 @@ export default function CustomerRequestsPage() {
               ].map((item) => (
                   <div key={item.label} className="min-w-0 rounded-2xl bg-secondary/20 p-3 text-center">
                     <p className="text-lg sm:text-xl font-bold">{item.value}</p>
-                    <p className="mt-1 break-words text-[11px] leading-tight text-muted-foreground sm:text-[10px]">{item.label}</p>
+                    <p className="mt-1 whitespace-normal text-[11px] leading-tight text-muted-foreground sm:text-[10px]">{item.label}</p>
                   </div>
               ))}
             </div>
@@ -626,7 +654,7 @@ export default function CustomerRequestsPage() {
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-3 overflow-y-auto pe-1">
+            <div className="min-w-0 flex-1 space-y-3 pe-1">
               {filteredRows.length === 0 ? (
                   <EmptyState
                       icon={ClipboardList}
@@ -663,15 +691,15 @@ export default function CustomerRequestsPage() {
                         >
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="whitespace-normal break-words text-xs font-semibold text-muted-foreground">
+                              <p className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
                                 {row.requestNumber}
                               </p>
-                              <p className="mt-2 break-words font-medium">
+                              <p className="mt-2 font-medium sm:truncate">
                                 {row.productName || t("requests.genericRequest")}
                               </p>
                             </div>
 
-                            <span className={`max-w-full self-start break-words rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                            <span className={`max-w-full self-start truncate rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
                           {t(`statuses.${row.status}`)}
                         </span>
                           </div>
@@ -688,7 +716,7 @@ export default function CustomerRequestsPage() {
                               </div>
                             </div>
                             
-                            <div className="flex shrink-0 gap-2">
+                            <div className="flex shrink-0 flex-wrap gap-2">
                               {canEditRequest(row.status) && (
                                 <Button 
                                   variant="ghost" 
@@ -815,6 +843,13 @@ export default function CustomerRequestsPage() {
                     customerId={selectedRow.customer.id}
                     status={selectedRow.status}
                     role="customer"
+                  />
+
+                  <OrderFollowupTimeline
+                    requestId={selectedRow.id}
+                    dealId={selectedRow.convertedDealId}
+                    customerId={selectedRow.customer.id}
+                    mode="customer"
                   />
 
                   {selectedPaymentSummary ? (
@@ -1015,12 +1050,16 @@ export default function CustomerRequestsPage() {
                             </div>
                           )}
 
-                          <div className="mt-6">
+                          <div
+                              className="mt-6 rounded-[1.25rem] border border-dashed border-primary/35 bg-background/30 p-4"
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={handleProofDrop}
+                          >
                             <input
                                 type="file"
                                 id="proof-upload"
                                 className="hidden"
-                                accept="image/*,.pdf,.doc,.docx"
+                                accept="image/png,image/jpeg,image/webp,application/pdf"
                                 onChange={handleProofFileChange}
                                 disabled={uploadingProof}
                             />
@@ -1043,6 +1082,11 @@ export default function CustomerRequestsPage() {
                                 {uploadingProof ? t("transferProof.uploading") : submitReceiptLabel}
                               </Button>
                             </div>
+                            <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                              {locale === "ar"
+                                ? "اسحب الإيصال هنا أو اختر ملفاً. الملفات المدعومة: PNG, JPG, WEBP, PDF حتى 8MB."
+                                : "Drag the receipt here or choose a file. Supported: PNG, JPG, WEBP, PDF up to 8MB."}
+                            </p>
                             {selectedProofFile ? (
                               <p className="mt-3 break-words text-sm text-muted-foreground">
                                 {selectedProofFile.name}

@@ -26,7 +26,7 @@ const BentoCard = forwardRef<HTMLDivElement, BentoCardProps>(({ children, classN
       transition={{ delay, duration: 0.35, ease: "easeOut" }}
       onClick={onClick}
       className={cn(
-        "relative w-full max-w-full min-w-0 overflow-hidden break-words rounded-2xl p-4 transition-all duration-300 sm:p-5",
+        "relative w-full max-w-full min-w-0 overflow-hidden rounded-2xl p-4 transition-all duration-300 sm:p-5",
         spanClasses[span],
         className,
         onClick && "cursor-pointer"

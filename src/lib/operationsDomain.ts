@@ -18,6 +18,7 @@ import { isAssignedPartnerForDeal } from "@/domain/operations/guards";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { runAutomation } from "@/lib/automationEngine";
 import { ensureOfficialOrderConversation } from "@/domain/support/orderConversations";
+import { recordNotificationReadiness } from "@/domain/notifications/readiness";
 import type {
   AttachmentRecord,
   CustomerAccount,
@@ -2894,7 +2895,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
 
   const { data: request, error: requestError } = await db
     .from("purchase_requests")
-    .select("id, status, customer_id")
+    .select("id, status, customer_id, converted_deal_id")
     .eq("id", requestId)
     .single();
 
@@ -2915,7 +2916,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const storagePath = STORAGE_PATHS.TRANSFER_PROOFS(requestId);
   const fullPath = `${storagePath}/${fileName}`;
 
-  const uploaded = await uploadFileToStorage("DOCUMENTS", fullPath, file);
+  const uploaded = await uploadFileToStorage("TRANSFER_PROOFS", fullPath, file);
 
   const { error } = await db.rpc("submit_transfer_proof_for_purchase_request", {
     request_id: requestId,
@@ -2924,6 +2925,39 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   });
 
   if (error) throw error;
+
+  try {
+    const { error: proofLogError } = await db.from("transfer_proofs").insert({
+      request_id: requestId,
+      deal_id: request.converted_deal_id || null,
+      customer_id: request.customer_id,
+      uploaded_by: user.id,
+      file_path: uploaded.path,
+      file_name: file.name,
+      file_type: file.type || "",
+      file_size: file.size,
+      storage_bucket: uploaded.bucket,
+      status: "pending_review",
+    });
+
+    if (proofLogError) {
+      logOptionalBackendUnavailableOnce("transfer_proofs", proofLogError);
+    }
+  } catch (proofLogError) {
+    logOptionalBackendUnavailableOnce("transfer_proofs", proofLogError);
+  }
+
+  try {
+    await recordNotificationReadiness({
+      eventType: "transfer_receipt_uploaded",
+      customerId: request.customer_id,
+      orderId: request.converted_deal_id,
+      channelHint: "both",
+      metadata: { request_id: requestId, file_name: file.name },
+    });
+  } catch (notificationError) {
+    logOperationalError("transfer_receipt_upload_notification_log", notificationError, { requestId });
+  }
 
   await writeAuditLog({
     action: "purchase_request.transfer_proof_uploaded",
@@ -2989,6 +3023,33 @@ export const acceptTransferProof = async (requestId: string) => {
       accepted_by: user.id,
     },
   });
+
+  try {
+    await db
+      .from("transfer_proofs")
+      .update({
+        status: "approved",
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("request_id", requestId)
+      .eq("status", "pending_review");
+  } catch (proofError) {
+    logOptionalBackendUnavailableOnce("transfer_proofs", proofError);
+  }
+
+  try {
+    await recordNotificationReadiness({
+      eventType: "transfer_receipt_reviewed",
+      customerId: request.customer_id,
+      orderId: request.converted_deal_id,
+      channelHint: "both",
+      metadata: { request_id: requestId, status: "approved" },
+    });
+  } catch (notificationError) {
+    logOperationalError("transfer_receipt_review_notification_log", notificationError, { requestId });
+  }
 
   try {
     await runAutomation(
@@ -3060,6 +3121,31 @@ export const acceptTransferProofWithPayment = async (
     });
   }
 
+  if (request) {
+    try {
+      await db
+        .from("transfer_proofs")
+        .update({
+          status: "approved",
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("request_id", requestId)
+        .eq("status", "pending_review");
+
+      await recordNotificationReadiness({
+        eventType: "transfer_receipt_reviewed",
+        customerId: request.customer_id,
+        orderId: request.converted_deal_id,
+        channelHint: "both",
+        metadata: { request_id: requestId, status: "approved" },
+      });
+    } catch (proofError) {
+      logOptionalBackendUnavailableOnce("transfer_proofs", proofError);
+    }
+  }
+
   await writeAuditLog({
     action: "purchase_request.transfer_proof_accepted_with_payment",
     tableName: "purchase_requests",
@@ -3109,6 +3195,30 @@ export const rejectTransferProof = async (requestId: string, reason: string) => 
     .eq("id", requestId);
 
   if (error) throw error;
+
+  try {
+    await db
+      .from("transfer_proofs")
+      .update({
+        status: "rejected",
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+        rejection_reason: reason,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("request_id", requestId)
+      .eq("status", "pending_review");
+
+    await recordNotificationReadiness({
+      eventType: "transfer_receipt_reviewed",
+      customerId: request.customer_id,
+      orderId: request.converted_deal_id,
+      channelHint: "both",
+      metadata: { request_id: requestId, status: "rejected", reason },
+    });
+  } catch (proofError) {
+    logOptionalBackendUnavailableOnce("transfer_proofs", proofError);
+  }
 
   await writeAuditLog({
     action: "purchase_request.transfer_proof_rejected",

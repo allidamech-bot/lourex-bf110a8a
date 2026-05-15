@@ -24,6 +24,8 @@ export const optionalBackendTables = new Set([
   "tracking_updates",
   "support_conversations",
   "conversation_messages",
+  "transfer_proofs",
+  "order_followups",
   "notification_events",
 ]);
 
