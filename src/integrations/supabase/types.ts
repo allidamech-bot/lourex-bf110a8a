@@ -2288,29 +2288,18 @@ export type Database = {
         Args: { p_message?: string; p_order_id: string; p_status: string }
         Returns: undefined
       }
-      upsert_current_customer_record:
-        | {
-            Args: {
-              p_city?: string
-              p_country?: string
-              p_email: string
-              p_full_name: string
-              p_phone?: string
-            }
-            Returns: {
-              customer_id: string
-            }[]
-          }
-        | {
-            Args: {
-              p_country: string
-              p_email: string
-              p_full_name: string
-              p_phone: string
-              p_user_id: string
-            }
-            Returns: string
-          }
+      upsert_current_customer_record: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_email: string
+          p_full_name: string
+          p_phone?: string
+        }
+        Returns: {
+          customer_id: string
+        }[]
+      }
     }
     Enums: {
       app_role:
