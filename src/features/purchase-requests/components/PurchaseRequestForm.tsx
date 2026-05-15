@@ -423,6 +423,7 @@ export const PurchaseRequestForm = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<PurchaseRequestFieldErrors>({});
   const [submittedData, setSubmittedData] = useState<{
+    requestId: string;
     requestNumber: string;
     trackingCode: string;
   } | null>(null);
@@ -911,7 +912,11 @@ export const PurchaseRequestForm = ({
         );
       }
 
-      setSubmittedData({ requestNumber, trackingCode });
+      setSubmittedData({
+        requestId: creationResult.data.id,
+        requestNumber: creationResult.data.requestNumber || requestNumber,
+        trackingCode: creationResult.data.trackingCode || trackingCode,
+      });
 
       trackEvent("purchase_request_submitted", {
         flow: "purchase_request",
@@ -1002,6 +1007,15 @@ export const PurchaseRequestForm = ({
                 onClick={() => setSubmittedData(null)}
             >
               {t("requests.intake.submitAnother")}
+            </Button>
+            <Button
+                variant="outline"
+                className="ms-3 mt-8"
+                asChild
+            >
+              <Link to={`/customer-portal/requests?request=${submittedData.requestId}`}>
+                {lang === "ar" ? "عرض الطلب في طلباتي" : "View in My Requests"}
+              </Link>
             </Button>
           </div>
         </div>

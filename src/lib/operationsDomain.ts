@@ -659,6 +659,12 @@ const getCurrentCustomerRecord = async () => {
     return null;
   }
 
+  trackEvent("customer_profile_resolution", {
+    flow: "customer_request",
+    authenticated: true,
+    method: "lookup",
+  });
+
   // In the Lourex Cloud ownership model, lourex_customers.id is intentionally equal to auth.users.id,
   // and purchase_requests.customer_id stores that same authenticated user id.
   const byUserId = await db
@@ -668,12 +674,20 @@ const getCurrentCustomerRecord = async () => {
     .maybeSingle();
 
   if (byUserId.data) {
+    trackEvent("customer_profile_resolution", {
+      flow: "customer_request",
+      authenticated: true,
+      method: "existing_customer_record",
+    });
     return byUserId.data;
   }
 
   const userEmail = user.email?.trim().toLowerCase() || "";
 
   if (!userEmail) {
+    logOperationalError("customer_profile_resolution", new Error("Authenticated customer is missing email"), {
+      flow: "customer_request",
+    });
     return null;
   }
 
@@ -688,6 +702,9 @@ const getCurrentCustomerRecord = async () => {
     .maybeSingle();
 
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+    logOperationalError("customer_profile_resolution", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"), {
+      flow: "customer_request",
+    });
     return null;
   }
 
@@ -697,7 +714,20 @@ const getCurrentCustomerRecord = async () => {
     .eq("id", upsertedCustomer.data.customer_id)
     .maybeSingle();
 
-  return upserted.data || null;
+  if (!upserted.data) {
+    logOperationalError("customer_profile_resolution", new Error("Customer upsert succeeded but record was not selectable"), {
+      flow: "customer_request",
+    });
+    return null;
+  }
+
+  trackEvent("customer_profile_resolution", {
+    flow: "customer_request",
+    authenticated: true,
+    method: "upserted_customer_record",
+  });
+
+  return upserted.data;
 };
 
 // writeAuditLog moved to @/domain/audit/service
@@ -916,6 +946,9 @@ export const createPurchaseRequestRecord = async (input: {
       .maybeSingle();
 
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
+    logOperationalError("customer_profile_resolution", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"), {
+      flow: "purchase_request_create",
+    });
     return {
       data: null,
       error: upsertedCustomer.error || {
@@ -925,6 +958,22 @@ export const createPurchaseRequestRecord = async (input: {
   }
 
   const customerId = upsertedCustomer.data.customer_id;
+
+  if (customerId !== user.id) {
+    const error = {
+      message: "The purchase request could not be linked to the signed-in customer account.",
+    };
+    logOperationalError("purchase_request_create", new Error(error.message), {
+      flow: "purchase_request_create",
+      customerLinkMismatch: true,
+    });
+    return { data: null, error };
+  }
+
+  trackEvent("purchase_request_create", {
+    flow: "purchase_request_create",
+    customerLinked: true,
+  });
 
   const inserted = await safeStructuredMutation<PurchaseRequestRow>(() =>
       db
@@ -967,7 +1016,23 @@ export const createPurchaseRequestRecord = async (input: {
   );
 
   if (inserted.error || !inserted.data) {
+    logOperationalError("purchase_request_create", inserted.error || new Error("Insert returned no row"), {
+      flow: "purchase_request_create",
+      requestNumber: input.requestNumber,
+    });
     return inserted;
+  }
+
+  if (!inserted.data.id || inserted.data.customer_id !== user.id) {
+    const error = {
+      message: "The purchase request was not linked to your customer account. Please try again or contact LOUREX support.",
+    };
+    logOperationalError("purchase_request_create", new Error(error.message), {
+      flow: "purchase_request_create",
+      requestId: inserted.data.id,
+      customerLinked: inserted.data.customer_id === user.id,
+    });
+    return { data: null, error };
   }
 
   const createdRequestPayload = {
@@ -1099,7 +1164,7 @@ export const loadPurchaseRequests = async (
   let currentCustomerId: string | null = null;
   if (isCustomer) {
     const customerRecord = await getCurrentCustomerRecord();
-    currentCustomerId = customerRecord?.id || null;
+    currentCustomerId = customerRecord?.id || user?.id || null;
   }
 
   let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
@@ -1123,6 +1188,14 @@ export const loadPurchaseRequests = async (
   }
 
   const explicitRows = await explicitRowsPromise;
+
+  if (isCustomer) {
+    trackEvent("customer_request_list", {
+      flow: "customer_request_list",
+      customerResolved: Boolean(currentCustomerId),
+      visibleRequests: explicitRows.length,
+    });
+  }
   const explicitRequestIds = explicitRows.map((row) => row.id);
   const attachmentRowsPromise = !options.includeAttachments
     ? Promise.resolve([] as AttachmentRow[])

@@ -365,13 +365,21 @@ export const createRequest = async (
       return success(normalizeRequest(createdRequest));
     }
 
+    if (!data.customer_id) {
+      logOperationalError("purchase_request_create", new Error("Created request is missing customer_id"), {
+        requestId: data.id,
+        requestNumber: normalizedInput.requestNumber,
+      });
+      return failure("The purchase request was created without a customer link. Please try again.");
+    }
+
     return success({
       id: data.id,
       requestNumber: normalizedInput.requestNumber,
       status: "intake_submitted",
       statusLabel: "تم الاستلام",
       customer: {
-        id: data.id,
+        id: data.customer_id,
         fullName: normalizedInput.fullName,
         phone: normalizedInput.phone,
         email: normalizedInput.email,
