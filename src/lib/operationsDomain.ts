@@ -732,24 +732,20 @@ const getCurrentCustomerRecord = async () => {
     .eq("id", upsertedCustomer.data.customer_id)
     .maybeSingle();
 
-  if (!upserted.data) {
-    if (byEmail.data) {
-      return byEmail.data;
-    }
-
-    logOperationalError("customer_profile_resolution", new Error("Customer upsert succeeded but record was not selectable"), {
-      flow: "customer_request",
-    });
-    return null;
-  }
-
   trackEvent("customer_profile_resolution", {
     flow: "customer_request",
     authenticated: true,
-    method: "upserted_customer_record",
+    method: upserted.data ? "upserted_customer_record" : "upserted_customer_id_fallback",
   });
 
-  return upserted.data;
+  return upserted.data || byEmail.data || {
+    id: upsertedCustomer.data.customer_id,
+    full_name: user.user_metadata?.full_name || "",
+    phone: "",
+    email: userEmail,
+    country: "",
+    city: "",
+  };
 };
 
 // writeAuditLog moved to @/domain/audit/service
@@ -2922,9 +2918,11 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
 
   if (requestError || !request) throw requestError || new Error("الطلب غير موجود.");
 
+  let customer: CustomerRow | null = null;
+
   // Customer ownership check
   if (profile.role === "customer") {
-    const customer = await getCurrentCustomerRecord();
+    customer = await getCurrentCustomerRecord();
     const userEmail = user.email?.trim().toLowerCase() || "";
     const requestEmail = String(request.email || "").trim().toLowerCase();
     const ownsRequest =
@@ -2945,6 +2943,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const fullPath = `${storagePath}/${fileName}`;
 
   const uploaded = await uploadFileToStorage("TRANSFER_PROOFS", fullPath, file);
+  const resolvedCustomerId = customer?.id || request.customer_id || user.id;
 
   const { error } = await db.rpc("submit_transfer_proof_for_purchase_request", {
     request_id: requestId,
@@ -2958,7 +2957,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
     const { error: proofLogError } = await db.from("transfer_proofs").insert({
       request_id: requestId,
       deal_id: request.converted_deal_id || null,
-      customer_id: request.customer_id || user.id,
+      customer_id: resolvedCustomerId,
       uploaded_by: user.id,
       file_path: uploaded.path,
       file_name: file.name,
@@ -2978,7 +2977,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   try {
     await recordNotificationReadiness({
       eventType: "transfer_receipt_uploaded",
-      customerId: request.customer_id,
+      customerId: resolvedCustomerId,
       orderId: request.converted_deal_id,
       channelHint: "both",
       metadata: { request_id: requestId, file_name: file.name },
