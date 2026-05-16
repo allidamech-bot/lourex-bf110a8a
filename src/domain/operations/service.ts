@@ -891,19 +891,42 @@ export const uploadTransferProof = async (
   } catch (error) {
     logOperationalError("purchase_request_transfer_proof_upload", error, { requestId });
     const message = error instanceof Error ? error.message : String(error || "");
+    const reason = ["AUTH_REQUIRED", "REQUEST_NOT_FOUND", "CUSTOMER_NOT_RESOLVED", "NOT_OWNER", "INVALID_STATUS", "INSERT_FAILED"]
+        .find((code) => message.includes(code));
     const storageNotConfigured =
         message.toLowerCase().includes("bucket not found") ||
         message.toLowerCase().includes("storage bucket") ||
         message.toLowerCase().includes("bucket");
+    const localizedMessage =
+        reason === "AUTH_REQUIRED"
+            ? "يرجى تسجيل الدخول ثم إعادة المحاولة."
+            : reason === "REQUEST_NOT_FOUND"
+              ? "تعذر العثور على طلب الشراء."
+              : reason === "CUSTOMER_NOT_RESOLVED"
+                ? "تعذر ربط حساب العميل بهذا الطلب. يرجى تحديث الصفحة ثم المحاولة مرة أخرى."
+                : reason === "NOT_OWNER"
+                  ? "لا تملك صلاحية رفع إثبات دفع لهذا الطلب."
+                  : reason === "INVALID_STATUS"
+                    ? "لا يمكن رفع إثبات التحويل في حالة الطلب الحالية."
+                    : reason === "INSERT_FAILED"
+                      ? "تم رفع الملف، لكن تعذر تسجيل إثبات التحويل. يرجى المحاولة مرة أخرى."
+                      : storageNotConfigured
+                        ? "مساحة تخزين إثباتات التحويل غير مهيأة."
+                        : "تعذر رفع إثبات التحويل. يرجى المحاولة مرة أخرى.";
+
+    console.error("[lourex:transfer-proof:domain-error]", {
+      requestId,
+      reason: reason || "UNKNOWN",
+      rawMessage: message,
+      error,
+    });
 
     return {
       data: null,
-      error: createDomainError(
-          error,
-          storageNotConfigured
-              ? "Transfer proof storage is not configured."
-              : "Failed to upload transfer proof.",
-      ),
+      error: {
+        message: localizedMessage,
+        cause: error,
+      },
     };
   }
 };

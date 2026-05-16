@@ -2900,10 +2900,42 @@ export const getDomainActivationStatus = async () => {
 export const formatTrackingVisibility = (visibility: TrackingUpdateRecord["visibility"]) =>
   trackingVisibilityLabel[visibility];
 
+const TRANSFER_PROOF_UPLOADABLE_STATUSES = ["ready_for_conversion", "transfer_uploaded", "transfer_proof_rejected"];
+
+const maskEmailForDiagnostics = (value: string | null | undefined) => {
+  const normalized = (value || "").trim().toLowerCase();
+  if (!normalized.includes("@")) return normalized ? "[present]" : "";
+  const [name, domain] = normalized.split("@");
+  return `${name.slice(0, 2)}***@${domain}`;
+};
+
+const readSupabaseErrorField = (error: unknown, field: "code" | "message" | "details" | "hint") => {
+  if (!error || typeof error !== "object") return "";
+  const value = (error as Record<string, unknown>)[field];
+  return typeof value === "string" ? value : "";
+};
+
+const getTransferProofRpcErrorMessage = (error: unknown) => {
+  const message = error instanceof Error ? error.message : readSupabaseErrorField(error, "message");
+  const details = readSupabaseErrorField(error, "details");
+  const code = readSupabaseErrorField(error, "code");
+  const hint = readSupabaseErrorField(error, "hint");
+  return [message, details, code ? `code=${code}` : "", hint ? `hint=${hint}` : ""].filter(Boolean).join(" | ");
+};
+
 export const uploadTransferProof = async (requestId: string, file: File) => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const { user, profile } = await getCurrentUserContext();
-  if (!user || !profile) {
-    throw new Error("يجب تسجيل الدخول للقيام بهذا الإجراء.");
+  if (!session?.access_token || !user || !profile) {
+    logOperationalError("transfer_proof_auth_session_missing", new Error("AUTH_REQUIRED: auth session is not ready"), {
+      requestId,
+      hasSession: Boolean(session?.access_token),
+      hasUser: Boolean(user),
+      hasProfile: Boolean(profile),
+    });
+    throw new Error("AUTH_REQUIRED: auth session is not ready");
   }
 
   if (profile.role === "turkish_partner" || profile.role === "saudi_partner") {
@@ -2919,11 +2951,11 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   if (requestError || !request) throw requestError || new Error("الطلب غير موجود.");
 
   let customer: CustomerRow | null = null;
+  const userEmail = user.email?.trim().toLowerCase() || "";
 
   // Customer ownership check
   if (profile.role === "customer") {
     customer = await getCurrentCustomerRecord();
-    const userEmail = user.email?.trim().toLowerCase() || "";
     const requestEmail = String(request.email || "").trim().toLowerCase();
     const ownsRequest =
       request.customer_id === user.id ||
@@ -2934,8 +2966,8 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
       throw new Error("ليس لديك صلاحية لرفع إثبات دفع لهذا الطلب.");
     }
   }
-  if (!["ready_for_conversion", "transfer_proof_rejected"].includes(request.status)) {
-    throw new Error("يمكن رفع إثبات الدفع فقط للطلبات التي تنتظر إثبات الدفع.");
+  if (!TRANSFER_PROOF_UPLOADABLE_STATUSES.includes(String(request.status))) {
+    throw new Error(`INVALID_STATUS: request status is ${request.status}`);
   }
 
   const fileName = `${Date.now()}-${file.name}`;
@@ -2945,33 +2977,46 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const uploaded = await uploadFileToStorage("TRANSFER_PROOFS", fullPath, file);
   const resolvedCustomerId = customer?.id || request.customer_id || user.id;
 
+  console.info("[lourex:transfer-proof:rpc-context]", {
+    authUid: user.id,
+    jwtEmail: maskEmailForDiagnostics(userEmail),
+    resolvedCustomerId,
+    requestCustomerId: request.customer_id,
+    requestEmail: maskEmailForDiagnostics(request.email),
+    requestStatus: request.status,
+    storagePath: uploaded.path,
+  });
+
   const { error } = await db.rpc("submit_transfer_proof_for_purchase_request", {
     request_id: requestId,
     proof_url: uploaded.path,
     proof_path: uploaded.path,
   });
 
-  if (error) throw error;
-
-  try {
-    const { error: proofLogError } = await db.from("transfer_proofs").insert({
-      request_id: requestId,
-      deal_id: request.converted_deal_id || null,
-      customer_id: resolvedCustomerId,
-      uploaded_by: user.id,
-      file_path: uploaded.path,
-      file_name: file.name,
-      file_type: file.type || "",
-      file_size: file.size,
-      storage_bucket: uploaded.bucket,
-      status: "pending_review",
+  if (error) {
+    const diagnosticMessage = getTransferProofRpcErrorMessage(error) || "UNKNOWN_RPC_ERROR: transfer proof RPC failed without details";
+    console.error("[lourex:transfer-proof:rpc-error]", {
+      message: readSupabaseErrorField(error, "message"),
+      details: readSupabaseErrorField(error, "details"),
+      code: readSupabaseErrorField(error, "code"),
+      hint: readSupabaseErrorField(error, "hint"),
+      context: {
+        authUid: user.id,
+        jwtEmail: maskEmailForDiagnostics(userEmail),
+        resolvedCustomerId,
+        requestCustomerId: request.customer_id,
+        requestEmail: maskEmailForDiagnostics(request.email),
+        requestStatus: request.status,
+        storagePath: uploaded.path,
+      },
     });
-
-    if (proofLogError) {
-      logOptionalBackendUnavailableOnce("transfer_proofs", proofLogError);
-    }
-  } catch (proofLogError) {
-    logOptionalBackendUnavailableOnce("transfer_proofs", proofLogError);
+    logOperationalError("transfer_proof_rpc_submit", new Error(diagnosticMessage), {
+      requestId,
+      reason: diagnosticMessage.split(":")[0].slice(0, 40),
+      supabaseCode: readSupabaseErrorField(error, "code"),
+      supabaseDetails: readSupabaseErrorField(error, "details").slice(0, 500),
+    });
+    throw new Error(diagnosticMessage);
   }
 
   try {

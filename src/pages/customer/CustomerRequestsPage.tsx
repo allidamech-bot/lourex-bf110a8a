@@ -493,6 +493,11 @@ export default function CustomerRequestsPage() {
       const { error } = await uploadTransferProof(selectedRow.id, selectedProofFile);
 
       if (error) {
+        console.error("[lourex:customer-transfer-proof-submit:error]", {
+          requestId: selectedRow.id,
+          message: error.message,
+          cause: error.cause,
+        });
         throw new Error(error.message || t("transferProof.error"));
       }
 
@@ -504,7 +509,7 @@ export default function CustomerRequestsPage() {
       logOperationalError("customer_transfer_proof_submit", proofError, {
         requestId: selectedRow.id,
       });
-      toast.error(t("transferProof.error"));
+      toast.error(proofError instanceof Error && proofError.message ? proofError.message : t("transferProof.error"));
     } finally {
       setUploadingProof(false);
     }
