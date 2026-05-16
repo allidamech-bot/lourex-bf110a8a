@@ -1537,11 +1537,11 @@ export type Database = {
           transfer_proof_name: string
           transfer_proof_status: string
           transfer_proof_uploaded_at: string | null
-          transfer_proof_url: string
+          transfer_proof_url: string | null
           transfer_received_amount: number | null
           transfer_received_currency: string
           transfer_reference_number: string
-          transfer_rejection_reason: string
+          transfer_rejection_reason: string | null
           updated_at: string
           weight: string | null
         }
@@ -1593,11 +1593,11 @@ export type Database = {
           transfer_proof_name?: string
           transfer_proof_status?: string
           transfer_proof_uploaded_at?: string | null
-          transfer_proof_url?: string
+          transfer_proof_url?: string | null
           transfer_received_amount?: number | null
           transfer_received_currency?: string
           transfer_reference_number?: string
-          transfer_rejection_reason?: string
+          transfer_rejection_reason?: string | null
           updated_at?: string
           weight?: string | null
         }
@@ -1649,11 +1649,11 @@ export type Database = {
           transfer_proof_name?: string
           transfer_proof_status?: string
           transfer_proof_uploaded_at?: string | null
-          transfer_proof_url?: string
+          transfer_proof_url?: string | null
           transfer_received_amount?: number | null
           transfer_received_currency?: string
           transfer_reference_number?: string
-          transfer_rejection_reason?: string
+          transfer_rejection_reason?: string | null
           updated_at?: string
           weight?: string | null
         }
@@ -2182,11 +2182,11 @@ export type Database = {
           transfer_proof_name: string
           transfer_proof_status: string
           transfer_proof_uploaded_at: string | null
-          transfer_proof_url: string
+          transfer_proof_url: string | null
           transfer_received_amount: number | null
           transfer_received_currency: string
           transfer_reference_number: string
-          transfer_rejection_reason: string
+          transfer_rejection_reason: string | null
           updated_at: string
           weight: string | null
         }
