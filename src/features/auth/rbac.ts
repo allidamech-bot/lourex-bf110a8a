@@ -33,13 +33,27 @@ export const INTERNAL_ROLES: LourexRole[] = [
 ];
 
 export const OWNER_ONLY_ROLES: LourexRole[] = ["owner"];
+
+/**
+ * Legacy broad accounting management roles.
+ * Keep this for backward compatibility while the codebase migrates to the more precise accounting permission helpers below.
+ */
 export const ACCOUNTING_ROLES: LourexRole[] = ["owner", "operations_employee"];
-export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
-export const OWNER_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "saudi_partner"];
-export const ACCOUNTING_DASHBOARD_UI_ROLES: LourexRole[] = [
-  ...ACCOUNTING_ROLES,
+
+export const ACCOUNTING_VIEW_ROLES: LourexRole[] = [
+  "owner",
+  "operations_employee",
   "saudi_partner",
 ];
+export const ACCOUNTING_CREATE_ROLES: LourexRole[] = ["owner", "operations_employee"];
+export const ACCOUNTING_EDIT_REQUEST_ROLES: LourexRole[] = ["owner", "operations_employee"];
+export const ACCOUNTING_APPROVAL_ROLES: LourexRole[] = ["owner"];
+export const ACCOUNTING_EXPORT_ROLES: LourexRole[] = ["owner", "operations_employee"];
+export const ACCOUNTING_AUDIT_ROLES: LourexRole[] = ["owner", "operations_employee"];
+
+export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
+export const OWNER_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "saudi_partner"];
+export const ACCOUNTING_DASHBOARD_UI_ROLES: LourexRole[] = ACCOUNTING_VIEW_ROLES;
 export const SYSTEM_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "operations_employee"];
 
 export const dashboardRoutePermissions = {
@@ -97,5 +111,11 @@ export const getDefaultRouteForRole = (role: LourexRole) => {
 export const canManageUsers = (role: LourexRole) => role === "owner";
 export const canManagePurchaseRequests = (role: LourexRole) => ["owner", "operations_employee"].includes(role);
 export const canManageAccounting = (role: LourexRole) => ACCOUNTING_ROLES.includes(role);
+export const canViewAccounting = (role: LourexRole) => ACCOUNTING_VIEW_ROLES.includes(role);
+export const canCreateAccountingEntry = (role: LourexRole) => ACCOUNTING_CREATE_ROLES.includes(role);
+export const canRequestAccountingEdit = (role: LourexRole) => ACCOUNTING_EDIT_REQUEST_ROLES.includes(role);
+export const canApproveAccountingEdit = (role: LourexRole) => ACCOUNTING_APPROVAL_ROLES.includes(role);
+export const canExportAccounting = (role: LourexRole) => ACCOUNTING_EXPORT_ROLES.includes(role);
+export const canAuditAccounting = (role: LourexRole) => ACCOUNTING_AUDIT_ROLES.includes(role);
 export const canViewPartnerArea = (role: LourexRole) => INTERNAL_ROLES.includes(role);
 export const canViewCustomerArea = (role: LourexRole) => role === "customer" || INTERNAL_ROLES.includes(role);
