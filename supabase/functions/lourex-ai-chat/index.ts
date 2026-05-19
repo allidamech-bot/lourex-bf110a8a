@@ -32,7 +32,27 @@ type ChatMessage = {
   content: string;
 };
 
-const roleContext: Record<string, string> = {
+type LourexAiRole = "owner" | "turkish_partner" | "saudi_partner" | "operations_employee" | "customer" | "guest";
+
+const ALL_AUTHENTICATED_ROLES: LourexAiRole[] = [
+  "owner",
+  "turkish_partner",
+  "saudi_partner",
+  "operations_employee",
+  "customer",
+];
+const MANAGEMENT_AI_ROLES: LourexAiRole[] = ["owner", "operations_employee"];
+const INTERNAL_AI_ROLES: LourexAiRole[] = ["owner", "operations_employee", "turkish_partner", "saudi_partner"];
+const FINANCE_AI_ROLES: LourexAiRole[] = ["owner", "operations_employee"];
+const PURCHASE_REQUEST_REVIEW_ROLES: LourexAiRole[] = ["owner", "operations_employee"];
+
+const isKnownRole = (role: unknown): role is LourexAiRole =>
+  typeof role === "string" &&
+  ["owner", "turkish_partner", "saudi_partner", "operations_employee", "customer", "guest"].includes(role);
+
+const normalizeAiRole = (role: unknown): LourexAiRole => (isKnownRole(role) ? role : "customer");
+
+const roleContext: Record<LourexAiRole, string> = {
   owner:
     "The current user is the OWNER of LOUREX. Provide high-level operational summaries, risk indicators, report drafts, and review checklists. Do not claim to approve, reject, delete, lock, unlock, or update records.",
   turkish_partner:
@@ -107,11 +127,33 @@ const operationalAssistantModes: Record<string, string> = {
   settlement_review:
     "Review partner settlement visibility, pending or disputed settlement risks, unpaid approved settlements, and internal follow-up needs.",
   accounting_risk_briefing:
-    "Generate an internal accounting risk briefing covering immutable-entry status, audit traceability gaps, duplicate-like entries, large balances, and review-only next actions.",
+    "Generate an internal accounting risk briefing covering immutable-entry status, audit traceability gaps, duplicate-like risks, large balances, and review-only next actions.",
   deal_briefing:
-    "Generate a concise internal deal briefing covering current deal state, responsibility, shipment state, finance signal, customer communication recommendation, and next best internal action.",
+    "Generate a concise internal deal briefing covering current deal state, responsibility, shipment state, finance signal, customer communication recommendation, and next internal action.",
   deal_risk_review:
     "Review operational deal risks such as missing shipment, stale tracking, missing partner assignment, finance gaps, customer waiting signals, and blocked progress. Advisory only.",
+};
+
+const operationalModeRoles: Record<string, LourexAiRole[]> = {
+  dashboard_daily_briefing: MANAGEMENT_AI_ROLES,
+  shipment_risk_review: INTERNAL_AI_ROLES,
+  shipment_briefing: INTERNAL_AI_ROLES,
+  shipment_customer_update_draft: INTERNAL_AI_ROLES,
+  shipment_document_review: INTERNAL_AI_ROLES,
+  finance_audit_review: FINANCE_AI_ROLES,
+  customer_balance_review: FINANCE_AI_ROLES,
+  settlement_review: FINANCE_AI_ROLES,
+  accounting_risk_briefing: FINANCE_AI_ROLES,
+  deal_briefing: INTERNAL_AI_ROLES,
+  deal_risk_review: INTERNAL_AI_ROLES,
+};
+
+const isAiModeAllowedForRole = (mode: string, role: LourexAiRole) => {
+  if (mode === "general_chat") return ALL_AUTHENTICATED_ROLES.includes(role);
+  if (mode === "purchase_request_analyzer") return ALL_AUTHENTICATED_ROLES.includes(role);
+  if (mode in purchaseRequestAssistantModes) return PURCHASE_REQUEST_REVIEW_ROLES.includes(role);
+  if (mode in operationalAssistantModes) return (operationalModeRoles[mode] || MANAGEMENT_AI_ROLES).includes(role);
+  return false;
 };
 
 const jsonResponse = (req: Request, body: Record<string, unknown>, status = 200) =>
@@ -182,7 +224,7 @@ serve(async (req) => {
     }
 
     let userEmail: string | null = null;
-    let userRole = "customer";
+    let userRole: LourexAiRole = "customer";
     let userName = "";
     let companyName = "";
 
@@ -214,7 +256,7 @@ serve(async (req) => {
     if (profile) {
       userName = profile.full_name || "";
       companyName = profile.company_name || "";
-      userRole = profile.role || userRole;
+      userRole = normalizeAiRole(profile.role);
     }
 
     const normalizedMessages = normalizeMessages(messages, message);
@@ -236,6 +278,15 @@ serve(async (req) => {
         : isOperationalAssistantMode
           ? normalizedAnalysisMode
           : "general_chat";
+
+    if (!isAiModeAllowedForRole(analysisModeLabel, userRole)) {
+      console.warn("lourex-ai-chat forbidden mode", {
+        role: userRole,
+        analysisMode: analysisModeLabel,
+        route: normalizedRoute,
+      });
+      return jsonResponse(req, { error: "AI mode is not allowed for this role" }, 403);
+    }
 
     const systemPrompt = `You are LOUREX AI Copilot, a premium bilingual Arabic/English trade operations assistant for LOUREX.
 
@@ -368,7 +419,7 @@ Required behavior by mode:
 - shipment_document_review: include required/recommended document gaps, customs-sensitive items, and review-only follow-up checklist.
 - finance_audit_review: include incomplete entries, suspicious values or descriptions, missing deal/customer references, locked-entry correction concerns, and review-only recommendations.
 - customer_balance_review: include balance summary, statement caveats, missing deal/customer references, multi-currency warnings, and customer-safe explanation notes.
-- settlement_review: include partner settlement state, pending approval/payment/dispute risks, linked financial signals, and review-only follow-up checklist.
+- settlement_review: include partner settlement state, pending or disputed settlement risks, unpaid approved settlements, and internal follow-up needs.
 - accounting_risk_briefing: include immutable accounting status, audit traceability gaps, duplicate-like risks, large or negative balances, and next internal review actions.
 - deal_briefing: include deal state, responsibility, shipment/tracking state, finance signal, customer-safe communication recommendation, and next internal action.
 - deal_risk_review: include operational risk flags, missing data, shipment risk, finance risk, blocked progress, and review-only recommendations.
