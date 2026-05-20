@@ -18,7 +18,14 @@ import type {
 import type { FinancialEntry, FinancialEditRequest } from "@/types/lourex";
 import type { OperationalDeal } from "@/lib/operationsDomain";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
-import { canManageAccounting, isValidRole } from "@/features/auth/rbac";
+import {
+  canApproveAccountingEdit,
+  canCreateAccountingEntry,
+  canRequestAccountingEdit,
+  canViewAccounting,
+  isValidRole,
+  type LourexRole,
+} from "@/features/auth/rbac";
 import {
   hasMeaningfulFinancialEditChange,
   isValidFinancialCurrency,
@@ -30,6 +37,22 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
+
+type AccountingPermission = "view" | "create" | "request_edit" | "approve_edit";
+
+const accountingPermissionMessages: Record<AccountingPermission, string> = {
+  view: "Your current role does not permit viewing accounting data.",
+  create: "Your current role does not permit creating accounting entries.",
+  request_edit: "Your current role does not permit requesting accounting edits.",
+  approve_edit: "Your current role does not permit approving or rejecting accounting edit requests.",
+};
+
+const accountingPermissionChecks: Record<AccountingPermission, (role: LourexRole) => boolean> = {
+  view: canViewAccounting,
+  create: canCreateAccountingEntry,
+  request_edit: canRequestAccountingEdit,
+  approve_edit: canApproveAccountingEdit,
+};
 
 const getSupabaseErrorMessage = (error: unknown) => {
   if (error instanceof Error && error.message) return error.message;
@@ -88,7 +111,7 @@ export const getFinancialOperationErrorMessage = (error: unknown) => {
   return message || "The financial action could not be completed.";
 };
 
-const assertAccountingActor = async (allowCustomerRead = false) => {
+const assertAccountingActor = async (permission: AccountingPermission) => {
   const context = await getCurrentUserContext();
   const role = context.profile?.role;
 
@@ -96,26 +119,30 @@ const assertAccountingActor = async (allowCustomerRead = false) => {
     throw new Error("Authentication required.");
   }
 
-  if (!allowCustomerRead && !canManageAccounting(role)) {
-    throw new Error("Your current role does not permit accounting management.");
+  if (!accountingPermissionChecks[permission](role)) {
+    throw new Error(accountingPermissionMessages[permission]);
   }
 
   return context;
 };
 
-export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
-  const { profile } = await assertAccountingActor(true);
-  const isCustomer = profile?.role === "customer";
+const filterRowsByVisibleDeals = <T extends { deal_id?: string | null }>(rows: T[], deals: OperationalDeal[]) => {
+  const visibleDealIds = new Set(deals.map((deal) => deal.id));
+  return rows.filter((row) => row.deal_id && visibleDealIds.has(row.deal_id));
+};
 
-  const [entries, deals, customers] = await Promise.all([
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<FinancialEntryRow>("financial_entries", "customer_id", profile.id)
-      : safeStructuredSelect<FinancialEntryRow>("financial_entries"),
-    options.deals ? Promise.resolve(options.deals) : loadDeals(),
-    isCustomer && profile?.id
-      ? safeStructuredSelectWhereEq<CustomerRow>("lourex_customers", "id", profile.id)
+export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] } = {}): Promise<FinancialEntry[]> => {
+  const { profile } = await assertAccountingActor("view");
+  const isScopedPartnerView = profile.role === "saudi_partner";
+
+  const deals = options.deals || await loadDeals();
+  const [rawEntries, customers] = await Promise.all([
+    safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+    isScopedPartnerView
+      ? Promise.resolve([] as CustomerRow[])
       : safeStructuredSelect<CustomerRow>("lourex_customers"),
   ]);
+  const entries = isScopedPartnerView ? filterRowsByVisibleDeals(rawEntries || [], deals) : rawEntries;
 
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
   const customerMap = new Map((customers || []).map((row) => [row.id, row]));
@@ -166,7 +193,7 @@ export const createFinancialEntry = async (input: {
   entryDate: string;
   referenceLabel?: string;
 }) => {
-  const { user } = await assertAccountingActor();
+  const { user } = await assertAccountingActor("create");
   if (!user) throw new Error("Authentication required.");
   if (!(await getLourexDomainAvailability())) throw new Error("The Lourex domain must be activated in Supabase first.");
 
@@ -237,15 +264,19 @@ export const createFinancialEntry = async (input: {
 };
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
-  await assertAccountingActor();
+  const { profile } = await assertAccountingActor("view");
+  const isScopedPartnerView = profile.role === "saudi_partner";
 
-  const [rows, entries, deals, customers, profiles] = await Promise.all([
+  const deals = await loadDeals();
+  const [rawRows, entries, customers, profiles] = await Promise.all([
     safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
-    loadFinancialEntries(),
-    loadDeals(),
-    safeStructuredSelect<CustomerRow>("lourex_customers"),
+    loadFinancialEntries({ deals }),
+    isScopedPartnerView
+      ? Promise.resolve([] as CustomerRow[])
+      : safeStructuredSelect<CustomerRow>("lourex_customers"),
     safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
   ]);
+  const rows = isScopedPartnerView ? filterRowsByVisibleDeals(rawRows || [], deals) : rawRows;
 
   const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
   const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
@@ -288,7 +319,7 @@ export const createFinancialEditRequest = async (input: {
   oldValue: Record<string, unknown>;
   proposedValue: Record<string, unknown>;
 }) => {
-  const { user } = await assertAccountingActor();
+  const { user } = await assertAccountingActor("request_edit");
   if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
   if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
@@ -394,7 +425,7 @@ export const updateFinancialEditRequestStatus = async (
   status: "approved" | "rejected",
   reviewNote?: string,
 ) => {
-  const { user } = await assertAccountingActor();
+  const { user } = await assertAccountingActor("approve_edit");
   if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
   if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
 
