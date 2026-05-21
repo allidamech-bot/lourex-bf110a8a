@@ -42,6 +42,7 @@ const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
 const SystemControlsPage = lazy(() => import("@/pages/dashboard/SystemControlsPage"));
 const HealthPage = lazy(() => import("@/pages/dashboard/HealthPage"));
+const OperationsBriefingPage = lazy(() => import("@/pages/dashboard/OperationsBriefingPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const CustomerPortal = lazy(() => import("@/pages/customer/CustomerPortal"));
 const CustomerRequestsPage = lazy(() => import("@/pages/customer/CustomerRequestsPage"));
@@ -140,6 +141,14 @@ const App = () => (
                                                     <PageWithAI component={<OverviewPage />} />
                                                 </ProtectedRoute>
                                             } 
+                                        />
+                                        <Route
+                                            path="operations-briefing"
+                                            element={
+                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
+                                                    <PageWithAI component={<OperationsBriefingPage />} />
+                                                </ProtectedRoute>
+                                            }
                                         />
                                         <Route
                                             path="requests"
