@@ -7,22 +7,38 @@ html[dir="rtl"] #root {
   text-rendering: optimizeLegibility;
 }
 
-/* The purchase requests screen is the only dashboard page with a two-column inbox/detail master-detail grid. */
-main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
-  align-items: start;
-  grid-template-columns: minmax(21rem, 0.72fr) minmax(0, 1.28fr) !important;
+/* Page-level master/detail layout.
+   The previous generic patch protected text, but the page could still collapse into narrow vertical columns.
+   This forces a real desktop master/detail split: compact inbox on the side, wide detail workspace. */
+main > div.w-full.max-w-full.min-w-0.space-y-4 {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
-@media (max-width: 1279px) {
-  main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
-    grid-template-columns: minmax(0, 1fr) !important;
+main > div.w-full.max-w-full.min-w-0.space-y-4 > div.grid {
+  align-items: start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+@media (min-width: 1280px) {
+  main > div.w-full.max-w-full.min-w-0.space-y-4 > div.grid {
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr) !important;
   }
 }
 
-@media (min-width: 1280px) and (max-width: 1535px) {
-  main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
-    grid-template-columns: minmax(20rem, 0.62fr) minmax(0, 1.38fr) !important;
+@media (min-width: 1536px) {
+  main > div.w-full.max-w-full.min-w-0.space-y-4 > div.grid {
+    grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr) !important;
   }
+}
+
+/* Make both top-level cards consume their grid tracks instead of shrinking to their internal content. */
+main > div.w-full.max-w-full.min-w-0.space-y-4 > div.grid > [class*="rounded"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
 }
 
 /* Deep overflow protection. Long Arabic, file names, generated AI text, and repeated characters must never stretch cards. */
@@ -63,20 +79,34 @@ html[dir="rtl"] main input {
   line-height: 1.75;
 }
 
-/* Detail panel inner split: keep it readable on desktop, never squeeze into narrow columns. */
+/* Detail panel: avoid the squeezed/narrow right-column effect. */
+main [tabindex="-1"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
 main [tabindex="-1"] > div.grid {
+  width: 100% !important;
+  align-items: start !important;
   grid-template-columns: minmax(0, 1fr) !important;
 }
 
 @media (min-width: 1536px) {
   main [tabindex="-1"] > div.grid {
-    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr) !important;
+    grid-template-columns: minmax(0, 1.08fr) minmax(24rem, 0.92fr) !important;
+  }
+}
+
+@media (min-width: 1800px) {
+  main [tabindex="-1"] > div.grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(26rem, 0.85fr) !important;
   }
 }
 
 /* Request meta grids and detail cards. */
 main [tabindex="-1"] .grid.md\:grid-cols-2 {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)) !important;
 }
 
 main [tabindex="-1"] [class*="rounded-2xl"],
@@ -84,13 +114,39 @@ main [tabindex="-1"] [class*="rounded-[1.35rem]"] {
   height: auto;
 }
 
+/* Panels that contain long generated text should be readable cards, not thin scroll strips. */
+main [tabindex="-1"] [class*="bg-[#080808]"],
+main [tabindex="-1"] [class*="bg-secondary"],
+main [tabindex="-1"] [class*="bg-primary"],
+main [tabindex="-1"] [class*="bg-white"] {
+  min-width: 0 !important;
+}
+
 /* Attachment grid: no more vertical narrow cards. */
+main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.75rem !important;
+}
+
+@media (min-width: 640px) {
+  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)) !important;
+  }
+}
+
 main [tabindex="-1"] a[href][target="_blank"] {
-  display: flex;
-  min-height: 7.5rem;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid !important;
+  min-height: 8rem;
+  grid-template-rows: 1fr auto;
   overflow: hidden;
+  padding: 1rem !important;
 }
 
 main [tabindex="-1"] a[href][target="_blank"] p:first-child {
@@ -98,16 +154,14 @@ main [tabindex="-1"] a[href][target="_blank"] p:first-child {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
-main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr)) !important;
-}
-
-@media (min-width: 1024px) {
-  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
-    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)) !important;
-  }
+main [tabindex="-1"] a[href][target="_blank"] p:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* AI/local analyzer and supplier brief output: contained, readable, scrollable. */
@@ -119,9 +173,14 @@ main pre {
   border-radius: 0.75rem;
 }
 
+/* Supplier brief / smart panel text blocks: avoid tiny inner scrollbars unless content is truly huge. */
+main [class*="max-h"] {
+  scrollbar-width: thin;
+}
+
 /* Smart clarification textarea and notes should not eat the whole card. */
 main textarea {
-  min-height: 9rem;
+  min-height: 8rem;
   max-height: 18rem;
   resize: vertical;
 }
@@ -157,15 +216,5 @@ main button svg {
   main [tabindex="-1"] h2 {
     font-size: 1.35rem;
     line-height: 1.45;
-  }
-
-  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1199px) {
-  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
