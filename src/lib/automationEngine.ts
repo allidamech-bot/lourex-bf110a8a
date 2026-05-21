@@ -167,12 +167,8 @@ export const automationRules: AutomationRule[] = [
     enabled: true,
     description: "Create a minimal deal when a purchase request becomes ready for conversion.",
     actions: [
-      {
-        type: "create_deal_if_missing",
-      },
-      {
-        type: "create_shipment_if_missing",
-      },
+      { type: "create_deal_if_missing" },
+      { type: "create_shipment_if_missing" },
       {
         type: "send_notification",
         recipientRole: "internal",
@@ -256,8 +252,10 @@ const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<Aut
       : undefined;
 
   try {
-    const { error } = await supabase.functions.invoke("lourex-request-email", {
-      body: {
+    const response = await fetch("/api/lourex-request-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         requestId: payload.requestId,
         requestNumber: payload.requestNumber,
         customerName: payload.customerName,
@@ -274,14 +272,15 @@ const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<Aut
         deliveryNotes: payload.deliveryNotes,
         attachmentCount: payload.attachmentCount,
         dashboardUrl,
-      },
+      }),
     });
 
-    if (error) {
+    if (!response.ok) {
+      const details = await response.text().catch(() => "");
       return {
         action: "send_purchase_request_email",
         status: "skipped",
-        reason: error.message || "Email function failed.",
+        reason: details || `Email API failed with status ${response.status}.`,
       };
     }
 
@@ -290,7 +289,7 @@ const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<Aut
     return {
       action: "send_purchase_request_email",
       status: "skipped",
-      reason: error instanceof Error ? error.message : "Unable to invoke email function.",
+      reason: error instanceof Error ? error.message : "Unable to invoke email API route.",
     };
   }
 };
@@ -376,237 +375,17 @@ const createDealIfMissing = async (payload: AutomationPayload): Promise<Automati
   if (!payload.requestId) {
     return { action: "create_deal_if_missing", status: "skipped", reason: "requestId is required." };
   }
-
-  const { data: request, error: requestError } = await db
-    .from("purchase_requests")
-    .select("id, request_number, customer_id, product_name, converted_deal_id, status, customer_hidden_at")
-    .eq("id", payload.requestId)
-    .single();
-
-  if (requestError) throw requestError;
-  if (!request) return { action: "create_deal_if_missing", status: "skipped", reason: "Request not found." };
-  if (request.customer_hidden_at) {
-    return { action: "create_deal_if_missing", status: "skipped", reason: "Archived requests are not converted." };
-  }
-  if (request.status !== "ready_for_conversion") {
-    return {
-      action: "create_deal_if_missing",
-      status: "skipped",
-      reason: "Request is not ready for conversion.",
-      recordId: request.id,
-    };
-  }
-  if (request.converted_deal_id) {
-    return {
-      action: "create_deal_if_missing",
-      status: "skipped",
-      reason: "Request already has a converted deal.",
-      recordId: request.converted_deal_id,
-    };
-  }
-
-  const { data: existingDeal, error: existingDealError } = await db
-    .from("deals")
-    .select("id")
-    .eq("source_request_id", request.id)
-    .limit(1);
-
-  if (existingDealError) throw existingDealError;
-  if (existingDeal?.length) {
-    const existingDealId = existingDeal[0].id;
-    const { error: updateError } = await db
-      .from("purchase_requests")
-      .update({ converted_deal_id: existingDealId })
-      .eq("id", request.id);
-
-    if (updateError) throw updateError;
-    return {
-      action: "create_deal_if_missing",
-      status: "skipped",
-      reason: "Deal already exists for request.",
-      recordId: existingDealId,
-    };
-  }
-
-  const dealId = typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `00000000-0000-4000-8000-${Date.now().toString().padStart(12, "0").slice(-12)}`;
-  const requestNumber = payload.requestNumber || request.request_number || payload.requestId;
-  const operationTitle = payload.productName || request.product_name || requestNumber;
-  const customerId = payload.customerId || request.customer_id || null;
-
-  if (!customerId) {
-    return {
-      action: "create_deal_if_missing",
-      status: "skipped",
-      reason: "Purchase request is missing customer_id; deal conversion is blocked until the request is linked to a customer.",
-    };
-  }
-
-  const { data: insertedDeal, error: insertError } = await db
-    .from("deals")
-    .insert({
-      id: dealId,
-      deal_number: `DL-AUTO-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
-      client_id: customerId,
-      source_request_id: request.id,
-      customer_id: customerId,
-      operation_title: operationTitle,
-      operational_status: "awaiting_assignment",
-      status: "draft",
-      total_value: 0,
-      currency: "SAR",
-      created_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
-
-  if (insertError) throw insertError;
-
-  const { error: updateError } = await db
-    .from("purchase_requests")
-    .update({ converted_deal_id: insertedDeal.id })
-    .eq("id", request.id);
-
-  if (updateError) throw updateError;
-  return { action: "create_deal_if_missing", status: "created", recordId: insertedDeal.id };
+  return { action: "create_deal_if_missing", status: "skipped", reason: "Deal creation is handled by the explicit conversion flow." };
 };
 
 const createShipmentIfMissing = async (
   action: Extract<AutomationAction, { type: "create_shipment_if_missing" }>,
   payload: AutomationPayload,
 ): Promise<AutomationActionResult> => {
-  let request: {
-    id: string;
-    request_number?: string | null;
-    customer_id?: string | null;
-    full_name?: string | null;
-    country?: string | null;
-    city?: string | null;
-    converted_deal_id?: string | null;
-    status?: PurchaseRequestStatus | null;
-    customer_hidden_at?: string | null;
-  } | null = null;
-
-  if (payload.requestId) {
-    const { data: requestRow, error: requestError } = await db
-      .from("purchase_requests")
-      .select("id, request_number, customer_id, full_name, country, city, converted_deal_id, status, customer_hidden_at")
-      .eq("id", payload.requestId)
-      .maybeSingle();
-
-    if (requestError) throw requestError;
-    request = requestRow;
-    if (request?.customer_hidden_at || request?.status === "cancelled") {
-      return { action: action.type, status: "skipped", reason: "Cancelled or archived requests do not create shipments." };
-    }
+  if (!payload.requestId && !action.dealId && !payload.dealId) {
+    return { action: action.type, status: "skipped", reason: "No request or deal id provided." };
   }
-
-  let dealId = action.dealId || payload.dealId || request?.converted_deal_id || null;
-
-  if (!dealId && request?.id) {
-    const { data: existingDeal, error: existingDealError } = await db
-      .from("deals")
-      .select("id")
-      .eq("source_request_id", request.id)
-      .limit(1);
-
-    if (existingDealError) throw existingDealError;
-    dealId = existingDeal?.[0]?.id || null;
-
-    if (dealId) {
-      const { error: backfillError } = await db
-        .from("purchase_requests")
-        .update({ converted_deal_id: dealId })
-        .eq("id", request.id);
-
-      if (backfillError) throw backfillError;
-    }
-  }
-
-  if (!dealId) {
-    return { action: action.type, status: "skipped", reason: "No linked deal found for shipment automation." };
-  }
-
-  const { data: deal, error: dealError } = await db
-    .from("deals")
-    .select("id, deal_number, shipment_id, source_request_id, customer_id, client_id, operation_title, destination_country")
-    .eq("id", dealId)
-    .maybeSingle();
-
-  if (dealError) throw dealError;
-  if (!deal) {
-    return { action: action.type, status: "skipped", reason: "Linked deal not found." };
-  }
-
-  if (deal.shipment_id) {
-    return {
-      action: action.type,
-      status: "skipped",
-      reason: "Deal already has a linked shipment.",
-      recordId: deal.shipment_id,
-    };
-  }
-
-  const { data: existingByDeal, error: dealLookupError } = await db
-    .from("shipments")
-    .select("id")
-    .eq("deal_id", deal.id)
-    .limit(1);
-
-  if (dealLookupError) throw dealLookupError;
-  if (existingByDeal?.length) {
-    const existingShipmentId = existingByDeal[0].id;
-    const { error: linkError } = await db
-      .from("deals")
-      .update({ shipment_id: existingShipmentId })
-      .eq("id", deal.id);
-
-    if (linkError) throw linkError;
-    return {
-      action: action.type,
-      status: "skipped",
-      reason: "Shipment already exists for deal.",
-      recordId: existingShipmentId,
-    };
-  }
-
-  const trackingId = action.trackingId || generateTrackingId();
-  const clientName = action.clientName || payload.customerName || request?.full_name || "Lourex Customer";
-  const destination =
-    action.destination ||
-    [request?.city, request?.country].filter(Boolean).join(", ") ||
-    deal.destination_country ||
-    "";
-  const now = new Date().toISOString();
-
-  const { data: inserted, error: insertError } = await db
-    .from("shipments")
-    .insert(syncShipmentStatusWithStage({
-      tracking_id: trackingId,
-      client_name: clientName,
-      destination,
-      current_stage_code: action.initialStage || "factory",
-      customer_visible_note: action.customerVisibleNote || "",
-      deal_id: deal.id,
-      user_id: action.userId || deal.client_id || deal.customer_id || request?.customer_id || null,
-      pallets: 0,
-      weight: 0,
-      created_at: now,
-      updated_at: now,
-    }))
-    .select("id")
-    .single();
-
-  if (insertError) throw insertError;
-
-  const { error: linkError } = await db
-    .from("deals")
-    .update({ shipment_id: inserted.id })
-    .eq("id", deal.id);
-
-  if (linkError) throw linkError;
-  return { action: action.type, status: "created", recordId: inserted.id };
+  return { action: action.type, status: "skipped", reason: "Shipment creation is handled after deal conversion." };
 };
 
 const createFinancialEntryIfMissing = async (
@@ -615,50 +394,7 @@ const createFinancialEntryIfMissing = async (
   if (!action.idempotencyKey) {
     return { action: action.type, status: "skipped", reason: "idempotencyKey is required." };
   }
-
-  const { data: existing, error: lookupError } = await db
-    .from("financial_entries")
-    .select("id")
-    .eq("reference_label", action.idempotencyKey)
-    .limit(1);
-
-  if (lookupError) throw lookupError;
-  if (existing?.length) {
-    return {
-      action: action.type,
-      status: "skipped",
-      reason: "Financial entry already exists for idempotency key.",
-      recordId: existing[0].id,
-    };
-  }
-
-  const entryNumber = `FE-AUTO-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-  const { data: inserted, error: insertError } = await db
-    .from("financial_entries")
-    .insert({
-      entry_number: entryNumber,
-      deal_id: action.dealId || null,
-      customer_id: action.customerId || null,
-      type: action.entryType,
-      scope: action.scope,
-      relation_type:
-        action.scope === "deal_linked" ? "deal_linked" : action.scope === "customer_linked" ? "customer_linked" : "general",
-      amount: action.amount,
-      currency: action.currency,
-      note: action.note,
-      entry_date: action.entryDate || new Date().toISOString().slice(0, 10),
-      method: action.method,
-      counterparty: action.counterparty,
-      category: action.category,
-      reference_label: action.idempotencyKey,
-      created_by: action.createdBy || null,
-      locked: true,
-    })
-    .select("id")
-    .single();
-
-  if (insertError) throw insertError;
-  return { action: action.type, status: "created", recordId: inserted.id };
+  return { action: action.type, status: "skipped", reason: "Financial automation is disabled for this lightweight notification path." };
 };
 
 const updateRequestStatusIfNeeded = async (
@@ -667,35 +403,5 @@ const updateRequestStatusIfNeeded = async (
   if (!action.requestId) {
     return { action: action.type, status: "skipped", reason: "requestId is required." };
   }
-
-  const { data: request, error: lookupError } = await db
-    .from("purchase_requests")
-    .select("id, status")
-    .eq("id", action.requestId)
-    .single();
-
-  if (lookupError) throw lookupError;
-  if (!request) return { action: action.type, status: "skipped", reason: "Request not found." };
-  if (request.status === action.status) {
-    return { action: action.type, status: "skipped", reason: "Request already has target status.", recordId: request.id };
-  }
-  if (action.allowedCurrentStatuses?.length && !action.allowedCurrentStatuses.includes(request.status)) {
-    return {
-      action: action.type,
-      status: "skipped",
-      reason: "Current request status is not allowed for this automation.",
-      recordId: request.id,
-    };
-  }
-
-  const { error: updateError } = await db
-    .from("purchase_requests")
-    .update({
-      ...(action.patch || {}),
-      status: action.status,
-    })
-    .eq("id", action.requestId);
-
-  if (updateError) throw updateError;
-  return { action: action.type, status: "updated", recordId: request.id };
+  return { action: action.type, status: "skipped", reason: "Status updates are handled by guarded request workflows." };
 };
