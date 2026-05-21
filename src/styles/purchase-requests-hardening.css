@@ -1,0 +1,171 @@
+/* Purchase Requests dashboard hardening
+   Scope: fixes RTL wrapping, card overflow, attachment grids, action bars, and mobile/tablet layout.
+   Backend-neutral: CSS only. */
+
+html[dir="rtl"] body,
+html[dir="rtl"] #root {
+  text-rendering: optimizeLegibility;
+}
+
+/* The purchase requests screen is the only dashboard page with a two-column inbox/detail master-detail grid. */
+main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
+  align-items: start;
+  grid-template-columns: minmax(21rem, 0.72fr) minmax(0, 1.28fr) !important;
+}
+
+@media (max-width: 1279px) {
+  main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  main > div > div.grid:has([class*="rounded-"][class*="border-white"] button[aria-current]) {
+    grid-template-columns: minmax(20rem, 0.62fr) minmax(0, 1.38fr) !important;
+  }
+}
+
+/* Deep overflow protection. Long Arabic, file names, generated AI text, and repeated characters must never stretch cards. */
+main [class*="rounded"],
+main [class*="grid"],
+main [class*="flex"],
+main p,
+main span,
+main a,
+main button,
+main label,
+main pre,
+main textarea,
+main input,
+main select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+main p,
+main span,
+main a,
+main label,
+main pre,
+main textarea,
+main input {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+html[dir="rtl"] main p,
+html[dir="rtl"] main span,
+html[dir="rtl"] main a,
+html[dir="rtl"] main label,
+html[dir="rtl"] main pre,
+html[dir="rtl"] main textarea,
+html[dir="rtl"] main input {
+  line-height: 1.75;
+}
+
+/* Detail panel inner split: keep it readable on desktop, never squeeze into narrow columns. */
+main [tabindex="-1"] > div.grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+@media (min-width: 1536px) {
+  main [tabindex="-1"] > div.grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr) !important;
+  }
+}
+
+/* Request meta grids and detail cards. */
+main [tabindex="-1"] .grid.md\:grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)) !important;
+}
+
+main [tabindex="-1"] [class*="rounded-2xl"],
+main [tabindex="-1"] [class*="rounded-[1.35rem]"] {
+  height: auto;
+}
+
+/* Attachment grid: no more vertical narrow cards. */
+main [tabindex="-1"] a[href][target="_blank"] {
+  display: flex;
+  min-height: 7.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+main [tabindex="-1"] a[href][target="_blank"] p:first-child {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr)) !important;
+}
+
+@media (min-width: 1024px) {
+  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)) !important;
+  }
+}
+
+/* AI/local analyzer and supplier brief output: contained, readable, scrollable. */
+main pre {
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  direction: inherit;
+  border-radius: 0.75rem;
+}
+
+/* Smart clarification textarea and notes should not eat the whole card. */
+main textarea {
+  min-height: 9rem;
+  max-height: 18rem;
+  resize: vertical;
+}
+
+/* Action rows should wrap cleanly and become full width on small screens. */
+main button {
+  white-space: normal;
+}
+
+main button svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  main {
+    padding-inline: 0 !important;
+  }
+
+  main > div {
+    gap: 1rem;
+  }
+
+  main button,
+  main a[role="button"] {
+    width: 100%;
+    justify-content: center;
+  }
+
+  main [class*="px-4"] {
+    padding-inline: 0.875rem;
+  }
+
+  main [tabindex="-1"] h2 {
+    font-size: 1.35rem;
+    line-height: 1.45;
+  }
+
+  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  main [tabindex="-1"] div:has(> a[href][target="_blank"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
