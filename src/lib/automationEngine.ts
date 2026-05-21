@@ -24,6 +24,9 @@ export type AutomationAction =
       link?: string;
     }
   | {
+      type: "send_purchase_request_email";
+    }
+  | {
       type: "create_deal_if_missing";
     }
   | {
@@ -74,7 +77,17 @@ export type AutomationPayload = JsonPayload & {
   customerId?: string | null;
   customerName?: string;
   customerEmail?: string;
+  customerPhone?: string;
+  customerCountry?: string;
+  customerCity?: string;
   productName?: string;
+  productDescription?: string;
+  quantity?: number;
+  destination?: string;
+  preferredShippingMethod?: string;
+  technicalSpecs?: string;
+  deliveryNotes?: string;
+  attachmentCount?: number;
   summary?: string;
   dealId?: string;
   shipmentId?: string;
@@ -110,6 +123,9 @@ export const automationRules: AutomationRule[] = [
         title: "New purchase request submitted",
         message: "Purchase request {{requestNumber}} was submitted by {{customerName}}.",
         link: "/dashboard/requests?request={{requestId}}",
+      },
+      {
+        type: "send_purchase_request_email",
       },
     ],
   },
@@ -210,6 +226,8 @@ export const executeAction = async (
   switch (action.type) {
     case "send_notification":
       return sendNotificationIfMissing(action, payload);
+    case "send_purchase_request_email":
+      return sendPurchaseRequestEmail(payload);
     case "create_deal_if_missing":
       return createDealIfMissing(payload);
     case "create_shipment_if_missing":
@@ -224,6 +242,56 @@ export const executeAction = async (
         status: "skipped",
         reason: `Unhandled automation action for payload ${JSON.stringify(payload)}`,
       };
+  }
+};
+
+const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<AutomationActionResult> => {
+  if (!payload.requestId && !payload.requestNumber) {
+    return { action: "send_purchase_request_email", status: "skipped", reason: "requestId or requestNumber is required." };
+  }
+
+  const dashboardUrl =
+    typeof window !== "undefined" && payload.requestId
+      ? `${window.location.origin}/dashboard/requests?request=${encodeURIComponent(payload.requestId)}`
+      : undefined;
+
+  try {
+    const { error } = await supabase.functions.invoke("lourex-request-email", {
+      body: {
+        requestId: payload.requestId,
+        requestNumber: payload.requestNumber,
+        customerName: payload.customerName,
+        customerEmail: payload.customerEmail,
+        customerPhone: payload.customerPhone,
+        customerCountry: payload.customerCountry,
+        customerCity: payload.customerCity,
+        productName: payload.productName,
+        productDescription: payload.productDescription,
+        quantity: payload.quantity,
+        destination: payload.destination,
+        preferredShippingMethod: payload.preferredShippingMethod,
+        technicalSpecs: payload.technicalSpecs,
+        deliveryNotes: payload.deliveryNotes,
+        attachmentCount: payload.attachmentCount,
+        dashboardUrl,
+      },
+    });
+
+    if (error) {
+      return {
+        action: "send_purchase_request_email",
+        status: "skipped",
+        reason: error.message || "Email function failed.",
+      };
+    }
+
+    return { action: "send_purchase_request_email", status: "sent" };
+  } catch (error) {
+    return {
+      action: "send_purchase_request_email",
+      status: "skipped",
+      reason: error instanceof Error ? error.message : "Unable to invoke email function.",
+    };
   }
 };
 
