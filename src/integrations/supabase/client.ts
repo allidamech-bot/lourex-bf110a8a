@@ -5,6 +5,8 @@ import type { Database } from "./types";
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 export const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
 export const EXPECTED_SUPABASE_PROJECT_REF = "qezrzwoiyhbjrrxnrqra";
+export const ENABLE_OPTIONAL_BACKEND_PROBES =
+  (import.meta.env.VITE_ENABLE_OPTIONAL_BACKEND_PROBES as string | undefined)?.trim() === "true";
 
 export const missingSupabaseEnvVars = [
   !SUPABASE_URL ? "VITE_SUPABASE_URL" : null,
@@ -37,7 +39,10 @@ const warnedOptionalBackendKeys = new Set<string>();
 export const logOptionalBackendUnavailableOnce = (feature: string, error?: unknown) => {
   if (!import.meta.env.DEV || warnedOptionalBackendKeys.has(feature)) return;
   warnedOptionalBackendKeys.add(feature);
-  console.info(`[lourex:optional-backend] ${feature} is not configured yet.`, error);
+
+  if (ENABLE_OPTIONAL_BACKEND_PROBES) {
+    console.info(`[lourex:optional-backend] ${feature} is not configured yet.`, error);
+  }
 };
 
 export const isMissingBackendResourceError = (error: unknown) => {
@@ -55,8 +60,10 @@ export const isMissingBackendResourceError = (error: unknown) => {
     message.includes("could not find") ||
     message.includes("relation") ||
     message.includes("function") ||
+    message.includes("column") ||
     details.includes("does not exist") ||
     details.includes("could not find") ||
+    details.includes("column") ||
     hint.includes("could not find")
   );
 };
