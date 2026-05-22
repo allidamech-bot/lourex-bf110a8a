@@ -109,6 +109,14 @@ export type AutomationRunResult = {
 
 const db = supabase as unknown as LooseDomainClient;
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    return String((error as { message?: unknown }).message || "Unknown error");
+  }
+  return String(error || "Unknown error");
+};
+
 export const automationRules: AutomationRule[] = [
   {
     id: "purchase-request-created-notify-internal",
@@ -124,9 +132,7 @@ export const automationRules: AutomationRule[] = [
         message: "Purchase request {{requestNumber}} was submitted by {{customerName}}.",
         link: "/dashboard/requests?request={{requestId}}",
       },
-      {
-        type: "send_purchase_request_email",
-      },
+      { type: "send_purchase_request_email" },
     ],
   },
   {
@@ -179,26 +185,11 @@ export const automationRules: AutomationRule[] = [
       },
     ],
   },
-  {
-    id: "payment-received-foundation",
-    event: "payment.received",
-    enabled: false,
-    description: "Foundation placeholder for payment-driven request status and accounting actions.",
-    actions: [],
-  },
-  {
-    id: "shipment-stage-changed-foundation",
-    event: "shipment.stage_changed",
-    enabled: false,
-    description: "Foundation placeholder for shipment stage notifications.",
-    actions: [],
-  },
+  { id: "payment-received-foundation", event: "payment.received", enabled: false, description: "Foundation placeholder.", actions: [] },
+  { id: "shipment-stage-changed-foundation", event: "shipment.stage_changed", enabled: false, description: "Foundation placeholder.", actions: [] },
 ];
 
-export const runAutomation = async (
-  event: AutomationEvent,
-  payload: AutomationPayload = {},
-): Promise<AutomationRunResult> => {
+export const runAutomation = async (event: AutomationEvent, payload: AutomationPayload = {}): Promise<AutomationRunResult> => {
   const matchedRules = automationRules.filter((rule) => rule.enabled && rule.event === event);
   const actions: AutomationActionResult[] = [];
 
@@ -208,17 +199,10 @@ export const runAutomation = async (
     }
   }
 
-  return {
-    event,
-    matchedRules: matchedRules.map((rule) => rule.id),
-    actions,
-  };
+  return { event, matchedRules: matchedRules.map((rule) => rule.id), actions };
 };
 
-export const executeAction = async (
-  action: AutomationAction,
-  payload: AutomationPayload = {},
-): Promise<AutomationActionResult> => {
+export const executeAction = async (action: AutomationAction, payload: AutomationPayload = {}): Promise<AutomationActionResult> => {
   switch (action.type) {
     case "send_notification":
       return sendNotificationIfMissing(action, payload);
@@ -233,11 +217,7 @@ export const executeAction = async (
     case "update_request_status_if_needed":
       return updateRequestStatusIfNeeded(action);
     default:
-      return {
-        action: (action as AutomationAction).type,
-        status: "skipped",
-        reason: `Unhandled automation action for payload ${JSON.stringify(payload)}`,
-      };
+      return { action: (action as AutomationAction).type, status: "skipped", reason: "Unhandled automation action." };
   }
 };
 
@@ -246,10 +226,9 @@ const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<Aut
     return { action: "send_purchase_request_email", status: "skipped", reason: "requestId or requestNumber is required." };
   }
 
-  const dashboardUrl =
-    typeof window !== "undefined" && payload.requestId
-      ? `${window.location.origin}/dashboard/requests?request=${encodeURIComponent(payload.requestId)}`
-      : undefined;
+  const dashboardUrl = typeof window !== "undefined" && payload.requestId
+    ? `${window.location.origin}/dashboard/requests?request=${encodeURIComponent(payload.requestId)}`
+    : undefined;
 
   try {
     const response = await fetch("/api/lourex-request-email", {
@@ -277,20 +256,12 @@ const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<Aut
 
     if (!response.ok) {
       const details = await response.text().catch(() => "");
-      return {
-        action: "send_purchase_request_email",
-        status: "skipped",
-        reason: details || `Email API failed with status ${response.status}.`,
-      };
+      return { action: "send_purchase_request_email", status: "skipped", reason: details || `Email API failed with status ${response.status}.` };
     }
 
     return { action: "send_purchase_request_email", status: "sent" };
   } catch (error) {
-    return {
-      action: "send_purchase_request_email",
-      status: "skipped",
-      reason: error instanceof Error ? error.message : "Unable to invoke email API route.",
-    };
+    return { action: "send_purchase_request_email", status: "skipped", reason: getErrorMessage(error) };
   }
 };
 
@@ -298,63 +269,54 @@ const sendNotificationIfMissing = async (
   action: Extract<AutomationAction, { type: "send_notification" }>,
   payload: AutomationPayload,
 ): Promise<AutomationActionResult> => {
-  const recipientIds = Array.from(
-    new Set([
+  try {
+    const recipientIds = Array.from(new Set([
       ...(action.recipientIds || []),
       ...(action.recipientRole === "internal" ? await loadInternalRecipientIds() : []),
       ...(action.recipientRole === "customer" && payload.customerId ? [payload.customerId] : []),
-    ].filter(Boolean)),
-  );
-  if (recipientIds.length === 0) {
-    return { action: action.type, status: "skipped", reason: "No recipients provided." };
+    ].filter(Boolean)));
+
+    if (recipientIds.length === 0) {
+      return { action: action.type, status: "skipped", reason: "No recipients provided." };
+    }
+
+    const title = interpolateTemplate(action.title, payload);
+    const message = interpolateTemplate(action.message, payload);
+    const link = action.link ? interpolateTemplate(action.link, payload) : "";
+    let sentCount = 0;
+
+    for (const userId of recipientIds) {
+      const { data: existing, error: lookupError } = await db
+        .from("notifications")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("type", action.notificationType)
+        .eq("title", title)
+        .eq("link", link)
+        .limit(1);
+
+      if (lookupError) throw lookupError;
+      if (existing?.length) continue;
+
+      const { error: insertError } = await db.from("notifications").insert({ user_id: userId, type: action.notificationType, title, message, link });
+      if (insertError) throw insertError;
+      sentCount += 1;
+    }
+
+    return { action: action.type, status: sentCount > 0 ? "sent" : "skipped", reason: sentCount > 0 ? undefined : "Matching notifications already exist." };
+  } catch (error) {
+    return { action: action.type, status: "skipped", reason: `Optional notifications unavailable: ${getErrorMessage(error)}` };
   }
-
-  const title = interpolateTemplate(action.title, payload);
-  const message = interpolateTemplate(action.message, payload);
-  const link = action.link ? interpolateTemplate(action.link, payload) : "";
-  let sentCount = 0;
-
-  for (const userId of recipientIds) {
-    const { data: existing, error: lookupError } = await db
-      .from("notifications")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("type", action.notificationType)
-      .eq("title", title)
-      .eq("link", link)
-      .limit(1);
-
-    if (lookupError) throw lookupError;
-    if (existing?.length) continue;
-
-    const { error: insertError } = await db.from("notifications").insert({
-      user_id: userId,
-      type: action.notificationType,
-      title,
-      message,
-      link,
-    });
-
-    if (insertError) throw insertError;
-    sentCount += 1;
-  }
-
-  return {
-    action: action.type,
-    status: sentCount > 0 ? "sent" : "skipped",
-    reason: sentCount > 0 ? undefined : "Matching notifications already exist.",
-  };
 };
 
 const loadInternalRecipientIds = async (): Promise<string[]> => {
-  const { data, error } = await db
-    .from("profiles")
-    .select("id, role, status")
-    .in("role", ["owner", "operations_employee", "turkish_partner", "saudi_partner"])
-    .eq("status", "active");
-
-  if (error) throw error;
-  return (data || []).map((row: { id?: string | null }) => row.id).filter(Boolean) as string[];
+  try {
+    const { data, error } = await db.from("profiles").select("id, role, status").in("role", ["owner", "operations_employee", "turkish_partner", "saudi_partner"]).eq("status", "active");
+    if (error) throw error;
+    return (data || []).map((row: { id?: string | null }) => row.id).filter(Boolean) as string[];
+  } catch {
+    return [];
+  }
 };
 
 const interpolateTemplate = (template: string, payload: AutomationPayload) =>
@@ -366,15 +328,10 @@ const interpolateTemplate = (template: string, payload: AutomationPayload) =>
     customerEmail: payload.customerEmail || "",
     productName: payload.productName || "requested product",
     summary: payload.summary || "",
-  }).reduce(
-    (currentTemplate, [key, value]) => currentTemplate.split(`{{${key}}}`).join(String(value)),
-    template,
-  );
+  }).reduce((currentTemplate, [key, value]) => currentTemplate.split(`{{${key}}}`).join(String(value)), template);
 
 const createDealIfMissing = async (payload: AutomationPayload): Promise<AutomationActionResult> => {
-  if (!payload.requestId) {
-    return { action: "create_deal_if_missing", status: "skipped", reason: "requestId is required." };
-  }
+  if (!payload.requestId) return { action: "create_deal_if_missing", status: "skipped", reason: "requestId is required." };
   return { action: "create_deal_if_missing", status: "skipped", reason: "Deal creation is handled by the explicit conversion flow." };
 };
 
@@ -382,26 +339,16 @@ const createShipmentIfMissing = async (
   action: Extract<AutomationAction, { type: "create_shipment_if_missing" }>,
   payload: AutomationPayload,
 ): Promise<AutomationActionResult> => {
-  if (!payload.requestId && !action.dealId && !payload.dealId) {
-    return { action: action.type, status: "skipped", reason: "No request or deal id provided." };
-  }
+  if (!payload.requestId && !action.dealId && !payload.dealId) return { action: action.type, status: "skipped", reason: "No request or deal id provided." };
   return { action: action.type, status: "skipped", reason: "Shipment creation is handled after deal conversion." };
 };
 
-const createFinancialEntryIfMissing = async (
-  action: Extract<AutomationAction, { type: "create_financial_entry_if_missing" }>,
-): Promise<AutomationActionResult> => {
-  if (!action.idempotencyKey) {
-    return { action: action.type, status: "skipped", reason: "idempotencyKey is required." };
-  }
+const createFinancialEntryIfMissing = async (action: Extract<AutomationAction, { type: "create_financial_entry_if_missing" }>): Promise<AutomationActionResult> => {
+  if (!action.idempotencyKey) return { action: action.type, status: "skipped", reason: "idempotencyKey is required." };
   return { action: action.type, status: "skipped", reason: "Financial automation is disabled for this lightweight notification path." };
 };
 
-const updateRequestStatusIfNeeded = async (
-  action: Extract<AutomationAction, { type: "update_request_status_if_needed" }>,
-): Promise<AutomationActionResult> => {
-  if (!action.requestId) {
-    return { action: action.type, status: "skipped", reason: "requestId is required." };
-  }
+const updateRequestStatusIfNeeded = async (action: Extract<AutomationAction, { type: "update_request_status_if_needed" }>): Promise<AutomationActionResult> => {
+  if (!action.requestId) return { action: action.type, status: "skipped", reason: "requestId is required." };
   return { action: action.type, status: "skipped", reason: "Status updates are handled by guarded request workflows." };
 };
