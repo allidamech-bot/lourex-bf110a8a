@@ -1,4 +1,18 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+type VercelLikeRequest = {
+  method?: string;
+  headers: {
+    origin?: string;
+  };
+  body?: unknown;
+};
+
+type VercelLikeResponse = {
+  setHeader(name: string, value: string): void;
+  status(code: number): {
+    json(payload: unknown): void;
+    end(): void;
+  };
+};
 
 type PurchaseRequestEmailPayload = {
   requestId?: string;
@@ -29,7 +43,7 @@ const allowedOrigins = new Set([
     .filter(Boolean),
 ]);
 
-const setCorsHeaders = (req: VercelRequest, res: VercelResponse) => {
+const setCorsHeaders = (req: VercelLikeRequest, res: VercelLikeResponse) => {
   const origin = req.headers.origin;
   const fallbackOrigin = [...allowedOrigins][0] || "https://lou-rex.com";
   const allowOrigin = origin && allowedOrigins.has(origin) ? origin : fallbackOrigin;
@@ -122,7 +136,7 @@ const buildPlainText = (payload: PurchaseRequestEmailPayload) => [
   payload.dashboardUrl ? `رابط الطلب: ${payload.dashboardUrl}` : "",
 ].filter(Boolean).join("\n");
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelLikeRequest, res: VercelLikeResponse) {
   setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
