@@ -18,6 +18,7 @@ import {
     INTERNAL_ROLES,
     OWNER_DASHBOARD_UI_ROLES,
     OWNER_ONLY_ROLES,
+    PREDICTIVE_INTELLIGENCE_ROLES,
     SYSTEM_DASHBOARD_UI_ROLES,
 } from "@/features/auth/rbac";
 
@@ -31,6 +32,7 @@ const WhyLourexPage = lazy(() => import("@/pages/public/WhyLourexPage"));
 const ContactPage = lazy(() => import("@/pages/public/ContactPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const OverviewPage = lazy(() => import("@/pages/dashboard/OverviewPage"));
+const PredictiveIntelligencePage = lazy(() => import("@/pages/dashboard/PredictiveIntelligencePage"));
 const PurchaseRequestsPage = lazy(() => import("@/pages/dashboard/PurchaseRequestsPage"));
 const CustomersPage = lazy(() => import("@/pages/dashboard/CustomersPage"));
 const DealsPage = lazy(() => import("@/pages/dashboard/DealsPage"));
@@ -147,6 +149,14 @@ const App = () => (
                                             element={
                                                 <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
                                                     <PageWithAI component={<OperationsBriefingPage />} />
+                                                </ProtectedRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="predictive-intelligence"
+                                            element={
+                                                <ProtectedRoute allowedRoles={PREDICTIVE_INTELLIGENCE_ROLES}>
+                                                    <PageWithAI component={<PredictiveIntelligencePage />} />
                                                 </ProtectedRoute>
                                             }
                                         />
