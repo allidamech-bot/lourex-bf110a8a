@@ -6,6 +6,7 @@ export type HelpAudience = "admin" | "partner" | "customer" | "general";
 
 export type HelpPageKey =
   | "dashboard_overview"
+  | "dashboard_predictive_intelligence"
   | "accounting"
   | "reports"
   | "audit"
