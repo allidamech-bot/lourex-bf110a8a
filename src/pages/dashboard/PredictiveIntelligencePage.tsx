@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { BrainCircuit, Loader2, RefreshCw } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { ProductionFallbackCard, ProductionSectionSkeleton } from "@/components/production/ProductionFallbacks";
 import { Button } from "@/components/ui/button";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { PredictiveIntelligencePanel } from "@/features/predictive-intelligence/components/PredictiveIntelligencePanel";
@@ -98,18 +100,28 @@ export default function PredictiveIntelligencePage() {
       </BentoCard>
 
       {error ? (
-        <BentoCard className="rounded-2xl border-rose-400/25 bg-rose-500/10 p-5 text-sm text-rose-100">
-          {error}
-        </BentoCard>
+        <ProductionFallbackCard
+          kind="backend"
+          title={lang === "ar" ? "تعذر تحميل بيانات الذكاء التنبؤي" : "Predictive intelligence data could not load"}
+          body={
+            lang === "ar"
+              ? "بقيت لوحة التحكم مستقرة، ويمكنك إعادة المحاولة أو متابعة استخدام باقي أقسام Lourex."
+              : "The dashboard remains stable. You can retry the analysis or continue using the rest of Lourex."
+          }
+        >
+          <Button type="button" variant="outline" onClick={() => void load()} disabled={loading} className="rounded-xl">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+          </Button>
+        </ProductionFallbackCard>
       ) : null}
 
       {loading ? (
-        <BentoCard className="rounded-2xl p-8 text-center text-sm text-slate-400">
-          <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-blue-200" />
-          {lang === "ar" ? "جاري تحليل البيانات التشغيلية..." : "Analyzing operational data..."}
-        </BentoCard>
+        <ProductionSectionSkeleton />
       ) : (
-        <PredictiveIntelligencePanel result={result} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+        <ErrorBoundary fallback={<ProductionFallbackCard kind="lazyError" />}>
+          <PredictiveIntelligencePanel result={result} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+        </ErrorBoundary>
       )}
     </div>
   );
