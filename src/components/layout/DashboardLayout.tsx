@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BrainCircuit,
   ClipboardList,
   FilePenLine,
   Files,
@@ -20,7 +21,7 @@ import { useI18n } from "@/lib/i18n";
 
 export const DashboardLayout = () => {
   const { profile } = useAuthSession();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const workspaceTitle = profile ? getWorkspaceTitle(profile, t) : t("identity.workspaces.operations_employee.title");
   const workspaceDescription = profile ? getWorkspaceDescription(profile, t) : "";
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : t("identity.labels.role");
@@ -33,6 +34,12 @@ export const DashboardLayout = () => {
       icon: LayoutDashboard,
       end: true,
       roles: dashboardRoutePermissions.overview,
+    },
+    {
+      to: "/dashboard/predictive-intelligence",
+      label: lang === "ar" ? "الذكاء التنبؤي" : "Predictive Intelligence",
+      icon: BrainCircuit,
+      roles: dashboardRoutePermissions.predictiveIntelligence,
     },
     {
       to: "/dashboard/requests",
