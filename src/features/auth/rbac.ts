@@ -55,9 +55,11 @@ export const PARTNER_ROLES: LourexRole[] = ["turkish_partner", "saudi_partner"];
 export const OWNER_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "saudi_partner"];
 export const ACCOUNTING_DASHBOARD_UI_ROLES: LourexRole[] = ACCOUNTING_VIEW_ROLES;
 export const SYSTEM_DASHBOARD_UI_ROLES: LourexRole[] = ["owner", "operations_employee"];
+export const PREDICTIVE_INTELLIGENCE_ROLES: LourexRole[] = INTERNAL_ROLES;
 
 export const dashboardRoutePermissions = {
   overview: INTERNAL_ROLES,
+  predictiveIntelligence: PREDICTIVE_INTELLIGENCE_ROLES,
   requests: INTERNAL_ROLES,
   customers: [...OWNER_DASHBOARD_UI_ROLES, "operations_employee"] as LourexRole[],
   deals: INTERNAL_ROLES,
@@ -119,3 +121,4 @@ export const canExportAccounting = (role: LourexRole) => ACCOUNTING_EXPORT_ROLES
 export const canAuditAccounting = (role: LourexRole) => ACCOUNTING_AUDIT_ROLES.includes(role);
 export const canViewPartnerArea = (role: LourexRole) => INTERNAL_ROLES.includes(role);
 export const canViewCustomerArea = (role: LourexRole) => role === "customer" || INTERNAL_ROLES.includes(role);
+export const canViewPredictiveIntelligence = (role: LourexRole) => PREDICTIVE_INTELLIGENCE_ROLES.includes(role);
