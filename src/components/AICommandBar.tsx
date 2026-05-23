@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   BarChart3,
+  BrainCircuit,
   Calculator,
   FileText,
   HelpCircle,
@@ -30,6 +31,7 @@ type PageContext =
   | "customer_requests"
   | "customer_tracking"
   | "dashboard_home"
+  | "dashboard_predictive_intelligence"
   | "dashboard_purchase_requests"
   | "dashboard_tracking"
   | "dashboard_accounting"
@@ -55,6 +57,7 @@ const detectPageContext = (pathname: string): PageContext => {
   if (pathname === "/customer-portal/requests") return "customer_requests";
   if (pathname === "/customer-portal/tracking") return "customer_tracking";
   if (pathname === "/dashboard") return "dashboard_home";
+  if (pathname === "/dashboard/predictive-intelligence") return "dashboard_predictive_intelligence";
   if (pathname === "/dashboard/requests") return "dashboard_purchase_requests";
   if (pathname === "/dashboard/tracking") return "dashboard_tracking";
   if (pathname === "/dashboard/accounting") return "dashboard_accounting";
@@ -73,11 +76,67 @@ const contextLabels: Record<PageContext, { en: string; ar: string }> = {
   customer_requests: { en: "Request Status Mode", ar: "وضع حالة الطلبات" },
   customer_tracking: { en: "Shipment Mode", ar: "وضع الشحنات" },
   dashboard_home: { en: "Owner Mode", ar: "وضع الإدارة" },
+  dashboard_predictive_intelligence: { en: "Predictive Intelligence Mode", ar: "وضع الذكاء التنبؤي" },
   dashboard_purchase_requests: { en: "Operations Mode", ar: "وضع العمليات" },
   dashboard_tracking: { en: "Logistics Mode", ar: "وضع اللوجستيات" },
   dashboard_accounting: { en: "Accounting Mode", ar: "وضع المحاسبة" },
   dashboard_reports: { en: "Reports Mode", ar: "وضع التقارير" },
   unknown: { en: "Copilot Mode", ar: "وضع المساعد" },
+};
+
+const pageContextBriefs: Record<PageContext, { en: string; ar: string }> = {
+  public_home: {
+    en: "General Lourex public website assistance for sourcing, logistics, and process explanation.",
+    ar: "مساعدة عامة لموقع لوركس العام حول التوريد واللوجستيات وشرح آلية العمل.",
+  },
+  public_request: {
+    en: "Public purchase request intake assistance focused on complete product details and sourcing readiness.",
+    ar: "مساعدة في نموذج طلب الشراء العام مع التركيز على اكتمال تفاصيل المنتج وجاهزية التوريد.",
+  },
+  public_tracking: {
+    en: "Public shipment tracking assistance focused on explaining stages, delays, and next steps.",
+    ar: "مساعدة في تتبع الشحنات العامة مع شرح المراحل والتأخير والخطوات التالية.",
+  },
+  customer_portal: {
+    en: "Customer portal assistance focused on customer next steps, request status, and required clarifications.",
+    ar: "مساعدة بوابة العميل مع التركيز على الخطوات التالية وحالة الطلب والتوضيحات المطلوبة.",
+  },
+  customer_requests: {
+    en: "Customer request assistance focused on statuses, missing details, and clarification messages.",
+    ar: "مساعدة طلبات العميل مع التركيز على الحالات والتفاصيل الناقصة ورسائل التوضيح.",
+  },
+  customer_tracking: {
+    en: "Customer shipment assistance focused on shipment stages, customer-safe updates, and delay explanation.",
+    ar: "مساعدة شحنات العميل مع التركيز على مراحل الشحنة وتحديثات آمنة للعميل وشرح التأخير.",
+  },
+  dashboard_home: {
+    en: "Internal dashboard assistance focused on operational priorities, workload, and management review.",
+    ar: "مساعدة لوحة التحكم الداخلية مع التركيز على الأولويات التشغيلية وعبء العمل ومراجعة الإدارة.",
+  },
+  dashboard_predictive_intelligence: {
+    en: "Predictive intelligence assistance focused on risk signals, conversion opportunities, bottlenecks, and actionable operational priorities. Do not claim live predictions unless the user provides visible page data.",
+    ar: "مساعدة الذكاء التنبؤي مع التركيز على مؤشرات المخاطر وفرص التحويل ونقاط الاختناق والأولويات التشغيلية القابلة للتنفيذ. لا تدّع وجود توقعات مباشرة إلا إذا قدم المستخدم بيانات ظاهرة من الصفحة.",
+  },
+  dashboard_purchase_requests: {
+    en: "Internal purchase request assistance focused on request review, missing data, supplier briefs, and customer clarifications.",
+    ar: "مساعدة طلبات الشراء الداخلية مع التركيز على مراجعة الطلبات والبيانات الناقصة وموجز المورد وتوضيحات العميل.",
+  },
+  dashboard_tracking: {
+    en: "Internal logistics assistance focused on shipment progress, delay risks, customer updates, and next logistics actions.",
+    ar: "مساعدة لوجستية داخلية مع التركيز على تقدم الشحنات ومخاطر التأخير وتحديثات العملاء والخطوات اللوجستية التالية.",
+  },
+  dashboard_accounting: {
+    en: "Internal accounting assistance focused on financial entries, balances, review flags, and customer statement language.",
+    ar: "مساعدة محاسبية داخلية مع التركيز على القيود المالية والأرصدة ومؤشرات المراجعة وصياغة كشوف العملاء.",
+  },
+  dashboard_reports: {
+    en: "Internal reporting assistance focused on executive summaries, performance highlights, and report narratives.",
+    ar: "مساعدة التقارير الداخلية مع التركيز على الملخصات التنفيذية وأبرز مؤشرات الأداء وسرد التقارير.",
+  },
+  unknown: {
+    en: "General Lourex advisory assistance.",
+    ar: "مساعدة استشارية عامة للوركس.",
+  },
 };
 
 const quickCommandsByContext: Record<PageContext, QuickCommand[]> = {
@@ -122,6 +181,12 @@ const quickCommandsByContext: Record<PageContext, QuickCommand[]> = {
     { icon: ShieldCheck, label: "What should the team review first?", labelAr: "ما الذي يجب أن يراجعه الفريق أولا؟" },
     { icon: AlertCircle, label: "List risk indicators to check today", labelAr: "اذكر مؤشرات المخاطر التي يجب فحصها اليوم" },
     { icon: FileText, label: "Explain today's workload", labelAr: "اشرح عبء العمل اليوم" },
+  ],
+  dashboard_predictive_intelligence: [
+    { icon: BrainCircuit, label: "Summarize predictive risk signals", labelAr: "لخص مؤشرات المخاطر التنبؤية" },
+    { icon: BarChart3, label: "Explain conversion opportunities", labelAr: "اشرح فرص التحويل" },
+    { icon: AlertCircle, label: "List bottlenecks to check now", labelAr: "اذكر نقاط الاختناق التي يجب فحصها الآن" },
+    { icon: ShieldCheck, label: "Draft an action plan from predictive insights", labelAr: "اكتب خطة عمل من نتائج الذكاء التنبؤي" },
   ],
   dashboard_purchase_requests: [
     { icon: FileText, label: "Summarize a purchase request", labelAr: "لخص طلب شراء" },
@@ -171,6 +236,8 @@ const AICommandBar = () => {
   const pageContext = useMemo(() => detectPageContext(location.pathname), [location.pathname]);
   const activeCommands = quickCommandsByContext[pageContext] ?? quickCommandsByContext.unknown;
   const contextLabel = contextLabels[pageContext] ?? contextLabels.unknown;
+  const pageContextBrief = pageContextBriefs[pageContext] ?? pageContextBriefs.unknown;
+  const localizedPageContextBrief = lang === "ar" ? pageContextBrief.ar : pageContextBrief.en;
   const isRtl = dir === "rtl";
 
   useEffect(() => {
@@ -203,11 +270,17 @@ const AICommandBar = () => {
       const { data, error: invokeError, unavailableMessage } = await invokeLourexAi({
         lang,
         area: "ai_command_bar",
-        context: { pageContext, route: location.pathname, userRole: profile?.role ?? "guest" },
+        context: {
+          pageContext,
+          pageContextBrief: localizedPageContextBrief,
+          route: location.pathname,
+          userRole: profile?.role ?? "guest",
+        },
         body: {
           message: lang === "ar" ? `${msg}\n\nأجب باللغة العربية فقط.` : `${msg}\n\nRespond in English only.`,
           messages: allMessages,
           pageContext,
+          pageContextBrief: localizedPageContextBrief,
           route: location.pathname,
           locale,
           language: lang,
