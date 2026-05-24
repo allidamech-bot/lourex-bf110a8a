@@ -19,6 +19,7 @@ import {
     OWNER_DASHBOARD_UI_ROLES,
     OWNER_ONLY_ROLES,
     PREDICTIVE_INTELLIGENCE_ROLES,
+    PRODUCT_MANAGEMENT_ROLES,
     SYSTEM_DASHBOARD_UI_ROLES,
 } from "@/features/auth/rbac";
 
@@ -36,6 +37,7 @@ const Auth = lazy(() => import("@/pages/Auth"));
 const OverviewPage = lazy(() => import("@/pages/dashboard/OverviewPage"));
 const PredictiveIntelligencePage = lazy(() => import("@/pages/dashboard/PredictiveIntelligencePage"));
 const PurchaseRequestsPage = lazy(() => import("@/pages/dashboard/PurchaseRequestsPage"));
+const ProductsManagementPage = lazy(() => import("@/pages/dashboard/ProductsManagementPage"));
 const CustomersPage = lazy(() => import("@/pages/dashboard/CustomersPage"));
 const DealsPage = lazy(() => import("@/pages/dashboard/DealsPage"));
 const TrackingPage = lazy(() => import("@/pages/dashboard/TrackingPage"));
@@ -144,6 +146,7 @@ const App = () => (
                                         <Route path="operations-briefing" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<OperationsBriefingPage />} /></ProtectedRoute>} />
                                         <Route path="predictive-intelligence" element={<ProtectedRoute allowedRoles={PREDICTIVE_INTELLIGENCE_ROLES}><PageWithAI component={<PredictiveIntelligencePage />} /></ProtectedRoute>} />
                                         <Route path="requests" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<PurchaseRequestsPage />} /></ProtectedRoute>} />
+                                        <Route path="products" element={<ProtectedRoute allowedRoles={PRODUCT_MANAGEMENT_ROLES}><PageWithAI component={<ProductsManagementPage />} /></ProtectedRoute>} />
                                         <Route path="customers" element={<ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}><PageWithAI component={<CustomersPage />} /></ProtectedRoute>} />
                                         <Route path="deals" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<DealsPage />} /></ProtectedRoute>} />
                                         <Route path="tracking" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<TrackingPage />} /></ProtectedRoute>} />
