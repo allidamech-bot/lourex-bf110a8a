@@ -172,6 +172,95 @@ export default function ReportsPage() {
       return;
     }
 
+    const executiveLabels = lang === "ar"
+      ? {
+          summary: "ملخص التقرير التنفيذي الذكي",
+          decisionMetrics: "مؤشرات القرار التنفيذي",
+          risks: "المخاطر التي تحتاج قرارا",
+          opportunities: "الفرص الإدارية",
+          actionPlan: "خطة العمل المقترحة",
+          field: "البند",
+          value: "القيمة",
+          title: "العنوان",
+          description: "الوصف",
+          level: "المستوى",
+          generatedAt: "وقت القراءة التنفيذية",
+          followUpLevel: "مستوى المتابعة",
+          followUpScore: "درجة المتابعة",
+          netProfit: "الصافي المالي",
+          profitMargin: "هامش الربح",
+          collectionExposure: "تعرض التحصيل",
+          settlementCoverage: "تغطية التسويات",
+          pendingEditRequests: "طلبات التعديل المالي المعلقة",
+          activeDeals: "الصفقات النشطة",
+          averageProcessingTime: "متوسط زمن المعالجة",
+        }
+      : {
+          summary: "Executive AI Report Summary",
+          decisionMetrics: "Executive Decision Metrics",
+          risks: "Risks Requiring Decision",
+          opportunities: "Management Opportunities",
+          actionPlan: "Suggested Action Plan",
+          field: "Field",
+          value: "Value",
+          title: "Title",
+          description: "Description",
+          level: "Level",
+          generatedAt: "Executive reading generated at",
+          followUpLevel: "Follow-up level",
+          followUpScore: "Follow-up score",
+          netProfit: "Net result",
+          profitMargin: "Profit margin",
+          collectionExposure: "Collection exposure",
+          settlementCoverage: "Settlement coverage",
+          pendingEditRequests: "Pending financial edit requests",
+          activeDeals: "Active deals",
+          averageProcessingTime: "Average processing time",
+        };
+
+    const executiveSections = executiveReport
+      ? [
+          {
+            title: executiveLabels.summary,
+            headers: [executiveLabels.field, executiveLabels.value],
+            rows: [
+              [executiveLabels.followUpLevel, executiveReport.executiveLevel],
+              [executiveLabels.followUpScore, executiveReport.executiveScore],
+              [executiveLabels.generatedAt, new Date(executiveReport.generatedAt).toLocaleString(locale)],
+              [executiveLabels.summary, executiveReport.summary],
+            ],
+          },
+          {
+            title: executiveLabels.decisionMetrics,
+            headers: [executiveLabels.field, executiveLabels.value],
+            rows: [
+              [executiveLabels.netProfit, `${Math.round(executiveReport.metrics.netProfit).toLocaleString(locale)} SAR`],
+              [executiveLabels.profitMargin, `${Math.round(executiveReport.metrics.profitMargin * 100)}%`],
+              [executiveLabels.collectionExposure, `${Math.round(executiveReport.metrics.collectionExposure).toLocaleString(locale)} SAR`],
+              [executiveLabels.settlementCoverage, `${Math.round(executiveReport.metrics.settlementCoverageRatio * 100)}%`],
+              [executiveLabels.pendingEditRequests, executiveReport.metrics.pendingEditRequests],
+              [executiveLabels.activeDeals, executiveReport.metrics.activeDeals],
+              [executiveLabels.averageProcessingTime, `${Math.round(executiveReport.metrics.averageProcessingTimeDays)} ${t("common.days")}`],
+            ],
+          },
+          {
+            title: executiveLabels.risks,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.risks.map((item) => [item.title, item.description, item.level]),
+          },
+          {
+            title: executiveLabels.opportunities,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.opportunities.map((item) => [item.title, item.description, item.level]),
+          },
+          {
+            title: executiveLabels.actionPlan,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.actionPlan.map((item) => [item.title, item.description, item.level]),
+          },
+        ]
+      : [];
+
     const exported = printPdfReport({
       title: t("reports.title"),
       filename: `lourex-report-${range}.pdf`,
@@ -184,6 +273,7 @@ export default function ReportsPage() {
         [t("reports.ranges.custom"), t(`reports.ranges.${range}`)],
       ],
       sections: [
+        ...executiveSections,
         {
           title: t("reports.operationsRead"),
           headers: [t("common.value"), t("common.amount")],
