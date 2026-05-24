@@ -7,17 +7,84 @@ import { fetchRequests } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { OperationsRequest } from "@/domain/operations/types";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  buildProductRequestPrefill,
+  getProductById,
+} from "@/features/products/services/productCatalogService";
+
+const buildPrefilledRequestFromProduct = (
+  productId: string,
+  lang: "ar" | "en",
+): OperationsRequest | null => {
+  const product = getProductById(productId);
+
+  if (!product) {
+    return null;
+  }
+
+  const prefill = buildProductRequestPrefill(product, lang);
+  const now = new Date().toISOString();
+
+  return {
+    id: `product-prefill-${product.id}`,
+    requestNumber: "",
+    status: "intake_submitted",
+    statusLabel: "",
+    customer: {
+      id: "",
+      fullName: "",
+      phone: "",
+      email: "",
+      country: "",
+      city: "",
+    },
+    productName: prefill.productName,
+    productDescription: prefill.productDescription,
+    quantity: 0,
+    sizeDimensions: prefill.sizeDimensions,
+    color: "",
+    material: prefill.material,
+    technicalSpecs: prefill.technicalSpecs,
+    referenceLink: prefill.referenceLink,
+    preferredShippingMethod: "sea",
+    deliveryNotes: prefill.deliveryNotes,
+    imageUrls: [],
+    createdAt: now,
+    internalNotes: "",
+    reviewedAt: null,
+    convertedDealId: null,
+    convertedDealNumber: null,
+    attachments: [],
+    weight: prefill.weight,
+    manufacturingCountry: prefill.manufacturingCountry,
+    brand: prefill.brand,
+    qualityLevel: prefill.qualityLevel,
+    isReadyMade: true,
+    hasPreviousSample: false,
+    expectedSupplyDate: "",
+    destination: "",
+    deliveryAddress: "",
+    isFullSourcing: true,
+    trackingCode: "",
+  };
+};
 
 export default function RequestPage() {
   const { lang, t } = useI18n();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editRequestId = searchParams.get("edit");
+  const productId = searchParams.get("product");
   const [editRequest, setEditRequest] = useState<OperationsRequest | null>(null);
   const [loadingEditRequest, setLoadingEditRequest] = useState(Boolean(editRequestId));
   const [editRequestError, setEditRequestError] = useState("");
+
+  const productPrefillRequest = useMemo(
+    () => (!editRequestId && productId ? buildPrefilledRequestFromProduct(productId, lang === "ar" ? "ar" : "en") : null),
+    [editRequestId, lang, productId],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -121,12 +188,32 @@ export default function RequestPage() {
                 {editRequestError}
               </div>
             ) : (
-              <PurchaseRequestForm
-                mode={editRequestId ? "edit" : "create"}
-                requestId={editRequestId || undefined}
-                initialRequest={editRequest}
-                onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
-              />
+              <div className="space-y-4">
+                {productId && productPrefillRequest ? (
+                  <div className="rounded-[1.6rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                    <p className="font-semibold text-foreground">
+                      {lang === "ar" ? "تم تجهيز الطلب من كتالوج المنتجات" : "Request prepared from the product catalog"}
+                    </p>
+                    <p className="mt-1">
+                      {lang === "ar"
+                        ? "راجع الكمية والوجهة وارفع صورك أو أي مرفقات إضافية قبل الإرسال."
+                        : "Review the quantity and destination, then upload your images or any extra references before submitting."}
+                    </p>
+                  </div>
+                ) : productId && !productPrefillRequest ? (
+                  <div className="rounded-[1.6rem] border border-amber-400/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
+                    {lang === "ar"
+                      ? "لم يتم العثور على المنتج المطلوب. يمكنك متابعة تعبئة الطلب يدوياً."
+                      : "The selected product was not found. You can continue filling the request manually."}
+                  </div>
+                ) : null}
+                <PurchaseRequestForm
+                  mode={editRequestId ? "edit" : "create"}
+                  requestId={editRequestId || undefined}
+                  initialRequest={editRequestId ? editRequest : productPrefillRequest}
+                  onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
+                />
+              </div>
             )}
           </div>
         </div>
@@ -134,4 +221,3 @@ export default function RequestPage() {
     </div>
   );
 }
-
