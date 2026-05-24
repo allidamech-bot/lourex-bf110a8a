@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
     { label: isArabic ? "التصنيف" : "Category", value: category ? (isArabic ? category.labelAr : category.labelEn) : product.categoryId },
     { label: isArabic ? "بلد المنشأ" : "Origin", value: product.originCountry },
     { label: isArabic ? "العلامة" : "Brand", value: product.brand },
-    { label: "MOQ", value: product.moq },
+    { label: isArabic ? "طبيعة الطلب" : "Request type", value: isArabic ? "طلب توريد حر" : "Free-form sourcing" },
     { label: isArabic ? "الوحدة" : "Unit", value: product.unit },
     { label: isArabic ? "التعبئة" : "Packaging", value: product.packaging },
     { label: isArabic ? "الوزن" : "Weight", value: product.weight },
@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-primary" />
                     <div>
-                      <h2 className="font-serif text-xl font-semibold">{isArabic ? "مواصفات مبدئية" : "Initial specifications"}</h2>
+                      <h2 className="font-serif text-xl font-semibold">{isArabic ? "مواصفات مبدئية للعرض" : "Initial display specifications"}</h2>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{product.technicalSpecs}</p>
                     </div>
                   </div>
@@ -104,13 +104,15 @@ export default function ProductDetailPage() {
               ) : null}
 
               <div className="mt-7 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-5 text-sm leading-7 text-amber-100">
-                {isArabic ? product.priceNoteAr : product.priceNoteEn}
+                {isArabic
+                  ? "هذا المنتج معروض كنموذج لخدمة التوريد. الطلب النهائي يبقى طلباً حراً حسب المواصفات والكمية والوجهة التي تحددها."
+                  : "This product is shown as a sourcing service example. The final request remains free-form based on the specifications, quantity, and destination you define."}
               </div>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Button asChild variant="gold" className="min-h-11 flex-1 rounded-xl">
-                  <Link to={`/request?product=${encodeURIComponent(product.id)}`}>
-                    {isArabic ? "اطلب هذا المنتج" : "Request this product"}
+                  <Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`}>
+                    {isArabic ? "إنشاء طلب توريد" : "Create sourcing request"}
                     <PackageSearch className="h-4 w-4" />
                   </Link>
                 </Button>
