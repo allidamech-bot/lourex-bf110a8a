@@ -25,6 +25,8 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
+import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -51,6 +53,7 @@ export default function ReportsPage() {
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: DrillDownItem[] } | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [executiveRefreshKey, setExecutiveRefreshKey] = useState(0);
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
@@ -77,6 +80,11 @@ export default function ReportsPage() {
 
     void load();
   }, [rangeStart, rangeEnd, t]);
+
+  const executiveReport = useMemo(
+    () => (snapshot ? buildExecutiveReportAdvisor(snapshot, lang === "ar" ? "ar" : "en") : null),
+    [executiveRefreshKey, lang, snapshot],
+  );
 
   const metrics = snapshot?.summary || {
     requests: 0,
@@ -281,6 +289,15 @@ export default function ReportsPage() {
           {statementExportHint}
         </div>
       </BentoCard>
+
+      {executiveReport ? (
+        <ExecutiveReportPanel
+          result={executiveReport}
+          language={lang === "ar" ? "ar" : "en"}
+          locale={locale}
+          onRefresh={() => setExecutiveRefreshKey((current) => current + 1)}
+        />
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[
