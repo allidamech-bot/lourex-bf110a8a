@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Boxes,
   BrainCircuit,
   ClipboardList,
   FilePenLine,
@@ -46,6 +47,12 @@ export const DashboardLayout = () => {
       label: t("dashboardNav.requests"),
       icon: ClipboardList,
       roles: dashboardRoutePermissions.requests,
+    },
+    {
+      to: "/dashboard/products",
+      label: lang === "ar" ? "المنتجات" : "Products",
+      icon: Boxes,
+      roles: dashboardRoutePermissions.products,
     },
     {
       to: "/dashboard/customers",
