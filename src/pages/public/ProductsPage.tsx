@@ -23,11 +23,11 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={isArabic ? "منتجات لوركس" : "Lourex Products"}
+        title={isArabic ? "منتجات وخدمات لوركس" : "Lourex Products & Sourcing"}
         description={
           isArabic
-            ? "استعرض المنتجات التركية المتاحة للتوريد عبر لوركس وابدأ طلب شراء من المنتج مباشرة."
-            : "Browse Turkish products available for sourcing through Lourex and start a purchase request directly from a product."
+            ? "استعرض أمثلة المنتجات والخدمات التي يمكن لفريق Lourex توريدها، ثم أنشئ طلب توريد حر بالمواصفات التي تحتاجها."
+            : "Browse examples of products and sourcing services Lourex can handle, then create a free-form sourcing request with your own specifications."
         }
       />
       <SiteHeader />
@@ -38,15 +38,15 @@ export default function ProductsPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
               <Sparkles className="h-4 w-4" />
-              {isArabic ? "كتالوج منتجات Lourex" : "Lourex product catalog"}
+              {isArabic ? "نماذج منتجات وخدمات Lourex" : "Lourex sourcing examples"}
             </div>
             <h1 className="mt-6 font-serif text-4xl font-bold tracking-tight md:text-6xl">
-              {isArabic ? "منتجات تركية جاهزة للطلب والتوريد" : "Turkish products ready for sourcing requests"}
+              {isArabic ? "منتجات نعرضها لإظهار خدمات التوريد" : "Products shown as sourcing service examples"}
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-muted-foreground md:text-lg">
               {isArabic
-                ? "استعرض المنتجات المتاحة، افتح التفاصيل، ثم أرسل طلب شراء جاهز بالمعلومات الأساسية للمنتج. الأسعار والكميات النهائية تتم مراجعتها حسب التوفر والشحن."
-                : "Browse available products, open details, then submit a purchase request prefilled with the product basics. Final pricing and quantities are reviewed based on availability and shipping."}
+                ? "هذه المنتجات للعرض وإظهار نوع الخدمات التي يمكن لفريق Lourex التعامل معها. عند الضغط على إنشاء طلب توريد، ستفتح صفحة طلب حر لتكتب المواصفات والكمية والوجهة التي تريدها."
+                : "These products are displayed to show the kind of sourcing work Lourex can handle. When you create a sourcing request, you will open a free-form request page where you describe your own specifications, quantity, and destination."}
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export default function ProductsPage() {
                     />
                     {product.isFeatured ? (
                       <span className="absolute top-4 rounded-full border border-primary/25 bg-primary/15 px-3 py-1 text-xs font-semibold text-primary ltr:left-4 rtl:right-4">
-                        {isArabic ? "مميز" : "Featured"}
+                        {isArabic ? "مثال مميز" : "Featured example"}
                       </span>
                     ) : null}
                   </div>
@@ -118,8 +118,8 @@ export default function ProductsPage() {
                         <span className="font-semibold">{product.originCountry}</span>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">MOQ</span>
-                        <span className="font-semibold">{product.moq || (isArabic ? "حسب الطلب" : "By request")}</span>
+                        <span className="text-muted-foreground">{isArabic ? "طبيعة الطلب" : "Request type"}</span>
+                        <span className="font-semibold">{isArabic ? "طلب حر" : "Free-form"}</span>
                       </div>
                     </div>
                     <div className="mt-auto flex gap-2 pt-5">
@@ -127,8 +127,8 @@ export default function ProductsPage() {
                         <Link to={`/products/${product.slug}`}>{isArabic ? "التفاصيل" : "Details"}</Link>
                       </Button>
                       <Button asChild variant="gold" className="flex-1 rounded-xl">
-                        <Link to={`/request?product=${encodeURIComponent(product.id)}`}>
-                          {isArabic ? "اطلبه" : "Request"}
+                        <Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`}>
+                          {isArabic ? "إنشاء طلب توريد" : "Create request"}
                           <ArrowRight className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`} />
                         </Link>
                       </Button>
@@ -144,7 +144,7 @@ export default function ProductsPage() {
               <PackageSearch className="mx-auto h-10 w-10 text-muted-foreground" />
               <h2 className="mt-4 font-serif text-2xl font-semibold">{isArabic ? "لا توجد منتجات مطابقة" : "No matching products"}</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
-                {isArabic ? "غيّر البحث أو التصنيف. يمكن لفريق Lourex إضافة المنتجات الفعلية من خلال مرحلة إدارة المنتجات القادمة." : "Adjust the search or category. The Lourex team can add real products in the upcoming product management phase."}
+                {isArabic ? "غيّر البحث أو التصنيف. هذه الصفحة مخصصة لعرض نماذج المنتجات والخدمات التي يمكن لفريق Lourex التعامل معها." : "Adjust the search or category. This page is designed to show product and sourcing service examples Lourex can handle."}
               </p>
             </div>
           ) : null}
