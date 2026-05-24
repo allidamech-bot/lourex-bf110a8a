@@ -34,6 +34,7 @@ export const SiteHeader = () => {
   const publicLinks = useMemo(
       () => [
         { to: "/", label: t("nav.home") },
+        { to: "/products", label: lang === "ar" ? "المنتجات" : "Products" },
         { to: "/request", label: t("nav.purchaseRequest") },
         {
           to: usesDashboardWorkspace
@@ -41,7 +42,7 @@ export const SiteHeader = () => {
               : isCustomer
                   ? "/customer-portal/requests#requests"
                   : "/auth",
-          label: t("customerPortal.actions.requests.title"),
+          label: lang === "ar" ? "طلباتي" : "My Requests",
         },
         {
           to: usesDashboardWorkspace
@@ -49,12 +50,12 @@ export const SiteHeader = () => {
               : isCustomer
                   ? "/customer-portal/tracking"
                   : "/track",
-          label: t("customerPortal.actions.tracking.title"),
+          label: t("nav.trackShipment"),
         },
         { to: "/guidelines", label: t("nav.guidelines") },
         { to: "/contact", label: t("nav.contact") },
       ],
-      [isCustomer, t, usesDashboardWorkspace],
+      [isCustomer, lang, t, usesDashboardWorkspace],
   );
 
   const workspaceLabel = profile
