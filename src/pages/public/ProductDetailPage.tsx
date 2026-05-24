@@ -1,19 +1,63 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, PackageSearch, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, PackageSearch, Sparkles } from "lucide-react";
 import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import {
+  fetchCatalogProductBySlug,
   getCategoryById,
-  getProductBySlug,
 } from "@/features/products/services/productCatalogService";
+import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const { lang } = useI18n();
   const isArabic = lang === "ar";
-  const product = slug ? getProductBySlug(slug) : null;
+  const [product, setProduct] = useState<ProductCatalogItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!slug) {
+      setProduct(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetchCatalogProductBySlug(slug)
+      .then((nextProduct) => {
+        if (!cancelled) {
+          setProduct(nextProduct);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-5 py-4 text-sm text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            {isArabic ? "جاري تحميل المنتج..." : "Loading product..."}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return <Navigate to="/products" replace />;
