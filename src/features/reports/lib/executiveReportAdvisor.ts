@@ -116,7 +116,7 @@ export const buildExecutiveReportAdvisor = (
       kind: exposureScore >= 0.35 ? "risk" : "opportunity",
       title: isArabic ? "تعرض تحصيل يحتاج متابعة" : "Collection exposure needs follow-up",
       description: isArabic
-        ? `الرصيد غير المحصل ${Math.round(collectionExposure).toLocaleString()}. رتب العملاء حسب الأثر وابدأ بالأكبر."
+        ? `الرصيد غير المحصل ${Math.round(collectionExposure).toLocaleString()}. رتب العملاء حسب الأثر وابدأ بالأكبر.`
         : `Outstanding balance is ${Math.round(collectionExposure).toLocaleString()}. Prioritize customers by impact and start with the largest exposure.`,
       level: exposureScore >= 0.35 ? "risk" : "watch",
       priority: exposureScore >= 0.35 ? 78 : 48,
