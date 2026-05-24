@@ -9,67 +9,7 @@ import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { OperationsRequest } from "@/domain/operations/types";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  buildProductRequestPrefill,
-  getProductById,
-} from "@/features/products/services/productCatalogService";
-
-const buildPrefilledRequestFromProduct = (
-  productId: string,
-  lang: "ar" | "en",
-): OperationsRequest | null => {
-  const product = getProductById(productId);
-
-  if (!product) {
-    return null;
-  }
-
-  const prefill = buildProductRequestPrefill(product, lang);
-  const now = new Date().toISOString();
-
-  return {
-    id: `product-prefill-${product.id}`,
-    requestNumber: "",
-    status: "intake_submitted",
-    statusLabel: "",
-    customer: {
-      id: "",
-      fullName: "",
-      phone: "",
-      email: "",
-      country: "",
-      city: "",
-    },
-    productName: prefill.productName,
-    productDescription: prefill.productDescription,
-    quantity: 0,
-    sizeDimensions: prefill.sizeDimensions,
-    color: "",
-    material: prefill.material,
-    technicalSpecs: prefill.technicalSpecs,
-    referenceLink: prefill.referenceLink,
-    preferredShippingMethod: "sea",
-    deliveryNotes: prefill.deliveryNotes,
-    imageUrls: [],
-    createdAt: now,
-    internalNotes: "",
-    reviewedAt: null,
-    convertedDealId: null,
-    convertedDealNumber: null,
-    attachments: [],
-    weight: prefill.weight,
-    manufacturingCountry: prefill.manufacturingCountry,
-    brand: prefill.brand,
-    qualityLevel: prefill.qualityLevel,
-    isReadyMade: true,
-    hasPreviousSample: false,
-    expectedSupplyDate: "",
-    destination: "",
-    deliveryAddress: "",
-    isFullSourcing: true,
-    trackingCode: "",
-  };
-};
+import { getProductById } from "@/features/products/services/productCatalogService";
 
 export default function RequestPage() {
   const { lang, t } = useI18n();
@@ -77,14 +17,16 @@ export default function RequestPage() {
   const [searchParams] = useSearchParams();
   const editRequestId = searchParams.get("edit");
   const productId = searchParams.get("product");
+  const requestSource = searchParams.get("source");
   const [editRequest, setEditRequest] = useState<OperationsRequest | null>(null);
   const [loadingEditRequest, setLoadingEditRequest] = useState(Boolean(editRequestId));
   const [editRequestError, setEditRequestError] = useState("");
 
-  const productPrefillRequest = useMemo(
-    () => (!editRequestId && productId ? buildPrefilledRequestFromProduct(productId, lang === "ar" ? "ar" : "en") : null),
-    [editRequestId, lang, productId],
+  const productSource = useMemo(
+    () => (!editRequestId && productId ? getProductById(productId) : null),
+    [editRequestId, productId],
   );
+  const isCatalogInspiredRequest = !editRequestId && (requestSource === "products" || Boolean(productId));
 
   useEffect(() => {
     let cancelled = false;
@@ -144,6 +86,8 @@ export default function RequestPage() {
     },
   ];
 
+  const productDisplayName = productSource ? (lang === "ar" ? productSource.nameAr : productSource.nameEn) : "";
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -189,28 +133,26 @@ export default function RequestPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {productId && productPrefillRequest ? (
+                {isCatalogInspiredRequest ? (
                   <div className="rounded-[1.6rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
                     <p className="font-semibold text-foreground">
-                      {lang === "ar" ? "تم تجهيز الطلب من كتالوج المنتجات" : "Request prepared from the product catalog"}
+                      {lang === "ar" ? "إنشاء طلب توريد حر" : "Create a free-form sourcing request"}
                     </p>
                     <p className="mt-1">
                       {lang === "ar"
-                        ? "راجع الكمية والوجهة وارفع صورك أو أي مرفقات إضافية قبل الإرسال."
-                        : "Review the quantity and destination, then upload your images or any extra references before submitting."}
+                        ? productDisplayName
+                          ? `شاهدت ${productDisplayName} في كتالوج Lourex. اكتب الآن طلبك الحقيقي بالمواصفات والكمية والوجهة التي تريدها، وفريقنا يراجع أفضل خيار توريد مناسب.`
+                          : "شاهدت كتالوج منتجات Lourex. اكتب طلبك الحقيقي بالمواصفات والكمية والوجهة التي تريدها، وفريقنا يراجع أفضل خيار توريد مناسب."
+                        : productDisplayName
+                          ? `You viewed ${productDisplayName} in the Lourex catalog. Now describe your actual request with the specifications, quantity, and destination you need, and our team will review the best sourcing option.`
+                          : "You viewed the Lourex product catalog. Now describe your actual request with the specifications, quantity, and destination you need, and our team will review the best sourcing option."}
                     </p>
-                  </div>
-                ) : productId && !productPrefillRequest ? (
-                  <div className="rounded-[1.6rem] border border-amber-400/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
-                    {lang === "ar"
-                      ? "لم يتم العثور على المنتج المطلوب. يمكنك متابعة تعبئة الطلب يدوياً."
-                      : "The selected product was not found. You can continue filling the request manually."}
                   </div>
                 ) : null}
                 <PurchaseRequestForm
                   mode={editRequestId ? "edit" : "create"}
                   requestId={editRequestId || undefined}
-                  initialRequest={editRequestId ? editRequest : productPrefillRequest}
+                  initialRequest={editRequest}
                   onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
                 />
               </div>
