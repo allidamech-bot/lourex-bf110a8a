@@ -40,12 +40,12 @@ export function ExecutiveRiskOverview({
   const money = `${metrics.totalFinancialExposure.toLocaleString(locale)} SAR`;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+    <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 backdrop-blur-xl p-5 shadow-2xl">
       <div className="flex items-center gap-3">
-        <Activity className="h-5 w-5 text-blue-200" />
-        <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
+        <Activity className="h-5 w-5 text-amber-500" />
+        <h3 className="font-serif text-xl font-semibold text-stone-100">{t.title}</h3>
       </div>
-      <SectionHelpBox className="mt-4" title={t.helpTitle} body={t.helpBody} example={t.helpExample} />
+      <SectionHelpBox className="mt-4 border-amber-200/15 bg-amber-500/10" title={t.helpTitle} body={t.helpBody} example={t.helpExample} />
       <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
         {[
           { label: t.health, value: `${metrics.aiOperationalHealthScore.toLocaleString(locale)}%`, icon: Activity },

@@ -217,24 +217,24 @@ export default function ProductsManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 shadow-[0_24px_80px_-55px_rgba(0,0,0,0.75)]">
+      <div className="rounded-[2rem] border border-amber-200/15 bg-stone-900/55 p-6 shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
               <Sparkles className="h-4 w-4" />
               Product catalog management
             </div>
-            <h1 className="mt-4 font-serif text-3xl font-bold text-white">Products / المنتجات</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">
+            <h1 className="mt-4 font-serif text-3xl font-bold text-stone-100">Products / المنتجات</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-400">
               Add products and images for the public catalog. Items are displayed as sourcing service examples, while customer requests remain free-form.
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => void refresh()} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
               Refresh
             </Button>
-            <Button variant="gold" onClick={resetForm}>
+            <Button variant="gold" onClick={resetForm} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
               <PackagePlus className="h-4 w-4" />
               New product
             </Button>
@@ -243,19 +243,19 @@ export default function ProductsManagementPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
           <div className="relative mb-4">
-            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products..." className="pl-9" />
+            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-stone-500" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products..." className="pl-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
           </div>
 
           {loading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm text-slate-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center gap-2 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 text-sm text-stone-500">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
               Loading products...
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 p-6 text-sm text-slate-400">No products yet.</div>
+            <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">No products yet.</div>
           ) : (
             <div className="space-y-3">
               {filteredProducts.map((product) => (
@@ -265,19 +265,19 @@ export default function ProductsManagementPage() {
                   onClick={() => selectProduct(product)}
                   className={`flex w-full gap-3 rounded-2xl border p-3 text-left transition ${
                     selectedProductId === product.id
-                      ? "border-blue-400/40 bg-blue-500/10"
-                      : "border-white/10 bg-white/[0.025] hover:border-blue-400/25 hover:bg-white/[0.05]"
+                      ? "border-amber-500/40 bg-amber-500/10 shadow-[0_12px_40px_-12px_rgba(251,191,36,0.25)]"
+                      : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
                   }`}
                 >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-900/80">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-stone-950/80">
                     {product.images[0]?.url ? <img src={product.images[0].url} alt={product.nameEn} className="h-full w-full object-contain p-1" /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-white">{product.nameEn || product.nameAr}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">{product.shortDescriptionEn || product.shortDescriptionAr}</p>
+                    <p className="truncate font-semibold text-stone-100">{product.nameEn || product.nameAr}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-400">{product.shortDescriptionEn || product.shortDescriptionAr}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge variant="outline">{product.status}</Badge>
-                      {product.isFeatured ? <Badge variant="secondary">Featured</Badge> : null}
+                      <Badge variant="outline" className="border-amber-200/20 text-stone-400">{product.status}</Badge>
+                      {product.isFeatured ? <Badge className="bg-amber-500/10 text-amber-200 border-amber-500/20">Featured</Badge> : null}
                     </div>
                   </div>
                 </button>
@@ -286,13 +286,13 @@ export default function ProductsManagementPage() {
           )}
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-semibold text-white">{selectedProduct ? "Edit product" : "Create product"}</h2>
-              <p className="mt-1 text-sm text-slate-400">Upload the image, write Arabic/English content, then publish it.</p>
+              <h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProduct ? "Edit product" : "Create product"}</h2>
+              <p className="mt-1 text-sm text-stone-500">Upload the image, write Arabic/English content, then publish it.</p>
             </div>
-            <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading}>
+            <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save
             </Button>
@@ -300,57 +300,57 @@ export default function ProductsManagementPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label>Product image</Label>
-              <div className="grid gap-4 rounded-2xl border border-dashed border-white/15 bg-slate-950/30 p-4 md:grid-cols-[12rem_minmax(0,1fr)]">
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-slate-900/80">
-                  {form.imageUrl ? <img src={form.imageUrl} alt={form.imageAltEn || form.nameEn} className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-10 w-10 text-slate-500" />}
+              <Label className="text-stone-300">Product image</Label>
+              <div className="grid gap-4 rounded-2xl border border-dashed border-amber-200/15 bg-stone-950/30 p-4 md:grid-cols-[12rem_minmax(0,1fr)]">
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-stone-950/80">
+                  {form.imageUrl ? <img src={form.imageUrl} alt={form.imageAltEn || form.nameEn} className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-10 w-10 text-stone-600" />}
                 </div>
                 <div className="space-y-3">
-                  <Input type="file" accept="image/*" onChange={(event) => void handleImageChange(event)} disabled={uploading} />
-                  {uploading ? <p className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Uploading image...</p> : null}
-                  <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder="Image URL" />
+                  <Input type="file" accept="image/*" onChange={(event) => void handleImageChange(event)} disabled={uploading} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
+                  {uploading ? <p className="flex items-center gap-2 text-sm text-stone-500"><Loader2 className="h-4 w-4 animate-spin text-amber-500" /> Uploading image...</p> : null}
+                  <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder="Image URL" className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2"><Label>Arabic name</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} /></div>
-            <div className="space-y-2"><Label>English name</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Slug</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder="auto-generated if empty" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Arabic name</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">English name</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Slug</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder="auto-generated if empty" className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label className="text-stone-300">Category</Label>
               <Select value={form.categoryId} onValueChange={(value) => updateField("categoryId", value)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.labelEn}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">{categories.map((category) => <SelectItem key={category.id} value={category.id} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{category.labelEn}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Arabic short description</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} /></div>
-            <div className="space-y-2"><Label>English short description</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Arabic description</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28" /></div>
-            <div className="space-y-2 md:col-span-2"><Label>English description</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28" /></div>
-            <div className="space-y-2"><Label>Origin country</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Brand</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Unit</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Packaging</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Weight</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Dimensions</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Material</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} /></div>
-            <div className="space-y-2"><Label>MOQ / note</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Technical specs</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} /></div>
-            <div className="space-y-2"><Label>Arabic tags, comma separated</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} /></div>
-            <div className="space-y-2"><Label>English tags, comma separated</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Arabic short description</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">English short description</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">Arabic description</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">English description</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Origin country</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Brand</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Unit</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Packaging</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Weight</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Dimensions</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Material</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">MOQ / note</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">Technical specs</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">Arabic tags, comma separated</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+            <div className="space-y-2"><Label className="text-stone-300">English tags, comma separated</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-stone-300">Status</Label>
               <Select value={form.status} onValueChange={(value: ProductCatalogAdminInput["status"]) => updateField("status", value)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
+                  <SelectItem value="active" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Active</SelectItem>
+                  <SelectItem value="draft" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Draft</SelectItem>
+                  <SelectItem value="archived" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-              <div><Label>Featured product</Label><p className="mt-1 text-xs text-slate-400">Show first in the catalog.</p></div>
+            <div className="flex items-center justify-between rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
+              <div><Label className="text-stone-100">Featured product</Label><p className="mt-1 text-xs text-stone-500">Show first in the catalog.</p></div>
               <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
             </div>
           </div>

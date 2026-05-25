@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const statusClass: Record<SystemHealthStatus, string> = {
   ok: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
   warning: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  error: "border-rose-500/30 bg-rose-500/10 text-rose-300",
+  error: "border-red-500/30 bg-red-500/10 text-red-300",
 };
 
 const statusIcon = {
@@ -182,14 +182,14 @@ const HealthMetric = ({
   value: number;
   status?: SystemHealthStatus;
 }) => (
-  <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+  <div className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={status ? `text-xl font-semibold ${statusClass[status].split(" ").at(-1) || ""}` : "text-xl font-semibold"}>{value}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{label}</p>
+        <p className={status ? `text-xl font-bold ${statusClass[status].split(" ").at(-1) || "text-stone-100"}` : "text-xl font-bold text-stone-100"}>{value}</p>
       </div>
     </div>
   </div>

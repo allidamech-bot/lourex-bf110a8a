@@ -426,51 +426,51 @@ export default function TrackingPage() {
 
   return (
     <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
-      <BentoCard className="space-y-4">
+      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div>
-          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("tracking.contextEyebrow")}</p>
-          <h2 className="mt-2 font-serif text-2xl font-semibold">{t("tracking.contextTitle")}</h2>
-          {activeShipment.dealNumber ? <p className="mt-2 text-sm text-muted-foreground">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
-          {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-muted-foreground">{partnerWorkspaceHint}</p> : null}
+          <p className="whitespace-normal text-[10px] font-semibold uppercase tracking-widest text-stone-500">{t("tracking.contextEyebrow")}</p>
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("tracking.contextTitle")}</h2>
+          {activeShipment.dealNumber ? <p className="mt-2 text-sm text-stone-400 font-bold">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
+          {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-stone-500 font-medium">{partnerWorkspaceHint}</p> : null}
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="relative">
-            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={searchPlaceholder}
-              className="ps-9"
+              className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
             />
           </div>
-          <Button variant="outline" onClick={() => void refresh()}>
-            <RefreshCcw className="me-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => void refresh()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+            <RefreshCcw className={`me-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {t("common.refresh")}
           </Button>
         </div>
 
         {loadError ? (
-          <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+          <div className="rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
             {loadError}
           </div>
         ) : null}
 
-        <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-5">
-          <p className="whitespace-normal text-xs font-semibold text-primary/80">{t("tracking.currentStage")}</p>
-          <p className="mt-2 font-serif text-2xl font-semibold">{currentStage?.label || t("tracking.noStage")}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
+        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-5">
+          <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-amber-500/80">{t("tracking.currentStage")}</p>
+          <p className="mt-2 font-serif text-2xl font-semibold text-stone-100">{currentStage?.label || t("tracking.noStage")}</p>
+          <p className="mt-2 text-xs text-stone-500">
             {t("tracking.labels.stageCode")}: {activeShipment.stage}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-stone-500">
             {t("tracking.labels.nextStage")}: {nextStage?.label || t("tracking.completedMessage")}
           </p>
-          <div className="mt-4 h-2 rounded-full bg-secondary">
-            <div className="h-2 rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
+          <div className="mt-4 h-2 rounded-full bg-stone-950/40">
+            <div className="h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.3)]" style={{ width: `${progressPercent}%` }} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">{progressPercent}%</p>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentStage?.description}</p>
-          {currentStage?.owner ? <p className="mt-3 text-sm font-medium text-primary/90">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
+          <p className="mt-2 text-xs text-stone-500 font-bold">{progressPercent}%</p>
+          <p className="mt-3 text-sm leading-7 text-stone-400">{currentStage?.description}</p>
+          {currentStage?.owner ? <p className="mt-3 text-sm font-bold text-amber-200 uppercase tracking-wide">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
         </div>
 
         {isInternal && shipmentAnalysis ? (
@@ -490,31 +490,31 @@ export default function TrackingPage() {
         ) : null}
 
         {isInternal ? (
-          <div className="rounded-[1.35rem] border border-primary/20 bg-[#080808] p-4">
+          <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-2xl backdrop-blur-xl">
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-3">
-                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
                 <div className="min-w-0">
-                  <p className="break-words text-sm font-semibold">
+                  <p className="break-words text-sm font-bold text-amber-200 uppercase tracking-wide">
                     {lang === "ar" ? "مراجعة مخاطر الشحنة بالذكاء الاصطناعي" : "AI shipment risk review"}
                   </p>
-                  <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                  <p className="mt-1 break-words text-xs leading-5 text-stone-500">
                     {lang === "ar" ? "مراجعة إرشادية فقط ولا تغيّر مراحل الشحن." : "Read-only review. It never advances shipment stages."}
                   </p>
                 </div>
               </div>
-              <Button type="button" variant="outline" size="sm" disabled={aiReviewLoading} onClick={() => void handleShipmentRiskReview()}>
-                {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Sparkles className="me-2 h-4 w-4" />}
+              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleShipmentRiskReview()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin text-amber-500" /> : <Sparkles className="me-2 h-4 w-4 text-amber-500" />}
                 {lang === "ar" ? "راجع المخاطر" : "Review risk"}
               </Button>
             </div>
             {aiUsedFallback ? (
-              <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+              <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-200">
                 {lang === "ar" ? "مساعد LOUREX AI غير متاح الآن. تم استخدام مراجعة محلية." : "LOUREX AI is unavailable right now. A local review was used."}
               </div>
             ) : null}
             {aiReview ? (
-              <pre className="mt-4 max-h-[22rem] whitespace-pre-wrap break-words rounded-[1rem] border border-primary/15 bg-secondary/15 p-4 font-sans text-sm leading-7 text-foreground">
+              <pre className="mt-4 max-h-[22rem] whitespace-pre-wrap break-words rounded-[1rem] border border-amber-200/10 bg-stone-950/40 p-4 font-sans text-sm leading-7 text-stone-300 shadow-inner">
                 {aiReview}
               </pre>
             ) : null}
@@ -533,9 +533,9 @@ export default function TrackingPage() {
           ].map((item) => {
             if (item.label === t("tracking.labels.customer") && !isInternal) return null;
             return (
-              <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-secondary/25 p-4">
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 break-words font-medium">{item.value}</p>
+              <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                <p className="text-xs text-stone-500 font-bold uppercase tracking-wider">{item.label}</p>
+                <p className="mt-1 break-words font-medium text-stone-200">{item.value}</p>
               </div>
             );
           })}
@@ -547,17 +547,17 @@ export default function TrackingPage() {
             { label: t("tracking.labels.remainingStages"), value: activeStageIndex >= 0 ? shipmentStages.length - activeStageIndex - 1 : shipmentStages.length },
             { label: t("tracking.labels.loggedUpdates"), value: activeShipment.timeline.length },
           ].map((item) => (
-            <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-secondary/20 p-4 text-center">
-              <p className="text-2xl font-bold">{item.value}</p>
-              <p className="mt-1 break-words text-xs text-muted-foreground">{item.label}</p>
+            <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4 text-center">
+              <p className="text-2xl font-bold text-stone-100">{item.value}</p>
+              <p className="mt-1 break-words text-[10px] uppercase tracking-widest text-stone-600 font-bold">{item.label}</p>
             </div>
           ))}
         </div>
 
         <div className="space-y-3">
           {filteredRows.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-border/60 bg-secondary/10 p-6">
-              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description={t("tracking.noMatches")} />
+            <div className="rounded-[1.5rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-6">
+              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description={t("tracking.noMatches")} className="bg-transparent border-0" />
             </div>
           ) : (
             filteredRows.map((row) => (
@@ -567,15 +567,15 @@ export default function TrackingPage() {
                 aria-current={activeShipment.id === row.id ? "true" : undefined}
                 onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
                 className={`block w-full max-w-full min-w-0 rounded-[1.3rem] border px-4 py-4 text-start transition-colors ${
-                  activeShipment.id === row.id ? "border-primary/30 bg-primary/10" : "border-border/60 bg-secondary/10 hover:border-primary/20"
+                  activeShipment.id === row.id ? "border-amber-500/35 bg-amber-500/10 shadow-[0_12px_40px_-12px_rgba(251,191,36,0.3)]" : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
                 }`}
               >
                 <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="break-words font-medium">{row.trackingId}</p>
-                    <p className="mt-1 break-words text-sm text-muted-foreground">{row.dealNumber || t("tracking.unlinked")}</p>
+                    <p className="break-words font-medium text-stone-100">{row.trackingId}</p>
+                    <p className="mt-1 break-words text-sm text-stone-400">{row.dealNumber || t("tracking.unlinked")}</p>
                   </div>
-                  <span className="max-w-full self-start break-words rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                  <span className="max-w-full self-start break-words rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-wider">
                     {getShipmentStageCopy(row.stage, lang)?.label || row.stage}
                   </span>
                 </div>
@@ -585,19 +585,19 @@ export default function TrackingPage() {
         </div>
 
         {isInternal && nextStage ? (
-          <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+          <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <Send className="h-4 w-4 text-primary" />
-              <p className="font-medium">{t("tracking.labels.nextStage")}</p>
+              <Send className="h-4 w-4 text-amber-500" />
+              <p className="font-medium text-stone-100">{t("tracking.labels.nextStage")}</p>
             </div>
 
-            <p className="mt-3 text-sm text-muted-foreground">{t("tracking.nextStageSuggested", { stage: nextStage.label })}</p>
+            <p className="mt-3 text-sm text-stone-400">{t("tracking.nextStageSuggested", { stage: nextStage.label })}</p>
 
             <Textarea
               rows={4}
               value={internalNote}
               onChange={(event) => setInternalNote(event.target.value)}
-              className="mt-4"
+              className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
               placeholder={t("tracking.internalPlaceholder")}
             />
 
@@ -605,16 +605,16 @@ export default function TrackingPage() {
               rows={3}
               value={customerNote}
               onChange={(event) => setCustomerNote(event.target.value)}
-              className="mt-4"
+              className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
               placeholder={t("tracking.customerPlaceholder")}
             />
 
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-6 text-muted-foreground">
+              <p className="text-xs leading-6 text-stone-500 font-medium">
                 {trackingRuleText}
               </p>
 
-              <Button variant="gold" className="w-full sm:w-auto" disabled={!canAdvance || submitting} onClick={handleAdvance}>
+              <Button variant="gold" className="w-full sm:w-auto bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110" disabled={!canAdvance || submitting} onClick={handleAdvance}>
                 {submitting ? t("tracking.advancing") : t("tracking.advance", { stage: nextStage.label })}
               </Button>
             </div>
@@ -634,17 +634,17 @@ export default function TrackingPage() {
                 <>
                   <Link
                     to={`/dashboard/deals?deal=${activeShipment.dealNumber}`}
-                    className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                    className="flex items-center gap-3 rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 text-sm font-bold text-stone-300 transition-colors hover:border-amber-500/25 hover:text-amber-200 group"
                   >
-                    <ArrowRightLeft className="h-4 w-4" />
+                    <ArrowRightLeft className="h-4 w-4 text-stone-600 group-hover:text-amber-500" />
                     {t("tracking.backToDeal")}
                   </Link>
 
                   <Link
                     to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`}
-                    className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-secondary/15 px-4 py-4 text-sm font-medium transition-colors hover:border-primary/25 hover:text-primary"
+                    className="flex items-center gap-3 rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 text-sm font-bold text-stone-300 transition-colors hover:border-amber-500/25 hover:text-amber-200 group"
                   >
-                    <PackageSearch className="h-4 w-4" />
+                    <PackageSearch className="h-4 w-4 text-stone-600 group-hover:text-amber-500" />
                     {t("tracking.openAccounting")}
                   </Link>
                 </>
@@ -655,24 +655,24 @@ export default function TrackingPage() {
       </BentoCard>
 
       <div ref={detailsRef} tabIndex={-1} className="min-w-0 space-y-4 scroll-mt-24 outline-none">
-        <BentoCard className="p-6">
+        <BentoCard className="p-6 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
           <div className="mb-6 flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <PackageSearch className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="break-words font-serif text-2xl font-semibold">{t("tracking.labels.officialTimeline")}</h2>
-              <p className="break-words text-sm text-muted-foreground">{t("tracking.labels.officialTimelineDescription")}</p>
+              <h2 className="break-words font-serif text-2xl font-semibold text-stone-100">{t("tracking.labels.officialTimeline")}</h2>
+              <p className="break-words text-sm text-stone-500 font-medium">{t("tracking.labels.officialTimelineDescription")}</p>
             </div>
           </div>
 
           <ShipmentTimeline currentStage={activeShipment.stage} />
         </BentoCard>
 
-        <BentoCard className="space-y-4">
+        <BentoCard className="space-y-4 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <h2 className="font-serif text-2xl font-semibold">{t("tracking.labels.updatesLog")}</h2>
+            <ShieldCheck className="h-5 w-5 text-amber-500" />
+            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("tracking.labels.updatesLog")}</h2>
           </div>
 
           {activeShipment.timeline.length === 0 ? (
@@ -680,6 +680,7 @@ export default function TrackingPage() {
               icon={Route}
               title={t("tracking.noUpdatesTitle")}
               description={t("tracking.noUpdatesDescription")}
+              className="bg-transparent border-0"
             />
           ) : (
             <div className="space-y-3">
@@ -689,35 +690,35 @@ export default function TrackingPage() {
                 .map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-[1.3rem] border border-border/60 bg-secondary/10 p-4"
+                    className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm"
                   >
                     <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="break-words font-medium">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{new Date(event.occurredAt).toLocaleString(locale)}</p>
+                        <p className="break-words font-bold text-stone-200 uppercase tracking-wide">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
+                        <p className="mt-1 text-[10px] text-stone-600 font-bold uppercase tracking-widest">{new Date(event.occurredAt).toLocaleString(locale)}</p>
                       </div>
 
                       {isInternal && (
-                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                        <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest">
                           {visibilityLabel(event.visibility)}
                         </span>
                       )}
                     </div>
 
                     {isInternal && (
-                      <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
+                      <p className="mt-3 break-words text-sm leading-7 text-stone-400">
                         {event.note || t("tracking.noInternalNote")}
                       </p>
                     )}
 
                     {event.customerNote ? (
-                      <div className="mt-3 rounded-[1rem] border border-primary/15 bg-primary/8 px-4 py-3 text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">{t("tracking.customerNoteLabel")}:</span>{" "}
+                      <div className="mt-3 rounded-[1rem] border border-amber-200/15 bg-amber-500/5 px-4 py-3 text-sm text-stone-400">
+                        <span className="font-bold text-amber-200 uppercase tracking-widest text-[10px] block mb-1">{t("tracking.customerNoteLabel")}</span>
                         {event.customerNote}
                       </div>
                     ) : (
                       !isInternal && !event.customerNote && (
-                        <p className="mt-3 text-sm italic text-muted-foreground">
+                        <p className="mt-3 text-sm italic text-stone-600">
                           {t("tracking.noCustomerNote")}
                         </p>
                       )

@@ -206,45 +206,45 @@ export default function AuditPage() {
   return (
     <div className="space-y-4">
       <PageHelpBox pageKey="audit" role={profile?.role} />
-      <BentoCard className="space-y-4">
+      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
-            <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
+            <p className="whitespace-normal text-[10px] font-semibold uppercase tracking-widest text-stone-500">
               {t("audit.explorer")}
             </p>
-            <h2 className="font-serif text-3xl font-semibold">{t("audit.title")}</h2>
-            <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
+            <h2 className="font-serif text-3xl font-semibold text-stone-100">{t("audit.title")}</h2>
+            <p className="max-w-3xl text-sm leading-7 text-stone-400">
               {t("audit.description")}
             </p>
           </div>
 
-          <Button variant="outline" onClick={() => void fetchLogs()}>
-            <RefreshCw className="me-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => void fetchLogs()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+            <RefreshCw className={`me-2 h-4 w-4 ${loading ? 'animate-spin text-amber-500' : 'text-amber-500'}`} />
             {t("audit.refresh")}
           </Button>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_220px]">
           <div className="relative">
-            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("audit.filters.searchPlaceholder")}
-              className="ps-10"
+              className="ps-10 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
             />
           </div>
 
           <select
             value={tableFilter}
             onChange={(event) => setTableFilter(event.target.value)}
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
           >
-            <option value="all">{t("audit.filters.allEntities")}</option>
+            <option value="all" className="bg-stone-900">{t("audit.filters.allEntities")}</option>
             {tableOptions
               .filter((option) => option !== "all")
               .map((option) => (
-                <option key={option} value={option}>
+                <option key={option} value={option} className="bg-stone-900">
                   {translate(`audit.entities.${option}`, humanizeIdentifier(option))}
                 </option>
               ))}
@@ -253,13 +253,13 @@ export default function AuditPage() {
           <select
             value={actionFilter}
             onChange={(event) => setActionFilter(event.target.value)}
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
           >
-            <option value="all">{t("audit.filters.allActions")}</option>
+            <option value="all" className="bg-stone-900">{t("audit.filters.allActions")}</option>
             {actionOptions
               .filter((option) => option !== "all")
               .map((option) => (
-                <option key={option} value={option}>
+                <option key={option} value={option} className="bg-stone-900">
                   {translate(`audit.actions.${option}`, humanizeIdentifier(option))}
                 </option>
               ))}
@@ -274,9 +274,9 @@ export default function AuditPage() {
           { label: t("audit.metrics.rejections"), value: metrics.rejections },
           { label: t("audit.metrics.financial"), value: metrics.financial },
         ].map((item) => (
-          <BentoCard key={item.label}>
-            <p className="text-xs text-muted-foreground">{item.label}</p>
-            <p className="mt-2 text-3xl font-bold">{item.value}</p>
+          <BentoCard key={item.label} className="border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-stone-500">{item.label}</p>
+            <p className="mt-2 text-3xl font-bold text-stone-100">{item.value}</p>
           </BentoCard>
         ))}
       </div>
@@ -286,6 +286,7 @@ export default function AuditPage() {
           icon={History}
           title={t("audit.noMatchTitle")}
           description={t("audit.noMatchDescription")}
+          className="bg-stone-900/50 border-amber-200/10"
         />
       ) : (
         <div className="space-y-3">
@@ -302,54 +303,54 @@ export default function AuditPage() {
             );
 
             return (
-              <BentoCard key={row.id} className="space-y-4">
+              <BentoCard key={row.id} className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                      <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest">
                         {actionLabel}
                       </span>
-                      <span className="rounded-full bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-stone-800 border border-stone-700 px-3 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
                         {entityLabel}
                       </span>
                     </div>
-                    <h3 className="font-medium">
+                    <h3 className="font-bold text-stone-100">
                       {context.summary || `${actionLabel} - ${entityLabel}`}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-stone-500 font-bold uppercase tracking-widest">
                       {new Date(row.created_at).toLocaleString(locale)}
                     </p>
                   </div>
 
                   {rowLink ? (
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" asChild className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                       <Link to={rowLink}>{t("common.open")}</Link>
                     </Button>
                   ) : null}
                 </div>
 
                 <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("audit.reference")}</p>
-                    <p className="mt-1 font-medium">
+                  <div className="rounded-[1.15rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-stone-600">{t("audit.reference")}</p>
+                    <p className="mt-1 font-bold text-stone-200">
                       {context.dealNumber || context.requestNumber || row.record_id}
                     </p>
                   </div>
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("audit.actor")}</p>
-                    <p className="mt-1 font-medium">
+                  <div className="rounded-[1.15rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-stone-600">{t("audit.actor")}</p>
+                    <p className="mt-1 font-bold text-stone-200">
                       {context.actorName || t("audit.system")}
                     </p>
                   </div>
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("audit.context")}</p>
-                    <p className="mt-1 font-medium">
+                  <div className="rounded-[1.15rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-stone-600">{t("audit.context")}</p>
+                    <p className="mt-1 font-bold text-stone-200">
                       {context.customer || context.trackingNumber || t("audit.genericContext")}
                     </p>
                   </div>
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("audit.why")}</p>
-                    <p className="mt-1 font-medium">
+                  <div className="rounded-[1.15rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-stone-600">{t("audit.why")}</p>
+                    <p className="mt-1 font-bold text-stone-200">
                       {context.summary || t("audit.noReason")}
                     </p>
                   </div>

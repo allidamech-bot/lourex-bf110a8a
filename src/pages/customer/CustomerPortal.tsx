@@ -214,8 +214,8 @@ const CustomerPortal = () => {
       ),
       icon: PlusCircle,
       link: "/request",
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
       badge: null as number | null,
     },
     {
@@ -231,8 +231,8 @@ const CustomerPortal = () => {
       ),
       icon: ClipboardList,
       link: "/customer-portal/requests#requests",
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      color: "text-amber-200",
+      bgColor: "bg-amber-500/10",
       badge: portalMetrics.requests,
     },
     {
@@ -248,8 +248,8 @@ const CustomerPortal = () => {
       ),
       icon: Route,
       link: "/customer-portal/tracking",
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
+      color: "text-amber-200",
+      bgColor: "bg-amber-500/10",
       badge: portalMetrics.deals,
     },
     {
@@ -265,8 +265,8 @@ const CustomerPortal = () => {
       ),
       icon: UserCircle2,
       link: "/profile",
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
+      color: "text-amber-200",
+      bgColor: "bg-amber-500/10",
       badge: null as number | null,
     },
   ];
@@ -296,21 +296,21 @@ const CustomerPortal = () => {
             className="mb-8 flex w-full max-w-full min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between"
         >
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500/80">
               {getSafeLabel(
                   t("customerPortal.eyebrow"),
                   locale === "ar" ? "لوحة العميل" : "Customer portal",
               )}
             </p>
 
-            <h1 className="mt-2 break-words font-serif text-2xl font-bold sm:text-3xl md:text-4xl">
+            <h1 className="mt-2 break-words font-serif text-2xl font-bold text-stone-100 sm:text-3xl md:text-4xl">
               {getSafeLabel(t("customerPortal.welcome"), locale === "ar" ? "مرحباً" : "Welcome")}{" "}
-              <span className="text-gradient-gold">
+              <span className="text-amber-500">
               {profile?.fullName || profile?.email || ""}
             </span>
             </h1>
 
-            <p className="mt-3 max-w-3xl break-words text-muted-foreground">
+            <p className="mt-3 max-w-3xl break-words text-stone-400">
               {getSafeLabel(
                   t("customerPortal.description"),
                   locale === "ar"
@@ -322,11 +322,11 @@ const CustomerPortal = () => {
 
           <Button
               variant="outline"
-              className="w-full md:w-auto"
+              className="w-full md:w-auto border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
               onClick={() => void loadData("refresh")}
               disabled={loading || refreshing}
           >
-            <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin text-amber-500" : "text-amber-500"}`} />
             {refreshing
                 ? locale === "ar"
                     ? "جاري التحديث..."
@@ -380,23 +380,23 @@ const CustomerPortal = () => {
                   transition={{ delay: index * 0.1 }}
               >
                 <Link to={item.link} className="block h-full min-w-0">
-                  <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-primary/30 hover:shadow-lg">
+                  <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-amber-200/30">
                     <div
                         className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
                     >
                       <item.icon className="h-6 w-6" />
                     </div>
 
-                    <h3 className="break-words font-serif text-xl font-semibold transition-colors group-hover:text-primary">
+                    <h3 className="break-words font-serif text-xl font-semibold text-stone-100 transition-colors group-hover:text-amber-200">
                       {item.title}
                     </h3>
 
-                    <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 break-words text-sm leading-6 text-stone-400">
                       {item.description}
                     </p>
 
                     {item.badge !== null && item.badge > 0 ? (
-                        <div className="absolute end-4 top-4 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                        <div className="absolute end-4 top-4 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-stone-950">
                           {formatNumber(item.badge, locale)}
                         </div>
                     ) : null}
@@ -411,10 +411,10 @@ const CustomerPortal = () => {
 
           <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
             <div className="mb-6 flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Wallet className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+                <Wallet className="h-5 w-5 text-amber-500" />
               </div>
-              <h3 className="min-w-0 break-words font-serif text-xl font-semibold">
+              <h3 className="min-w-0 break-words font-serif text-xl font-semibold text-stone-100">
                 {getSafeLabel(
                     t("customerPortal.financial.title"),
                     locale === "ar" ? "الملخص المالي" : "Financial summary",
@@ -424,17 +424,17 @@ const CustomerPortal = () => {
 
             {loading ? (
                 <div className="space-y-4 py-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-32 w-full rounded-[1.5rem]" />
+                  <Skeleton className="h-12 w-full bg-stone-900" />
+                  <Skeleton className="h-12 w-full bg-stone-900" />
+                  <Skeleton className="h-32 w-full rounded-[1.5rem] bg-stone-900" />
                 </div>
             ) : customerData ? (
                 <div className="space-y-4">
-                  <div className="rounded-[1.25rem] border border-primary/15 bg-primary/10 p-4 text-sm leading-7 text-muted-foreground">
+                  <div className="rounded-[1.25rem] border border-amber-500/15 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
                     {financialSummaryCopy}
                   </div>
 
-                  <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm leading-7 text-muted-foreground">
+                  <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 p-4 text-sm leading-7 text-stone-400">
                     {statementNotice}
                   </div>
                   <SectionHelpBox
@@ -454,7 +454,7 @@ const CustomerPortal = () => {
                   <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
                     <ReadableInfoCard
                       label={getSafeLabel(t("customerPortal.financial.balance"), locale === "ar" ? "الرصيد" : "Balance")}
-                      value={<span className={customerData.financialBalance >= 0 ? "text-emerald-500" : "text-rose-500"}>{formatMoney(customerData.financialBalance, locale)}</span>}
+                      value={<span className={customerData.financialBalance >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatMoney(customerData.financialBalance, locale)}</span>}
                     />
                     <ReadableInfoCard
                       label={getSafeLabel(t("customerPortal.financial.operations"), locale === "ar" ? "العمليات" : "Operations")}
@@ -462,20 +462,20 @@ const CustomerPortal = () => {
                     />
                     <ReadableInfoCard
                       label={getSafeLabel(t("customerPortal.financial.incomeTracked"), locale === "ar" ? "الإيرادات المسجلة" : "Income tracked")}
-                      value={<span className="text-emerald-500">{formatMoney(customerData.financialIncome, locale)}</span>}
+                      value={<span className="text-emerald-400">{formatMoney(customerData.financialIncome, locale)}</span>}
                     />
                     <ReadableInfoCard
                       label={getSafeLabel(t("customerPortal.financial.expenseTracked"), locale === "ar" ? "المصروفات المسجلة" : "Expense tracked")}
-                      value={<span className="text-rose-500">{formatMoney(customerData.financialExpense, locale)}</span>}
+                      value={<span className="text-rose-400">{formatMoney(customerData.financialExpense, locale)}</span>}
                     />
                   </ResponsiveInfoGrid>
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="mb-4 rounded-full bg-secondary p-4">
-                    <LayoutDashboard className="h-8 w-8 text-muted-foreground/40" />
+                  <div className="mb-4 rounded-full bg-stone-900 p-4">
+                    <LayoutDashboard className="h-8 w-8 text-stone-600" />
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-stone-500">
                     {getSafeLabel(
                         t("customerPortal.financial.empty"),
                         locale === "ar"
@@ -489,10 +489,10 @@ const CustomerPortal = () => {
 
           <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
             <div className="mb-6 flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <ClipboardList className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+                <ClipboardList className="h-5 w-5 text-amber-500" />
               </div>
-              <h3 className="min-w-0 break-words font-serif text-xl font-semibold">
+              <h3 className="min-w-0 break-words font-serif text-xl font-semibold text-stone-100">
                 {getSafeLabel(
                     t("customerPortal.recent.title"),
                     locale === "ar" ? "آخر الطلبات" : "Recent requests",
@@ -502,15 +502,15 @@ const CustomerPortal = () => {
 
             {loading ? (
                 <div className="space-y-3">
-                  <Skeleton className="h-20 w-full rounded-[1.25rem]" />
-                  <Skeleton className="h-20 w-full rounded-[1.25rem]" />
-                  <Skeleton className="h-20 w-full rounded-[1.25rem]" />
+                  <Skeleton className="h-20 w-full rounded-[1.25rem] bg-stone-900" />
+                  <Skeleton className="h-20 w-full rounded-[1.25rem] bg-stone-900" />
+                  <Skeleton className="h-20 w-full rounded-[1.25rem] bg-stone-900" />
                 </div>
             ) : recentRequests.length > 0 ? (
                 <div className="space-y-3">
                   {recentRequestStatus ? (
-                      <div className="rounded-[1.2rem] border border-primary/15 bg-primary/10 p-4 text-sm leading-7 text-muted-foreground">
-                        <p className="font-medium text-foreground">
+                      <div className="rounded-[1.2rem] border border-amber-500/15 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
+                        <p className="font-medium text-stone-100">
                           {recentRequestStatus.label}
                         </p>
                         <p className="mt-2">{recentRequestStatus.nextStep}</p>
@@ -525,18 +525,18 @@ const CustomerPortal = () => {
                         <Link
                             key={request.id}
                             to={`/customer-portal/requests?request=${request.id}`}
-                            className="block w-full max-w-full min-w-0 rounded-xl border border-border/40 bg-secondary/5 p-4 transition-colors hover:border-primary/25 hover:bg-secondary/15"
+                            className="block w-full max-w-full min-w-0 rounded-xl border border-amber-200/10 bg-stone-900/50 p-4 transition-colors hover:border-amber-500/25 hover:bg-stone-800/50"
                         >
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0">
-                              <p className="break-words text-sm font-medium">{request.requestNumber}</p>
-                              <p className="mt-1 max-w-full break-words text-xs text-muted-foreground sm:max-w-[260px] sm:truncate">
+                              <p className="break-words text-sm font-medium text-stone-100">{request.requestNumber}</p>
+                              <p className="mt-1 max-w-full break-words text-xs text-stone-400 sm:max-w-[260px] sm:truncate">
                                 {request.productName ||
                                     (locale === "ar" ? "طلب شراء" : "Purchase request")}
                               </p>
 
                               {trackingCode ? (
-                                  <p className="mt-2 break-words text-xs text-muted-foreground">
+                                  <p className="mt-2 break-words text-xs text-stone-500">
                                     {locale === "ar" ? "كود التتبع: " : "Tracking: "}
                                     {trackingCode}
                                   </p>
@@ -544,10 +544,10 @@ const CustomerPortal = () => {
                             </div>
 
                             <div className="min-w-0 shrink-0 text-start sm:text-end">
-                        <span className="inline-flex max-w-full break-words rounded-md bg-secondary px-2 py-1 text-[10px] uppercase text-muted-foreground">
+                        <span className="inline-flex max-w-full break-words rounded-md bg-stone-800 px-2 py-1 text-[10px] uppercase text-stone-400">
                           {statusCopy?.label || request.statusLabel || request.status}
                         </span>
-                              <p className="mt-2 text-xs text-muted-foreground">
+                              <p className="mt-2 text-xs text-stone-500">
                                 {formatDate(request.createdAt, locale)}
                               </p>
                             </div>
@@ -556,7 +556,7 @@ const CustomerPortal = () => {
                     );
                   })}
 
-                  <Button variant="link" className="h-auto p-0 text-xs" asChild>
+                  <Button variant="link" className="h-auto p-0 text-xs text-amber-500 hover:text-amber-400" asChild>
                     <Link to="/customer-portal/requests#requests">
                       {getSafeLabel(
                           t("customerPortal.recent.viewAll"),
@@ -567,13 +567,13 @@ const CustomerPortal = () => {
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
-                  <p className="max-w-sm text-sm leading-7 text-muted-foreground">
+                  <p className="max-w-sm text-sm leading-7 text-stone-400">
                     {locale === "ar"
                         ? "لم يتم تسجيل أي طلبات بعد. ابدأ بطلب شراء جديد ليظهر هنا."
                         : "No requests have been submitted yet. Start a new purchase request to see it here."}
                   </p>
 
-                  <Button variant="outline" asChild>
+                  <Button variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10" asChild>
                     <Link to="/request">
                       {getSafeLabel(
                           t("customerPortal.recent.firstRequest"),

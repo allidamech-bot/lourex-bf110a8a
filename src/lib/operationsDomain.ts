@@ -527,26 +527,26 @@ const trackingVisibilityLabel: Record<TrackingUpdateRecord["visibility"], string
 };
 
 export const requestStatusMeta: Record<PurchaseRequestStatus, { label: string; tone: string }> = {
-  intake_submitted: { label: "تم الاستلام", tone: "bg-sky-500/15 text-sky-300" },
-  under_review: { label: "قيد المراجعة", tone: "bg-amber-500/15 text-amber-300" },
-  awaiting_clarification: { label: "بانتظار الإيضاح", tone: "bg-rose-500/15 text-rose-300" },
-  ready_for_conversion: { label: "جاهز للتحويل", tone: "bg-emerald-500/15 text-emerald-300" },
-  transfer_proof_pending: { label: "بانتظار مراجعة التحويل", tone: "bg-indigo-500/15 text-indigo-300" },
-  transfer_proof_rejected: { label: "تم رفض التحويل", tone: "bg-rose-500/15 text-rose-300" },
-  in_progress: { label: "قيد التنفيذ", tone: "bg-primary/15 text-primary" },
-  completed: { label: "مكتمل", tone: "bg-emerald-500/25 text-emerald-400" },
-  cancelled: { label: "ملغي", tone: "bg-zinc-500/15 text-zinc-300" },
+  intake_submitted: { label: "تم الاستلام", tone: "bg-amber-500/10 text-amber-200 border border-amber-500/20" },
+  under_review: { label: "قيد المراجعة", tone: "bg-amber-500/20 text-amber-100 border border-amber-500/30" },
+  awaiting_clarification: { label: "بانتظار الإيضاح", tone: "bg-stone-800 text-amber-300 border border-amber-200/15" },
+  ready_for_conversion: { label: "جاهز للتحويل", tone: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" },
+  transfer_proof_pending: { label: "بانتظار مراجعة التحويل", tone: "bg-amber-500/10 text-amber-200 border border-amber-500/20" },
+  transfer_proof_rejected: { label: "تم رفض التحويل", tone: "bg-red-500/10 text-red-300 border border-red-500/20" },
+  in_progress: { label: "قيد التنفيذ", tone: "bg-stone-800 text-stone-100 border border-amber-200/10" },
+  completed: { label: "مكتمل", tone: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" },
+  cancelled: { label: "ملغي", tone: "bg-stone-900 text-stone-500 border border-stone-800" },
 };
 
 export const operationalStatusMeta: Record<DealOperationalStatus, { label: string; tone: string }> = {
-  awaiting_assignment: { label: "بانتظار التعيين", tone: "bg-muted text-muted-foreground" },
-  partner_assigned: { label: "تم تعيين الشركاء", tone: "bg-sky-500/15 text-sky-300" },
-  sourcing: { label: "بدء التوريد", tone: "bg-amber-500/15 text-amber-300" },
-  origin_execution: { label: "تنفيذ بلد المنشأ", tone: "bg-primary/15 text-primary" },
-  in_transit: { label: "في الطريق", tone: "bg-indigo-500/15 text-indigo-300" },
-  destination_execution: { label: "تنفيذ بلد الوصول", tone: "bg-orange-500/15 text-orange-300" },
-  delivered: { label: "تم التسليم", tone: "bg-emerald-500/15 text-emerald-300" },
-  closed: { label: "أغلقت العملية", tone: "bg-zinc-500/15 text-zinc-300" },
+  awaiting_assignment: { label: "بانتظار التعيين", tone: "bg-stone-900 text-stone-600 border border-stone-800" },
+  partner_assigned: { label: "تم تعيين الشركاء", tone: "bg-amber-500/10 text-amber-200 border border-amber-500/20" },
+  sourcing: { label: "بدء التوريد", tone: "bg-amber-500/20 text-amber-100 border border-amber-500/30" },
+  origin_execution: { label: "تنفيذ بلد المنشأ", tone: "bg-stone-800 text-amber-200 border border-amber-200/10" },
+  in_transit: { label: "في الطريق", tone: "bg-stone-800 text-stone-100 border border-amber-200/10" },
+  destination_execution: { label: "تنفيذ بلد الوصول", tone: "bg-stone-800 text-stone-100 border border-amber-200/10" },
+  delivered: { label: "تم التسليم", tone: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" },
+  closed: { label: "أغلقت العملية", tone: "bg-stone-900 text-stone-500 border border-stone-800" },
 };
 
 export type OperationalPurchaseRequest = PurchaseRequest & {

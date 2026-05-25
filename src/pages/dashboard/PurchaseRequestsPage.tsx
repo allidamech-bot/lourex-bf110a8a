@@ -98,15 +98,15 @@ const valueOrDash = (value: unknown) => {
 };
 
 const statusBadgeClasses: Record<PurchaseRequestStatus, string> = {
-    intake_submitted: "border-blue-400/25 bg-blue-500/10 text-blue-100",
-    under_review: "border-amber-400/25 bg-amber-400/10 text-amber-100",
-    awaiting_clarification: "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-100",
-    ready_for_conversion: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100",
-    transfer_proof_pending: "border-cyan-400/25 bg-cyan-500/10 text-cyan-100",
-    transfer_proof_rejected: "border-rose-400/25 bg-rose-500/10 text-rose-100",
-    in_progress: "border-sky-400/25 bg-sky-500/10 text-sky-100",
-    completed: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
-    cancelled: "border-slate-400/40 bg-slate-500/20 text-slate-100 ring-1 ring-slate-400/20",
+    intake_submitted: "border-amber-500/20 bg-amber-500/5 text-amber-200",
+    under_review: "border-amber-500/30 bg-amber-500/10 text-amber-100",
+    awaiting_clarification: "border-amber-200/15 bg-stone-50/5 text-amber-300",
+    ready_for_conversion: "border-emerald-500/20 bg-emerald-500/5 text-emerald-100",
+    transfer_proof_pending: "border-amber-500/20 bg-amber-500/5 text-amber-200",
+    transfer_proof_rejected: "border-rose-500/20 bg-rose-500/5 text-rose-100",
+    in_progress: "border-amber-200/20 bg-stone-50/5 text-stone-100",
+    completed: "border-emerald-500/30 bg-emerald-500/15 text-emerald-100",
+    cancelled: "border-stone-700 bg-stone-800 text-stone-400",
 };
 
 const getStatusBadgeClass = (status: PurchaseRequestStatus | string | null | undefined) =>
@@ -968,11 +968,11 @@ export default function PurchaseRequestsPage() {
         <div className="w-full max-w-full min-w-0 space-y-4">
             <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
             <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(24rem,0.82fr)_minmax(0,1.18fr)]">
-                <BentoCard className="space-y-5 rounded-[1.5rem] border-white/10 bg-white/[0.03]">
+                <BentoCard className="space-y-5 rounded-[1.5rem] border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
                     <div>
-                        <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("requests.inboxEyebrow")}</p>
-                        <h2 className="mt-2 font-serif text-2xl font-semibold">{t("requests.inboxTitle")}</h2>
-                        <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("requests.inboxDescription")}</p>
+                        <p className="whitespace-normal text-xs font-semibold text-stone-500">{t("requests.inboxEyebrow")}</p>
+                        <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("requests.inboxTitle")}</h2>
+                        <p className="mt-3 text-sm leading-7 text-stone-400">{t("requests.inboxDescription")}</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
@@ -982,34 +982,38 @@ export default function PurchaseRequestsPage() {
                             { label: t("requests.ready"), value: requestMetrics.ready },
                             { label: t("requests.converted"), value: requestMetrics.converted },
                         ].map((item) => (
-                            <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition-colors hover:border-blue-400/25">
-                                <p className="text-2xl font-bold text-white">{item.value}</p>
-                                <p className="mt-1 whitespace-normal text-xs leading-tight text-slate-400">{item.label}</p>
+                            <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 text-center transition-colors hover:border-amber-500/25">
+                                <p className="text-2xl font-bold text-stone-100">{item.value}</p>
+                                <p className="mt-1 whitespace-normal text-xs leading-tight text-stone-500">{item.label}</p>
                             </div>
                         ))}
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
                         <div className="relative">
-                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
                             <Input
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder={t("requests.searchPlaceholder")}
-                                className="h-10 rounded-xl border-white/10 bg-white/[0.04] ps-9"
+                                className="h-10 rounded-xl border-amber-200/10 bg-stone-950/40 text-stone-100 focus:ring-amber-500/20 ps-9"
                             />
                         </div>
 
                         <div className="flex w-full flex-wrap gap-2 md:w-auto">
-                            <Button variant="outline" size="sm" className="h-10 min-w-fit rounded-xl whitespace-nowrap" onClick={() => void refresh()}>
+                            <Button variant="outline" size="sm" className="h-10 min-w-fit rounded-xl whitespace-nowrap border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10" onClick={() => void refresh()}>
                                 {t("common.refresh")}
                             </Button>
                             {requestFilters.map((filter) => (
                                 <Button
                                     key={filter.key}
-                                    variant={activeFilter === filter.key ? "gold" : "outline"}
+                                    variant={activeFilter === filter.key ? "default" : "outline"}
                                     size="sm"
-                                    className="h-10 min-w-fit rounded-xl whitespace-nowrap"
+                                    className={`h-10 min-w-fit rounded-xl whitespace-nowrap ${
+                                        activeFilter === filter.key
+                                        ? "bg-amber-500/10 text-amber-200 border-amber-500/30 hover:bg-amber-500/20"
+                                        : "border-amber-200/15 bg-stone-50/5 text-stone-400 hover:bg-stone-50/10 hover:text-stone-100"
+                                    }`}
                                     onClick={() => setActiveFilter(filter.key)}
                                 >
                                     <Filter className="me-2 h-4 w-4" />
@@ -1020,17 +1024,18 @@ export default function PurchaseRequestsPage() {
                     </div>
 
                     {loadError ? (
-                        <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+                        <div className="rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
                             {loadError}
                         </div>
                     ) : null}
 
                     {filteredRows.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-6">
+                        <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6">
                             <EmptyState
                                 icon={ClipboardList}
                                 title={t("requests.emptyFilteredTitle")}
                                 description={t("requests.emptyFilteredDescription")}
+                                className="bg-transparent border-0"
                             />
                         </div>
                     ) : (
@@ -1048,11 +1053,11 @@ export default function PurchaseRequestsPage() {
                                         className={`w-full max-w-full min-w-0 rounded-[1.35rem] border transition-colors ${
                                             isCancelled
                                                 ? isSelected
-                                                    ? "border-slate-400/45 bg-slate-500/10 shadow-[0_18px_46px_-36px_rgba(148,163,184,0.75)]"
-                                                    : "border-slate-500/25 bg-slate-500/[0.06] opacity-80 hover:border-slate-400/35 hover:bg-slate-500/10"
+                                                    ? "border-stone-600 bg-stone-800 shadow-[0_18px_46px_-36px_rgba(0,0,0,0.5)]"
+                                                    : "border-stone-800 bg-stone-900/40 opacity-80 hover:border-stone-700 hover:bg-stone-800"
                                                 : isSelected
-                                                ? "border-blue-400/40 bg-blue-500/10 shadow-[0_18px_46px_-34px_rgba(59,130,246,0.9)]"
-                                                : "border-white/10 bg-white/[0.03] hover:border-blue-400/25 hover:bg-blue-500/5"
+                                                ? "border-amber-500/35 bg-amber-500/10 shadow-[0_18px_46px_-34px_rgba(251,191,36,0.3)]"
+                                                : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
                                         }`}
                                     >
                                         <button
@@ -1063,15 +1068,15 @@ export default function PurchaseRequestsPage() {
                                         >
                                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <p className="whitespace-nowrap text-xs font-semibold text-slate-400">
+                                                <p className="whitespace-nowrap text-xs font-semibold text-stone-500">
                                                     {row.requestNumber}
                                                 </p>
-                                                <p className="mt-2 text-base font-semibold text-foreground sm:truncate">
+                                                <p className="mt-2 text-base font-semibold text-stone-100 sm:truncate">
                                                     {row.productName || t("requests.genericRequest")}
                                                 </p>
-                                                <p className="mt-1 text-sm text-muted-foreground sm:truncate">{row.customer.fullName}</p>
+                                                <p className="mt-1 text-sm text-stone-400 sm:truncate">{row.customer.fullName}</p>
                                                 {isCancelled ? (
-                                                    <p className="mt-2 break-words text-xs font-medium text-slate-300">
+                                                    <p className="mt-2 break-words text-xs font-medium text-stone-500">
                                                         {t("requests.dashboardActions.cancelledNotice")}
                                                     </p>
                                                 ) : null}
@@ -1082,19 +1087,19 @@ export default function PurchaseRequestsPage() {
                       </span>
                                         </div>
 
-                                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-stone-500">
                                             <span>{t("requests.attachmentsCount", { count: row.attachments.length })}</span>
                                             <span>•</span>
                                             <span>{new Date(row.createdAt).toLocaleDateString(locale)}</span>
                                         </div>
                                         </button>
 
-                                        <div className="flex flex-wrap gap-2 border-t border-white/10 px-4 py-3">
+                                        <div className="flex flex-wrap gap-2 border-t border-amber-200/10 px-4 py-3">
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-white/10 bg-white/[0.03] px-2.5 text-xs whitespace-nowrap hover:border-blue-400/35 hover:bg-blue-500/10"
+                                                className="h-8 min-w-fit rounded-lg border-amber-200/15 bg-stone-50/5 text-stone-100 px-2.5 text-xs whitespace-nowrap hover:bg-stone-50/10"
                                                 onClick={() => setSelectedRequest(row.id, true)}
                                             >
                                                 <Eye className="me-1.5 h-3.5 w-3.5" />
@@ -1104,7 +1109,7 @@ export default function PurchaseRequestsPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-amber-400/25 bg-amber-400/10 px-2.5 text-xs text-amber-100 whitespace-nowrap hover:bg-amber-400/15"
+                                                className="h-8 min-w-fit rounded-lg border-amber-500/20 bg-amber-500/10 px-2.5 text-xs text-amber-200 whitespace-nowrap hover:bg-amber-500/20"
                                                 disabled={isBusy || !canResubmit}
                                                 onClick={() => void handleResubmitRequest(row)}
                                                 title={!canResubmit ? requestResubmitLabels.unavailable : undefined}
@@ -1117,7 +1122,7 @@ export default function PurchaseRequestsPage() {
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 min-w-fit rounded-lg border-slate-500/25 bg-slate-500/10 px-2.5 text-xs text-slate-200 whitespace-nowrap hover:bg-slate-500/15"
+                                                    className="h-8 min-w-fit rounded-lg border-stone-700 bg-stone-800 px-2.5 text-xs text-stone-300 whitespace-nowrap hover:bg-stone-700"
                                                     disabled={isBusy || !canCancel}
                                                     onClick={() => void handleCancelRequest(row)}
                                                 >
@@ -1129,7 +1134,7 @@ export default function PurchaseRequestsPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-rose-400/25 bg-rose-500/10 px-2.5 text-xs text-rose-100 whitespace-nowrap hover:bg-rose-500/15"
+                                                className="h-8 min-w-fit rounded-lg border-red-500/20 bg-red-500/10 px-2.5 text-xs text-red-200 whitespace-nowrap hover:bg-red-500/20"
                                                 disabled={isBusy}
                                                 onClick={() => void handleArchiveRequest(row)}
                                             >
@@ -1148,29 +1153,29 @@ export default function PurchaseRequestsPage() {
                     <BentoCard
                         ref={detailsPanelRef}
                         tabIndex={-1}
-                        className={`rounded-[1.5rem] p-0 ${
+                        className={`rounded-[1.5rem] p-0 shadow-2xl backdrop-blur-xl ${
                             selectedRow.status === "cancelled"
-                                ? "border-slate-400/25 bg-[linear-gradient(180deg,rgba(30,41,59,0.88),rgba(15,23,42,0.88))]"
-                                : "border-blue-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(6,17,31,0.9))]"
+                                ? "border-stone-700 bg-[linear-gradient(180deg,rgba(28,25,23,0.9),rgba(12,10,9,0.95))]"
+                                : "border-amber-200/15 bg-[linear-gradient(180deg,rgba(12,10,9,0.95),rgba(28,25,23,0.9))]"
                         }`}
                     >
-                        <div className="border-b border-white/10 p-4 sm:p-6">
+                        <div className="border-b border-amber-200/10 p-4 sm:p-6">
                             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                                 <div className="min-w-0">
-                                    <p className="whitespace-normal text-xs font-semibold text-blue-200">
+                                    <p className="whitespace-normal text-xs font-semibold text-amber-200/70">
                                         {selectedRow.requestNumber}
                                     </p>
-                                    <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-white sm:text-3xl">
+                                    <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-stone-100 sm:text-3xl">
                                         {selectedRow.productName || t("requests.genericRequest")}
                                     </h2>
-                                    <p className="mt-2 break-words text-sm text-slate-400">
+                                    <p className="mt-2 break-words text-sm text-stone-400">
                                         {selectedRow.customer.fullName} • {selectedRow.customer.email}
                                     </p>
                                 </div>
 
                                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
                                     {isInternal && selectedRow.convertedDealNumber ? (
-                                        <Button variant="outline" asChild>
+                                        <Button variant="outline" asChild className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                                             <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
                                                 <Eye className="me-2 h-4 w-4" />
                                                 {t("requests.openDeal")}
@@ -1180,7 +1185,6 @@ export default function PurchaseRequestsPage() {
 
                                     {isInternal && (
                                         <Button
-                                            variant="gold"
                                             disabled={
                                                 convertingId === selectedRow.id ||
                                                 (!selectedRow.convertedDealNumber &&
@@ -1191,6 +1195,7 @@ export default function PurchaseRequestsPage() {
                                                     }))
                                             }
                                             onClick={handleConvert}
+                                            className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
                                         >
                                             {convertingId === selectedRow.id ? (
                                                 <>
@@ -1218,20 +1223,20 @@ export default function PurchaseRequestsPage() {
                                 })()}
 
                                 {selectedRow.convertedDealNumber ? (
-                                    <span className="max-w-full break-words rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                    <span className="max-w-full break-words rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-medium text-amber-200">
                     {t("requests.linkedDeal", { deal: selectedRow.convertedDealNumber })}
                   </span>
                                 ) : null}
 
                                 {selectedRow.isLegacyFallback ? (
-                                    <span className="max-w-full break-words rounded-full bg-secondary/25 px-3 py-1 text-xs font-medium text-muted-foreground">
+                                    <span className="max-w-full break-words rounded-full bg-stone-800 px-3 py-1 text-xs font-medium text-stone-500">
                     {t("requests.legacy")}
                   </span>
                                 ) : null}
                             </div>
 
                             {selectedRow.status === "cancelled" ? (
-                                <div className="mt-4 rounded-2xl border border-slate-400/25 bg-slate-500/10 p-4 text-sm leading-7 text-slate-200">
+                                <div className="mt-4 rounded-2xl border border-stone-700 bg-stone-800 p-4 text-sm leading-7 text-stone-300">
                                     {t("requests.dashboardActions.cancelledNotice")}
                                 </div>
                             ) : null}
@@ -1249,29 +1254,29 @@ export default function PurchaseRequestsPage() {
                                         value: selectedRow.customer.fullName || t("common.notAvailable"),
                                     },
                                 ].map((item) => (
-                                    <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                                        <p className="break-words text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                                    <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 px-4 py-3">
+                                        <p className="break-words text-[11px] font-medium uppercase tracking-[0.12em] text-stone-500">
                                             {item.label}
                                         </p>
-                                        <p className="mt-1 break-words text-sm font-semibold text-white">{item.value}</p>
+                                        <p className="mt-1 break-words text-sm font-semibold text-stone-200">{item.value}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
-                            <div className="min-w-0 border-b border-border/50 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
+                            <div className="min-w-0 border-b border-amber-200/10 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
                                 <div className="space-y-5">
                                     <div className="space-y-2">
-                                        <p className="whitespace-normal text-xs font-semibold text-primary">
+                                        <p className="whitespace-normal text-xs font-semibold text-amber-500">
                                             {t("requests.intake.productTitle")}
                                         </p>
-                                        <p className="text-sm leading-7 text-muted-foreground">
+                                        <p className="text-sm leading-7 text-stone-400">
                                             {selectedRow.productDescription || t("requests.noDescription")}
                                         </p>
                                     </div>
 
-                                    <p className="whitespace-normal text-xs font-semibold text-slate-400">
+                                    <p className="whitespace-normal text-xs font-semibold text-stone-500">
                                         {t("requests.labels.details")}
                                     </p>
 
@@ -1314,31 +1319,31 @@ export default function PurchaseRequestsPage() {
                                             { label: t("requests.labels.color"), value: selectedRow.color || "—" },
                                             { label: t("requests.labels.reference"), value: selectedRow.referenceLink || t("requests.noReference") },
                                         ].map((item) => (
-                                            <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                                                <p className="break-words text-xs text-slate-400">{item.label}</p>
-                                                <p className="mt-1 break-words text-sm font-medium text-white">{item.value}</p>
+                                            <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 px-4 py-3">
+                                                <p className="break-words text-xs text-stone-500">{item.label}</p>
+                                                <p className="mt-1 break-words text-sm font-medium text-stone-200">{item.value}</p>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                                    <div className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                                         <div className="flex items-center gap-3">
-                                            <ShieldCheck className="h-4 w-4 text-primary" />
-                                            <p className="font-medium">{t("requests.labels.technicalSpecs")}</p>
+                                            <ShieldCheck className="h-4 w-4 text-amber-500" />
+                                            <p className="font-medium text-stone-100">{t("requests.labels.technicalSpecs")}</p>
                                         </div>
-                                        <p className="mt-3 break-words text-sm leading-7 text-muted-foreground">
+                                        <p className="mt-3 break-words text-sm leading-7 text-stone-400">
                                             {selectedRow.technicalSpecs || t("requests.noSpecs")}
                                         </p>
                                     </div>
 
-                                    <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                                    <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
                                         <div className="flex items-center gap-3">
-                                            <FileImage className="h-4 w-4 text-primary" />
-                                            <p className="font-medium">{t("requests.labels.attachments")}</p>
+                                            <FileImage className="h-4 w-4 text-amber-500" />
+                                            <p className="font-medium text-stone-100">{t("requests.labels.attachments")}</p>
                                         </div>
 
                                         {selectedRow.attachments.length === 0 ? (
-                                            <p className="mt-3 text-sm text-muted-foreground">{t("requests.noAttachments")}</p>
+                                            <p className="mt-3 text-sm text-stone-500">{t("requests.noAttachments")}</p>
                                         ) : (
                                             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                                                 {selectedRow.attachments.map((attachment) => (
@@ -1347,10 +1352,10 @@ export default function PurchaseRequestsPage() {
                                                         href={attachment.fileUrl}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                                                        className="rounded-[1.2rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 transition-colors hover:border-amber-500/25"
                                                     >
-                                                        <p className="break-words font-medium">{attachment.fileName}</p>
-                                                        <p className="mt-1 text-xs text-muted-foreground">{attachment.category}</p>
+                                                        <p className="break-words font-medium text-stone-200">{attachment.fileName}</p>
+                                                        <p className="mt-1 text-xs text-stone-500">{attachment.category}</p>
                                                     </a>
                                                 ))}
                                             </div>
@@ -1363,12 +1368,12 @@ export default function PurchaseRequestsPage() {
                             <div className="min-w-0 p-4 sm:p-6">
                                     <div className="space-y-5">
                                         {selectedRow.status === "transfer_proof_pending" && (
-                                            <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-4 sm:p-6">
+                                            <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 sm:p-6">
                                                 <div className="flex items-center gap-3">
-                                                    <FileImage className="h-5 w-5 text-primary" />
-                                                    <h3 className="text-lg font-semibold">{t("requests.transferProof.title")}</h3>
+                                                    <FileImage className="h-5 w-5 text-amber-500" />
+                                                    <h3 className="text-lg font-semibold text-stone-100">{t("requests.transferProof.title")}</h3>
                                                 </div>
-                                                <p className="mt-2 text-sm text-muted-foreground">{t("requests.transferProof.description")}</p>
+                                                <p className="mt-2 text-sm text-stone-400">{t("requests.transferProof.description")}</p>
 
                                                 {proofSignedUrl && (
                                                     <div className="mt-4">
@@ -1376,7 +1381,7 @@ export default function PurchaseRequestsPage() {
                                                             href={proofSignedUrl}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20"
+                                                            className="inline-flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20"
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                             {selectedRow.transferProofName || t("requests.transferProof.viewProof")}
@@ -1387,20 +1392,20 @@ export default function PurchaseRequestsPage() {
                                                 <form className="mt-6 space-y-4" onSubmit={handleAcceptTransfer}>
                                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                                         <label className="space-y-1.5 text-sm">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.paymentType}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.paymentType}</span>
                                                             <select
                                                                 value={transferPaymentType}
                                                                 onChange={(event) => setTransferPaymentType(event.target.value as TransferPaymentType)}
                                                                 disabled={actingOnProof}
-                                                                className="h-10 w-full rounded-xl border border-white/10 bg-background px-3 text-sm text-foreground"
+                                                                className="h-10 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
                                                             >
-                                                                <option value="first_payment">{transferPaymentLabels.firstPayment}</option>
-                                                                <option value="second_payment">{transferPaymentLabels.secondPayment}</option>
-                                                                <option value="full_payment">{transferPaymentLabels.fullPayment}</option>
+                                                                <option value="first_payment" className="bg-stone-900">{transferPaymentLabels.firstPayment}</option>
+                                                                <option value="second_payment" className="bg-stone-900">{transferPaymentLabels.secondPayment}</option>
+                                                                <option value="full_payment" className="bg-stone-900">{transferPaymentLabels.fullPayment}</option>
                                                             </select>
                                                         </label>
                                                         <label className="space-y-1.5 text-sm">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.receivedAmount}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.receivedAmount}</span>
                                                             <Input
                                                                 type="number"
                                                                 min="0"
@@ -1408,40 +1413,45 @@ export default function PurchaseRequestsPage() {
                                                                 value={transferReceivedAmount}
                                                                 onChange={(event) => setTransferReceivedAmount(event.target.value)}
                                                                 disabled={actingOnProof}
+                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                             />
                                                         </label>
                                                         <label className="space-y-1.5 text-sm">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.currency}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.currency}</span>
                                                             <Input
                                                                 value={transferCurrency}
                                                                 onChange={(event) => setTransferCurrency(event.target.value)}
                                                                 disabled={actingOnProof}
+                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                             />
                                                         </label>
                                                         <label className="space-y-1.5 text-sm">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.paymentMethod}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.paymentMethod}</span>
                                                             <Input
                                                                 value={transferPaymentMethod}
                                                                 onChange={(event) => setTransferPaymentMethod(event.target.value)}
                                                                 disabled={actingOnProof}
                                                                 placeholder={transferPaymentLabels.bankTransfer}
+                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                             />
                                                         </label>
                                                         <label className="space-y-1.5 text-sm md:col-span-2">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.transferReferenceNumber}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.transferReferenceNumber}</span>
                                                             <Input
                                                                 value={transferReferenceNumber}
                                                                 onChange={(event) => setTransferReferenceNumber(event.target.value)}
                                                                 disabled={actingOnProof}
+                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                             />
                                                         </label>
                                                         <label className="space-y-1.5 text-sm md:col-span-2">
-                                                            <span className="text-muted-foreground">{transferPaymentLabels.internalNote}</span>
+                                                            <span className="text-stone-500">{transferPaymentLabels.internalNote}</span>
                                                             <Textarea
                                                                 value={transferInternalNote}
                                                                 onChange={(event) => setTransferInternalNote(event.target.value)}
                                                                 disabled={actingOnProof}
                                                                 rows={3}
+                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                             />
                                                         </label>
                                                     </div>
@@ -1450,7 +1460,7 @@ export default function PurchaseRequestsPage() {
                                                         <Button
                                                             type="submit"
                                                             disabled={actingOnProof}
-                                                            className="bg-emerald-600 text-white hover:bg-emerald-700"
+                                                            className="bg-emerald-600 text-stone-950 font-bold hover:bg-emerald-500 shadow-xl"
                                                         >
                                                             {actingOnProof ? (
                                                                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -1464,7 +1474,7 @@ export default function PurchaseRequestsPage() {
                                                             variant="outline"
                                                             onClick={handleRejectTransfer}
                                                             disabled={actingOnProof}
-                                                            className="border-rose-500/50 text-rose-500 hover:bg-rose-500/10"
+                                                            className="border-red-500/50 text-red-400 hover:bg-red-500/10"
                                                         >
                                                             <MessageSquareWarning className="me-2 h-4 w-4" />
                                                             {t("requests.actions.rejectTransfer")}
@@ -1475,7 +1485,7 @@ export default function PurchaseRequestsPage() {
                                         )}
 
                                         {selectedRow.status === "transfer_proof_rejected" && (
-                                            <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/10 p-4 text-rose-100 sm:p-6">
+                                            <div className="rounded-[1.35rem] border border-red-500/20 bg-red-500/10 p-4 text-red-100 sm:p-6">
                                                 <p className="font-bold">{t("requests.transferProof.rejected")}</p>
                                                 <p className="mt-1 break-words text-sm">
                                                     {t("requests.transferProof.rejectionReason")} {selectedRow.transferRejectionReason}
@@ -1483,7 +1493,7 @@ export default function PurchaseRequestsPage() {
                                             </div>
                                         )}
 
-                                        <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+                                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
                                             {t("requests.reviewPanel")}
                                         </div>
 
@@ -1520,18 +1530,18 @@ export default function PurchaseRequestsPage() {
                                             mode="admin"
                                         />
 
-                                        <div className="rounded-[1.35rem] border border-primary/25 bg-[#080808] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                                        <div className="rounded-[1.35rem] border border-amber-200/15 bg-stone-950/40 p-4 shadow-2xl backdrop-blur-xl">
                                             <div className="flex flex-wrap items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <div className="flex min-w-0 items-center gap-2">
-                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-200">
                                                             <Sparkles className="h-4 w-4" />
                                                         </span>
                                                         <div>
-                                                            <p className="text-xs uppercase tracking-[0.18em] text-primary">
+                                                            <p className="text-xs uppercase tracking-[0.18em] text-amber-200">
                                                                 {t("requests.ai.title")}
                                                             </p>
-                                                            <p className="mt-1 break-words text-xs leading-6 text-muted-foreground">
+                                                            <p className="mt-1 break-words text-xs leading-6 text-stone-500">
                                                                 {t("requests.ai.description")}
                                                             </p>
                                                         </div>
@@ -1539,7 +1549,7 @@ export default function PurchaseRequestsPage() {
                                                 </div>
 
                                                 {aiOutput ? (
-                                                    <Button variant="outline" size="sm" onClick={() => void handleCopyAiOutput()}>
+                                                    <Button variant="outline" size="sm" onClick={() => void handleCopyAiOutput()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                                                         <Copy className="me-2 h-4 w-4" />
                                                         {t("requests.ai.copy")}
                                                     </Button>
@@ -1556,14 +1566,14 @@ export default function PurchaseRequestsPage() {
                                                             type="button"
                                                             variant="outline"
                                                             size="sm"
-                                                            className="justify-start border-primary/25 bg-[#111111] text-start text-foreground hover:border-primary/45 hover:bg-primary/10"
+                                                            className="justify-start border-amber-200/10 bg-stone-900/30 text-start text-stone-300 hover:border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-100"
                                                             disabled={Boolean(aiActionLoading)}
                                                             onClick={() => void handleAiAction(action.mode)}
                                                         >
                                                             {isLoading ? (
-                                                                <Loader2 className="me-2 h-4 w-4 shrink-0 animate-spin text-primary" />
+                                                                <Loader2 className="me-2 h-4 w-4 shrink-0 animate-spin text-amber-500" />
                                                             ) : (
-                                                                <Sparkles className="me-2 h-4 w-4 shrink-0 text-primary" />
+                                                                <Sparkles className="me-2 h-4 w-4 shrink-0 text-amber-500" />
                                                             )}
                                                         <span className="min-w-0 break-words sm:truncate">
                                                                 {lang === "ar" ? action.labelAr : action.label}
@@ -1574,40 +1584,40 @@ export default function PurchaseRequestsPage() {
                                             </div>
 
                                             {aiUsedFallback ? (
-                                                <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+                                                <div className="mt-4 rounded-[1rem] border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-6 text-amber-200">
                                                     {t("requests.ai.unavailable")}
                                                 </div>
                                             ) : null}
 
                                             {aiOutput ? (
-                                                <div className="mt-4 rounded-[1rem] border border-primary/20 bg-[#111111] p-4">
+                                                <div className="mt-4 rounded-[1rem] border border-amber-200/15 bg-stone-950/40 p-4">
                                                     <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                        <p className="break-words text-sm font-semibold text-primary">{aiOutputTitle}</p>
-                                                        <span className="max-w-full self-start break-words rounded-full border border-primary/20 px-2.5 py-1 text-[11px] text-muted-foreground">
+                                                        <p className="break-words text-sm font-semibold text-amber-200">{aiOutputTitle}</p>
+                                                        <span className="max-w-full self-start break-words rounded-full border border-amber-200/10 px-2.5 py-1 text-[11px] text-stone-500">
                                                             {t("requests.ai.advisory")}
                                                         </span>
                                                     </div>
-                                                    <pre className="max-h-[24rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-foreground">{aiOutput}</pre>
+                                                    <pre className="max-h-[24rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-stone-300">{aiOutput}</pre>
                                                 </div>
                                             ) : null}
                                         </div>
 
-                                        <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                                        <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
                                             <div className="flex items-center gap-3">
-                                                <StickyNote className="h-4 w-4 text-primary" />
-                                                <p className="font-medium">{t("requests.labels.internalNotes")}</p>
+                                                <StickyNote className="h-4 w-4 text-amber-500" />
+                                                <p className="font-medium text-stone-100">{t("requests.labels.internalNotes")}</p>
                                             </div>
 
                                             <Textarea
                                                 rows={8}
                                                 value={internalNotesDraft}
                                                 onChange={(event) => setInternalNotesDraft(event.target.value)}
-                                                className="mt-4"
+                                                className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                                                 placeholder={t("requests.notesPlaceholder")}
                                             />
 
                                             <Button
-                                                className="mt-4"
+                                                className="mt-4 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
                                                 variant="outline"
                                                 onClick={handleSaveNotes}
                                                 disabled={savingNotesId === selectedRow.id}
@@ -1628,7 +1638,7 @@ export default function PurchaseRequestsPage() {
                                                 {statusActions.map((action) => (
                                                     <Button
                                                         key={action.value}
-                                                        variant={selectedRow.status === action.value ? "gold" : "outline"}
+                                                        variant={selectedRow.status === action.value ? "default" : "outline"}
                                                         disabled={
                                                             updatingStatusId === selectedRow.id ||
                                                             selectedRow.status === action.value ||
@@ -1636,13 +1646,17 @@ export default function PurchaseRequestsPage() {
                                                             !canTransitionPurchaseRequestStatus(selectedRow.status, action.value)
                                                         }
                                                         onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
+                                                        className={selectedRow.status === action.value
+                                                            ? "bg-amber-500/20 text-amber-200 border-amber-500/30 hover:bg-amber-500/30"
+                                                            : "border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
+                                                        }
                                                     >
                                                         {updatingStatusId === selectedRow.id && selectedRow.status !== action.value ? (
-                                                            <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                                                            <Loader2 className="me-2 h-4 w-4 animate-spin text-amber-500" />
                                                         ) : action.value === "ready_for_conversion" ? (
-                                                            <CheckCircle2 className="me-2 h-4 w-4" />
+                                                            <CheckCircle2 className="me-2 h-4 w-4 text-amber-500" />
                                                         ) : (
-                                                            <MessageSquareWarning className="me-2 h-4 w-4" />
+                                                            <MessageSquareWarning className="me-2 h-4 w-4 text-amber-500" />
                                                         )}
                                                         {action.label}
                                                     </Button>
@@ -1654,19 +1668,19 @@ export default function PurchaseRequestsPage() {
                                             </div>
                                         )}
 
-                                        <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4 text-sm">
+                                        <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 p-4 text-sm">
                                             <div className="flex items-center gap-3">
-                                                <ShieldCheck className="h-4 w-4 text-primary" />
-                                                <p className="font-medium">{t("requests.labels.reviewHistory")}</p>
+                                                <ShieldCheck className="h-4 w-4 text-amber-500" />
+                                                <p className="font-medium text-stone-100">{t("requests.labels.reviewHistory")}</p>
                                             </div>
 
-                                            <p className="mt-2 text-muted-foreground">
+                                            <p className="mt-2 text-stone-500">
                                                 {t("requests.receivedAt", {
                                                     value: new Date(selectedRow.createdAt).toLocaleString(locale),
                                                 })}
                                             </p>
 
-                                            <p className="mt-1 text-muted-foreground">
+                                            <p className="mt-1 text-stone-500">
                                                 {selectedRow.reviewedAt
                                                     ? t("requests.reviewedAt", {
                                                         value: new Date(selectedRow.reviewedAt).toLocaleString(locale),

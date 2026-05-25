@@ -239,97 +239,97 @@ export default function EditRequestsPage() {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-      <BentoCard className="space-y-5">
+      <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div>
-          <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("editRequests.newRequest")}</p>
-          <h2 className="mt-2 font-serif text-2xl font-semibold">{t("editRequests.title")}</h2>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("editRequests.description")}</p>
+          <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-stone-500">{t("editRequests.newRequest")}</p>
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("editRequests.title")}</h2>
+          <p className="mt-3 text-sm leading-7 text-stone-400 font-medium">{t("editRequests.description")}</p>
         </div>
-        <div className="rounded-[1.25rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-          <p className="font-medium text-foreground">{t("editRequests.lockedGuidanceTitle")}</p>
-          <p className="mt-1">{t("editRequests.lockedGuidanceDescription")}</p>
+        <div className="rounded-[1.25rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
+          <p className="font-bold text-amber-200 uppercase tracking-wide">{t("editRequests.lockedGuidanceTitle")}</p>
+          <p className="mt-1 font-medium">{t("editRequests.lockedGuidanceDescription")}</p>
           {entry && !entry.locked ? (
-            <p className="mt-3 rounded-[1rem] border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-amber-100">
+            <p className="mt-3 rounded-[1rem] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-100 font-bold">
               {t("editRequests.unlockedEntryNotice")}
             </p>
           ) : null}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>{t("editRequests.requesterName")}</Label>
-            <Input value={requester} onChange={(event) => setRequester(event.target.value)} />
+            <Label className="text-stone-300">{t("editRequests.requesterName")}</Label>
+            <Input value={requester} onChange={(event) => setRequester(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
           </div>
           <div>
-            <Label>{t("editRequests.requesterEmail")}</Label>
-            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <Label className="text-stone-300">{t("editRequests.requesterEmail")}</Label>
+            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
           </div>
         </div>
         <div>
-          <Label>{t("editRequests.dealReference")}</Label>
-          <Input value={deal?.dealNumber || focusDeal} readOnly />
+          <Label className="text-stone-300">{t("editRequests.dealReference")}</Label>
+          <Input value={deal?.dealNumber || focusDeal} readOnly className="bg-stone-950/40 border-amber-200/10 text-stone-100 opacity-80" />
         </div>
         <div>
-          <Label>{t("editRequests.entryReference")}</Label>
-          <Input value={entry?.entryNumber || focusEntry} readOnly />
+          <Label className="text-stone-300">{t("editRequests.entryReference")}</Label>
+          <Input value={entry?.entryNumber || focusEntry} readOnly className="bg-stone-950/40 border-amber-200/10 text-stone-100 opacity-80" />
         </div>
         {entry ? (
           <>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                <p className="text-xs text-muted-foreground">{t("editRequests.currentValue")}</p>
-                <p className="mt-2 font-medium">{entry.amount.toLocaleString()} {entry.currency}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{entry.method || t("editRequests.noMethod")} / {entry.counterparty || t("editRequests.noCounterparty")}</p>
+              <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("editRequests.currentValue")}</p>
+                <p className="mt-2 font-bold text-stone-200">{entry.amount.toLocaleString()} {entry.currency}</p>
+                <p className="mt-2 text-xs text-stone-500 font-medium">{entry.method || t("editRequests.noMethod")} / {entry.counterparty || t("editRequests.noCounterparty")}</p>
               </div>
-              <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                <p className="text-xs text-muted-foreground">{t("editRequests.currentDescription")}</p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{entry.note || t("editRequests.noDescription")}</p>
+              <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("editRequests.currentDescription")}</p>
+                <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{entry.note || t("editRequests.noDescription")}</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label>{t("editRequests.newAmount")}</Label>
-                <Input value={proposedAmount} onChange={(event) => setProposedAmount(event.target.value)} />
+                <Label className="text-stone-300">{t("editRequests.newAmount")}</Label>
+                <Input value={proposedAmount} onChange={(event) => setProposedAmount(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
               </div>
               <div>
-                <Label>{t("editRequests.newMethod")}</Label>
-                <Input value={proposedMethod} onChange={(event) => setProposedMethod(event.target.value)} />
+                <Label className="text-stone-300">{t("editRequests.newMethod")}</Label>
+                <Input value={proposedMethod} onChange={(event) => setProposedMethod(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
               </div>
               <div>
-                <Label>{t("editRequests.newCounterparty")}</Label>
-                <Input value={proposedCounterparty} onChange={(event) => setProposedCounterparty(event.target.value)} />
+                <Label className="text-stone-300">{t("editRequests.newCounterparty")}</Label>
+                <Input value={proposedCounterparty} onChange={(event) => setProposedCounterparty(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
               </div>
               <div>
-                <Label>{t("editRequests.newCategory")}</Label>
-                <Input value={proposedCategory} onChange={(event) => setProposedCategory(event.target.value)} />
+                <Label className="text-stone-300">{t("editRequests.newCategory")}</Label>
+                <Input value={proposedCategory} onChange={(event) => setProposedCategory(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
               </div>
             </div>
             <div>
-              <Label>{t("editRequests.newDescription")}</Label>
-              <Textarea rows={4} value={proposedNote} onChange={(event) => setProposedNote(event.target.value)} />
+              <Label className="text-stone-300">{t("editRequests.newDescription")}</Label>
+              <Textarea rows={4} value={proposedNote} onChange={(event) => setProposedNote(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
             </div>
           </>
         ) : null}
         <div>
-          <Label>{t("editRequests.reason")}</Label>
-          <Textarea rows={6} value={reason} onChange={(event) => setReason(event.target.value)} />
+          <Label className="text-stone-300">{t("editRequests.reason")}</Label>
+          <Textarea rows={6} value={reason} onChange={(event) => setReason(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="gold" onClick={submit} disabled={submitting || !entry || !entry.locked || !canManageFinancialEditRequests}>
+          <Button onClick={submit} disabled={submitting || !entry || !entry.locked || !canManageFinancialEditRequests} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
             {submitting ? t("editRequests.submitting") : t("editRequests.submit")}
           </Button>
           {focusDeal ? (
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
               <Link to={`/dashboard/deals?deal=${focusDeal}`}>{t("editRequests.backToDeal")}</Link>
             </Button>
           ) : null}
         </div>
       </BentoCard>
 
-      <BentoCard className="p-0">
-        <div className="border-b border-border/60 px-6 py-5">
+      <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <div className="border-b border-amber-200/10 px-6 py-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-serif text-2xl font-semibold">{t("editRequests.incomingTitle")}</h2>
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("editRequests.incomingTitle")}</h2>
+            <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest">
               {t("editRequests.pendingCount", { count: pendingCount })}
             </span>
           </div>
@@ -338,23 +338,24 @@ export default function EditRequestsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("editRequests.searchPlaceholder")}
+              className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
             />
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | "pending" | "approved" | "rejected")}
-              className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
             >
-              <option value="all">{t("editRequests.filters.all")}</option>
-              <option value="pending">{t("editRequests.filters.pending")}</option>
-              <option value="approved">{t("editRequests.filters.approved")}</option>
-              <option value="rejected">{t("editRequests.filters.rejected")}</option>
+              <option value="all" className="bg-stone-900">{t("editRequests.filters.all")}</option>
+              <option value="pending" className="bg-stone-900">{t("editRequests.filters.pending")}</option>
+              <option value="approved" className="bg-stone-900">{t("editRequests.filters.approved")}</option>
+              <option value="rejected" className="bg-stone-900">{t("editRequests.filters.rejected")}</option>
             </select>
-            <Button variant="outline" onClick={() => void refresh()}>
+            <Button variant="outline" onClick={() => void refresh()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
               {t("common.refresh")}
             </Button>
           </div>
           {loadError ? (
-            <div className="mt-4 rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+            <div className="mt-4 rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
               {loadError}
             </div>
           ) : null}
@@ -363,7 +364,7 @@ export default function EditRequestsPage() {
           {loading ? (
             <div className="space-y-4 p-6">
               {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-24 w-full rounded-[1.5rem]" />
+                <Skeleton key={index} className="h-24 w-full rounded-[1.5rem] bg-stone-950/40" />
               ))}
             </div>
           ) : visibleRows.length === 0 ? (
@@ -372,64 +373,65 @@ export default function EditRequestsPage() {
                 icon={FilePenLine}
                 title={t("editRequests.emptyTitle")}
                 description={t("editRequests.emptyDescription")}
+                className="bg-transparent border-0"
               />
             </div>
           ) : (
             visibleRows.map((row) => (
-              <div key={row.id} className="border-b border-border/40 px-6 py-5 last:border-b-0">
+              <div key={row.id} className="border-b border-amber-200/10 px-6 py-5 last:border-b-0 hover:bg-stone-800/30 transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium">{row.requestedBy}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{row.requestedByEmail}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="font-bold text-stone-200 uppercase tracking-tight">{row.requestedBy}</p>
+                    <p className="mt-1 text-xs text-stone-500 font-medium">{row.requestedByEmail}</p>
+                    <p className="mt-1 text-[10px] font-bold text-stone-600 uppercase tracking-widest">
                       {row.dealNumber ? `${t("editRequests.dealReference")}: ${row.dealNumber}` : t("editRequests.withoutDeal")}
                       {row.targetEntryNumber ? ` / ${t("editRequests.entryReference")}: ${row.targetEntryNumber}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-[11px] font-medium ${
+                      className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest border ${
                         row.status === "approved"
-                          ? "bg-emerald-500/15 text-emerald-300"
+                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
                           : row.status === "rejected"
-                            ? "bg-rose-500/15 text-rose-300"
-                            : "bg-amber-500/15 text-amber-300"
+                            ? "border-red-500/20 bg-red-500/10 text-red-400"
+                            : "border-amber-500/20 bg-amber-500/10 text-amber-200"
                       }`}
                     >
                       {formatStatus(row.status)}
                     </span>
-                    <Send className="h-4 w-4 text-primary" />
+                    <Send className="h-4 w-4 text-amber-500" />
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{row.reason}</p>
+                <p className="mt-3 text-sm leading-7 text-stone-400 font-medium">{row.reason}</p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("editRequests.oldValue")}</p>
+                  <div className="rounded-[1.15rem] border border-amber-200/10 bg-stone-950/40 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("editRequests.oldValue")}</p>
                     {renderEditValueSummary(row.oldValue || {})}
                   </div>
-                  <div className="rounded-[1.15rem] bg-secondary/20 p-4">
-                    <p className="text-xs text-muted-foreground">{t("editRequests.proposedValue")}</p>
+                  <div className="rounded-[1.15rem] border border-amber-200/10 bg-stone-950/40 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("editRequests.proposedValue")}</p>
                     {renderEditValueSummary(row.proposedValue || {})}
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap items-center gap-4">
                   {row.dealNumber ? (
-                    <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-xs font-medium text-primary hover:underline">
+                    <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors">
                       {t("editRequests.openDeal")}
                     </Link>
                   ) : null}
                   {row.financialEntryId ? (
                     <Link
                       to={`/dashboard/accounting${row.dealNumber ? `?deal=${row.dealNumber}` : ""}`}
-                      className="text-xs font-medium text-primary hover:underline"
+                      className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
                     >
                       {t("editRequests.openAccounting")}
                     </Link>
                   ) : null}
-                  <p className="text-xs text-muted-foreground">{new Date(row.submittedAt).toLocaleString(locale)}</p>
+                  <p className="text-[10px] font-bold text-stone-600 uppercase tracking-widest ml-auto">{new Date(row.submittedAt).toLocaleString(locale)}</p>
                 </div>
                 {row.reviewedAt ? (
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-2 text-[10px] font-bold text-stone-600 uppercase tracking-widest">
                     {row.reviewerName
                       ? t("editRequests.reviewedBy", { name: row.reviewerName, date: new Date(row.reviewedAt).toLocaleString(locale) })
                       : t("editRequests.reviewedGeneric", { date: new Date(row.reviewedAt).toLocaleString(locale) })}
@@ -437,19 +439,20 @@ export default function EditRequestsPage() {
                   </p>
                 ) : null}
                 {row.status === "pending" && canManageFinancialEditRequests ? (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-3 pt-4 border-t border-amber-200/10">
                     <Textarea
                       rows={3}
                       value={reviewNotes[row.id] || ""}
                       onChange={(event) => setReviewNotes((currentNotes) => ({ ...currentNotes, [row.id]: event.target.value }))}
                       placeholder={t("editRequests.reviewPlaceholder")}
+                      className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                     />
                     <div className="flex flex-wrap gap-3">
                       <Button
-                        variant="gold"
                         size="sm"
                         disabled={updatingId === row.id}
                         onClick={() => handleStatusUpdate(row.id, "approved")}
+                        className="bg-emerald-600 text-stone-950 font-bold hover:bg-emerald-500"
                       >
                         {updatingId === row.id ? t("editRequests.updating") : t("editRequests.approve")}
                       </Button>
@@ -458,6 +461,7 @@ export default function EditRequestsPage() {
                         size="sm"
                         disabled={updatingId === row.id}
                         onClick={() => handleStatusUpdate(row.id, "rejected")}
+                        className="border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                       >
                         {t("editRequests.reject")}
                       </Button>

@@ -127,14 +127,14 @@ const optionalQuery = async <T,>(
 };
 
 const statusBadgeClass = (value: string) => {
-  if (["critical", "rejected", "error"].includes(value)) return "border-rose-500/30 bg-rose-500/10 text-rose-300";
+  if (["critical", "rejected", "error"].includes(value)) return "border-red-500/30 bg-red-500/10 text-red-300";
   if (["warning", "pending"].includes(value)) return "border-amber-500/30 bg-amber-500/10 text-amber-300";
   if (["approved", "ok", "info"].includes(value)) return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
-  return "border-border bg-secondary/40 text-muted-foreground";
+  return "border-amber-200/10 bg-stone-800 text-stone-400";
 };
 
 const JsonBlock = ({ value }: { value: unknown }) => (
-  <pre className="max-h-56 overflow-auto rounded-xl bg-secondary/30 p-3 text-xs leading-5 text-muted-foreground">
+  <pre className="max-h-56 overflow-auto rounded-xl bg-stone-950/40 border border-amber-200/5 p-3 text-xs leading-5 text-stone-500 font-mono shadow-inner">
     {formatJson(value)}
   </pre>
 );
@@ -151,13 +151,13 @@ const FilterInput = ({
   type?: "text" | "date";
 }) => (
   <div className="relative">
-    {type === "text" ? <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" /> : null}
+    {type === "text" ? <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-stone-500" /> : null}
     <Input
       type={type}
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className={type === "text" ? "pl-9" : undefined}
+      className={`${type === "text" ? "pl-9" : ""} bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20`}
     />
   </div>
 );
@@ -346,17 +346,17 @@ export default function SystemControlsPage() {
   return (
     <div className="space-y-5">
       {!isSupabaseConfigured ? <ProductionFallbackCard kind="backend" /> : null}
-      <BentoCard className="space-y-4">
+      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="whitespace-normal text-xs font-semibold text-primary/80">Admin systems</p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold">Security, Rules, Audit, and Health</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+            <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Admin systems</p>
+            <h2 className="mt-2 font-serif text-3xl font-semibold text-stone-100">Security, Rules, Audit, and Health</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400">
               Monitor protected backend systems, review operational events, and manage configurable business rules.
             </p>
           </div>
-          <Button variant="outline" onClick={() => void refresh()} disabled={loading}>
-            <RefreshCw className={loading ? "animate-spin" : undefined} />
+          <Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+            <RefreshCw className={`me-2 h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
             Refresh
           </Button>
         </div>
@@ -369,16 +369,16 @@ export default function SystemControlsPage() {
       </BentoCard>
 
       <Tabs defaultValue="rules" className="space-y-4">
-        <TabsList className="h-auto flex-wrap justify-start">
-          <TabsTrigger value="rules">Business Rules</TabsTrigger>
-          <TabsTrigger value="security">Security Audit</TabsTrigger>
-          <TabsTrigger value="events">System Events</TabsTrigger>
-          <TabsTrigger value="health">Health</TabsTrigger>
-          <TabsTrigger value="finance">Financial Corrections</TabsTrigger>
+        <TabsList className="h-auto flex-wrap justify-start bg-stone-900/50 border border-amber-200/10 p-1">
+          <TabsTrigger value="rules" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Business Rules</TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Security Audit</TabsTrigger>
+          <TabsTrigger value="events" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">System Events</TabsTrigger>
+          <TabsTrigger value="health" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Health</TabsTrigger>
+          <TabsTrigger value="finance" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Financial Corrections</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rules">
-          <BentoCard className="space-y-4">
+          <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={SlidersHorizontal}
               title="Business Rules Management"
@@ -388,24 +388,24 @@ export default function SystemControlsPage() {
             {loading ? (
               <LoadingRows />
             ) : filteredRules.length === 0 ? (
-              <EmptyState icon={SlidersHorizontal} title="No business rules found" description="No matching rules are available." />
+              <EmptyState icon={SlidersHorizontal} title="No business rules found" description="No matching rules are available." className="bg-transparent border-0" />
             ) : (
               <div className="space-y-3">
                 {filteredRules.map((rule) => (
-                  <div key={rule.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                  <div key={rule.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_220px_minmax(260px,0.9fr)_auto] xl:items-start">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="break-words font-mono text-sm font-semibold [overflow-wrap:anywhere]">{rule.rule_key}</p>
-                          <Badge variant="outline">{rule.rule_group}</Badge>
+                          <p className="break-words font-mono text-sm font-semibold text-amber-200 [overflow-wrap:anywhere]">{rule.rule_key}</p>
+                          <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{rule.rule_group}</Badge>
                           <Badge className={statusBadgeClass(rule.severity)} variant="outline">
                             {rule.severity}
                           </Badge>
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">
                           {rule.description || "No description provided."}
                         </p>
-                        <p className="mt-2 text-xs text-muted-foreground">Updated {dateTime(rule.updated_at)}</p>
+                        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Updated {dateTime(rule.updated_at)}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <Switch
@@ -413,7 +413,7 @@ export default function SystemControlsPage() {
                           disabled={!canManageRules || savingRuleId === rule.id}
                           onCheckedChange={(checked) => void updateRule(rule, { enabled: checked })}
                         />
-                        <span className="text-sm text-muted-foreground">{rule.enabled ? "Enabled" : "Disabled"}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-stone-500">{rule.enabled ? "Enabled" : "Disabled"}</span>
                       </div>
                       <div className="space-y-3">
                         <Select
@@ -429,12 +429,12 @@ export default function SystemControlsPage() {
                             }))
                           }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
                             <SelectValue placeholder="Severity" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
                             {severityOptions.map((severity) => (
-                              <SelectItem key={severity} value={severity}>
+                              <SelectItem key={severity} value={severity} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">
                                 {severity}
                               </SelectItem>
                             ))}
@@ -453,13 +453,14 @@ export default function SystemControlsPage() {
                               },
                             }))
                           }
-                          className="font-mono text-xs"
+                          className="font-mono text-xs bg-stone-950/40 border-amber-200/10 text-stone-300 focus:ring-amber-500/20"
                         />
                       </div>
                       <Button
                         variant="gold"
                         disabled={!canManageRules || savingRuleId === rule.id}
                         onClick={() => void saveRuleDraft(rule)}
+                        className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
                       >
                         {savingRuleId === rule.id ? "Saving" : "Save"}
                       </Button>
@@ -472,7 +473,7 @@ export default function SystemControlsPage() {
         </TabsContent>
 
         <TabsContent value="security">
-          <BentoCard className="space-y-4">
+          <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={ShieldCheck}
               title="Security Audit Events"
@@ -506,18 +507,18 @@ export default function SystemControlsPage() {
               rows={filteredSecurityEvents}
               emptyTitle="No security audit events found"
               render={(event) => (
-                <div key={event.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                <div key={event.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <p className="font-mono text-sm font-semibold">{event.action}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="font-mono text-sm font-semibold text-amber-200 uppercase tracking-tight">{event.action}</p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">
                         {event.entity_type}
                         {event.entity_id ? ` / ${event.entity_id}` : ""}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{event.actor_role || "unknown role"}</Badge>
-                      <Badge variant="outline">{dateTime(event.created_at)}</Badge>
+                      <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{event.actor_role || "unknown role"}</Badge>
+                      <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{dateTime(event.created_at)}</Badge>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -530,7 +531,7 @@ export default function SystemControlsPage() {
         </TabsContent>
 
         <TabsContent value="events">
-          <BentoCard className="space-y-4">
+          <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={Activity}
               title="System Events"
@@ -541,13 +542,13 @@ export default function SystemControlsPage() {
                 value={systemFilters.severity}
                 onValueChange={(value) => setSystemFilters((current) => ({ ...current, severity: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
                   <SelectValue placeholder="Severity" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All severities</SelectItem>
+                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
+                  <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">All severities</SelectItem>
                   {severityOptions.map((severity) => (
-                    <SelectItem key={severity} value={severity}>
+                    <SelectItem key={severity} value={severity} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">
                       {severity}
                     </SelectItem>
                   ))}
@@ -575,20 +576,20 @@ export default function SystemControlsPage() {
               rows={filteredSystemEvents}
               emptyTitle="No system events found"
               render={(event) => (
-                <div key={event.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                <div key={event.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-mono text-sm font-semibold">{event.event_type}</p>
+                        <p className="font-mono text-sm font-semibold text-stone-200">{event.event_type}</p>
                         <Badge className={statusBadgeClass(event.severity)} variant="outline">
                           {event.severity}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{event.message}</p>
+                      <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{event.message}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{event.source}</Badge>
-                      <Badge variant="outline">{dateTime(event.created_at)}</Badge>
+                      <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{event.source}</Badge>
+                      <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{dateTime(event.created_at)}</Badge>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -601,34 +602,34 @@ export default function SystemControlsPage() {
         </TabsContent>
 
         <TabsContent value="health">
-          <BentoCard className="space-y-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <SectionHeader
                 icon={Database}
                 title="System Health Snapshots"
                 description="Capture and review lightweight database health counts."
               />
-              <Button variant="gold" disabled={capturingHealth} onClick={() => void captureHealthSnapshot()}>
-                <ClipboardCheck />
+              <Button variant="gold" disabled={capturingHealth} onClick={() => void captureHealthSnapshot()} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+                <ClipboardCheck className="me-2 h-4 w-4" />
                 {capturingHealth ? "Capturing" : "Capture Snapshot"}
               </Button>
             </div>
             {loading ? (
               <LoadingRows />
             ) : healthSnapshots.length === 0 ? (
-              <EmptyState icon={Database} title="No health snapshots found" description="Capture a snapshot to start tracking counts." />
+              <EmptyState icon={Database} title="No health snapshots found" description="Capture a snapshot to start tracking counts." className="bg-transparent border-0" />
             ) : (
               <div className="grid gap-3 xl:grid-cols-2">
                 {healthSnapshots.map((snapshot) => (
-                  <div key={snapshot.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                  <div key={snapshot.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline">{snapshot.snapshot_type}</Badge>
+                        <Badge variant="outline" className="border-stone-700 text-stone-500 font-bold uppercase tracking-widest text-[10px]">{snapshot.snapshot_type}</Badge>
                         <Badge className={statusBadgeClass(snapshot.status)} variant="outline">
                           {snapshot.status}
                         </Badge>
                       </div>
-                      <span className="text-xs text-muted-foreground">{dateTime(snapshot.created_at)}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{dateTime(snapshot.created_at)}</span>
                     </div>
                     <JsonBlock value={snapshot.metrics} />
                   </div>
@@ -639,7 +640,7 @@ export default function SystemControlsPage() {
         </TabsContent>
 
         <TabsContent value="finance">
-          <BentoCard className="space-y-4">
+          <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={FilePenLine}
               title="Financial Edit Requests / Correction History"
@@ -647,14 +648,14 @@ export default function SystemControlsPage() {
             />
             <div className="max-w-xs">
               <Select value={financeStatusFilter} onValueChange={setFinanceStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
+                  <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">All statuses</SelectItem>
+                  <SelectItem value="pending" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Pending</SelectItem>
+                  <SelectItem value="approved" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Approved</SelectItem>
+                  <SelectItem value="rejected" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -665,25 +666,26 @@ export default function SystemControlsPage() {
                 icon={FilePenLine}
                 title="No financial correction history found"
                 description="Financial edit requests and correction entries will appear here after the correction workflow is used."
+                className="bg-transparent border-0"
               />
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
                 <div className="space-y-3">
-                  <h3 className="font-serif text-xl font-semibold">Edit Requests</h3>
+                  <h3 className="font-serif text-xl font-semibold text-stone-100">Edit Requests</h3>
                   {filteredFinancialRequests.map((request) => (
-                    <div key={request.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                    <div key={request.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="break-words font-mono text-sm font-semibold [overflow-wrap:anywhere]">{request.financial_entry_id || request.id}</p>
+                        <p className="break-words font-mono text-sm font-semibold text-stone-200 [overflow-wrap:anywhere]">{request.financial_entry_id || request.id}</p>
                         <Badge className={statusBadgeClass(request.status)} variant="outline">
                           {request.status}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">
                         {request.request_reason || request.reason || "No reason recorded."}
                       </p>
-                      <p className="mt-2 text-xs text-muted-foreground">Created {dateTime(request.created_at)}</p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Created {dateTime(request.created_at)}</p>
                       {request.reviewed_at ? (
-                        <p className="mt-1 text-xs text-muted-foreground">Reviewed {dateTime(request.reviewed_at)}</p>
+                        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-600">Reviewed {dateTime(request.reviewed_at)}</p>
                       ) : null}
                       <div className="mt-3">
                         <JsonBlock value={request.proposed_changes || request.proposed_value} />
@@ -692,18 +694,18 @@ export default function SystemControlsPage() {
                   ))}
                 </div>
                 <div className="space-y-3">
-                  <h3 className="font-serif text-xl font-semibold">Correction Entries</h3>
+                  <h3 className="font-serif text-xl font-semibold text-stone-100">Correction Entries</h3>
                   {financialCorrections.map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-border/60 bg-secondary/10 p-4">
+                    <div key={entry.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-mono text-sm font-semibold">{entry.entry_number || entry.id}</p>
-                        <Badge variant="outline">
+                        <p className="font-mono text-sm font-semibold text-amber-200">{entry.entry_number || entry.id}</p>
+                        <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/5 text-emerald-300 font-bold">
                           {entry.amount ?? 0} {entry.currency || ""}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{entry.category || "No category"}</p>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{entry.note || "No note recorded."}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">Created {dateTime(entry.created_at)}</p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">{entry.category || "No category"}</p>
+                      <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{entry.note || "No note recorded."}</p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Created {dateTime(entry.created_at)}</p>
                     </div>
                   ))}
                 </div>
@@ -725,14 +727,14 @@ const MetricTile = ({
   label: string;
   value: number;
 }) => (
-  <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+  <div className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold">{value}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{label}</p>
+        <p className="text-xl font-bold text-stone-200">{value}</p>
       </div>
     </div>
   </div>
@@ -748,12 +750,12 @@ const SectionHeader = ({
   description: string;
 }) => (
   <div className="flex items-start gap-3">
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
       <Icon className="h-5 w-5" />
     </div>
     <div>
-      <h3 className="font-serif text-2xl font-semibold">{title}</h3>
-      <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+      <h3 className="font-serif text-2xl font-semibold text-stone-100">{title}</h3>
+      <p className="mt-1 text-sm leading-7 text-stone-500 font-medium">{description}</p>
     </div>
   </div>
 );
@@ -761,7 +763,7 @@ const SectionHeader = ({
 const LoadingRows = () => (
   <div className="space-y-3">
     {Array.from({ length: 3 }).map((_, index) => (
-      <Skeleton key={index} className="h-28 rounded-2xl" />
+      <Skeleton key={index} className="h-28 rounded-2xl bg-stone-950/40" />
     ))}
   </div>
 );
