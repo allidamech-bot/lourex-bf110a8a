@@ -89,7 +89,7 @@ export default function RequestPage() {
   const productDisplayName = productSource ? (lang === "ar" ? productSource.nameAr : productSource.nameEn) : "";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
         title={lang === "ar" ? "إرسال طلب شراء" : "Submit Purchase Request"}
         description={
@@ -100,9 +100,9 @@ export default function RequestPage() {
       />
       <SiteHeader />
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.08),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.05),transparent_30%)]" />
         <div className="container relative mx-auto px-4 py-12 md:px-8 md:py-16">
-          <PageHelpBox pageKey="request" className="mb-8" />
+          <PageHelpBox pageKey="request" className="mb-8 opacity-80" />
           <div className="grid gap-10 xl:grid-cols-[0.95fr_1.05fr]">
             <div className="space-y-6">
               <SectionHeading
@@ -112,30 +112,30 @@ export default function RequestPage() {
               />
               <div className="grid gap-4">
                 {cards.map((item) => (
-                  <div key={item.title} className="rounded-[1.7rem] border border-primary/12 bg-card/90 p-5 shadow-[0_18px_42px_-34px_rgba(0,0,0,0.2)] dark:shadow-[0_18px_42px_-34px_rgba(0,0,0,0.48)]">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <div key={item.title} className="rounded-[1.7rem] border border-amber-200/15 bg-stone-50/5 p-5 shadow-2xl backdrop-blur-xl">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
                       <item.icon className="h-5 w-5" />
                     </div>
-                    <h3 className="mt-5 font-serif text-2xl font-semibold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.desc}</p>
+                    <h3 className="mt-5 font-serif text-2xl font-semibold text-stone-100">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-stone-400">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {loadingEditRequest ? (
-              <div className="rounded-[2rem] border border-border/60 bg-card/90 p-8 text-sm text-muted-foreground">
+              <div className="rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-8 text-sm text-stone-400 backdrop-blur-xl">
                 {t("common.loading") || "Loading..."}
               </div>
             ) : editRequestId && editRequestError ? (
-              <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-sm text-destructive">
+              <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-sm text-red-400">
                 {editRequestError}
               </div>
             ) : (
               <div className="space-y-4">
                 {isCatalogInspiredRequest ? (
-                  <div className="rounded-[1.6rem] border border-primary/20 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
-                    <p className="font-semibold text-foreground">
+                  <div className="rounded-[1.6rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
+                    <p className="font-semibold text-stone-100">
                       {lang === "ar" ? "إنشاء طلب توريد حر" : "Create a free-form sourcing request"}
                     </p>
                     <p className="mt-1">

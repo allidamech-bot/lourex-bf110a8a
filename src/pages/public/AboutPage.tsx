@@ -20,7 +20,7 @@ export default function AboutPage() {
         ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={lang === "ar" ? "عن Lourex" : "About Lourex"}
         description={lang === "ar" ? "تعرف على Lourex كمنصة وسيط عمليات تربط بين العملاء والشركاء في تركيا والسعودية." : "Learn about Lourex as an intermediary operations platform connecting customers with partners in Turkey and Saudi Arabia."}
@@ -38,7 +38,7 @@ export default function AboutPage() {
         />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {items.map((item) => (
-            <div key={item} className="rounded-3xl border border-border/60 bg-card p-6 text-sm leading-7 text-muted-foreground">
+            <div key={item} className="rounded-3xl border border-amber-200/15 bg-stone-50/5 p-6 text-sm leading-7 text-stone-400 backdrop-blur-xl">
               {item}
             </div>
           ))}
