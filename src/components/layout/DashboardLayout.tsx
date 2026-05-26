@@ -1,6 +1,7 @@
 import {
   Activity,
   BarChart3,
+  BellRing,
   Boxes,
   BrainCircuit,
   ClipboardList,
@@ -42,6 +43,7 @@ export const DashboardLayout = () => {
     { to: "/dashboard/settlements", label: t("dashboardNav.settlements"), icon: Scale, roles: dashboardRoutePermissions.settlements },
     { to: "/dashboard/audit", label: t("dashboardNav.audit"), icon: ShieldCheck, roles: dashboardRoutePermissions.audit },
     { to: "/dashboard/reports", label: t("dashboardNav.reports"), icon: BarChart3, roles: dashboardRoutePermissions.reports },
+    { to: "/dashboard/notifications", label: lang === "ar" ? "الإشعارات" : "Notifications", icon: BellRing, roles: dashboardRoutePermissions.system },
     { to: "/dashboard/system", label: t("dashboardNav.system"), icon: SlidersHorizontal, roles: dashboardRoutePermissions.system },
     {
       to: "/dashboard/health",
