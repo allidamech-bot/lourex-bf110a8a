@@ -54,6 +54,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const CustomerPortal = lazy(() => import("@/pages/customer/CustomerPortal"));
 const CustomerOperationsPage = lazy(() => import("@/pages/customer/CustomerOperationsPage"));
 const CustomerRequestsPage = lazy(() => import("@/pages/customer/CustomerRequestsPage"));
+const CustomerRequestDetailProPage = lazy(() => import("@/pages/customer/CustomerRequestDetailProPage"));
 const CustomerTrackingPage = lazy(() => import("@/pages/customer/CustomerTrackingPage"));
 const CustomerNotificationsPage = lazy(() => import("@/pages/customer/CustomerNotificationsPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -168,6 +169,7 @@ const App = () => (
                                         <Route index element={<PageWithAI component={<CustomerPortal />} />} />
                                         <Route path="operations" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerOperationsPage />} /></ProtectedRoute>} />
                                         <Route path="requests" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerRequestsPage />} /></ProtectedRoute>} />
+                                        <Route path="request-detail" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerRequestDetailProPage />} /></ProtectedRoute>} />
                                         <Route path="tracking" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerTrackingPage />} /></ProtectedRoute>} />
                                         <Route path="notifications" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerNotificationsPage />} /></ProtectedRoute>} />
                                     </Route>
