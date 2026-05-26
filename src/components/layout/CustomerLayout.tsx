@@ -1,4 +1,4 @@
-import { BellRing, ClipboardList, LayoutDashboard, Route } from "lucide-react";
+import { BellRing, ClipboardList, LayoutDashboard, Radar, Route } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +13,11 @@ export const CustomerLayout = () => {
       label: isRtl ? "الرئيسية" : "Overview",
       icon: LayoutDashboard,
       end: true,
+    },
+    {
+      to: "/customer-portal/operations",
+      label: isRtl ? "مركز العمليات" : "Operations",
+      icon: Radar,
     },
     {
       to: "/customer-portal/requests",
