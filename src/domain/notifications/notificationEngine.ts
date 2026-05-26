@@ -65,6 +65,16 @@ export type NotificationDeliveryQueueRow = {
   updated_at: string;
 };
 
+type AuditLogRow = {
+  id: string;
+  action: string;
+  table_name?: string | null;
+  record_id?: string | null;
+  old_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export type NotificationEngineReport = {
   available: boolean;
   migrationlessMode: boolean;
@@ -201,6 +211,86 @@ const builtinTemplates: NotificationTemplateRow[] = [
   },
 ];
 
+const asObject = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+
+const asString = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
+
+const buildAuditBackedNotificationEvents = (auditRows: AuditLogRow[]): NotificationEventRow[] =>
+  auditRows
+    .map((row): NotificationEventRow | null => {
+      const newValues = asObject(row.new_values);
+      const oldValues = asObject(row.old_values);
+      const requestId = asString(newValues.request_id) || asString(row.record_id);
+      const dealId = asString(newValues.deal_id);
+      const trackingId = asString(newValues.tracking_id);
+
+      if (row.action === "purchase_request.status_updated") {
+        return {
+          id: `audit-${row.id}`,
+          event_type: "order_stage_changed",
+          customer_id: null,
+          order_id: dealId || requestId,
+          tracking_id: null,
+          channel_hint: "both",
+          metadata: {
+            source: "audit_logs",
+            action: row.action,
+            request_id: requestId,
+            request_number: asString(newValues.request_number),
+            old_status: asString(oldValues.status),
+            new_status: asString(newValues.status),
+            entity_label: asString(newValues.entity_label),
+          },
+          status: "logged",
+          template_key: "order_stage_changed_email_en",
+          delivery_status: "provider_not_configured",
+          created_at: row.created_at,
+          updated_at: row.created_at,
+        };
+      }
+
+      if (row.action === "tracking.updated") {
+        return {
+          id: `audit-${row.id}`,
+          event_type: "shipment_status_changed",
+          customer_id: null,
+          order_id: dealId,
+          tracking_id: trackingId,
+          channel_hint: "both",
+          metadata: {
+            source: "audit_logs",
+            action: row.action,
+            shipment_id: asString(newValues.shipment_id),
+            deal_id: dealId,
+            tracking_id: trackingId,
+            old_stage: asString(oldValues.stage_code),
+            new_stage: asString(newValues.stage_code),
+            customer_note: asString(newValues.customer_note),
+            entity_label: asString(newValues.entity_label),
+          },
+          status: "logged",
+          template_key: "shipment_status_changed_email_en",
+          delivery_status: "provider_not_configured",
+          created_at: row.created_at,
+          updated_at: row.created_at,
+        };
+      }
+
+      return null;
+    })
+    .filter((item): item is NotificationEventRow => Boolean(item));
+
+const dedupeEvents = (events: NotificationEventRow[]) => {
+  const seen = new Set<string>();
+  return events.filter((event) => {
+    const key = `${event.id}:${event.event_type}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const buildVirtualQueueFromEvents = (events: NotificationEventRow[]): NotificationDeliveryQueueRow[] =>
   events.map((event) => {
     const metadata = event.metadata || {};
@@ -220,13 +310,15 @@ const buildVirtualQueueFromEvents = (events: NotificationEventRow[]): Notificati
         order_id: event.order_id,
         tracking_id: event.tracking_id,
         metadata,
-        source: "notification_events_fallback",
+        source: metadata.source || "notification_events_fallback",
       },
       status: providerConfigured ? "queued" : "provider_not_configured",
       provider: providerConfigured ? "ready_for_provider" : null,
       attempt_count: 0,
       max_attempts: 3,
-      last_error: providerConfigured ? null : "External delivery provider is not configured yet. Event is safely logged in notification_events.",
+      last_error: providerConfigured
+        ? null
+        : "External delivery provider is not configured yet. Event is safely visible in migrationless notification mode.",
       scheduled_for: event.created_at,
       sent_at: null,
       created_at: event.created_at,
@@ -252,7 +344,7 @@ const optionalList = async <T extends Record<string, unknown>>(
 };
 
 export const loadNotificationEngineReport = async (): Promise<NotificationEngineReport> => {
-  const [settings, storedTemplates, events, storedQueue] = await Promise.all([
+  const [settings, storedTemplates, notificationEvents, auditRows, storedQueue] = await Promise.all([
     optionalList<NotificationSettingRow>("notification_settings", () =>
       notificationsDb.from<NotificationSettingRow>("notification_settings").select("*").order("setting_key"),
     ),
@@ -262,11 +354,22 @@ export const loadNotificationEngineReport = async (): Promise<NotificationEngine
     optionalList<NotificationEventRow>("notification_events", () =>
       notificationsDb.from<NotificationEventRow>("notification_events").select("*").order("created_at", { ascending: false }).limit(50),
     ),
+    optionalList<AuditLogRow>("audit_logs", () =>
+      notificationsDb
+        .from<AuditLogRow>("audit_logs")
+        .select("id, action, table_name, record_id, old_values, new_values, created_at")
+        .order("created_at", { ascending: false })
+        .limit(80),
+    ),
     optionalList<NotificationDeliveryQueueRow>("notification_delivery_queue", () =>
       notificationsDb.from<NotificationDeliveryQueueRow>("notification_delivery_queue").select("*").order("created_at", { ascending: false }).limit(50),
     ),
   ]);
 
+  const auditBackedEvents = buildAuditBackedNotificationEvents(auditRows);
+  const events = dedupeEvents([...notificationEvents, ...auditBackedEvents]).sort(
+    (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
+  );
   const templates = storedTemplates.length > 0 ? storedTemplates : builtinTemplates;
   const queue = storedQueue.length > 0 ? storedQueue : buildVirtualQueueFromEvents(events);
   const migrationlessMode = storedTemplates.length === 0 || storedQueue.length === 0 || settings.length === 0;
