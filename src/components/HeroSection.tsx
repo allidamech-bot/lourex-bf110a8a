@@ -41,17 +41,17 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen overflow-hidden pt-20">
       <div className="absolute inset-0">
-        <img src={heroImg} alt="Lourex operations" className="h-full w-full object-cover" width={1920} height={1080} />
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,16,29,0.94)_8%,rgba(10,21,38,0.88)_45%,rgba(248,249,251,0.16)_100%)] dark:bg-[linear-gradient(115deg,rgba(5,10,18,0.98)_8%,rgba(11,19,31,0.92)_45%,rgba(12,18,27,0.45)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(212,175,55,0.14),transparent_30%),radial-gradient(circle_at_80%_15%,rgba(255,255,255,0.08),transparent_18%)]" />
+        <img src={heroImg} alt="Lourex operations" className="h-full w-full object-cover grayscale-[0.4]" width={1920} height={1080} />
+        <div className="absolute inset-0 bg-stone-950/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(251,191,36,0.08),transparent_30%),radial-gradient(circle_at_80%_15%,rgba(255,255,255,0.03),transparent_18%)]" />
       </div>
 
       <div className="container relative z-10 mx-auto px-4 pb-16 pt-16 md:px-8 md:pt-24">
         <div className="grid items-end gap-12 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="max-w-4xl">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-background/50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary backdrop-blur">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+              <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-amber-500/30 bg-stone-900/50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-amber-500 backdrop-blur">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
                 {t("home.hero.eyebrow")}
               </div>
             </motion.div>
@@ -60,10 +60,10 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.08 }}
-              className="font-serif text-4xl font-bold leading-[1.08] text-foreground md:text-6xl xl:text-7xl"
+              className="font-serif text-4xl font-bold leading-[1.08] text-stone-100 md:text-6xl xl:text-7xl"
             >
               {t("home.hero.titlePrefix")}
-              <span className="text-primary">
+              <span className="text-amber-500">
                 {t("home.hero.titleGradient")}
               </span>
               {t("home.hero.titleSuffix")}
@@ -73,7 +73,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.16 }}
-              className="mt-7 max-w-2xl text-lg leading-8 text-foreground/80 md:text-xl"
+              className="mt-7 max-w-2xl text-lg leading-8 text-stone-300 md:text-xl"
             >
               {t("home.hero.description")}
             </motion.p>
@@ -84,7 +84,7 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.24 }}
               className="mt-10 flex flex-wrap gap-4"
             >
-              <Button variant="default" size="lg" className="px-8 text-base font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]" asChild>
+              <Button variant="default" size="lg" className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 px-8 text-base font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110" asChild>
                 <Link to="/request">
                   {t("home.hero.ctaRequest")}
                   <ArrowRight className="ms-2 h-4 w-4" />
@@ -93,7 +93,7 @@ const HeroSection = () => {
               <Button
                 variant="outline"
                 size="lg"
-                className="border-border/80 bg-background/60 px-8 text-base text-foreground hover:bg-background/80"
+                className="border-amber-200/20 bg-stone-900/40 px-8 text-base text-stone-100 hover:bg-stone-900/60"
                 asChild
               >
                 <Link to="/track">{t("home.hero.ctaTrack")}</Link>
@@ -105,24 +105,24 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.18 }}
-            className="rounded-[2rem] border border-border/60 bg-card/85 p-6 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_30px_90px_-30px_rgba(0,0,0,0.65)]"
+            className="rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-6 shadow-2xl backdrop-blur-xl"
           >
             <div className="grid gap-4">
-              <div className="rounded-[1.5rem] border border-primary/20 bg-background/70 p-5 dark:bg-black/20">
+              <div className="rounded-[1.5rem] border border-amber-500/20 bg-stone-900/50 p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-500">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-stone-400">
                       {t("home.hero.controlTitle")}
                     </p>
-                    <p className="font-serif text-2xl font-semibold text-foreground">
+                    <p className="font-serif text-2xl font-semibold text-stone-100">
                       {t("home.hero.controlSubtitle")}
                     </p>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                <p className="mt-4 text-sm leading-7 text-stone-400">
                   {t("home.hero.controlDescription")}
                 </p>
               </div>
@@ -134,13 +134,13 @@ const HeroSection = () => {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.32 + index * 0.08 }}
-                    className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4 dark:border-white/10 dark:bg-black/15"
+                    className="rounded-[1.4rem] border border-amber-200/10 bg-stone-900/50 p-4"
                   >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_10px_rgba(212,166,58,0.1)]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-500">
                       <stat.icon className="h-5 w-5" />
                     </div>
-                    <p className="mt-5 font-serif text-xl font-semibold text-foreground">{stat.value}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{stat.label}</p>
+                    <p className="mt-5 font-serif text-xl font-semibold text-stone-100">{stat.value}</p>
+                    <p className="mt-2 text-sm leading-6 text-stone-400">{stat.label}</p>
                   </motion.div>
                 ))}
               </div>

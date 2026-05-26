@@ -34,6 +34,7 @@ export const SiteHeader = () => {
   const publicLinks = useMemo(
       () => [
         { to: "/", label: t("nav.home") },
+        { to: "/products", label: lang === "ar" ? "المنتجات" : "Products" },
         { to: "/request", label: t("nav.purchaseRequest") },
         {
           to: usesDashboardWorkspace
@@ -41,7 +42,7 @@ export const SiteHeader = () => {
               : isCustomer
                   ? "/customer-portal/requests#requests"
                   : "/auth",
-          label: t("customerPortal.actions.requests.title"),
+          label: lang === "ar" ? "طلباتي" : "My Requests",
         },
         {
           to: usesDashboardWorkspace
@@ -49,12 +50,12 @@ export const SiteHeader = () => {
               : isCustomer
                   ? "/customer-portal/tracking"
                   : "/track",
-          label: t("customerPortal.actions.tracking.title"),
+          label: t("nav.trackShipment"),
         },
         { to: "/guidelines", label: t("nav.guidelines") },
         { to: "/contact", label: t("nav.contact") },
       ],
-      [isCustomer, t, usesDashboardWorkspace],
+      [isCustomer, lang, t, usesDashboardWorkspace],
   );
 
   const workspaceLabel = profile
@@ -86,7 +87,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="glass-topbar sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+          className="bg-stone-950/90 backdrop-blur-xl sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible border-b border-amber-200/15"
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
@@ -98,15 +99,15 @@ export const SiteHeader = () => {
                 onClick={() => setIsOpen(false)}
                 aria-label="Lourex home"
             >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
               <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
             </span>
-              <span className="min-w-0 truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
+              <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
             </Link>
 
             <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground shadow-sm transition-colors hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-blue-100"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/15 bg-stone-900 text-stone-100 transition-colors hover:bg-stone-800"
                 onClick={() => setIsOpen((value) => !value)}
                 aria-label={t("nav.menu")}
                 aria-expanded={isOpen}
@@ -127,10 +128,10 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
           >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
             <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
           </span>
-            <span className="font-serif text-xl font-bold text-foreground">LOUREX</span>
+            <span className="font-serif text-xl font-bold text-stone-100">LOUREX</span>
           </Link>
 
           <nav
@@ -143,8 +144,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                                ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
+                                : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
                         }`
                     }
                 >
@@ -159,8 +160,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                                ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
+                                : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
                         }`
                     }
                 >
@@ -169,7 +170,7 @@ export const SiteHeader = () => {
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-3 border-s border-white/10 ps-4">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-s border-amber-200/15 ps-4">
             <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
               {user ? <NotificationBell userId={user.id} /> : null}
 
@@ -180,7 +181,7 @@ export const SiteHeader = () => {
                   <>
                     <Link
                         to="/profile"
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-400/20 bg-blue-500/15 text-sm font-bold text-blue-100 transition hover:border-blue-300/50 hover:bg-blue-500/25"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200/20 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/20"
                         title={userName}
                     >
                       {userName.slice(0, 1).toUpperCase()}
@@ -189,7 +190,7 @@ export const SiteHeader = () => {
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="h-10 rounded-xl px-3 text-slate-300 hover:bg-blue-500/10 hover:text-white"
+                        className="h-10 rounded-xl px-3 text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
                         title={signOutLabel}
                     >
                       <LogOut className="h-4 w-4" />
@@ -199,7 +200,7 @@ export const SiteHeader = () => {
                   <Button
                       variant="default"
                       asChild
-                      className="h-10 rounded-xl bg-blue-600 px-5 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-500"
+                      className="h-10 rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 px-5 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110"
                   >
                     <Link to="/auth">{signInLabel}</Link>
                   </Button>
@@ -218,7 +219,7 @@ export const SiteHeader = () => {
                   onClick={() => setIsOpen(false)}
               />
               <div
-                  className={`absolute inset-y-0 ${isRtl ? "left-0" : "right-0"} flex h-[100dvh] w-[min(100vw,26rem)] max-w-full overflow-hidden border-white/10 bg-[#0B1220] shadow-2xl ${isRtl ? "border-r" : "border-l"}`}
+                  className={`absolute inset-y-0 ${isRtl ? "left-0" : "right-0"} flex h-[100dvh] w-[min(100vw,26rem)] max-w-full overflow-hidden border-amber-200/15 bg-stone-950 shadow-2xl ${isRtl ? "border-r" : "border-l"}`}
               >
               <div className="flex h-full w-full max-w-full min-w-0 flex-col overflow-y-auto overscroll-contain p-4 sm:p-5">
                 <div className="mb-8 flex items-center justify-between">
@@ -227,16 +228,16 @@ export const SiteHeader = () => {
                       className="flex min-w-0 shrink items-center gap-3"
                       onClick={() => setIsOpen(false)}
                   >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/40 bg-white/[0.04] shadow-[0_0_15px_rgba(212,166,58,0.15)]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900">
                   <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
                 </span>
-                    <span className="min-w-0 truncate font-serif text-xl font-bold text-foreground">LOUREX</span>
+                    <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
                   </Link>
 
                   <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="rounded-lg p-2 text-slate-400 hover:bg-white/5"
+                      className="rounded-lg p-2 text-stone-400 hover:bg-stone-800"
                       aria-label={t("common.close")}
                   >
                     <X size={20} />
@@ -247,15 +248,15 @@ export const SiteHeader = () => {
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="mb-6 block w-full max-w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 transition-colors hover:border-blue-400/40 hover:bg-blue-500/10"
+                        className="mb-6 block w-full max-w-full rounded-2xl border border-amber-200/15 bg-stone-900/50 px-4 py-4 transition-colors hover:bg-stone-800"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-base font-bold text-blue-100 ring-1 ring-blue-400/30">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-base font-bold text-amber-200 ring-1 ring-amber-500/20">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                          <p className="truncate text-xs text-slate-400">
+                          <p className="truncate text-sm font-semibold text-stone-100">{userName}</p>
+                          <p className="truncate text-xs text-stone-400">
                             {roleLabel || userEmail || workspaceLabel}
                           </p>
                         </div>
@@ -263,7 +264,7 @@ export const SiteHeader = () => {
                     </Link>
                 ) : null}
 
-                <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-amber-200/15 bg-stone-900/50 px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                   <ThemeToggle />
@@ -277,8 +278,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                               `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                                   isActive
-                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                                      ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
+                                      : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
                               }`
                           }
                       >
@@ -295,8 +296,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                               `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                                   isActive
-                                      ? "bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
-                                      : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                                      ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
+                                      : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
                               }`
                           }
                       >
@@ -306,12 +307,12 @@ export const SiteHeader = () => {
                   ))}
                 </nav>
 
-                <div className="mt-auto border-t border-white/5 pt-6">
+                <div className="mt-auto border-t border-amber-200/10 pt-6">
                   {isAuthenticated ? (
                       <button
                           type="button"
                           onClick={() => void handleLogout()}
-                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800 hover:text-stone-100"
                       >
                         <span>{signOutLabel}</span>
                         <LogOut className="h-4 w-4 opacity-70" />
@@ -320,7 +321,7 @@ export const SiteHeader = () => {
                       <Button
                           variant="default"
                           asChild
-                          className="h-11 w-full rounded-xl bg-blue-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400"
+                          className="h-11 w-full rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110"
                       >
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
                           {signInLabel}

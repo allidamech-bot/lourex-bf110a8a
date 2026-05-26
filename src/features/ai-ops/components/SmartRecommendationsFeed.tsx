@@ -22,23 +22,23 @@ export function SmartRecommendationsFeed({
   const t = labels[language];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+    <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 backdrop-blur-xl p-5 shadow-2xl">
       <div className="flex items-center gap-3">
-        <Lightbulb className="h-5 w-5 text-blue-200" />
-        <h3 className="font-serif text-xl font-semibold text-white">{t.title}</h3>
+        <Lightbulb className="h-5 w-5 text-amber-500" />
+        <h3 className="font-serif text-xl font-semibold text-stone-100">{t.title}</h3>
       </div>
       <div className="mt-4 space-y-3">
         {recommendations.length ? recommendations.map((item) => (
-          <div key={item.id} className="rounded-xl border border-white/10 bg-slate-950/35 p-4">
+          <div key={item.id} className="rounded-xl border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <p className="font-semibold text-white">{item.title}</p>
-              <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-100">{item.severity}</span>
+              <p className="font-bold text-stone-100 uppercase tracking-tight">{item.title}</p>
+              <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest">{item.severity}</span>
             </div>
-            <p className="mt-2 text-sm leading-6 text-slate-400">{item.detail}</p>
-            {item.relatedEntity ? <p className="mt-2 text-xs text-slate-500">{item.relatedEntity}</p> : null}
+            <p className="mt-2 text-sm leading-6 text-stone-400 font-medium">{item.detail}</p>
+            {item.relatedEntity ? <p className="mt-2 text-[10px] font-bold text-stone-500 uppercase tracking-widest">{item.relatedEntity}</p> : null}
           </div>
         )) : (
-          <p className="rounded-xl border border-white/10 bg-slate-950/35 p-4 text-sm text-slate-400">{t.empty}</p>
+          <p className="rounded-xl border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500 text-center font-medium">{t.empty}</p>
         )}
       </div>
     </div>

@@ -149,12 +149,12 @@ const RequestInfoTile = ({
   label: string;
   value: string;
 }) => (
-    <div className="w-full max-w-full min-w-0 rounded-[1rem] border border-border/50 bg-secondary/20 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
-      <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
-        <span className="text-primary">{icon}</span>
+    <div className="w-full max-w-full min-w-0 rounded-[1rem] border border-amber-200/10 bg-stone-900/50 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
+      <div className="flex min-w-0 items-center gap-2 text-[11px] text-stone-500 sm:text-xs">
+        <span className="text-amber-500">{icon}</span>
         <span className="min-w-0 break-words">{label}</span>
       </div>
-      <p className="mt-1 sm:mt-2 break-words text-[13px] sm:text-sm font-medium text-foreground">{value || "-"}</p>
+      <p className="mt-1 sm:mt-2 break-words text-[13px] sm:text-sm font-medium text-stone-200">{value || "-"}</p>
     </div>
 );
 
@@ -580,17 +580,17 @@ export default function CustomerRequestsPage() {
           <BentoCard className="flex max-w-full flex-col gap-4 overflow-hidden">
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0 max-w-full">
-                <p className="whitespace-normal text-[10px] font-semibold text-muted-foreground sm:text-xs">
+                <p className="whitespace-normal text-[10px] font-semibold text-stone-500 sm:text-xs">
                   {t("customerPortal.eyebrow")}
                 </p>
-                <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold">{t("customerPortal.title")}</h1>
+                <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold text-stone-100">{t("customerPortal.title")}</h1>
               </div>
 
               <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
-                <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing}>
-                  <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                  <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin text-amber-500" : "text-amber-500"}`} />
                 </Button>
-                <Button variant="gold" size="sm" asChild className="min-w-0 flex-1 sm:flex-none">
+                <Button asChild size="sm" className="min-w-0 flex-1 sm:flex-none bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
                   <Link to="/request">
                     <Plus className="me-2 h-4 w-4" />
                     {t("requests.new")}
@@ -600,7 +600,7 @@ export default function CustomerRequestsPage() {
             </div>
 
             {error ? (
-                <div className="flex items-start gap-2 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <div className="flex items-start gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -613,9 +613,9 @@ export default function CustomerRequestsPage() {
                 { label: t("requests.review"), value: requestMetrics.review },
                 { label: t("requests.converted"), value: requestMetrics.converted },
               ].map((item) => (
-                  <div key={item.label} className="min-w-0 rounded-2xl bg-secondary/20 p-3 text-center">
-                    <p className="text-lg sm:text-xl font-bold">{item.value}</p>
-                    <p className="mt-1 whitespace-normal text-[11px] leading-tight text-muted-foreground sm:text-[10px]">{item.label}</p>
+                  <div key={item.label} className="min-w-0 rounded-2xl bg-stone-900/50 border border-amber-200/10 p-3 text-center">
+                    <p className="text-lg sm:text-xl font-bold text-stone-100">{item.value}</p>
+                    <p className="mt-1 whitespace-normal text-[11px] leading-tight text-stone-500 sm:text-[10px]">{item.label}</p>
                   </div>
               ))}
             </div>
@@ -635,12 +635,12 @@ export default function CustomerRequestsPage() {
 
             <div className="shrink-0 space-y-3">
               <div className="relative">
-                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
                 <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={t("requests.searchPlaceholder")}
-                    className="ps-9"
+                    className="ps-9 bg-stone-900/70 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
                 />
               </div>
 
@@ -648,10 +648,14 @@ export default function CustomerRequestsPage() {
                 {requestFilters.map((filter) => (
                     <Button
                         key={filter.key}
-                        variant={activeFilter === filter.key ? "gold" : "outline"}
+                        variant={activeFilter === filter.key ? "default" : "outline"}
                         size="sm"
                         onClick={() => setActiveFilter(filter.key)}
-                        className="shrink-0 whitespace-nowrap"
+                        className={`shrink-0 whitespace-nowrap ${
+                          activeFilter === filter.key
+                          ? "bg-amber-500/10 text-amber-200 border-amber-500/30 hover:bg-amber-500/20"
+                          : "border-amber-200/15 bg-stone-50/5 text-stone-400 hover:bg-stone-50/10 hover:text-stone-100"
+                        }`}
                     >
                       {filter.label}
                     </Button>
@@ -665,6 +669,7 @@ export default function CustomerRequestsPage() {
                       icon={ClipboardList}
                       title={t("requests.emptyTitle")}
                       description={t("requests.emptyDescription")}
+                      className="bg-stone-900/50 border-amber-200/10"
                   />
               ) : (
                   filteredRows.map((row) => {
@@ -690,27 +695,27 @@ export default function CustomerRequestsPage() {
                             }}
                             className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-3 py-4 text-start transition-colors sm:px-4 ${
                                 isSelected
-                                    ? "border-primary/35 bg-primary/10"
-                                    : "border-border/60 bg-secondary/15 hover:border-primary/25"
+                                    ? "border-amber-500/35 bg-amber-500/10"
+                                    : "border-amber-200/10 bg-stone-900/50 hover:border-amber-500/25"
                             }`}
                         >
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
+                              <p className="whitespace-nowrap text-xs font-semibold text-stone-500">
                                 {row.requestNumber}
                               </p>
-                              <p className="mt-2 font-medium sm:truncate">
+                              <p className="mt-2 font-medium text-stone-100 sm:truncate">
                                 {row.productName || t("requests.genericRequest")}
                               </p>
                             </div>
 
-                            <span className={`max-w-full self-start truncate rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone}`}>
+                            <span className={`max-w-full self-start truncate rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone.replace('bg-secondary', 'bg-stone-800')}`}>
                           {t(`statuses.${row.status}`)}
                         </span>
                           </div>
 
                           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-stone-500">
                               <div className="flex items-center gap-1.5">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {formatDate(row.createdAt, locale)}
@@ -726,7 +731,7 @@ export default function CustomerRequestsPage() {
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 rounded-full"
+                                  className="h-8 w-8 rounded-full hover:bg-amber-500/10 hover:text-amber-200"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleEditRequest(row);
@@ -738,7 +743,7 @@ export default function CustomerRequestsPage() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 rounded-full text-rose-400 hover:bg-rose-500/10"
+                                className="h-8 w-8 rounded-full text-red-400 hover:bg-red-500/10"
                                 aria-label={removeActionLabel}
                                 title={removeActionLabel}
                                 onClick={(e) => {
@@ -764,12 +769,12 @@ export default function CustomerRequestsPage() {
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <div className="min-w-0 max-w-full">
                       <div className="flex min-w-0 items-center gap-2">
-                        <Package className="h-4 w-4 text-primary" />
-                        <p className="whitespace-normal text-xs font-semibold text-muted-foreground">
+                        <Package className="h-4 w-4 text-amber-500" />
+                        <p className="whitespace-normal text-xs font-semibold text-stone-500">
                           {selectedRow.requestNumber}
                         </p>
                       </div>
-                      <h2 className="mt-2 break-words font-serif text-xl sm:text-2xl lg:text-3xl font-semibold">
+                      <h2 className="mt-2 break-words font-serif text-xl sm:text-2xl lg:text-3xl font-semibold text-stone-100">
                         {selectedRow.productName || t("requests.genericRequest")}
                       </h2>
                     </div>
@@ -777,9 +782,9 @@ export default function CustomerRequestsPage() {
                     <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
                       {canResubmitRequest(selectedRow.status) && (
                           <Button
-                              variant="gold"
                               disabled={actionLoadingId === selectedRow.id}
                               onClick={() => handleResubmitRequest(selectedRow)}
+                              className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
                           >
                             {actionLoadingId === selectedRow.id ? (
                                 <RotateCcw className="me-2 h-4 w-4 animate-spin" />
@@ -791,7 +796,7 @@ export default function CustomerRequestsPage() {
                       )}
 
                       {canEditRequest(selectedRow.status) && (
-                          <Button variant="outline" onClick={() => handleEditRequest(selectedRow)}>
+                          <Button variant="outline" onClick={() => handleEditRequest(selectedRow)} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                             {t("requests.actions.edit")}
                           </Button>
                       )}
@@ -801,7 +806,7 @@ export default function CustomerRequestsPage() {
                               variant="outline"
                               disabled={actionLoadingId === selectedRow.id}
                               onClick={() => handleCancelRequest(selectedRow)}
-                              className="border-rose-500/30 text-rose-500 hover:bg-rose-500/5"
+                              className="border-red-500/30 text-red-500 hover:bg-red-500/5"
                           >
                             {t("requests.actions.cancel")}
                           </Button>
@@ -810,22 +815,22 @@ export default function CustomerRequestsPage() {
                   </div>
 
                   <div className="flex min-w-0 flex-wrap items-center gap-3">
-                <span className={`max-w-full break-words rounded-full px-3 py-1 text-xs font-medium ${selectedStatusMeta?.tone}`}>
+                <span className={`max-w-full break-words rounded-full px-3 py-1 text-xs font-medium ${selectedStatusMeta?.tone.replace('bg-secondary', 'bg-stone-800')}`}>
                   {t(`statuses.${selectedRow.status}`)}
                 </span>
-                    <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2 text-xs text-stone-500">
                       <CalendarDays className="h-3.5 w-3.5" />
                       {t("requests.submittedAt", { value: formatDateTime(selectedRow.createdAt, locale) })}
                     </div>
                   </div>
 
                   {selectedStatusCopy && (
-                      <div className="w-full max-w-full rounded-[1.35rem] border border-primary/20 bg-primary/10 p-4 leading-7 sm:p-5">
+                      <div className="w-full max-w-full rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 leading-7 sm:p-5">
                         <div className="flex min-w-0 items-center gap-3">
-                          <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
-                          <p className="min-w-0 break-words font-medium text-foreground">{selectedStatusCopy.label}</p>
+                          <AlertCircle className="h-5 w-5 shrink-0 text-amber-500" />
+                          <p className="min-w-0 break-words font-medium text-stone-100">{selectedStatusCopy.label}</p>
                         </div>
-                        <p className="mt-2 break-words text-sm text-muted-foreground">{selectedStatusCopy.description}</p>
+                        <p className="mt-2 break-words text-sm text-stone-400">{selectedStatusCopy.description}</p>
                       </div>
                   )}
 
@@ -858,14 +863,14 @@ export default function CustomerRequestsPage() {
                   />
 
                   {selectedPaymentSummary ? (
-                      <div className="w-full max-w-full rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4 sm:p-5">
+                      <div className="w-full max-w-full rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4 sm:p-5">
                         <div className="flex min-w-0 items-center gap-3">
-                          <CreditCard className="h-5 w-5 text-primary" />
+                          <CreditCard className="h-5 w-5 text-amber-500" />
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-stone-100">
                               {locale === "ar" ? "ملخص المدفوعات" : "Payment summary"}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-stone-500">
                               {locale === "ar" ? "يعرض المدفوعات المرتبطة بهذه العملية فقط." : "Only payments linked to this operation are shown."}
                             </p>
                           </div>
@@ -890,26 +895,26 @@ export default function CustomerRequestsPage() {
                         </div>
 
                         {selectedPaymentSummary.payments.length ? (
-                            <div className="mt-4 divide-y divide-border/50 rounded-[1.1rem] border border-border/50">
+                            <div className="mt-4 divide-y divide-amber-200/10 rounded-[1.1rem] border border-amber-200/10 bg-stone-950/30">
                               {selectedPaymentSummary.payments.map((payment) => (
                                   <div key={payment.id} className="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                                     <div className="min-w-0">
-                                      <p className="break-words font-medium">{payment.referenceNumber}</p>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="break-words font-medium text-stone-200">{payment.referenceNumber}</p>
+                                      <p className="text-xs text-stone-500">
                                         {formatDateTime(payment.receivedAt || payment.createdAt, locale)}
                                       </p>
                                     </div>
                                     <div className="min-w-0 text-start sm:text-end">
-                                      <p className="font-semibold">
+                                      <p className="font-semibold text-stone-100">
                                         {formatMoney(payment.amount, payment.currency, locale)}
                                       </p>
-                                      <p className="text-xs text-muted-foreground">{payment.paymentStatus}</p>
+                                      <p className="text-xs text-stone-500">{payment.paymentStatus}</p>
                                     </div>
                                   </div>
                               ))}
                             </div>
                         ) : (
-                            <p className="mt-4 text-sm text-muted-foreground">
+                            <p className="mt-4 text-sm text-stone-500">
                               {locale === "ar" ? "لا توجد مدفوعات مسجلة بعد." : "No payments recorded yet."}
                             </p>
                         )}
@@ -989,9 +994,9 @@ export default function CustomerRequestsPage() {
                           value: selectedRow.deliveryAddress,
                         },
                       ].map((item) => (
-                          <div key={item.label} className="min-w-0 rounded-[1rem] bg-secondary/25 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
-                            <p className="break-words text-[11px] text-muted-foreground sm:text-xs">{item.label}</p>
-                            <p className="mt-1 break-words text-[13px] sm:text-sm font-medium">
+                          <div key={item.label} className="min-w-0 rounded-[1rem] bg-stone-900/50 border border-amber-200/10 px-3 py-2.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
+                            <p className="break-words text-[11px] text-stone-500 sm:text-xs">{item.label}</p>
+                            <p className="mt-1 break-words text-[13px] sm:text-sm font-medium text-stone-200">
                               {item.value || t("common.notAvailable")}
                             </p>
                           </div>
@@ -999,11 +1004,11 @@ export default function CustomerRequestsPage() {
                     </div>
 
                     {selectedRow.technicalSpecs ? (
-                        <div className="w-full max-w-full rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
-                          <p className="font-medium">
+                        <div className="w-full max-w-full rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
+                          <p className="font-medium text-stone-100">
                             {t("requests.intake.technicalSpecs")}
                           </p>
-                          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">
+                          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-stone-400">
                             {selectedRow.technicalSpecs}
                           </p>
                         </div>
@@ -1011,26 +1016,26 @@ export default function CustomerRequestsPage() {
 
                     {selectedRow.deliveryNotes || selectedRow.referenceLink ? (
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                          <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                            <p className="font-medium">{t("requests.intake.deliveryNotes")}</p>
-                            <p className="mt-2 break-words text-sm leading-7 text-muted-foreground">
+                          <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 p-4">
+                            <p className="font-medium text-stone-100">{t("requests.intake.deliveryNotes")}</p>
+                            <p className="mt-2 break-words text-sm leading-7 text-stone-400">
                               {selectedRow.deliveryNotes || t("common.notAvailable")}
                             </p>
                           </div>
 
-                          <div className="rounded-[1.25rem] border border-border/60 bg-secondary/10 p-4">
-                            <p className="font-medium">{t("requests.intake.referenceLink")}</p>
+                          <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 p-4">
+                            <p className="font-medium text-stone-100">{t("requests.intake.referenceLink")}</p>
                             {selectedRow.referenceLink ? (
                                 <a
                                     href={selectedRow.referenceLink}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="mt-2 block break-words text-sm leading-7 text-primary underline-offset-4 hover:underline"
+                                    className="mt-2 block break-words text-sm leading-7 text-amber-500 underline-offset-4 hover:underline"
                                 >
                                   {selectedRow.referenceLink}
                                 </a>
                             ) : (
-                                <p className="mt-2 text-sm text-muted-foreground">
+                                <p className="mt-2 text-sm text-stone-500">
                                   {getSafeLabel(t("common.notAvailable"), "N/A")}
                                 </p>
                             )}
@@ -1039,24 +1044,24 @@ export default function CustomerRequestsPage() {
                     ) : null}
 
                     {selectedRow.status === "ready_for_conversion" || selectedRow.status === "transfer_proof_rejected" ? (
-                        <div className="rounded-[1.35rem] border border-primary/20 bg-primary/5 p-4 sm:p-6">
+                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 sm:p-6">
                           <div className="flex min-w-0 items-center gap-3">
-                            <Plus className="h-5 w-5 text-primary" />
-                            <h3 className="text-lg font-semibold">{t("transferProof.title")}</h3>
+                            <Plus className="h-5 w-5 text-amber-500" />
+                            <h3 className="text-lg font-semibold text-stone-100">{t("transferProof.title")}</h3>
                           </div>
-                          <p className="mt-2 text-sm text-muted-foreground">
+                          <p className="mt-2 text-sm text-stone-400">
                             {t("transferProof.description")}
                           </p>
                           
                           {selectedRow.status === "transfer_proof_rejected" && selectedRow.transferRejectionReason && (
-                            <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+                            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
                               <p className="font-bold">{t("transferProof.rejectionReason")}</p>
                               <p className="mt-1">{selectedRow.transferRejectionReason}</p>
                             </div>
                           )}
 
                           <div
-                              className="mt-6 rounded-[1.25rem] border border-dashed border-primary/35 bg-background/30 p-4"
+                              className="mt-6 rounded-[1.25rem] border border-dashed border-amber-500/35 bg-stone-950/30 p-4"
                               onDragOver={(event) => event.preventDefault()}
                               onDrop={handleProofDrop}
                           >
@@ -1073,7 +1078,7 @@ export default function CustomerRequestsPage() {
                                   asChild
                                   variant="outline"
                                   disabled={uploadingProof}
-                                  className="h-12 w-full px-4 sm:w-auto sm:px-8"
+                                  className="h-12 w-full px-4 sm:w-auto sm:px-8 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
                               >
                                 <label htmlFor="proof-upload" className="cursor-pointer">
                                   {t("transferProof.uploadButton")}
@@ -1082,18 +1087,18 @@ export default function CustomerRequestsPage() {
                               <Button
                                   onClick={handleSubmitProof}
                                   disabled={!selectedProofFile || uploadingProof}
-                                  className="h-12 w-full px-4 sm:w-auto sm:px-8"
+                                  className="h-12 w-full px-4 sm:w-auto sm:px-8 bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
                               >
                                 {uploadingProof ? t("transferProof.uploading") : submitReceiptLabel}
                               </Button>
                             </div>
-                            <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                            <p className="mt-3 text-xs leading-5 text-stone-500">
                               {locale === "ar"
                                 ? "اسحب الإيصال هنا أو اختر ملفاً. الملفات المدعومة: PNG, JPG, WEBP, PDF حتى 8MB."
                                 : "Drag the receipt here or choose a file. Supported: PNG, JPG, WEBP, PDF up to 8MB."}
                             </p>
                             {selectedProofFile ? (
-                              <p className="mt-3 break-words text-sm text-muted-foreground">
+                              <p className="mt-3 break-words text-sm text-stone-400">
                                 {selectedProofFile.name}
                               </p>
                             ) : null}
@@ -1102,32 +1107,32 @@ export default function CustomerRequestsPage() {
                     ) : null}
 
                     {selectedRow.status === "transfer_proof_pending" ? (
-                        <div className="rounded-[1.35rem] border border-indigo-500/20 bg-indigo-500/10 p-4 text-indigo-100 sm:p-6">
+                        <div className="rounded-[1.35rem] border border-amber-200/20 bg-amber-500/10 p-4 text-amber-100 sm:p-6">
                           <div className="flex min-w-0 items-center gap-3">
-                            <RotateCcw className="h-5 w-5 animate-spin text-indigo-400" />
+                            <RotateCcw className="h-5 w-5 animate-spin text-amber-500" />
                             <p className="min-w-0 break-words font-medium">{t("transferProof.statusPending")}</p>
                           </div>
                         </div>
                     ) : null}
 
                     {!canEditRequest(selectedRow.status) && selectedRow.status !== "ready_for_conversion" && selectedRow.status !== "transfer_proof_rejected" ? (
-                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-700 dark:text-amber-100">
+                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-amber-200">
                           {locale === "ar"
                               ? "لا يمكن تعديل هذا الطلب بعد بدء المراجعة أو تحويله إلى عملية تشغيلية."
                               : "This request cannot be edited after review starts or after it is converted into an operation."}
                         </div>
                     ) : null}
 
-                    <div className="rounded-[1.35rem] border border-border/60 bg-secondary/10 p-4">
+                    <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
                       <div className="flex items-center gap-3">
-                        <FileImage className="h-4 w-4 text-primary" />
-                        <p className="font-medium">
+                        <FileImage className="h-4 w-4 text-amber-500" />
+                        <p className="font-medium text-stone-100">
                           {getSafeLabel(t("requests.labels.attachments"), locale === "ar" ? "المرفقات والصور" : "Attachments")}
                         </p>
                       </div>
 
                       {selectedRow.attachments.length === 0 ? (
-                          <p className="mt-3 text-sm text-muted-foreground">
+                          <p className="mt-3 text-sm text-stone-500">
                             {getSafeLabel(
                                 t("requests.noAttachments"),
                                 locale === "ar" ? "لا توجد مرفقات مرفوعة." : "No attachments uploaded.",
@@ -1141,17 +1146,17 @@ export default function CustomerRequestsPage() {
                                     href={attachment.fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="group flex min-w-0 items-center justify-between gap-3 rounded-[1.2rem] border border-border/60 bg-card px-4 py-4 transition-colors hover:border-primary/25"
+                                    className="group flex min-w-0 items-center justify-between gap-3 rounded-[1.2rem] border border-amber-200/10 bg-stone-950/50 px-4 py-4 transition-colors hover:border-amber-500/25"
                                 >
                                   <div className="min-w-0">
-                                    <p className="truncate font-medium group-hover:text-primary">
+                                    <p className="truncate font-medium text-stone-200 group-hover:text-amber-200">
                                       {attachment.fileName}
                                     </p>
-                                    <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                    <p className="mt-1 text-[10px] uppercase tracking-wider text-stone-500">
                                       {attachment.category}
                                     </p>
                                   </div>
-                                  <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary" />
+                                  <ImageIcon className="h-4 w-4 shrink-0 text-stone-600 group-hover:text-amber-500" />
                                 </a>
                             ))}
                           </div>

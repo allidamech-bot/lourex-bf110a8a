@@ -80,7 +80,7 @@ const contextLabels: Record<PageContext, { en: string; ar: string }> = {
   dashboard_purchase_requests: { en: "Operations Mode", ar: "وضع العمليات" },
   dashboard_tracking: { en: "Logistics Mode", ar: "وضع اللوجستيات" },
   dashboard_accounting: { en: "Accounting Mode", ar: "وضع المحاسبة" },
-  dashboard_reports: { en: "Reports Mode", ar: "وضع التقارير" },
+  dashboard_reports: { en: "Executive Reports Mode", ar: "وضع التقارير التنفيذية" },
   unknown: { en: "Copilot Mode", ar: "وضع المساعد" },
 };
 
@@ -130,8 +130,8 @@ const pageContextBriefs: Record<PageContext, { en: string; ar: string }> = {
     ar: "مساعدة محاسبية داخلية مع التركيز على القيود المالية والأرصدة ومؤشرات المراجعة وصياغة كشوف العملاء.",
   },
   dashboard_reports: {
-    en: "Internal reporting assistance focused on executive summaries, performance highlights, and report narratives.",
-    ar: "مساعدة التقارير الداخلية مع التركيز على الملخصات التنفيذية وأبرز مؤشرات الأداء وسرد التقارير.",
+    en: "Executive reporting assistance focused on the Executive AI Report panel, risk score, net result, profit margin, collection exposure, settlement coverage, decision risks, and management action plans. Do not invent live figures; ask the user to provide visible report values when needed.",
+    ar: "مساعدة التقارير التنفيذية مع التركيز على لوحة التقرير التنفيذي الذكي ودرجة المخاطر والصافي المالي وهامش الربح وتعرض التحصيل وتغطية التسويات والمخاطر التي تحتاج قرارا وخطة العمل الإدارية. لا تخترع أرقاما مباشرة؛ اطلب من المستخدم تزويدك بالقيم الظاهرة عند الحاجة.",
   },
   unknown: {
     en: "General Lourex advisory assistance.",
@@ -208,10 +208,10 @@ const quickCommandsByContext: Record<PageContext, QuickCommand[]> = {
     { icon: HelpCircle, label: "Explain balance in simple terms", labelAr: "اشرح الرصيد بعبارات بسيطة" },
   ],
   dashboard_reports: [
-    { icon: FileText, label: "Draft executive summary", labelAr: "اكتب ملخصا تنفيذيا" },
-    { icon: BarChart3, label: "Summarize customer activity", labelAr: "لخص نشاط العملاء" },
-    { icon: ShieldCheck, label: "Summarize operational performance", labelAr: "لخص الأداء التشغيلي" },
-    { icon: Sparkles, label: "Suggest report highlights", labelAr: "اقترح أبرز نقاط التقرير" },
+    { icon: BrainCircuit, label: "Summarize the Executive AI Report", labelAr: "لخص التقرير التنفيذي الذكي" },
+    { icon: AlertCircle, label: "List executive risks that need a decision", labelAr: "اذكر المخاطر التنفيذية التي تحتاج قرارا" },
+    { icon: BarChart3, label: "Explain net result, margin, collection exposure, and settlement coverage", labelAr: "اشرح الصافي والهامش وتعرض التحصيل وتغطية التسويات" },
+    { icon: ShieldCheck, label: "Draft a management action plan from this report", labelAr: "اكتب خطة عمل إدارية من هذا التقرير" },
   ],
   unknown: [
     { icon: Package, label: "Ask about purchase requests", labelAr: "اسأل عن طلبات الشراء" },

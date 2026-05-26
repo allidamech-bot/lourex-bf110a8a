@@ -484,28 +484,28 @@ export default function OverviewPage() {
       value: metrics.requests,
       icon: ClipboardList,
       helper: t("overview.reviewDescription"),
-      accent: "from-blue-500/25 to-cyan-400/10 text-blue-100 ring-blue-400/25",
+      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
     },
     {
       label: t("overview.metrics.deals"),
       value: metrics.deals,
       icon: PackageSearch,
       helper: t("overview.readyDescription"),
-      accent: "from-indigo-500/25 to-blue-400/10 text-indigo-100 ring-indigo-400/25",
+      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
     },
     {
       label: t("overview.activeShipments"),
       value: metrics.shipments,
       icon: Truck,
       helper: t("overview.currentOpsDescription"),
-      accent: "from-sky-500/25 to-blue-400/10 text-sky-100 ring-sky-400/25",
+      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
     },
     {
       label: t("reports.metrics.linkedEntries"),
       value: metrics.financialEntries,
       icon: WalletCards,
       helper: t("overview.editDescription"),
-      accent: "from-emerald-500/20 to-blue-400/10 text-emerald-100 ring-emerald-400/25",
+      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
     },
   ];
 
@@ -517,21 +517,21 @@ export default function OverviewPage() {
         span="full"
         className="rounded-2xl p-4 sm:p-6 md:p-8"
         style={{
-          background: "linear-gradient(135deg, rgba(30,58,138,0.18) 0%, rgba(15,23,42,0.95) 60%)",
-          border: "1px solid rgba(59,130,246,0.18)",
+          background: "linear-gradient(135deg, rgba(120,53,15,0.08) 0%, rgba(12,10,9,0.95) 60%)",
+          border: "1px solid rgba(251,191,36,0.15)",
           backdropFilter: "blur(12px)",
-          boxShadow: "0 12px 40px rgba(59,130,246,0.08)",
+          boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
         } as React.CSSProperties}
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <span
-            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200"
-            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.22)" }}
+            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200"
+            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.22)" }}
           >
             {t("overview.heroEyebrow")}
           </span>
           <span
-            className="rounded-full px-3 py-1 text-[11px] text-slate-400"
+            className="rounded-full px-3 py-1 text-[11px] text-stone-500"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
             {new Date().toLocaleDateString(locale)}
@@ -539,17 +539,15 @@ export default function OverviewPage() {
         </div>
         <div className="mt-5 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl min-w-0">
-            <h2 className="break-words font-serif text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+            <h2 className="break-words font-serif text-2xl font-bold text-stone-100 sm:text-3xl md:text-4xl">
               {t("overview.heroTitle")}
             </h2>
-            <p className="mt-3 max-w-2xl break-words text-sm leading-7 text-slate-400">{t("overview.heroDescription")}</p>
+            <p className="mt-3 max-w-2xl break-words text-sm leading-7 text-stone-400">{t("overview.heroDescription")}</p>
           </div>
           <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap">
             <Button
-              variant="default"
               asChild
-              className="rounded-xl font-semibold"
-              style={{ background: "#3B82F6", color: "white", border: "1px solid rgba(96,165,250,0.3)" }}
+              className="rounded-xl font-bold bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 text-stone-950 shadow-2xl hover:brightness-110"
             >
               <Link to="/dashboard/requests">
                 {t("overview.openRequests")}
@@ -559,7 +557,7 @@ export default function OverviewPage() {
             <Button
               variant="outline"
               asChild
-              className="rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
+              className="rounded-xl border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
             >
               <Link to="/dashboard/deals">
                 {t("overview.openDeals")}
@@ -694,30 +692,30 @@ export default function OverviewPage() {
       ) : null}
 
       {isInternal ? (
-        <BentoCard span="full" className="rounded-2xl p-6 md:p-7">
+        <BentoCard span="full" className="rounded-2xl p-6 md:p-7 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
                   <motion.div
                     className="absolute inset-0 rounded-xl"
-                    style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(37,99,235,0.4))" }}
+                    style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.2))" }}
                     animate={{ scale: [1, 1.05, 1], opacity: [0.6, 0.9, 0.6] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   />
                   <motion.div
                     className="absolute inset-0 rounded-xl"
-                    style={{ border: "1px solid rgba(96,165,250,0.5)" }}
+                    style={{ border: "1px solid rgba(251,191,36,0.3)" }}
                     animate={{ rotate: 360 }}
                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                   />
-                  <Sparkles className="relative z-10 h-4 w-4 text-blue-200" />
+                  <Sparkles className="relative z-10 h-4 w-4 text-amber-200" />
                 </div>
                 <div className="min-w-0">
-                  <p className={`text-[11px] text-blue-300/70 ${lang === "ar" ? "tracking-normal" : "uppercase tracking-[0.22em]"}`}>
+                  <p className={`text-[11px] text-amber-200/70 ${lang === "ar" ? "tracking-normal" : "uppercase tracking-[0.22em]"}`}>
                     {lang === "ar" ? "موجز LOUREX AI اليومي" : "LOUREX AI Daily Briefing"}
                   </p>
-                  <p className="mt-0.5 break-words text-xs leading-5 text-slate-400">
+                  <p className="mt-0.5 break-words text-xs leading-5 text-stone-500">
                     {lang === "ar"
                       ? "مخرجات الذكاء الاصطناعي إرشادية فقط، والقرارات النهائية تبقى لفريق Lourex."
                       : "AI output is advisory. Final decisions remain with the Lourex team."}
@@ -729,39 +727,39 @@ export default function OverviewPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full shrink-0 rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white sm:w-auto"
+              className="w-full shrink-0 rounded-xl border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10 sm:w-auto"
               disabled={briefingLoading || loading}
               onClick={() => void prepareDailyBriefing()}
               aria-label={lang === "ar" ? "تحديث الموجز اليومي" : "Refresh daily briefing"}
               aria-busy={briefingLoading}
             >
               {briefingLoading ? (
-                <Loader2 className="me-2 h-4 w-4 animate-spin text-blue-200" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin text-amber-200" />
               ) : (
-                <RefreshCw className="me-2 h-4 w-4 text-blue-200" />
+                <RefreshCw className="me-2 h-4 w-4 text-amber-200" />
               )}
               {lang === "ar" ? "تحديث الموجز" : "Refresh briefing"}
             </Button>
           </div>
 
           {briefingUsedFallback ? (
-            <div className="mt-5 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-100">
+            <div className="mt-5 rounded-[1rem] border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-6 text-amber-200">
               {lang === "ar"
                 ? "مساعد LOUREX AI غير متاح الآن. تم إنشاء موجز تشغيلي محلي بدلا من ذلك."
                 : "LOUREX AI is unavailable right now. A local operational briefing was generated instead."}
             </div>
           ) : null}
 
-          <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5">
+          <div className="mt-5 rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 p-5">
             {briefingLoading ? (
-              <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-200" />
+              <div className="flex items-center gap-3 text-sm text-stone-500">
+                <Loader2 className="h-4 w-4 animate-spin text-amber-200" />
                 {lang === "ar" ? "جاري تجهيز الموجز اليومي..." : "Preparing daily briefing..."}
               </div>
             ) : briefingText ? (
-              <pre className="max-h-[28rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-100">{briefingText}</pre>
+              <pre className="max-h-[28rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-stone-300">{briefingText}</pre>
             ) : (
-              <div className="text-sm leading-7 text-slate-400">
+              <div className="text-sm leading-7 text-stone-500">
                 {lang === "ar"
                   ? "سيظهر الموجز اليومي بعد تحميل بيانات لوحة التحكم."
                   : "The daily briefing will appear after dashboard data finishes loading."}
@@ -772,15 +770,15 @@ export default function OverviewPage() {
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <BentoCard className="space-y-5 rounded-2xl">
+        <BentoCard className="space-y-5 rounded-2xl border-amber-200/10 bg-stone-900/50">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="whitespace-normal text-[11px] font-semibold text-blue-300/70">{t("overview.priorityBoard")}</p>
-              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.priorityTitle")}</h3>
+              <p className="whitespace-normal text-[11px] font-semibold text-amber-200/70">{t("overview.priorityBoard")}</p>
+              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-stone-100">{t("overview.priorityTitle")}</h3>
             </div>
             <span
-              className="rounded-full px-3 py-1 text-xs font-medium text-blue-200"
-              style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+              className="rounded-full px-3 py-1 text-xs font-medium text-amber-200"
+              style={{ background: "rgba(251,191,36,0.10)", border: "1px solid rgba(251,191,36,0.18)" }}
             >
               {t("overview.liveFocus")}
             </span>
@@ -793,46 +791,39 @@ export default function OverviewPage() {
             ].map((item) => (
               <div
                 key={item.label}
-                className="rounded-xl p-4 transition-colors"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
+                className="rounded-xl p-4 transition-colors bg-stone-950/40 border border-amber-200/10 hover:border-amber-200/20"
               >
-                <p className="break-words text-xs font-medium text-slate-400">{item.label}</p>
-                <p className="mt-2 text-2xl font-bold text-white">{item.value.toLocaleString(locale)}</p>
-                <p className="mt-1.5 break-words text-xs leading-5 text-slate-400">{item.description}</p>
+                <p className="break-words text-xs font-medium text-stone-500">{item.label}</p>
+                <p className="mt-2 text-2xl font-bold text-stone-100">{item.value.toLocaleString(locale)}</p>
+                <p className="mt-1.5 break-words text-xs leading-5 text-stone-400">{item.description}</p>
               </div>
             ))}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-4 rounded-2xl">
+        <BentoCard className="space-y-4 rounded-2xl border-amber-200/10 bg-stone-900/50">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-blue-200"
-            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-200"
+            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.2)" }}
           >
             <Receipt className="h-4 w-4" />
           </div>
-          <h3 className="font-serif text-xl font-semibold text-white">{t("overview.currentOpsTitle")}</h3>
+          <h3 className="font-serif text-xl font-semibold text-stone-100">{t("overview.currentOpsTitle")}</h3>
           <div className="grid gap-2.5">
             <div
-              className="rounded-xl p-4"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+              className="rounded-xl p-4 bg-stone-950/40 border border-amber-200/10"
             >
-              <p className="text-xs font-medium text-slate-400">{t("overview.activeShipments")}</p>
-              <p className="mt-1.5 text-2xl font-bold text-white">{deliverySummary.active.toLocaleString(locale)}</p>
+              <p className="text-xs font-medium text-stone-500">{t("overview.activeShipments")}</p>
+              <p className="mt-1.5 text-2xl font-bold text-stone-100">{deliverySummary.active.toLocaleString(locale)}</p>
             </div>
             <div
-              className="rounded-xl p-4"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+              className="rounded-xl p-4 bg-stone-950/40 border border-amber-200/10"
             >
-              <p className="text-xs font-medium text-slate-400">{t("overview.deliveredShipments")}</p>
-              <p className="mt-1.5 text-2xl font-bold text-white">{deliverySummary.delivered.toLocaleString(locale)}</p>
+              <p className="text-xs font-medium text-stone-500">{t("overview.deliveredShipments")}</p>
+              <p className="mt-1.5 text-2xl font-bold text-stone-100">{deliverySummary.delivered.toLocaleString(locale)}</p>
             </div>
             <div
-              className="rounded-xl p-3.5 text-xs leading-6 text-slate-300"
-              style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.14)" }}
+              className="rounded-xl p-3.5 text-xs leading-6 text-stone-300 bg-amber-500/5 border border-amber-500/10"
             >
               {t("overview.currentOpsDescription")}
             </div>
@@ -841,18 +832,16 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <BentoCard span="1" className="rounded-2xl p-0">
+        <BentoCard span="1" className="rounded-2xl p-0 border-amber-200/10 bg-stone-900/50">
           <div
-            className="flex items-center justify-between gap-3 px-5 py-4"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+            className="flex items-center justify-between gap-3 px-5 py-4 border-b border-amber-200/10"
           >
             <div className="min-w-0">
-              <p className="whitespace-normal text-[11px] font-semibold text-blue-300/70">{t("customers.activity")}</p>
-              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-white">{t("overview.latestRequests")}</h3>
+              <p className="whitespace-normal text-[11px] font-semibold text-amber-200/70">{t("customers.activity")}</p>
+              <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-stone-100">{t("overview.latestRequests")}</h3>
             </div>
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-blue-200"
-              style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.18)" }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20"
             >
               <Clock3 className="h-4 w-4" />
             </span>
@@ -861,7 +850,7 @@ export default function OverviewPage() {
             {loading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-16 w-full rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }} />
+                  <Skeleton key={index} className="h-16 w-full rounded-xl bg-stone-950/40" />
                 ))}
               </div>
             ) : recentActivity.length > 0 ? (
@@ -883,19 +872,18 @@ export default function OverviewPage() {
                 })}
               />
             ) : (
-              <div className="py-8 text-center text-sm text-slate-400">{t("overview.noRequests")}</div>
+              <div className="py-8 text-center text-sm text-stone-500">{t("overview.noRequests")}</div>
             )}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-4 rounded-2xl">
+        <BentoCard className="space-y-4 rounded-2xl border-amber-200/10 bg-stone-900/50">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-blue-200"
-            style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20"
           >
             <FilePenLine className="h-4 w-4" />
           </div>
-          <h3 className="font-serif text-xl font-semibold text-white">{t("overview.quickActions")}</h3>
+          <h3 className="font-serif text-xl font-semibold text-stone-100">{t("overview.quickActions")}</h3>
           <div className="grid gap-2">
             {[
               { label: t("overview.quickReview"), to: "/dashboard/requests" },
@@ -906,23 +894,16 @@ export default function OverviewPage() {
               <Link
                 key={item.label}
                 to={item.to}
-                className="group flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:text-white"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.08)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                className="group flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-300 transition-all bg-stone-950/40 border border-amber-200/10 hover:border-amber-200/20 hover:bg-stone-950/60 hover:text-stone-100"
               >
                 <span className="min-w-0 break-words">{item.label}</span>
-                <ChevronRight className="h-4 w-4 text-slate-500 transition-colors group-hover:text-blue-300" />
+                <ChevronRight className="h-4 w-4 text-stone-600 transition-colors group-hover:text-amber-200" />
               </Link>
             ))}
           </div>
           {newestFinancialEntry ? (
             <div
-              className="rounded-xl p-3.5 text-xs leading-6 text-emerald-200"
-              style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.16)" }}
+              className="rounded-xl p-3.5 text-xs leading-6 text-emerald-100 bg-emerald-500/10 border border-emerald-500/20"
             >
               {t("reports.metrics.linkedEntries")}: {metrics.financialEntries.toLocaleString(locale)}
             </div>

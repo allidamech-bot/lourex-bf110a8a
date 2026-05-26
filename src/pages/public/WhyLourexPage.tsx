@@ -20,7 +20,7 @@ export default function WhyLourexPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("nav.whyLourex")}
         description="Six reasons teams choose LOUREX for structured sourcing operations, live tracking, disciplined accounting, and audit-ready visibility."
@@ -30,9 +30,9 @@ export default function WhyLourexPage() {
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">
-              {t("why.title")} <span className="text-gradient-gold">{t("why.titleHighlight")}</span>
+              {t("why.title")} <span className="text-amber-500">{t("why.titleHighlight")}</span>
             </h1>
-            <p className="text-muted-foreground text-lg mb-10">{t("why.subtitle")}</p>
+            <p className="text-stone-400 text-lg mb-10">{t("why.subtitle")}</p>
 
             <div className="space-y-4">
               {reasons.map((r, i) => (
@@ -41,14 +41,14 @@ export default function WhyLourexPage() {
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex gap-4 rounded-xl border border-border bg-card p-5"
+                  className="flex gap-4 rounded-xl border border-amber-200/15 bg-stone-50/5 p-5 backdrop-blur-xl"
                 >
                   <div className="flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <CheckCircle2 className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">{r.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{r.desc}</p>
+                    <h3 className="font-semibold text-stone-100 mb-1">{r.title}</h3>
+                    <p className="text-sm text-stone-400 leading-relaxed">{r.desc}</p>
                   </div>
                 </motion.div>
               ))}

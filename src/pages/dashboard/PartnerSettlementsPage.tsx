@@ -150,37 +150,37 @@ export default function PartnerSettlementsPage() {
       <SettlementVisibilityPanel summary={settlementVisibility} t={t} formatMoney={formatMoney} />
 
       {canManage ? (
-        <BentoCard className="space-y-4">
+        <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-3">
-            <Scale className="h-5 w-5 text-primary" />
-            <h2 className="font-serif text-2xl font-semibold">{t("partnerSettlements.createTitle")}</h2>
+            <Scale className="h-5 w-5 text-amber-500" />
+            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("partnerSettlements.createTitle")}</h2>
           </div>
           <SectionHelpBox title={t("partnerSettlements.pro.helpTitle")} body={t("partnerSettlements.pro.helpBody")} example={t("partnerSettlements.pro.helpExample")} />
           <div className="grid gap-4 md:grid-cols-[minmax(12rem,1.2fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_auto]">
             <div>
-              <Label>{t("partnerSettlements.partner")}</Label>
+              <Label className="text-stone-300">{t("partnerSettlements.partner")}</Label>
               <select
                 value={partnerId}
                 onChange={(event) => setPartnerId(event.target.value)}
-                className="mt-2 flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
               >
                 {partners.map((partner) => (
-                  <option key={partner.id} value={partner.id}>
+                  <option key={partner.id} value={partner.id} className="bg-stone-900">
                     {partner.full_name || partner.email} ({roleLabel(partner.role)})
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <Label>{t("partnerSettlements.period")}</Label>
-              <Input value={period} onChange={(event) => setPeriod(event.target.value)} placeholder="2026-04" />
+              <Label className="text-stone-300">{t("partnerSettlements.period")}</Label>
+              <Input value={period} onChange={(event) => setPeriod(event.target.value)} placeholder="2026-04" className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
             </div>
             <div>
-              <Label>{t("partnerSettlements.commissionRate")}</Label>
-              <Input value={commissionRate} onChange={(event) => setCommissionRate(event.target.value)} />
+              <Label className="text-stone-300">{t("partnerSettlements.commissionRate")}</Label>
+              <Input value={commissionRate} onChange={(event) => setCommissionRate(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
             </div>
             <div className="flex items-end">
-              <Button variant="gold" onClick={handleCreate} disabled={!selectedPartner || submitting}>
+              <Button onClick={handleCreate} disabled={!selectedPartner || submitting} className="w-full bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
                 {t("partnerSettlements.createDraft")}
               </Button>
             </div>
@@ -188,33 +188,33 @@ export default function PartnerSettlementsPage() {
         </BentoCard>
       ) : null}
 
-      <BentoCard className="p-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-6 py-5">
+      <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200/10 px-6 py-5">
           <div>
-            <h2 className="font-serif text-2xl font-semibold">{t("partnerSettlements.title")}</h2>
-            <p className="text-sm text-muted-foreground">{t("partnerSettlements.description")}</p>
+            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("partnerSettlements.title")}</h2>
+            <p className="text-sm text-stone-400 font-medium">{t("partnerSettlements.description")}</p>
           </div>
-          <Button variant="outline" onClick={() => void refresh()}>
-            <RefreshCcw className="me-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => void refresh()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+            <RefreshCcw className={`me-2 h-4 w-4 ${loading ? 'animate-spin text-amber-500' : 'text-amber-500'}`} />
             {t("common.refresh")}
           </Button>
         </div>
 
         {settlements.length === 0 ? (
           <div className="p-6">
-            <EmptyState icon={CircleDollarSign} title={t("partnerSettlements.emptyTitle")} description={t("partnerSettlements.emptyDescription")} />
+            <EmptyState icon={CircleDollarSign} title={t("partnerSettlements.emptyTitle")} description={t("partnerSettlements.emptyDescription")} className="bg-transparent border-0" />
           </div>
         ) : (
           settlements.map((settlement) => (
-            <div key={settlement.id} className="border-b border-border/40 px-6 py-5 last:border-b-0">
+            <div key={settlement.id} className="border-b border-amber-200/10 px-6 py-5 last:border-b-0 hover:bg-stone-800/30 transition-colors">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium">{settlement.partnerName || settlement.partnerId}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="font-bold text-stone-100 uppercase tracking-tight">{settlement.partnerName || settlement.partnerId}</p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">
                     {roleLabel(settlement.partnerRole)} · {settlement.settlementPeriod}
                   </p>
                 </div>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest shadow-sm">
                   {t(`statuses.${settlement.status}`)}
                 </span>
               </div>
@@ -232,18 +232,18 @@ export default function PartnerSettlementsPage() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {canManage && ["draft", "pending_review", "disputed"].includes(settlement.status) ? (
-                  <Button size="sm" onClick={() => runAction(t("partnerSettlements.toasts.approved"), () => approvePartnerSettlement(settlement.id))} disabled={submitting}>
+                  <Button size="sm" onClick={() => runAction(t("partnerSettlements.toasts.approved"), () => approvePartnerSettlement(settlement.id))} disabled={submitting} className="bg-emerald-600 text-stone-950 font-bold hover:bg-emerald-500">
                     <CheckCircle2 className="me-2 h-4 w-4" />
                     {t("partnerSettlements.approve")}
                   </Button>
                 ) : null}
                 {canManage && settlement.status === "approved" ? (
-                  <Button size="sm" variant="gold" onClick={() => runAction(t("partnerSettlements.toasts.paid"), () => markPartnerSettlementPaid(settlement.id))} disabled={submitting}>
+                  <Button size="sm" onClick={() => runAction(t("partnerSettlements.toasts.paid"), () => markPartnerSettlementPaid(settlement.id))} disabled={submitting} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
                     {t("partnerSettlements.markPaid")}
                   </Button>
                 ) : null}
                 {settlement.status !== "paid" && settlement.status !== "disputed" ? (
-                  <Button size="sm" variant="outline" onClick={() => runAction(t("partnerSettlements.toasts.disputed"), () => disputePartnerSettlement(settlement.id, t("partnerSettlements.dashboardDisputeReason")))} disabled={submitting}>
+                  <Button size="sm" variant="outline" onClick={() => runAction(t("partnerSettlements.toasts.disputed"), () => disputePartnerSettlement(settlement.id, t("partnerSettlements.dashboardDisputeReason")))} disabled={submitting} className="border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20">
                     <ShieldAlert className="me-2 h-4 w-4" />
                     {t("partnerSettlements.dispute")}
                   </Button>

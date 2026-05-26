@@ -19,10 +19,13 @@ import {
     OWNER_DASHBOARD_UI_ROLES,
     OWNER_ONLY_ROLES,
     PREDICTIVE_INTELLIGENCE_ROLES,
+    PRODUCT_MANAGEMENT_ROLES,
     SYSTEM_DASHBOARD_UI_ROLES,
 } from "@/features/auth/rbac";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
+const ProductsPage = lazy(() => import("@/pages/public/ProductsPage"));
+const ProductDetailPage = lazy(() => import("@/pages/public/ProductDetailPage"));
 const RequestPage = lazy(() => import("@/pages/public/RequestPage"));
 const TrackPage = lazy(() => import("@/pages/public/TrackPage"));
 const AboutPage = lazy(() => import("@/pages/public/AboutPage"));
@@ -34,6 +37,7 @@ const Auth = lazy(() => import("@/pages/Auth"));
 const OverviewPage = lazy(() => import("@/pages/dashboard/OverviewPage"));
 const PredictiveIntelligencePage = lazy(() => import("@/pages/dashboard/PredictiveIntelligencePage"));
 const PurchaseRequestsPage = lazy(() => import("@/pages/dashboard/PurchaseRequestsPage"));
+const ProductsManagementPage = lazy(() => import("@/pages/dashboard/ProductsManagementPage"));
 const CustomersPage = lazy(() => import("@/pages/dashboard/CustomersPage"));
 const DealsPage = lazy(() => import("@/pages/dashboard/DealsPage"));
 const TrackingPage = lazy(() => import("@/pages/dashboard/TrackingPage"));
@@ -114,6 +118,8 @@ const App = () => (
                                 <Suspense fallback={<PageLoader />}>
                                     <Routes>
                                     <Route path="/" element={<HomePage />} />
+                                    <Route path="/products" element={<PageWithAI component={<ProductsPage />} />} />
+                                    <Route path="/products/:slug" element={<PageWithAI component={<ProductDetailPage />} />} />
                                     <Route path="/request" element={<PageWithAI component={<RequestPage />} />} />
                                     <Route path="/track" element={<PageWithAI component={<TrackPage />} />} />
                                     <Route path="/auth" element={<Auth />} />
@@ -136,162 +142,30 @@ const App = () => (
                                             </ProtectedRoute>
                                         }
                                     >
-                                        <Route 
-                                            index 
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<OverviewPage />} />
-                                                </ProtectedRoute>
-                                            } 
-                                        />
-                                        <Route
-                                            path="operations-briefing"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<OperationsBriefingPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="predictive-intelligence"
-                                            element={
-                                                <ProtectedRoute allowedRoles={PREDICTIVE_INTELLIGENCE_ROLES}>
-                                                    <PageWithAI component={<PredictiveIntelligencePage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="requests"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<PurchaseRequestsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="customers"
-                                            element={
-                                                <ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}>
-                                                    <PageWithAI component={<CustomersPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="deals"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<DealsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="tracking"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<TrackingPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="accounting"
-                                            element={
-                                                <ProtectedRoute allowedRoles={ACCOUNTING_DASHBOARD_UI_ROLES}>
-                                                    <PageWithAI component={<AccountingPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="edit-requests"
-                                            element={
-                                                <ProtectedRoute allowedRoles={ACCOUNTING_DASHBOARD_UI_ROLES}>
-                                                    <PageWithAI component={<EditRequestsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="settlements"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<PartnerSettlementsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="audit"
-                                            element={
-                                                <ProtectedRoute allowedRoles={INTERNAL_ROLES}>
-                                                    <PageWithAI component={<AuditPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="reports"
-                                            element={
-                                                <ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}>
-                                                    <PageWithAI component={<ReportsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="system"
-                                            element={
-                                                <ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}>
-                                                    <PageWithAI component={<SystemControlsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="health"
-                                            element={
-                                                <ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}>
-                                                    <PageWithAI component={<HealthPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
+                                        <Route index element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<OverviewPage />} /></ProtectedRoute>} />
+                                        <Route path="operations-briefing" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<OperationsBriefingPage />} /></ProtectedRoute>} />
+                                        <Route path="predictive-intelligence" element={<ProtectedRoute allowedRoles={PREDICTIVE_INTELLIGENCE_ROLES}><PageWithAI component={<PredictiveIntelligencePage />} /></ProtectedRoute>} />
+                                        <Route path="requests" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<PurchaseRequestsPage />} /></ProtectedRoute>} />
+                                        <Route path="products" element={<ProtectedRoute allowedRoles={PRODUCT_MANAGEMENT_ROLES}><PageWithAI component={<ProductsManagementPage />} /></ProtectedRoute>} />
+                                        <Route path="customers" element={<ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}><PageWithAI component={<CustomersPage />} /></ProtectedRoute>} />
+                                        <Route path="deals" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<DealsPage />} /></ProtectedRoute>} />
+                                        <Route path="tracking" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<TrackingPage />} /></ProtectedRoute>} />
+                                        <Route path="accounting" element={<ProtectedRoute allowedRoles={ACCOUNTING_DASHBOARD_UI_ROLES}><PageWithAI component={<AccountingPage />} /></ProtectedRoute>} />
+                                        <Route path="edit-requests" element={<ProtectedRoute allowedRoles={ACCOUNTING_DASHBOARD_UI_ROLES}><PageWithAI component={<EditRequestsPage />} /></ProtectedRoute>} />
+                                        <Route path="settlements" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<PartnerSettlementsPage />} /></ProtectedRoute>} />
+                                        <Route path="audit" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<AuditPage />} /></ProtectedRoute>} />
+                                        <Route path="reports" element={<ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}><PageWithAI component={<ReportsPage />} /></ProtectedRoute>} />
+                                        <Route path="system" element={<ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}><PageWithAI component={<SystemControlsPage />} /></ProtectedRoute>} />
+                                        <Route path="health" element={<ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}><PageWithAI component={<HealthPage />} /></ProtectedRoute>} />
                                     </Route>
 
-                                    <Route
-                                        path="/profile"
-                                        element={
-                                            <ProtectedRoute>
-                                                <PageWithAI component={<Profile />} />
-                                            </ProtectedRoute>
-                                        }
-                                    />
-                                    <Route
-                                        path="/customer-portal"
-                                        element={
-                                            <ProtectedRoute allowedRoles={["customer"]}>
-                                                <CustomerLayout />
-                                            </ProtectedRoute>
-                                        }
-                                    >
+                                    <Route path="/profile" element={<ProtectedRoute><PageWithAI component={<Profile />} /></ProtectedRoute>} />
+                                    <Route path="/customer-portal" element={<ProtectedRoute allowedRoles={["customer"]}><CustomerLayout /></ProtectedRoute>}>
                                         <Route index element={<PageWithAI component={<CustomerPortal />} />} />
-                                        <Route
-                                            path="requests"
-                                            element={
-                                                <ProtectedRoute allowedRoles={["customer"]}>
-                                                    <PageWithAI component={<CustomerRequestsPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="tracking"
-                                            element={
-                                                <ProtectedRoute allowedRoles={["customer"]}>
-                                                    <PageWithAI component={<CustomerTrackingPage />} />
-                                                </ProtectedRoute>
-                                            }
-                                        />
+                                        <Route path="requests" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerRequestsPage />} /></ProtectedRoute>} />
+                                        <Route path="tracking" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerTrackingPage />} /></ProtectedRoute>} />
                                     </Route>
-                                    <Route
-                                        path="/admin"
-                                        element={
-                                            <ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}>
-                                                <PageWithAI component={<Admin />} />
-                                            </ProtectedRoute>
-                                        }
-                                    />
+                                    <Route path="/admin" element={<ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}><PageWithAI component={<Admin />} /></ProtectedRoute>} />
                                     <Route path="*" element={<NotFound />} />
                                     </Routes>
                                 </Suspense>

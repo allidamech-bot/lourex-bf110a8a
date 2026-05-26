@@ -38,14 +38,14 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("nav.home")} 
         description={t("home.charter.description")}
       />
       <SiteHeader />
       <HeroSection />
-      <section className="relative overflow-hidden border-y border-border/50 bg-[linear-gradient(180deg,hsla(var(--secondary)/0.35),transparent)] py-20">
+      <section className="relative overflow-hidden border-y border-amber-200/10 bg-stone-900/50 py-20">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -53,13 +53,13 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="mx-auto max-w-4xl text-center"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
               {t("home.charter.eyebrow")}
             </p>
-            <h2 className="mt-5 font-serif text-3xl font-bold md:text-5xl">
+            <h2 className="mt-5 font-serif text-3xl font-bold text-stone-100 md:text-5xl">
               {t("home.charter.title")}
             </h2>
-            <p className="mt-5 text-base leading-8 text-muted-foreground">
+            <p className="mt-5 text-base leading-8 text-stone-300">
               {t("home.charter.description")}
             </p>
           </motion.div>
@@ -72,13 +72,13 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08 }}
-                className="rounded-[1.9rem] border border-primary/10 bg-card/90 p-6 shadow-[0_24px_55px_-38px_rgba(0,0,0,0.22)] dark:shadow-[0_24px_55px_-38px_rgba(0,0,0,0.75)]"
+                className="rounded-[1.9rem] border border-amber-200/15 bg-stone-50/5 p-6 shadow-2xl backdrop-blur-xl"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
                   <item.icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-5 font-serif text-2xl font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.description}</p>
+                <h3 className="mt-5 font-serif text-2xl font-semibold text-stone-100">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-stone-400">{item.description}</p>
               </motion.div>
             ))}
           </div>

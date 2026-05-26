@@ -25,6 +25,8 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
+import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -51,6 +53,7 @@ export default function ReportsPage() {
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: DrillDownItem[] } | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [executiveRefreshKey, setExecutiveRefreshKey] = useState(0);
 
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
@@ -77,6 +80,11 @@ export default function ReportsPage() {
 
     void load();
   }, [rangeStart, rangeEnd, t]);
+
+  const executiveReport = useMemo(
+    () => (snapshot ? buildExecutiveReportAdvisor(snapshot, lang === "ar" ? "ar" : "en") : null),
+    [executiveRefreshKey, lang, snapshot],
+  );
 
   const metrics = snapshot?.summary || {
     requests: 0,
@@ -164,6 +172,95 @@ export default function ReportsPage() {
       return;
     }
 
+    const executiveLabels = lang === "ar"
+      ? {
+          summary: "ملخص التقرير التنفيذي الذكي",
+          decisionMetrics: "مؤشرات القرار التنفيذي",
+          risks: "المخاطر التي تحتاج قرارا",
+          opportunities: "الفرص الإدارية",
+          actionPlan: "خطة العمل المقترحة",
+          field: "البند",
+          value: "القيمة",
+          title: "العنوان",
+          description: "الوصف",
+          level: "المستوى",
+          generatedAt: "وقت القراءة التنفيذية",
+          followUpLevel: "مستوى المتابعة",
+          followUpScore: "درجة المتابعة",
+          netProfit: "الصافي المالي",
+          profitMargin: "هامش الربح",
+          collectionExposure: "تعرض التحصيل",
+          settlementCoverage: "تغطية التسويات",
+          pendingEditRequests: "طلبات التعديل المالي المعلقة",
+          activeDeals: "الصفقات النشطة",
+          averageProcessingTime: "متوسط زمن المعالجة",
+        }
+      : {
+          summary: "Executive AI Report Summary",
+          decisionMetrics: "Executive Decision Metrics",
+          risks: "Risks Requiring Decision",
+          opportunities: "Management Opportunities",
+          actionPlan: "Suggested Action Plan",
+          field: "Field",
+          value: "Value",
+          title: "Title",
+          description: "Description",
+          level: "Level",
+          generatedAt: "Executive reading generated at",
+          followUpLevel: "Follow-up level",
+          followUpScore: "Follow-up score",
+          netProfit: "Net result",
+          profitMargin: "Profit margin",
+          collectionExposure: "Collection exposure",
+          settlementCoverage: "Settlement coverage",
+          pendingEditRequests: "Pending financial edit requests",
+          activeDeals: "Active deals",
+          averageProcessingTime: "Average processing time",
+        };
+
+    const executiveSections = executiveReport
+      ? [
+          {
+            title: executiveLabels.summary,
+            headers: [executiveLabels.field, executiveLabels.value],
+            rows: [
+              [executiveLabels.followUpLevel, executiveReport.executiveLevel],
+              [executiveLabels.followUpScore, executiveReport.executiveScore],
+              [executiveLabels.generatedAt, new Date(executiveReport.generatedAt).toLocaleString(locale)],
+              [executiveLabels.summary, executiveReport.summary],
+            ],
+          },
+          {
+            title: executiveLabels.decisionMetrics,
+            headers: [executiveLabels.field, executiveLabels.value],
+            rows: [
+              [executiveLabels.netProfit, `${Math.round(executiveReport.metrics.netProfit).toLocaleString(locale)} SAR`],
+              [executiveLabels.profitMargin, `${Math.round(executiveReport.metrics.profitMargin * 100)}%`],
+              [executiveLabels.collectionExposure, `${Math.round(executiveReport.metrics.collectionExposure).toLocaleString(locale)} SAR`],
+              [executiveLabels.settlementCoverage, `${Math.round(executiveReport.metrics.settlementCoverageRatio * 100)}%`],
+              [executiveLabels.pendingEditRequests, executiveReport.metrics.pendingEditRequests],
+              [executiveLabels.activeDeals, executiveReport.metrics.activeDeals],
+              [executiveLabels.averageProcessingTime, `${Math.round(executiveReport.metrics.averageProcessingTimeDays)} ${t("common.days")}`],
+            ],
+          },
+          {
+            title: executiveLabels.risks,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.risks.map((item) => [item.title, item.description, item.level]),
+          },
+          {
+            title: executiveLabels.opportunities,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.opportunities.map((item) => [item.title, item.description, item.level]),
+          },
+          {
+            title: executiveLabels.actionPlan,
+            headers: [executiveLabels.title, executiveLabels.description, executiveLabels.level],
+            rows: executiveReport.actionPlan.map((item) => [item.title, item.description, item.level]),
+          },
+        ]
+      : [];
+
     const exported = printPdfReport({
       title: t("reports.title"),
       filename: `lourex-report-${range}.pdf`,
@@ -176,6 +273,7 @@ export default function ReportsPage() {
         [t("reports.ranges.custom"), t(`reports.ranges.${range}`)],
       ],
       sections: [
+        ...executiveSections,
         {
           title: t("reports.operationsRead"),
           headers: [t("common.value"), t("common.amount")],
@@ -241,46 +339,55 @@ export default function ReportsPage() {
   return (
     <div className="w-full max-w-full min-w-0 space-y-4">
       <PageHelpBox pageKey="reports" role={profile?.role} />
-      <BentoCard className="space-y-4">
+      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="whitespace-normal text-xs font-semibold text-muted-foreground">{t("reports.window")}</p>
-            <h2 className="mt-2 font-serif text-2xl font-semibold">{t("reports.title")}</h2>
+            <p className="whitespace-normal text-[10px] font-semibold uppercase tracking-widest text-stone-500">{t("reports.window")}</p>
+            <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("reports.title")}</h2>
           </div>
           <div className="grid w-full grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))] lg:w-auto">
             <select
               value={range}
               onChange={(event) => setRange(event.target.value as ReportRange)}
-            className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
             >
-              <option value="monthly">{t("reports.ranges.monthly")}</option>
-              <option value="quarterly">{t("reports.ranges.quarterly")}</option>
-              <option value="semiannual">{t("reports.ranges.semiannual")}</option>
-              <option value="annual">{t("reports.ranges.annual")}</option>
-              <option value="custom">{t("reports.ranges.custom")}</option>
+              <option value="monthly" className="bg-stone-900">{t("reports.ranges.monthly")}</option>
+              <option value="quarterly" className="bg-stone-900">{t("reports.ranges.quarterly")}</option>
+              <option value="semiannual" className="bg-stone-900">{t("reports.ranges.semiannual")}</option>
+              <option value="annual" className="bg-stone-900">{t("reports.ranges.annual")}</option>
+              <option value="custom" className="bg-stone-900">{t("reports.ranges.custom")}</option>
             </select>
-            <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            <button onClick={handleExport} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex min-w-0 items-center gap-2"><Download className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.exportCsv")}</span></span>
+            <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20" />
+            <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20" />
+            <button onClick={handleExport} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
+              <span className="inline-flex min-w-0 items-center gap-2"><Download className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.exportCsv")}</span></span>
             </button>
-            <button onClick={handleExportPdf} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.exportPdf")}</span></span>
+            <button onClick={handleExportPdf} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
+              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.exportPdf")}</span></span>
             </button>
-            <button onClick={() => window.print()} className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0" /><span className="break-words">{t("common.print")}</span></span>
+            <button onClick={() => window.print()} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
+              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.print")}</span></span>
             </button>
           </div>
         </div>
         {loadError ? (
-          <div className="rounded-[1.35rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+          <div className="rounded-[1.35rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
             {loadError}
           </div>
         ) : null}
-        <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400 font-medium">
           {statementExportHint}
         </div>
       </BentoCard>
+
+      {executiveReport ? (
+        <ExecutiveReportPanel
+          result={executiveReport}
+          language={lang === "ar" ? "ar" : "en"}
+          locale={locale}
+          onRefresh={() => setExecutiveRefreshKey((current) => current + 1)}
+        />
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[
@@ -289,46 +396,46 @@ export default function ReportsPage() {
           { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
           { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
         ].map((item) => (
-          <BentoCard key={item.label} className={`space-y-3 ${item.action ? "cursor-pointer hover:bg-secondary/10 transition-colors" : ""}`} onClick={item.action}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <BentoCard key={item.label} className={`space-y-3 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl ${item.action ? "cursor-pointer hover:bg-stone-800/50 transition-colors" : ""}`} onClick={item.action}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <item.icon className="h-5 w-5" />
             </div>
             <div className="flex min-w-0 items-center justify-between">
-              <p className="break-words font-serif text-4xl font-bold">{item.value}</p>
-              {item.action ? <ExternalLink className="h-4 w-4 text-muted-foreground" /> : null}
+              <p className="break-words font-serif text-4xl font-bold text-stone-100">{item.value}</p>
+              {item.action ? <ExternalLink className="h-4 w-4 text-stone-600" /> : null}
             </div>
-            <p className="break-words text-sm text-muted-foreground">{item.label}</p>
+            <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-500">{item.label}</p>
           </BentoCard>
         ))}
       </div>
 
       {drillDownData ? (
-        <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4">
+        <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="break-words font-serif text-xl font-semibold capitalize">
+            <h2 className="break-words font-serif text-xl font-semibold capitalize text-stone-100">
               {t(`reports.drilldowns.${drillDownData.type}`)} {t("reports.title")}
             </h2>
-            <button onClick={() => setDrillDownData(null)} className="text-sm text-primary hover:underline">
+            <button onClick={() => setDrillDownData(null)} className="text-sm font-bold text-amber-500 hover:text-amber-400 transition-colors">
               {t("common.close")}
             </button>
           </div>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[34rem] text-sm">
+            <table className="w-full min-w-[34rem] text-sm text-stone-300">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 font-medium">{t("common.id")}</th>
-                  <th className="pb-2 font-medium">{t("common.status")}</th>
-                  <th className="pb-2 font-medium text-right">{t("common.value")}</th>
+                <tr className="border-b border-amber-200/10 text-left text-stone-500 font-bold uppercase tracking-widest text-[10px]">
+                  <th className="pb-3 px-2 font-bold">{t("common.id")}</th>
+                  <th className="pb-3 px-2 font-bold">{t("common.status")}</th>
+                  <th className="pb-3 px-2 font-bold text-right">{t("common.value")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-amber-200/10">
                 {drillDownData.items.map((item) => (
-                  <tr key={item.id} className="hover:bg-secondary/5">
-                    <td className="py-3 font-mono text-xs">{item.id.substring(0, 8)}...</td>
-                    <td className="py-3">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{item.status}</span>
+                  <tr key={item.id} className="hover:bg-stone-800/30 transition-colors">
+                    <td className="py-4 px-2 font-mono text-xs text-stone-400">{item.id.substring(0, 8)}...</td>
+                    <td className="py-4 px-2">
+                      <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-200 uppercase tracking-wider">{item.status}</span>
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="py-4 px-2 text-right font-bold text-stone-200">
                       {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : "-"}
                     </td>
                   </tr>
@@ -340,10 +447,10 @@ export default function ReportsPage() {
       ) : null}
 
       <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <BentoCard className="space-y-5">
+        <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-3">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            <h2 className="font-serif text-2xl font-semibold">{t("reports.operationsRead")}</h2>
+            <BarChart3 className="h-5 w-5 text-amber-500" />
+            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.operationsRead")}</h2>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
@@ -359,28 +466,28 @@ export default function ReportsPage() {
               { label: t("common.active"), value: snapshot?.operations.activeDeals || 0, icon: PackageSearch },
               { label: t("reports.metrics.avgTime"), value: `${Math.round(snapshot?.operations.averageProcessingTimeDays || 0)} ${t("common.days")}`, icon: Clock },
             ].map((item) => (
-              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-secondary/25 p-4">
-                <p className="break-words text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 break-words text-2xl font-bold">{item.value}</p>
+              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-600">{item.label}</p>
+                <p className="mt-1 break-words text-2xl font-bold text-stone-100">{item.value}</p>
               </div>
             ))}
           </div>
-          <div className="rounded-[1.35rem] border border-primary/15 bg-primary/8 p-4 text-sm leading-7 text-muted-foreground">
+          <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400 font-medium">
             {t("reports.structuredHint")}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-5">
-          <h2 className="font-serif text-2xl font-semibold">{t("reports.shipmentSummary")}</h2>
+        <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.shipmentSummary")}</h2>
           <div className="grid gap-3">
             {[
               { label: t("reports.inTransit"), value: metrics.inTransit },
               { label: t("reports.destination"), value: metrics.destination },
               { label: t("reports.delivered"), value: metrics.delivered },
             ].map((item) => (
-              <div key={item.label} className="rounded-[1.25rem] border border-border/60 bg-secondary/15 p-4">
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 text-3xl font-bold">{item.value}</p>
+              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-600">{item.label}</p>
+                <p className="mt-1 text-3xl font-bold text-stone-100">{item.value}</p>
               </div>
             ))}
           </div>
@@ -388,55 +495,55 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <BentoCard className="space-y-4">
-          <h2 className="font-serif text-2xl font-semibold">{t("reports.topCustomers")}</h2>
+        <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.topCustomers")}</h2>
           <div className="space-y-3">
             {snapshot?.topCustomers.length ? (
               snapshot.topCustomers.map((customer) => (
-                <div key={customer.customerId} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
+                <div key={customer.customerId} className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <p className="break-words font-medium">{customer.fullName}</p>
-                      <p className="mt-1 break-words text-sm text-muted-foreground">{customer.email}</p>
+                      <p className="break-words font-bold text-stone-200">{customer.fullName}</p>
+                      <p className="mt-1 break-words text-xs text-stone-500 font-medium">{customer.email}</p>
                     </div>
-                    <div className="text-start text-sm text-muted-foreground sm:text-end">
+                    <div className="text-start text-[10px] font-bold uppercase tracking-widest text-stone-600 sm:text-end">
                       <div>{t("reports.requestsCount", { count: customer.requestsCount })}</div>
                       <div>{t("reports.dealsCount", { count: customer.dealsCount })}</div>
                     </div>
                   </div>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="min-w-0 rounded-[1rem] bg-background/60 p-3 text-sm">
-                      <p className="text-xs text-muted-foreground">{t("reports.labels.outstandingBalance")}</p>
-                      <p className="mt-1 break-words font-semibold">{customer.outstandingBalance.toLocaleString()} SAR</p>
+                    <div className="min-w-0 rounded-[1rem] bg-stone-950/40 border border-amber-200/5 p-3 text-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("reports.labels.outstandingBalance")}</p>
+                      <p className="mt-1 break-words font-bold text-stone-300">{customer.outstandingBalance.toLocaleString()} SAR</p>
                     </div>
-                    <div className="min-w-0 rounded-[1rem] bg-background/60 p-3 text-sm">
-                      <p className="text-xs text-muted-foreground">{t("reports.labels.pendingEditRequests")}</p>
-                      <p className="mt-1 font-semibold">{customer.pendingEditRequests}</p>
+                    <div className="min-w-0 rounded-[1rem] bg-stone-950/40 border border-amber-200/5 p-3 text-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("reports.labels.pendingEditRequests")}</p>
+                      <p className="mt-1 font-bold text-stone-300">{customer.pendingEditRequests}</p>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4 text-sm text-muted-foreground">
+              <div className="rounded-[1.3rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500 text-center font-medium">
                 {t("reports.noCustomers")}
               </div>
             )}
           </div>
         </BentoCard>
 
-        <BentoCard className="space-y-4">
-          <h2 className="font-serif text-2xl font-semibold">{t("reports.topExpenses")}</h2>
+        <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.topExpenses")}</h2>
           <div className="space-y-3">
             {snapshot?.financialSummary.trends.length ? (
-              <div className="mb-4 rounded-[1.3rem] border border-primary/15 bg-primary/5 p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <div className="mb-4 rounded-[1.3rem] border border-amber-500/20 bg-amber-500/5 p-4">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-amber-200">
                   {t("reports.monthlyTrend")}
                 </p>
                 <div className="space-y-2">
                   {snapshot.financialSummary.trends.slice(-3).map((trend) => (
                     <div key={trend.month} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{trend.month}</span>
-                      <span className={`font-mono font-bold ${trend.net >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      <span className="text-stone-500 font-bold uppercase tracking-widest text-[10px]">{trend.month}</span>
+                      <span className={`font-bold ${trend.net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                         {trend.net > 0 ? "+" : ""}
                         {trend.net.toLocaleString()} SAR
                       </span>
@@ -447,15 +554,15 @@ export default function ReportsPage() {
             ) : null}
             {snapshot?.topExpenseCategories.length ? (
               snapshot.topExpenseCategories.map((item) => (
-                  <div key={item.category} className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4">
+                  <div key={item.category} className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                    <p className="break-words font-medium">{item.category}</p>
-                    <p className="break-words text-sm font-semibold">{Number(item.amount).toLocaleString()} SAR</p>
+                    <p className="break-words font-bold text-stone-200 uppercase tracking-wide text-sm">{item.category}</p>
+                    <p className="break-words text-sm font-bold text-stone-100">{Number(item.amount).toLocaleString()} SAR</p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.3rem] border border-border/60 bg-secondary/15 p-4 text-sm text-muted-foreground">
+              <div className="rounded-[1.3rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500 text-center font-medium">
                 {t("reports.noExpenses")}
               </div>
             )}

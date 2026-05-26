@@ -11,7 +11,7 @@ export default function PrivacyPage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("consent.privacyTitle")}
         description="LOUREX Privacy Policy: how we collect, store, and protect your personal and trade data with AES-256 encryption."
@@ -21,19 +21,19 @@ export default function PrivacyPage() {
         <div className="container mx-auto px-4 md:px-8 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-amber-500" />
               </div>
-              <h1 className="font-serif text-3xl md:text-4xl font-bold">
+              <h1 className="font-serif text-3xl md:text-4xl font-bold text-stone-100">
                 {t("consent.privacyTitle")}
               </h1>
             </div>
-            <div className="rounded-xl border border-border bg-card p-6 md:p-8">
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+            <div className="rounded-xl border border-amber-200/10 bg-stone-50/5 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+              <p className="text-sm text-stone-400 leading-relaxed whitespace-pre-line font-medium">
                 {t("consent.privacyContent")}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground/60 mt-4 text-center">
+            <p className="text-xs text-stone-600 font-bold uppercase tracking-widest mt-6 text-center">
               {t("legal.lastUpdated")}: March 2026
             </p>
           </motion.div>
