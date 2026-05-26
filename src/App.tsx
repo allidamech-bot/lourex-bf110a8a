@@ -46,6 +46,7 @@ const EditRequestsPage = lazy(() => import("@/pages/dashboard/EditRequestsPage")
 const PartnerSettlementsPage = lazy(() => import("@/pages/dashboard/PartnerSettlementsPage"));
 const AuditPage = lazy(() => import("@/pages/dashboard/AuditPage"));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage"));
+const NotificationsPage = lazy(() => import("@/pages/dashboard/NotificationsPage"));
 const SystemControlsPage = lazy(() => import("@/pages/dashboard/SystemControlsPage"));
 const HealthPage = lazy(() => import("@/pages/dashboard/HealthPage"));
 const OperationsBriefingPage = lazy(() => import("@/pages/dashboard/OperationsBriefingPage"));
@@ -155,6 +156,7 @@ const App = () => (
                                         <Route path="settlements" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<PartnerSettlementsPage />} /></ProtectedRoute>} />
                                         <Route path="audit" element={<ProtectedRoute allowedRoles={INTERNAL_ROLES}><PageWithAI component={<AuditPage />} /></ProtectedRoute>} />
                                         <Route path="reports" element={<ProtectedRoute allowedRoles={[...OWNER_DASHBOARD_UI_ROLES, "operations_employee"]}><PageWithAI component={<ReportsPage />} /></ProtectedRoute>} />
+                                        <Route path="notifications" element={<ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}><PageWithAI component={<NotificationsPage />} /></ProtectedRoute>} />
                                         <Route path="system" element={<ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}><PageWithAI component={<SystemControlsPage />} /></ProtectedRoute>} />
                                         <Route path="health" element={<ProtectedRoute allowedRoles={SYSTEM_DASHBOARD_UI_ROLES}><PageWithAI component={<HealthPage />} /></ProtectedRoute>} />
                                     </Route>
