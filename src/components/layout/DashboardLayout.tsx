@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Boxes,
   BrainCircuit,
@@ -42,6 +43,12 @@ export const DashboardLayout = () => {
     { to: "/dashboard/audit", label: t("dashboardNav.audit"), icon: ShieldCheck, roles: dashboardRoutePermissions.audit },
     { to: "/dashboard/reports", label: t("dashboardNav.reports"), icon: BarChart3, roles: dashboardRoutePermissions.reports },
     { to: "/dashboard/system", label: t("dashboardNav.system"), icon: SlidersHorizontal, roles: dashboardRoutePermissions.system },
+    {
+      to: "/dashboard/health",
+      label: lang === "ar" ? "الصحة والجاهزية" : "Health & Readiness",
+      icon: Activity,
+      roles: dashboardRoutePermissions.system
+    },
   ];
 
   const visibleLinks = dashboardLinks.filter((link) => profile && link.roles.includes(profile.role));
