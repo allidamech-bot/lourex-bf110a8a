@@ -29,6 +29,9 @@ export const optionalBackendTables = new Set([
   "transfer_proofs",
   "order_followups",
   "notification_events",
+  "notification_settings",
+  "notification_templates",
+  "notification_delivery_queue",
 ]);
 
 export const optionalBackendUnavailableMessage =
