@@ -43,12 +43,24 @@ const getNextAction = (request: OperationsRequest | undefined, lang: "ar" | "en"
     };
   }
 
+  const trackingCode = getTrackingCode(request);
+
+  if (request.status === "in_progress" || trackingCode) {
+    return {
+      icon: Route,
+      title: lang === "ar" ? "تابع العملية والشحنة" : "Track the operation",
+      description: lang === "ar" ? "طلبك قيد التنفيذ. تابع التحديثات والمراحل من صفحة التتبع الاحترافية." : "Your request is in progress. Follow updates and stages from the pro tracking view.",
+      href: trackingCode ? `/customer-portal/tracking-pro?tracking=${encodeURIComponent(trackingCode)}` : "/customer-portal/tracking-pro",
+      cta: lang === "ar" ? "فتح التتبع الاحترافي" : "Open Tracking Pro",
+    };
+  }
+
   if (request.status === "awaiting_clarification") {
     return {
       icon: MessageSquareText,
       title: lang === "ar" ? "مطلوب توضيح منك" : "Clarification needed",
-      description: lang === "ar" ? "راجع طلبك وأرسل التوضيح المطلوب حتى تتابع الإدارة المراجعة." : "Review your request and send the requested clarification so management can continue.",
-      href: `/customer-portal/requests?request=${request.id}`,
+      description: lang === "ar" ? "راجع طلبك وأرسل التوضيح المطلوب من عرض التفاصيل الاحترافي." : "Review your request and send the requested clarification from the pro detail view.",
+      href: `/customer-portal/request-detail?request=${request.id}`,
       cta: lang === "ar" ? "إرسال التوضيح" : "Reply now",
     };
   }
@@ -57,20 +69,9 @@ const getNextAction = (request: OperationsRequest | undefined, lang: "ar" | "en"
     return {
       icon: ReceiptText,
       title: lang === "ar" ? "راجع إثبات التحويل" : "Review transfer proof",
-      description: lang === "ar" ? "ارفع الإيصال أو راجع سبب الرفض من صفحة الطلب." : "Upload the receipt or review the rejection reason from the request page.",
-      href: `/customer-portal/requests?request=${request.id}`,
+      description: lang === "ar" ? "ارفع الإيصال أو راجع سبب الرفض من عرض التفاصيل الاحترافي." : "Upload the receipt or review the rejection reason from the pro detail view.",
+      href: `/customer-portal/request-detail?request=${request.id}`,
       cta: lang === "ar" ? "فتح الطلب" : "Open request",
-    };
-  }
-
-  if (request.status === "in_progress") {
-    const trackingCode = getTrackingCode(request);
-    return {
-      icon: Route,
-      title: lang === "ar" ? "تابع العملية والشحنة" : "Track the operation",
-      description: lang === "ar" ? "طلبك قيد التنفيذ. تابع التحديثات والمراحل من صفحة التتبع." : "Your request is in progress. Follow updates and stages from tracking.",
-      href: trackingCode ? `/customer-portal/tracking?tracking=${encodeURIComponent(trackingCode)}` : "/customer-portal/tracking",
-      cta: lang === "ar" ? "فتح التتبع" : "Open tracking",
     };
   }
 
@@ -78,18 +79,18 @@ const getNextAction = (request: OperationsRequest | undefined, lang: "ar" | "en"
     return {
       icon: PackageCheck,
       title: lang === "ar" ? "عملية مكتملة" : "Operation completed",
-      description: lang === "ar" ? "راجع سجل الطلب والإشعارات النهائية داخل بوابتك." : "Review the request history and final notifications inside your portal.",
-      href: `/customer-portal/requests?request=${request.id}`,
-      cta: lang === "ar" ? "مراجعة الطلب" : "Review request",
+      description: lang === "ar" ? "راجع سجل الطلب والإشعارات النهائية في عرض التفاصيل." : "Review the request history and final notifications in the detail view.",
+      href: `/customer-portal/request-detail?request=${request.id}`,
+      cta: lang === "ar" ? "مراجعة التفاصيل" : "Review details",
     };
   }
 
   return {
     icon: Clock3,
     title: lang === "ar" ? "طلبك قيد المتابعة" : "Your request is being handled",
-    description: lang === "ar" ? "لا يوجد إجراء مطلوب منك حالياً. ستظهر التحديثات الجديدة في الإشعارات." : "No action is required from you right now. New updates will appear in notifications.",
-    href: "/customer-portal/notifications",
-    cta: lang === "ar" ? "فتح الإشعارات" : "Open notifications",
+    description: lang === "ar" ? "راجع تفاصيل طلبك أو انتظر التحديثات في الإشعارات." : "Review your request details or wait for updates in notifications.",
+    href: `/customer-portal/request-detail?request=${request.id}`,
+    cta: lang === "ar" ? "عرض التفاصيل" : "View details",
   };
 };
 

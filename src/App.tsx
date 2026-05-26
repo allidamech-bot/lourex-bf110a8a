@@ -56,6 +56,7 @@ const CustomerOperationsPage = lazy(() => import("@/pages/customer/CustomerOpera
 const CustomerRequestsPage = lazy(() => import("@/pages/customer/CustomerRequestsPage"));
 const CustomerRequestDetailProPage = lazy(() => import("@/pages/customer/CustomerRequestDetailProPage"));
 const CustomerTrackingPage = lazy(() => import("@/pages/customer/CustomerTrackingPage"));
+const CustomerTrackingProPage = lazy(() => import("@/pages/customer/CustomerTrackingProPage"));
 const CustomerNotificationsPage = lazy(() => import("@/pages/customer/CustomerNotificationsPage"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -171,6 +172,7 @@ const App = () => (
                                         <Route path="requests" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerRequestsPage />} /></ProtectedRoute>} />
                                         <Route path="request-detail" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerRequestDetailProPage />} /></ProtectedRoute>} />
                                         <Route path="tracking" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerTrackingPage />} /></ProtectedRoute>} />
+                                        <Route path="tracking-pro" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerTrackingProPage />} /></ProtectedRoute>} />
                                         <Route path="notifications" element={<ProtectedRoute allowedRoles={["customer"]}><PageWithAI component={<CustomerNotificationsPage />} /></ProtectedRoute>} />
                                     </Route>
                                     <Route path="/admin" element={<ProtectedRoute allowedRoles={OWNER_ONLY_ROLES}><PageWithAI component={<Admin />} /></ProtectedRoute>} />

@@ -522,9 +522,8 @@ const CustomerPortal = () => {
                     const trackingCode = getTrackingCode(request);
 
                     return (
-                        <Link
+                        <div
                             key={request.id}
-                            to={`/customer-portal/requests?request=${request.id}`}
                             className="block w-full max-w-full min-w-0 rounded-xl border border-amber-200/10 bg-stone-900/50 p-4 transition-colors hover:border-amber-500/25 hover:bg-stone-800/50"
                         >
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -552,7 +551,22 @@ const CustomerPortal = () => {
                               </p>
                             </div>
                           </div>
-                        </Link>
+
+                          <div className="mt-4 flex flex-wrap gap-4 border-t border-amber-200/5 pt-3">
+                            <Button variant="link" className="h-auto p-0 text-xs font-bold text-amber-500 hover:text-amber-400" asChild>
+                              <Link to={`/customer-portal/request-detail?request=${request.id}`}>
+                                {lang === "ar" ? "العرض الاحترافي" : "Pro View"}
+                              </Link>
+                            </Button>
+                            {trackingCode ? (
+                              <Button variant="link" className="h-auto p-0 text-xs font-bold text-amber-500 hover:text-amber-400" asChild>
+                                <Link to={`/customer-portal/tracking-pro?tracking=${encodeURIComponent(trackingCode)}`}>
+                                  {lang === "ar" ? "التتبع الاحترافي" : "Tracking Pro"}
+                                </Link>
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
                     );
                   })}
 
