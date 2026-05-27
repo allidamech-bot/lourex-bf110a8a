@@ -4,13 +4,14 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock3,
+  Eye,
   PackageSearch,
   RefreshCw,
   Route,
   Search,
   Truck,
 } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -560,18 +561,27 @@ export default function CustomerTrackingPage() {
                   </p>
                 </div>
 
-                <div className="grid w-full max-w-full shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:w-auto xl:min-w-[18rem]">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="text-xs font-medium text-slate-400">
-                      {t("tracking.progress")}
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-white">{formatNumber(progressPercent, locale)}%</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="text-xs font-medium text-slate-400">
-                      {getSafeLabel(t("tracking.labels.remainingStages"), locale === "ar" ? "المتبقي" : "Remaining")}
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-white">{formatNumber(getRemainingStages(activeShipment.stage), locale)}</p>
+                <div className="flex w-full flex-col gap-4 sm:w-auto xl:min-w-[18rem]">
+                  <Button asChild variant="outline" className="w-full border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                    <Link to={`/customer-portal/tracking-pro?tracking=${activeShipment.trackingId}`}>
+                      <Eye className="me-2 h-4 w-4 text-amber-500" />
+                      {lang === "ar" ? "التتبع الاحترافي" : "Tracking Pro"}
+                    </Link>
+                  </Button>
+
+                  <div className="grid w-full max-w-full shrink-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-xs font-medium text-slate-400">
+                        {t("tracking.progress")}
+                      </p>
+                      <p className="mt-2 text-3xl font-bold text-white">{formatNumber(progressPercent, locale)}%</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-xs font-medium text-slate-400">
+                        {getSafeLabel(t("tracking.labels.remainingStages"), locale === "ar" ? "المتبقي" : "Remaining")}
+                      </p>
+                      <p className="mt-2 text-3xl font-bold text-white">{formatNumber(getRemainingStages(activeShipment.stage), locale)}</p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -21,8 +21,77 @@ export type NotificationReadinessInput = {
   metadata?: Record<string, unknown>;
 };
 
+type NotificationDeliveryChannel = "email" | "whatsapp_sms";
+type NotificationDeliveryStatus = "queued" | "provider_not_configured";
+
 const hasEmailProvider = () => Boolean(import.meta.env.VITE_EMAIL_NOTIFICATIONS_ENABLED === "true");
 const hasMessagingProvider = () => Boolean(import.meta.env.VITE_WHATSAPP_SMS_NOTIFICATIONS_ENABLED === "true");
+
+const resolveDeliveryChannels = (channelHint: NotificationReadinessInput["channelHint"]): NotificationDeliveryChannel[] => {
+  if (channelHint === "email") return ["email"];
+  if (channelHint === "whatsapp_sms") return ["whatsapp_sms"];
+  return ["email", "whatsapp_sms"];
+};
+
+const getProviderConfiguredForChannel = (channel: NotificationDeliveryChannel) =>
+  channel === "email" ? hasEmailProvider() : hasMessagingProvider();
+
+const getDeliveryStatusForChannel = (channel: NotificationDeliveryChannel): NotificationDeliveryStatus =>
+  getProviderConfiguredForChannel(channel) ? "queued" : "provider_not_configured";
+
+const getTemplateKeyForEvent = (eventType: CustomerNotificationEvent, channel: NotificationDeliveryChannel) => {
+  const channelSuffix = channel === "email" ? "email_en" : "whatsapp_sms_en";
+  return `${eventType}_${channelSuffix}`;
+};
+
+const getRecipientContactFromMetadata = (metadata: Record<string, unknown> | undefined) => {
+  const value = metadata?.customerEmail || metadata?.email || metadata?.phone || metadata?.customerPhone;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+};
+
+const queueNotificationDelivery = async (input: NotificationReadinessInput) => {
+  const metadata = input.metadata || {};
+  const channels = resolveDeliveryChannels(input.channelHint);
+  const rows = channels.map((channel) => {
+    const status = getDeliveryStatusForChannel(channel);
+
+    return {
+      event_type: input.eventType,
+      channel,
+      recipient_type: "customer",
+      recipient_id: input.customerId || null,
+      recipient_contact: getRecipientContactFromMetadata(metadata),
+      template_key: getTemplateKeyForEvent(input.eventType, channel),
+      payload: {
+        order_id: input.orderId || null,
+        tracking_id: input.trackingId || null,
+        metadata,
+      },
+      status,
+      provider: status === "queued" ? "ready_for_provider" : null,
+      last_error: status === "provider_not_configured" ? "External delivery provider is not configured yet." : null,
+    };
+  });
+
+  if (rows.length === 0) return { queued: false, deliveryStatus: "skipped" as const };
+
+  try {
+    const { error } = await supabase.from("notification_delivery_queue").insert(rows);
+    if (error) throw error;
+
+    return {
+      queued: true,
+      deliveryStatus: rows.some((row) => row.status === "queued") ? "queued" : "provider_not_configured",
+    };
+  } catch (error) {
+    if (isOptionalBackendUnavailable(error)) {
+      logOptionalBackendUnavailableOnce("notification_delivery_queue", error);
+      return { queued: false, deliveryStatus: "skipped" as const };
+    }
+
+    throw error;
+  }
+};
 
 export const getCustomerNotificationCopy = (lang: Lang) =>
   lang === "ar"
@@ -66,16 +135,26 @@ export const recordNotificationReadiness = async (input: NotificationReadinessIn
     status: "ready",
   };
 
+  let logged = false;
+
   try {
     const { error } = await supabase.from("notification_events").insert(payload);
     if (error) throw error;
-    return { logged: true, providerConfigured: payload.provider_email_configured || payload.provider_messaging_configured };
+    logged = true;
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       logOptionalBackendUnavailableOnce("notification_events", error);
-      return { logged: false, providerConfigured: payload.provider_email_configured || payload.provider_messaging_configured };
+    } else {
+      throw error;
     }
-
-    throw error;
   }
+
+  const queued = await queueNotificationDelivery(input);
+
+  return {
+    logged,
+    queued: queued.queued,
+    deliveryStatus: queued.deliveryStatus,
+    providerConfigured: payload.provider_email_configured || payload.provider_messaging_configured,
+  };
 };

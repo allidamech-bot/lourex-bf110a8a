@@ -780,6 +780,13 @@ export default function CustomerRequestsPage() {
                     </div>
 
                     <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+                      <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                        <Link to={`/customer-portal/request-detail?request=${selectedRow.id}`}>
+                          <Eye className="me-2 h-4 w-4 text-amber-500" />
+                          {lang === "ar" ? "العرض الاحترافي" : "Pro View"}
+                        </Link>
+                      </Button>
+
                       {canResubmitRequest(selectedRow.status) && (
                           <Button
                               disabled={actionLoadingId === selectedRow.id}
