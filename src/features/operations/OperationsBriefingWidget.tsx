@@ -11,7 +11,18 @@ import {
   type OperationsBriefingReport,
   type OperationsRiskLevel,
 } from "@/domain/operations/operationsBriefing";
+import {
+  fetchAuditCount,
+  fetchDeals,
+  fetchFinancialEditRequests,
+  fetchRequests,
+  fetchShipments,
+} from "@/domain/operations/service";
 import { logOperationalError } from "@/lib/monitoring";
+import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
+import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
+import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
+import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
   excellent: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
@@ -50,11 +61,26 @@ const riskIcon = {
 export function OperationsBriefingWidget() {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<OperationsBriefingReport | null>(null);
+  const [deals, setDeals] = useState<OperationsDeal[]>([]);
+  const [requests, setRequests] = useState<OperationsRequest[]>([]);
+  const [shipments, setShipments] = useState<any[]>([]);
+  const [editRequests, setEditRequests] = useState<any[]>([]);
 
   const loadReport = useCallback(async () => {
     setLoading(true);
     try {
-      setReport(await buildOperationsBriefingReport());
+      const [rpt, dealsData, requestsData, shipmentsData, editsData] = await Promise.all([
+        buildOperationsBriefingReport(),
+        fetchDeals(),
+        fetchRequests(),
+        fetchShipments(),
+        fetchFinancialEditRequests(),
+      ]);
+      setReport(rpt);
+      setDeals(dealsData);
+      setRequests(requestsData);
+      setShipments(shipmentsData);
+      setEditRequests(editsData);
     } catch (error) {
       logOperationalError("operations_briefing_widget_load", error);
     } finally {
@@ -65,6 +91,43 @@ export function OperationsBriefingWidget() {
   useEffect(() => {
     void loadReport();
   }, [loadReport]);
+
+  const recommendations = useMemo(
+    () => generateRecommendations(deals, requests),
+    [deals, requests]
+  );
+
+  const operationalRisks = useMemo<OperationalRisk[]>(() => {
+    const risks: OperationalRisk[] = [];
+    const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
+
+    if (delayedShipments.length > 0) {
+      risks.push({
+        id: "risk-delayed",
+        type: "delay",
+        level: delayedShipments.length > 3 ? "HIGH" : "MEDIUM",
+        title: `${delayedShipments.length} shipments in high-latency stages`,
+        titleAr: `${delayedShipments.length} شحنات في مراحل بطيئة`,
+        recommendation: "Check clearing status and follow up with local Saudi agent.",
+        recommendationAr: "تحقق من حالة التخليص وتابع مع وكيل السعودية المحلي.",
+      });
+    }
+
+    const pendingEdits = editRequests.filter(e => e.status === "pending");
+    if (pendingEdits.length > 0) {
+      risks.push({
+        id: "risk-accounting",
+        type: "missing_info",
+        level: "MEDIUM",
+        title: `${pendingEdits.length} pending financial adjustments`,
+        titleAr: `${pendingEdits.length} تعديلات مالية معلقة`,
+        recommendation: "Review and lock financial entries to prevent settlement delays.",
+        recommendationAr: "راجع وأقفل القيود المالية لتجنب تأخير التسويات.",
+      });
+    }
+
+    return risks;
+  }, [deals, editRequests]);
 
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
@@ -114,6 +177,20 @@ export function OperationsBriefingWidget() {
           </Button>
         </div>
       </div>
+
+      {!loading && (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <OperationsHealthCenter
+            activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+            pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+            inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
+            delayedCount={shipments.filter(s => s.stage !== "delivered" && s.stage !== "closed").length}
+            blockedWorkflows={editRequests.filter(e => e.status === "pending").length}
+            completionScore={82}
+          />
+          <OperationalRiskCenter risks={operationalRisks} />
+        </div>
+      )}
 
       <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {report.metrics.map((metric) => (

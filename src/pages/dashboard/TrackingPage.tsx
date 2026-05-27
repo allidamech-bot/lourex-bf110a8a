@@ -26,6 +26,7 @@ import { filterShipments } from "@/lib/adminOperations";
 import { getCustomerNotificationCopy, recordNotificationReadiness } from "@/domain/notifications/readiness";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
+import { OperationsTimelineIntelligence, type TimelineWorkflowStage } from "@/features/operations-intelligence/components/OperationsTimelineIntelligence";
 
 type ShipmentAiContext = {
   trackingId: string;
@@ -668,6 +669,18 @@ export default function TrackingPage() {
 
           <ShipmentTimeline currentStage={activeShipment.stage} />
         </BentoCard>
+
+        {isInternal && (
+          <OperationsTimelineIntelligence
+            stages={[
+              { id: '1', name: 'Order Validation', nameAr: 'تأكيد الطلب', status: 'completed', confidence: 100 },
+              { id: '2', name: 'Factory Preparation', nameAr: 'تجهيز المصنع', status: activeStageIndex >= 0 ? 'completed' : 'in_progress', confidence: 95 },
+              { id: '3', name: 'International Transit', nameAr: 'الشحن الدولي', status: activeStageIndex >= 5 ? 'completed' : (activeStageIndex >= 4 ? 'in_progress' : 'pending'), confidence: 85 },
+              { id: '4', name: 'Customs Clearance', nameAr: 'التخليص الجمركي', status: activeStageIndex >= 7 ? 'completed' : (activeStageIndex >= 6 ? 'in_progress' : 'pending'), confidence: 70 },
+              { id: '5', name: 'Final Delivery', nameAr: 'التسليم النهائي', status: activeStageIndex >= 9 ? 'completed' : (activeStageIndex >= 8 ? 'in_progress' : 'pending'), confidence: 90 },
+            ]}
+          />
+        )}
 
         <BentoCard className="space-y-4 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-3">

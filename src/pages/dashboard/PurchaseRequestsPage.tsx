@@ -49,6 +49,9 @@ import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigatio
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
 import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
+import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
+import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
+import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -653,6 +656,11 @@ export default function PurchaseRequestsPage() {
         }
     }, [filteredRows, selectedRequestId, setSelectedRequest]);
 
+    const recommendations = useMemo(
+        () => generateRecommendations([], rows),
+        [rows]
+    );
+
     const requestMetrics = useMemo(
         () => ({
             total: rows.length,
@@ -967,6 +975,21 @@ export default function PurchaseRequestsPage() {
     return (
         <div className="w-full max-w-full min-w-0 space-y-4">
             <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
+
+            {isInternal && (
+                <div className="grid gap-4 xl:grid-cols-2">
+                    <OperationsHealthCenter
+                        activeRequests={requestMetrics.total - requestMetrics.converted}
+                        pendingOperations={requestMetrics.review}
+                        inTransitCount={0}
+                        delayedCount={0}
+                        blockedWorkflows={rows.filter(r => r.status === 'transfer_proof_rejected').length}
+                        completionScore={75}
+                    />
+                    <PriorityQueueEngine recommendations={recommendations} />
+                </div>
+            )}
+
             <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(24rem,0.82fr)_minmax(0,1.18fr)]">
                 <BentoCard className="space-y-5 rounded-[1.5rem] border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
                     <div>

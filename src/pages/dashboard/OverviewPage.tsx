@@ -43,6 +43,11 @@ import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
 import { logOperationalError } from "@/lib/monitoring";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import type { PartnerSettlement } from "@/types/lourex";
+import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
+import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
+import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
+import { DailyOperationsBriefing } from "@/features/operations-intelligence/components/DailyOperationsBriefing";
+import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -357,6 +362,43 @@ export default function OverviewPage() {
     [shipments],
   );
 
+  const recommendations = useMemo(
+    () => generateRecommendations(deals, requests, settlements),
+    [deals, requests, settlements]
+  );
+
+  const operationalRisks = useMemo<OperationalRisk[]>(() => {
+    const risks: OperationalRisk[] = [];
+    const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
+
+    if (delayedShipments.length > 0) {
+      risks.push({
+        id: "risk-delayed",
+        type: "delay",
+        level: delayedShipments.length > 3 ? "HIGH" : "MEDIUM",
+        title: `${delayedShipments.length} shipments in high-latency stages`,
+        titleAr: `${delayedShipments.length} شحنات في مراحل بطيئة`,
+        recommendation: "Check clearing status and follow up with local Saudi agent.",
+        recommendationAr: "تحقق من حالة التخليص وتابع مع وكيل السعودية المحلي.",
+      });
+    }
+
+    const pendingEdits = editRequests.filter(e => e.status === "pending");
+    if (pendingEdits.length > 0) {
+      risks.push({
+        id: "risk-accounting",
+        type: "missing_info",
+        level: "MEDIUM",
+        title: `${pendingEdits.length} pending financial adjustments`,
+        titleAr: `${pendingEdits.length} تعديلات مالية معلقة`,
+        recommendation: "Review and lock financial entries to prevent settlement delays.",
+        recommendationAr: "راجع وأقفل القيود المالية لتجنب تأخير التسويات.",
+      });
+    }
+
+    return risks;
+  }, [deals, editRequests]);
+
   const pendingEditRequests = editRequests.filter((item) => item.status === "pending").length;
   const newestFinancialEntry = financialEntries[0];
 
@@ -595,6 +637,34 @@ export default function OverviewPage() {
           );
         })}
       </ResponsiveInfoGrid>
+
+      {isInternal && !loading && (
+        <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-5">
+            <OperationsHealthCenter
+              activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+              pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+              inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
+              delayedCount={deliverySummary.active}
+              blockedWorkflows={pendingEditRequests}
+              completionScore={85}
+            />
+            <OperationalRiskCenter risks={operationalRisks} />
+          </div>
+          <div className="space-y-5">
+            <DailyOperationsBriefing
+              stats={{
+                activeShipments: metrics.shipments,
+                delayedOps: deliverySummary.active,
+                pendingReviews: requestSummary.review,
+                settlementAlerts: settlements.filter(s => s.status === "pending_review").length,
+              }}
+            />
+            <PriorityQueueEngine recommendations={recommendations} />
+          </div>
+        </div>
+      )}
+
       {isInternal && !loading ? (
         <ProductionLazySection>
           <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />

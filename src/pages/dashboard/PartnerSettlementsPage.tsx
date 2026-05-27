@@ -27,6 +27,9 @@ import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import type { PartnerSettlementRole } from "@/types/lourex";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
+import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
+import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
+import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
 
 type PartnerProfile = Awaited<ReturnType<typeof loadPartnerProfiles>>[number];
 
@@ -85,6 +88,43 @@ export default function PartnerSettlementsPage() {
     }),
     [settlements],
   );
+
+  const recommendations = useMemo(
+    () => generateRecommendations([], [], settlements),
+    [settlements]
+  );
+
+  const operationalRisks = useMemo<OperationalRisk[]>(() => {
+    const risks: OperationalRisk[] = [];
+    const pendingSettlements = settlements.filter(s => s.status === "pending_review");
+
+    if (pendingSettlements.length > 0) {
+      risks.push({
+        id: "risk-settlement",
+        type: "settlement",
+        level: pendingSettlements.length > 2 ? "HIGH" : "MEDIUM",
+        title: `${pendingSettlements.length} settlements awaiting review`,
+        titleAr: `${pendingSettlements.length} تسويات بانتظار المراجعة`,
+        recommendation: "Prioritize audit of these settlements to maintain partner trust.",
+        recommendationAr: "أعط الأولوية لتدقيق هذه التسويات للحفاظ على ثقة الشركاء.",
+      });
+    }
+
+    if (totals.disputed > 0) {
+      risks.push({
+        id: "risk-disputed",
+        type: "bottleneck",
+        level: "HIGH",
+        title: `${totals.disputed} disputed settlements detected`,
+        titleAr: `${totals.disputed} تسويات متنازع عليها تم اكتشافها`,
+        recommendation: "Engage with affected partners to resolve disputes immediately.",
+        recommendationAr: "تواصل مع الشركاء المتأثرين لحل النزاعات فوراً.",
+      });
+    }
+
+    return risks;
+  }, [settlements, totals.disputed]);
+
   const settlementVisibility = useMemo(() => summarizeSettlementVisibility(settlements), [settlements]);
 
   const handleCreate = async () => {
@@ -141,6 +181,12 @@ export default function PartnerSettlementsPage() {
   return (
     <div className="space-y-4">
       <PageHelpBox pageKey="partner_settlements" role={profile?.role} />
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <OperationalRiskCenter risks={operationalRisks} />
+        <PriorityQueueEngine recommendations={recommendations} />
+      </div>
+
       <ResponsiveInfoGrid min="minmax(min(100%, 11rem), 1fr)">
         <ReadableMetricCard label={t("partnerSettlements.metrics.unpaid")} value={`${formatMoney(totals.unpaid)} SAR`} />
         <ReadableMetricCard label={t("partnerSettlements.metrics.paid")} value={`${formatMoney(totals.paid)} SAR`} />
