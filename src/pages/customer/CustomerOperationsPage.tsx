@@ -5,10 +5,11 @@ import { CustomerOperationsCommandCenter } from "@/features/customer/CustomerOpe
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
-import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
+import { fetchCustomerDashboard, fetchRequests, fetchDeals } from "@/domain/operations/service";
+import type { OperationsCustomer, OperationsRequest, OperationsDeal } from "@/domain/operations/types";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
+import { CustomerOperationsHealthWidget } from "@/features/customer-intelligence/components/CustomerOperationsHealthWidget";
 
 const getRequestEmail = (request: OperationsRequest) => {
   const row = request as OperationsRequest & {
@@ -25,6 +26,7 @@ const CustomerOperationsPage = () => {
   const { locale } = useI18n();
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
   const [requests, setRequests] = useState<OperationsRequest[]>([]);
+  const [deals, setDeals] = useState<OperationsDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -45,9 +47,10 @@ const CustomerOperationsPage = () => {
     setError("");
 
     try {
-      const [dashboardResult, requestResult] = await Promise.allSettled([
+      const [dashboardResult, requestResult, dealsResult] = await Promise.allSettled([
         fetchCustomerDashboard(),
         fetchRequests(),
+        fetchDeals(),
       ]);
 
       if (dashboardResult.status === "fulfilled") {
@@ -66,6 +69,12 @@ const CustomerOperationsPage = () => {
         setRequests(visibleRequests);
       } else {
         logOperationalError("customer_operations_requests_load", requestResult.reason, { customerId: profile.id });
+      }
+
+      if (dealsResult.status === "fulfilled") {
+        setDeals(dealsResult.value || []);
+      } else {
+        logOperationalError("customer_operations_deals_load", dealsResult.reason, { customerId: profile.id });
       }
 
       if (dashboardResult.status === "rejected" || requestResult.status === "rejected") {
@@ -133,6 +142,15 @@ const CustomerOperationsPage = () => {
           <span>{error}</span>
         </div>
       ) : null}
+
+      <div className="mb-8">
+        <CustomerOperationsHealthWidget
+          activeShipmentsCount={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+          openRequestsCount={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+          delayedCount={deals.filter(d => d.stage === "customs_clearance" || d.stage === "in_transit").length}
+          lastUpdateDate={deals[0]?.createdAt || requests[0]?.createdAt}
+        />
+      </div>
 
       <CustomerOperationsCommandCenter
         requests={recentRequests}

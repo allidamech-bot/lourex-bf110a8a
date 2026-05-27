@@ -29,6 +29,8 @@ import { useI18n, type Lang } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { toast } from "sonner";
+import { ShipmentETAIntelligence } from "@/features/customer-intelligence/components/ShipmentETAIntelligence";
+import { CustomerTrustTimeline } from "@/features/customer-intelligence/components/CustomerTrustTimeline";
 
 type CustomerShipmentRows = Awaited<ReturnType<typeof loadShipments>>;
 type CustomerShipmentRow = CustomerShipmentRows[number];
@@ -559,6 +561,10 @@ export default function CustomerTrackingPage() {
                     {currentStage?.description ||
                         t("tracking.noStageDescription")}
                   </p>
+
+                  <div className="mt-6">
+                    <ShipmentETAIntelligence currentStage={activeShipment.stage} />
+                  </div>
                 </div>
 
                 <div className="flex w-full flex-col gap-4 sm:w-auto xl:min-w-[18rem]">
@@ -720,58 +726,17 @@ export default function CustomerTrackingPage() {
               />
             </BentoCard>
 
-            <BentoCard className="space-y-4">
+            <BentoCard className="space-y-6">
               <div>
-                <p className="whitespace-normal text-xs font-semibold text-stone-500">
+                <p className="whitespace-normal text-xs font-semibold text-stone-500 uppercase tracking-widest">
                   {t("tracking.shipmentTimeline")}
                 </p>
-                <h3 className="mt-2 text-lg font-semibold text-stone-100">
+                <h3 className="mt-2 text-lg font-serif font-bold text-stone-100">
                   {t("tracking.customerVisibleEvents")}
                 </h3>
               </div>
 
-              {activeShipment.shipmentEvents.length ? (
-                <div className="space-y-3">
-                  {activeShipment.shipmentEvents.map((event) => {
-                    const fromStage = getEventStageLabel(event.fromStage, lang);
-                    const toStage = getEventStageLabel(event.toStage, lang);
-
-                    return (
-                      <div
-                        key={event.id}
-                        className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 px-4 py-3"
-                      >
-                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-stone-100">
-                              {getEventTypeLabel(event.eventType, locale)}
-                            </p>
-                            {fromStage || toStage ? (
-                              <p className="mt-1 break-words text-sm text-stone-500">
-                                {fromStage && toStage
-                                  ? `${fromStage} → ${toStage}`
-                                  : toStage || fromStage}
-                              </p>
-                            ) : null}
-                          </div>
-                          <p className="shrink-0 break-words text-xs text-stone-600">
-                            {formatDateTime(event.createdAt, locale)}
-                          </p>
-                        </div>
-                        {event.note ? (
-                          <p className="mt-3 break-words text-sm leading-6 text-stone-400">
-                            {event.note}
-                          </p>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-[1.25rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500">
-                  {t("tracking.noCustomerEvents")}
-                </div>
-              )}
+              <CustomerTrustTimeline updates={activeShipment.timeline} />
             </BentoCard>
             </>
             ) : (

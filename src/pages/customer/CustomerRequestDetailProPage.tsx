@@ -7,8 +7,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadCustomerPaymentSummaries, type CustomerPaymentSummary } from "@/domain/accounting/payments";
-import { fetchRequests } from "@/domain/operations/service";
-import type { OperationsRequest } from "@/domain/operations/types";
+import { fetchRequests, fetchShipments } from "@/domain/operations/service";
+import type { OperationsRequest, OperationsShipment } from "@/domain/operations/types";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
@@ -28,6 +28,7 @@ const CustomerRequestDetailProPage = () => {
   const { locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [requests, setRequests] = useState<OperationsRequest[]>([]);
+  const [shipments, setShipments] = useState<OperationsShipment[]>([]);
   const [paymentSummaries, setPaymentSummaries] = useState<Map<string, CustomerPaymentSummary>>(new Map());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,7 +45,11 @@ const CustomerRequestDetailProPage = () => {
     setError("");
 
     try {
-      const loaded = await fetchRequests();
+      const [loaded, loadedShipments] = await Promise.all([
+        fetchRequests(),
+        fetchShipments()
+      ]);
+
       const visibleRequests = [...loaded]
         .filter((request) => {
           if (!normalizedEmail) return true;
@@ -53,6 +58,7 @@ const CustomerRequestDetailProPage = () => {
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
       setRequests(visibleRequests);
+      setShipments(loadedShipments);
 
       const dealIds = visibleRequests.map((request) => request.convertedDealId).filter(Boolean) as string[];
       setPaymentSummaries(dealIds.length ? await loadCustomerPaymentSummaries(dealIds) : new Map());
@@ -78,6 +84,14 @@ const CustomerRequestDetailProPage = () => {
     if (!requests.length) return null;
     return requests.find((request) => request.id === selectedRequestId) || requests[0];
   }, [requests, selectedRequestId]);
+
+  const selectedShipment = useMemo(() => {
+    if (!selectedRequest || !shipments.length) return null;
+    return shipments.find(s =>
+      s.dealId === selectedRequest.convertedDealId ||
+      (selectedRequest.trackingCode && s.trackingId === selectedRequest.trackingCode)
+    ) || null;
+  }, [selectedRequest, shipments]);
 
   const selectedPaymentSummary = selectedRequest?.convertedDealId
     ? paymentSummaries.get(selectedRequest.convertedDealId)
@@ -135,6 +149,7 @@ const CustomerRequestDetailProPage = () => {
       {selectedRequest ? (
         <CustomerRequestDetailProView
           request={selectedRequest}
+          shipment={selectedShipment}
           paymentSummary={selectedPaymentSummary}
           locale={locale}
         />

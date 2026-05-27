@@ -2,6 +2,10 @@ import { BellRing, ClipboardList, LayoutDashboard, Radar, Route } from "lucide-r
 import { NavLink, Outlet } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useI18n } from "@/lib/i18n";
+import { CustomerAIAssistantStub } from "@/features/customer-intelligence/components/CustomerAIAssistantStub";
+import { useEffect, useState } from "react";
+import { fetchRequests, fetchDeals } from "@/domain/operations/service";
+import type { OperationsRequest, OperationsDeal } from "@/domain/operations/types";
 
 export const CustomerLayout = () => {
   const { lang } = useI18n();
@@ -35,6 +39,14 @@ export const CustomerLayout = () => {
       icon: BellRing,
     },
   ];
+
+  const [requests, setRequests] = useState<OperationsRequest[]>([]);
+  const [deals, setDeals] = useState<OperationsDeal[]>([]);
+
+  useEffect(() => {
+    fetchRequests().then(setRequests).catch(() => {});
+    fetchDeals().then(setDeals).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-950 text-stone-100 selection:bg-amber-500/30 selection:text-amber-200">
@@ -74,6 +86,7 @@ export const CustomerLayout = () => {
           <Outlet />
         </div>
       </main>
+      <CustomerAIAssistantStub requests={requests} deals={deals} />
     </div>
   );
 };

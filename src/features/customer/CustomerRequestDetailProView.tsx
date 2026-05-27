@@ -23,6 +23,10 @@ import type { CustomerPaymentSummary } from "@/domain/accounting/payments";
 import type { OperationsRequest } from "@/domain/operations/types";
 import { getCustomerRequestStatusCopy } from "@/lib/customerExperience";
 import type { PurchaseRequestStatus } from "@/types/lourex";
+import type { PurchaseRequestStatus } from "@/types/lourex";
+import { FinancialVisibilityLayer } from "@/features/customer-intelligence/components/FinancialVisibilityLayer";
+import { ShipmentETAIntelligence } from "@/features/customer-intelligence/components/ShipmentETAIntelligence";
+import { CustomerTrustTimeline } from "@/features/customer-intelligence/components/CustomerTrustTimeline";
 
 const statusOrder: PurchaseRequestStatus[] = [
   "intake_submitted",
@@ -144,10 +148,12 @@ const InfoTile = ({ icon: Icon, label, value }: { icon: typeof Package; label: s
 
 export const CustomerRequestDetailProView = ({
   request,
+  shipment,
   paymentSummary,
   locale,
 }: {
   request: OperationsRequest;
+  shipment?: any; // Using any for quick integration with OperationsShipment
   paymentSummary?: CustomerPaymentSummary;
   locale: string;
 }) => {
@@ -184,6 +190,12 @@ export const CustomerRequestDetailProView = ({
           <p className="mt-2 text-sm leading-6 text-stone-500">
             {request.requestNumber} · {formatDateTime(request.createdAt, locale)}
           </p>
+
+          {shipment && (
+            <div className="mt-6">
+              <ShipmentETAIntelligence currentStage={shipment.stage} />
+            </div>
+          )}
         </div>
         <Button asChild className="bg-amber-500 text-stone-950 hover:bg-amber-400">
           <Link to={nextAction.href}>{nextAction.cta}</Link>
@@ -236,16 +248,19 @@ export const CustomerRequestDetailProView = ({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-[1.5rem] border border-amber-200/10 bg-stone-950/35 p-5">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-6">
             <CreditCard className="h-5 w-5 text-amber-300" />
-            <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "الدفع" : "Payment"}</p>
+            <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "تفاصيل الدفع" : "Payment Details"}</p>
           </div>
           {paymentSummary ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-              <InfoTile icon={ReceiptText} label={lang === "ar" ? "المطلوب" : "Expected"} value={formatMoney(paymentSummary.expectedAmount, paymentSummary.currency, locale)} />
-              <InfoTile icon={CheckCircle2} label={lang === "ar" ? "المدفوع" : "Paid"} value={formatMoney(paymentSummary.paidAmount, paymentSummary.currency, locale)} />
-              <InfoTile icon={AlertTriangle} label={lang === "ar" ? "المتبقي" : "Remaining"} value={formatMoney(paymentSummary.remainingAmount, paymentSummary.currency, locale)} />
-            </div>
+            <FinancialVisibilityLayer
+              paidAmount={paymentSummary.paidAmount}
+              remainingAmount={paymentSummary.remainingAmount}
+              totalAmount={paymentSummary.expectedAmount}
+              currency={paymentSummary.currency}
+              paymentProofStatus={request.transferProofStatus}
+              completionState={paymentSummary.remainingAmount <= 0 ? (lang === "ar" ? "مكتمل" : "Settled") : (lang === "ar" ? "معلق" : "Outstanding")}
+            />
           ) : (
             <p className="mt-4 text-sm leading-7 text-stone-500">
               {lang === "ar" ? "لم يتم إنشاء ملخص دفع لهذه العملية بعد." : "No payment summary has been created for this operation yet."}
@@ -278,6 +293,16 @@ export const CustomerRequestDetailProView = ({
             </Button>
           </div>
         </div>
+
+        {shipment && shipment.timeline && (
+          <div className="rounded-[1.5rem] border border-amber-200/10 bg-stone-950/35 p-5 xl:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <BellRing className="h-5 w-5 text-amber-300" />
+              <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "سجل تتبع الشحنة" : "Shipment Event Timeline"}</p>
+            </div>
+            <CustomerTrustTimeline updates={shipment.timeline} />
+          </div>
+        )}
       </div>
 
       {(request.technicalSpecs || request.deliveryNotes || request.referenceLink) ? (

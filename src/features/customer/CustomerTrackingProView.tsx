@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import type { Lang } from "@/lib/i18n";
 import type { ShipmentEventRecord, ShipmentStageCode, TrackingUpdateRecord } from "@/types/lourex";
+import { ShipmentETAIntelligence } from "@/features/customer-intelligence/components/ShipmentETAIntelligence";
+import { CustomerTrustTimeline } from "@/features/customer-intelligence/components/CustomerTrustTimeline";
 
 type CustomerTrackingShipment = {
   id: string;
@@ -147,6 +149,10 @@ export const CustomerTrackingProView = ({ shipment, locale }: { shipment: Custom
           <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400">
             {currentStage?.description || (lang === "ar" ? "مرحلة الشحنة الحالية ضمن مسار لوركس التشغيلي." : "Current shipment stage inside the Lourex operations journey.")}
           </p>
+
+          <div className="mt-6">
+            <ShipmentETAIntelligence currentStage={shipment.stage} />
+          </div>
         </div>
         <Button asChild className="bg-amber-500 text-stone-950 hover:bg-amber-400">
           <Link to={action.href}>{action.cta}</Link>
@@ -204,47 +210,33 @@ export const CustomerTrackingProView = ({ shipment, locale }: { shipment: Custom
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-[1.5rem] border border-amber-200/10 bg-stone-950/35 p-5">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-6">
             <BellRing className="h-5 w-5 text-amber-300" />
-            <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "آخر تحديث رسمي" : "Latest official update"}</p>
+            <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "سجل الأحداث الرسمي" : "Official Event Timeline"}</p>
           </div>
-          {latestEvent ? (
-            <div className="mt-4 rounded-2xl border border-amber-200/10 bg-stone-900/60 p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="font-semibold text-stone-100">{eventLabel(latestEvent.eventType, lang)}</p>
-                  <p className="mt-1 text-sm text-stone-500">
-                    {[getEventStageLabel(latestEvent.fromStage, lang as Lang), getEventStageLabel(latestEvent.toStage, lang as Lang)].filter(Boolean).join(" → ")}
-                  </p>
-                </div>
-                <p className="text-xs uppercase tracking-widest text-stone-600">{formatDateTime(latestEvent.createdAt, locale)}</p>
-              </div>
-              {latestEvent.note ? <p className="mt-3 text-sm leading-7 text-stone-400">{latestEvent.note}</p> : null}
-            </div>
-          ) : (
-            <p className="mt-4 text-sm leading-7 text-stone-500">
-              {lang === "ar" ? "لا توجد أحداث ظاهرة للعميل بعد." : "No customer-visible shipment events yet."}
-            </p>
-          )}
+
+          <CustomerTrustTimeline updates={shipment.timeline || []} />
         </div>
 
-        <div className="rounded-[1.5rem] border border-amber-200/10 bg-stone-950/35 p-5">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-300" />
-            <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "ملاحظة المرحلة" : "Stage note"}</p>
-          </div>
-          <p className="mt-4 text-sm leading-7 text-stone-400">
-            {shipment.customerVisibleNote || (lang === "ar" ? "لا توجد ملاحظة خاصة بالعميل لهذه المرحلة حالياً." : "No customer-visible note is available for this stage yet.")}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-              <Link to="/customer-portal/notifications">{lang === "ar" ? "الإشعارات" : "Notifications"}</Link>
-            </Button>
-            <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-              <Link to="/customer-portal/operations">{lang === "ar" ? "مركز العمليات" : "Operations"}</Link>
-            </Button>
+        <div className="space-y-4">
+          <div className="rounded-[1.5rem] border border-amber-200/10 bg-stone-950/35 p-5 h-full">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-300" />
+              <p className="font-serif text-xl font-semibold text-stone-100">{lang === "ar" ? "ملاحظة المرحلة" : "Stage note"}</p>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-stone-400">
+              {shipment.customerVisibleNote || (lang === "ar" ? "لا توجد ملاحظة خاصة بالعميل لهذه المرحلة حالياً." : "No customer-visible note is available for this stage yet.")}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                <Link to="/customer-portal/notifications">{lang === "ar" ? "الإشعارات" : "Notifications"}</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                <Link to="/customer-portal/operations">{lang === "ar" ? "مركز العمليات" : "Operations"}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

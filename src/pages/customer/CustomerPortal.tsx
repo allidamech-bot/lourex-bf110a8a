@@ -21,13 +21,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useI18n } from "@/lib/i18n";
-import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
-import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
+import { fetchCustomerDashboard, fetchRequests, fetchDeals } from "@/domain/operations/service";
+import type { OperationsCustomer, OperationsRequest, OperationsDeal } from "@/domain/operations/types";
 import { logOperationalError } from "@/lib/monitoring";
 import {
   getCustomerFinancialSummaryCopy,
   getCustomerRequestStatusCopy,
 } from "@/lib/customerExperience";
+import { CustomerOperationsHealthWidget } from "@/features/customer-intelligence/components/CustomerOperationsHealthWidget";
+import { FinancialVisibilityLayer } from "@/features/customer-intelligence/components/FinancialVisibilityLayer";
+import { CustomerAIAssistantStub } from "@/features/customer-intelligence/components/CustomerAIAssistantStub";
 
 const getSafeLabel = (value: string, fallback: string) => {
   if (!value || value.includes(".")) {
@@ -93,6 +96,7 @@ const CustomerPortal = () => {
 
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
   const [recentRequests, setRecentRequests] = useState<OperationsRequest[]>([]);
+  const [deals, setDeals] = useState<OperationsDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -118,6 +122,7 @@ const CustomerPortal = () => {
     try {
       let dashboard: OperationsCustomer | null = null;
       let requests: OperationsRequest[] = [];
+      let dealsData: OperationsDeal[] = [];
       let dashboardError: unknown = null;
       let requestsError: unknown = null;
 
@@ -135,6 +140,15 @@ const CustomerPortal = () => {
       } catch (error) {
         requestsError = error;
         logOperationalError("customer_portal_requests_load", error, {
+          customerId: profile.id,
+        });
+      }
+
+      try {
+        dealsData = await fetchDeals();
+        setDeals(dealsData);
+      } catch (error) {
+        logOperationalError("customer_portal_deals_load", error, {
           customerId: profile.id,
         });
       }
@@ -337,6 +351,17 @@ const CustomerPortal = () => {
           </Button>
         </motion.div>
 
+        <div className="mb-8">
+          <CustomerOperationsHealthWidget
+            activeShipmentsCount={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+            openRequestsCount={recentRequests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+            delayedCount={deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit").length}
+            lastUpdateDate={deals[0]?.createdAt || recentRequests[0]?.createdAt}
+            nextAction={recentRequestStatus?.label}
+            nextActionAr={recentRequestStatus?.label}
+          />
+        </div>
+
         {loadError ? (
             <div className="mb-6 flex w-full max-w-full items-start gap-3 rounded-[1.5rem] border border-destructive/20 bg-destructive/10 px-4 py-4 text-sm text-destructive sm:px-5">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -469,6 +494,19 @@ const CustomerPortal = () => {
                       value={<span className="text-rose-400">{formatMoney(customerData.financialExpense, locale)}</span>}
                     />
                   </ResponsiveInfoGrid>
+
+                  <div className="pt-6 mt-6 border-t border-amber-200/5">
+                    <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-4">
+                      {lang === "ar" ? "تفصيل الرؤية المالية" : "Financial Visibility Detail"}
+                    </p>
+                    <FinancialVisibilityLayer
+                      paidAmount={customerData.financialIncome}
+                      remainingAmount={Math.abs(customerData.financialBalance)}
+                      totalAmount={customerData.financialIncome + Math.abs(customerData.financialBalance)}
+                      currency="SAR"
+                      completionState={customerData.financialBalance >= 0 ? "Settled" : "Outstanding"}
+                    />
+                  </div>
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -599,6 +637,8 @@ const CustomerPortal = () => {
             )}
           </BentoCard>
         </div>
+
+        <CustomerAIAssistantStub requests={recentRequests} deals={deals} />
       </>
   );
 };
