@@ -80,16 +80,20 @@ export const generateExecutiveFocusAreas = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): ExecutiveFocusArea[] => {
-  const activeReqs = requests.filter(r => r.status !== 'completed' && r.status !== 'cancelled').length;
-  const stalledDeals = deals.filter(d => d.operationalStatus === 'awaiting_assignment').length;
-  const pendingFinance = financials.filter(f => !f.locked).length;
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
+
+  const activeReqs = safeRequests.filter(r => r && r.status !== 'completed' && r.status !== 'cancelled').length;
+  const stalledDeals = safeDeals.filter(d => d && d.operationalStatus === 'awaiting_assignment').length;
+  const pendingFinance = safeFinancials.filter(f => f && !f.locked).length;
 
   return [
     {
       id: 'focus-ops',
       title: 'Operational Throughput',
       status: stalledDeals > 5 ? 'Attention Needed' : 'Stable',
-      metric: `${deals.filter(d => d.operationalStatus === 'closed').length} Completions`,
+      metric: `${safeDeals.filter(d => d && d.operationalStatus === 'closed').length} Completions`,
       trend: 'up',
     },
     {
@@ -115,10 +119,15 @@ export const generateCriticalActionQueue = (
   settlements: PartnerSettlement[],
   editRequests: FinancialEditRequest[]
 ): CriticalAction[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeSettlements = Array.isArray(settlements) ? settlements : [];
+  // safeEditRequests not directly filtered but better to be safe if added later
+
   const actions: CriticalAction[] = [];
 
   // 1. Critical Deal Assignments
-  deals.filter(d => d.operationalStatus === 'awaiting_assignment').forEach(d => {
+  safeDeals.filter(d => d && d.operationalStatus === 'awaiting_assignment').forEach(d => {
     actions.push({
       id: `crit-deal-${d.id}`,
       title: `Assign Partner for Deal ${d.dealNumber}`,
@@ -130,7 +139,7 @@ export const generateCriticalActionQueue = (
   });
 
   // 2. High Pressure Settlements
-  settlements.filter(s => s.status === 'pending_review' && s.netDue > 10000).forEach(s => {
+  safeSettlements.filter(s => s && s.status === 'pending_review' && s.netDue > 10000).forEach(s => {
     actions.push({
       id: `crit-settle-${s.id}`,
       title: `Review High Value Settlement: ${s.partnerName}`,
@@ -142,7 +151,7 @@ export const generateCriticalActionQueue = (
   });
 
   // 3. Stalled Requests
-  requests.filter(r => r.status === 'awaiting_clarification').slice(0, 3).forEach(r => {
+  safeRequests.filter(r => r && r.status === 'awaiting_clarification').slice(0, 3).forEach(r => {
     actions.push({
       id: `crit-req-${r.id}`,
       title: `Customer Clarification: ${r.requestNumber}`,
@@ -155,7 +164,7 @@ export const generateCriticalActionQueue = (
 
   return actions.sort((a, b) => {
     const weights = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
-    return weights[a.priority] - weights[b.priority];
+    return (weights[a.priority] ?? 4) - (weights[b.priority] ?? 4);
   });
 };
 
@@ -163,11 +172,13 @@ export const generateOperationalPressureMap = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): OperationalPressure[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const zones: OperationalPressure[] = [];
 
-  const turkeyOps = deals.filter(d => d.shipmentStage.includes('turkey')).length;
-  const destinationOps = deals.filter(d => !d.shipmentStage.includes('turkey') && d.operationalStatus !== 'closed').length;
-  const intakeOps = requests.filter(r => r.status === 'intake_submitted').length;
+  const turkeyOps = safeDeals.filter(d => d && String(d.shipmentStage ?? "").toLowerCase().includes('turkey')).length;
+  const destinationOps = safeDeals.filter(d => d && !String(d.shipmentStage ?? "").toLowerCase().includes('turkey') && d.operationalStatus !== 'closed').length;
+  const intakeOps = safeRequests.filter(r => r && r.status === 'intake_submitted').length;
 
   zones.push({
     zone: 'Turkey Origin Sourcing',
@@ -198,12 +209,15 @@ export const generateBusinessStabilityAssessment = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): BusinessStability => {
-  const lockedRatio = financials.length > 0
-    ? (financials.filter(f => f.locked).length / financials.length) * 100
+  const safeFinancials = Array.isArray(financials) ? financials : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+
+  const lockedRatio = safeFinancials.length > 0
+    ? (safeFinancials.filter(f => f && f.locked).length / safeFinancials.length) * 100
     : 100;
 
-  const completionRate = deals.length > 0
-    ? (deals.filter(d => d.operationalStatus === 'closed').length / deals.length) * 100
+  const completionRate = safeDeals.length > 0
+    ? (safeDeals.filter(d => d && d.operationalStatus === 'closed').length / safeDeals.length) * 100
     : 80;
 
   const score = Math.round((lockedRatio + completionRate) / 2);
@@ -226,7 +240,9 @@ export const generateBusinessStabilityAssessment = (
 export const generateExecutiveMomentum = (
   deals: DealOperation[]
 ): ExecutiveMomentum => {
-  const recentCompletions = deals.filter(d => {
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const recentCompletions = safeDeals.filter(d => {
+    if (!d || !d.createdAt) return false;
     const created = new Date(d.createdAt).getTime();
     return (Date.now() - created) < 1000 * 60 * 60 * 24 * 7 && d.operationalStatus === 'closed';
   }).length;
@@ -253,9 +269,11 @@ export const generateCrossSystemInsights = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): CrossSystemInsight[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
   const insights: CrossSystemInsight[] = [];
 
-  const intakeSubmitted = requests.filter(r => r.status === 'intake_submitted').length;
+  const intakeSubmitted = safeRequests.filter(r => r && r.status === 'intake_submitted').length;
   if (intakeSubmitted > 10) {
     insights.push({
       id: 'insight-1',
@@ -265,7 +283,7 @@ export const generateCrossSystemInsights = (
     });
   }
 
-  const unlockedFins = financials.filter(f => !f.locked).length;
+  const unlockedFins = safeFinancials.filter(f => f && !f.locked).length;
   if (unlockedFins > 15) {
     insights.push({
       id: 'insight-2',
@@ -281,7 +299,8 @@ export const generateCrossSystemInsights = (
 export const generateCommandPriorityMatrix = (
   actions: CriticalAction[]
 ): CommandPriority[] => {
-  return actions.map(a => {
+  const safeActions = Array.isArray(actions) ? actions : [];
+  return safeActions.map(a => {
     let category: CommandPriority['category'] = 'MONITOR';
     if (a.priority === 'CRITICAL') category = 'NOW';
     else if (a.priority === 'HIGH') category = 'NEXT';
@@ -289,7 +308,7 @@ export const generateCommandPriorityMatrix = (
 
     return {
       id: `priority-${a.id}`,
-      title: a.title,
+      title: a.title ?? "Unknown Action",
       category,
       pressureType: a.type === 'finance' ? 'Financial' : 'Operational'
     };

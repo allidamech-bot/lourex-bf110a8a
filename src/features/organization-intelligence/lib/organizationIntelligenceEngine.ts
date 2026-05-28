@@ -95,6 +95,9 @@ export const generateBranchProfiles = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): BranchProfile[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
   const branchMap: Record<string, BranchProfile> = {};
 
   const getOrCreateBranch = (name: string, region: string) => {
@@ -114,14 +117,16 @@ export const generateBranchProfiles = (
     return branchMap[name];
   };
 
-  requests.forEach(r => {
+  safeRequests.forEach(r => {
+    if (!r) return;
     const branch = getOrCreateBranch(getBranchName(r), getRegionName(r));
     if (r.status !== 'completed' && r.status !== 'cancelled') {
       branch.activeRequests++;
     }
   });
 
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     const branch = getOrCreateBranch(getBranchName(d), getRegionName(d));
     if (d.operationalStatus === 'closed' || d.shipmentStage === 'closed' || d.shipmentStage === 'delivered') {
       branch.completedOperations++;
@@ -130,7 +135,8 @@ export const generateBranchProfiles = (
     }
   });
 
-  financials.forEach(f => {
+  safeFinancials.forEach(f => {
+    if (!f) return;
     const branch = getOrCreateBranch(getBranchName(f), getRegionName(f));
     if (!f.locked) {
       branch.pendingFinanceItems++;
@@ -157,10 +163,11 @@ export const generateBranchProfiles = (
 };
 
 export const calculateBranchPerformance = (branchId: string, deals: DealOperation[]): number => {
-  const branchDeals = deals.filter(d => getBranchName(d) === branchId);
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const branchDeals = safeDeals.filter(d => d && getBranchName(d) === branchId);
   if (branchDeals.length === 0) return 0;
 
-  const completed = branchDeals.filter(d => d.operationalStatus === 'closed').length;
+  const completed = branchDeals.filter(d => d && d.operationalStatus === 'closed').length;
   return Math.round((completed / branchDeals.length) * 100);
 };
 
@@ -170,14 +177,18 @@ export const calculateBranchRiskScore = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): BranchRiskScore => {
-  const branchDeals = deals.filter(d => getBranchName(d) === branchId);
-  const branchRequests = requests.filter(r => getBranchName(r) === branchId);
-  const branchFinancials = financials.filter(f => getBranchName(f) === branchId);
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
 
-  const opRisk = Math.min(100, branchDeals.filter(d => d.operationalStatus === 'awaiting_assignment').length * 10);
-  const finRisk = Math.min(100, branchFinancials.filter(f => !f.locked).length * 5);
-  const shipRisk = Math.min(100, branchDeals.filter(d => d.shipmentStage === 'factory').length * 2);
-  const followUpRisk = Math.min(100, branchRequests.filter(r => r.status === 'intake_submitted').length * 5);
+  const branchDeals = safeDeals.filter(d => d && getBranchName(d) === branchId);
+  const branchRequests = safeRequests.filter(r => r && getBranchName(r) === branchId);
+  const branchFinancials = safeFinancials.filter(f => f && getBranchName(f) === branchId);
+
+  const opRisk = Math.min(100, branchDeals.filter(d => d && d.operationalStatus === 'awaiting_assignment').length * 10);
+  const finRisk = Math.min(100, branchFinancials.filter(f => f && !f.locked).length * 5);
+  const shipRisk = Math.min(100, branchDeals.filter(d => d && d.shipmentStage === 'factory').length * 2);
+  const followUpRisk = Math.min(100, branchRequests.filter(r => r && r.status === 'intake_submitted').length * 5);
 
   const overall = Math.round((opRisk + finRisk + shipRisk + followUpRisk) / 4);
 
@@ -201,6 +212,8 @@ export const generateTeamWorkloadInsights = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): TeamWorkload[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const workloadMap: Record<string, { assigned: number; pending: number }> = {};
 
   const increment = (name: string, type: 'assigned' | 'pending') => {
@@ -208,13 +221,14 @@ export const generateTeamWorkloadInsights = (
     workloadMap[name][type]++;
   };
 
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     if (d.turkishPartnerName) increment(d.turkishPartnerName, 'assigned');
     if (d.saudiPartnerName) increment(d.saudiPartnerName, 'assigned');
   });
 
-  requests.forEach(r => {
-    if (r.status === 'intake_submitted') {
+  safeRequests.forEach(r => {
+    if (r && r.status === 'intake_submitted') {
       increment("Operations Team", 'pending');
     }
   });
@@ -232,6 +246,8 @@ export const generateRegionalOperationsSummary = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): RegionalSummary[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const regionMap: Record<string, RegionalSummary> = {};
 
   const getOrCreateRegion = (region: string) => {
@@ -247,14 +263,18 @@ export const generateRegionalOperationsSummary = (
     return regionMap[region];
   };
 
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     const regionName = getRegionName(d);
     const summary = getOrCreateRegion(regionName);
     summary.operationsCount++;
-    summary.shipmentDistribution[d.shipmentStage] = (summary.shipmentDistribution[d.shipmentStage] || 0) + 1;
+    if (d.shipmentStage) {
+      summary.shipmentDistribution[d.shipmentStage] = (summary.shipmentDistribution[d.shipmentStage] || 0) + 1;
+    }
   });
 
-  requests.forEach(r => {
+  safeRequests.forEach(r => {
+    if (!r) return;
     const regionName = getRegionName(r);
     const summary = getOrCreateRegion(regionName);
     summary.requestConcentration++;

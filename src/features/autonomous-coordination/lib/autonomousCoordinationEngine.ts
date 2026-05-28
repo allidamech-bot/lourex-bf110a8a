@@ -71,11 +71,14 @@ export const detectOperationalBlockers = (
   financials: FinancialEntry[],
   editRequests: FinancialEditRequest[]
 ): OperationalBlocker[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeEditRequests = Array.isArray(editRequests) ? editRequests : [];
   const blockers: OperationalBlocker[] = [];
 
   // Request Blockers
-  requests.forEach(r => {
-    if (r.status === 'awaiting_clarification') {
+  safeRequests.forEach(r => {
+    if (r && r.status === 'awaiting_clarification') {
       blockers.push({
         id: `blocker-req-${r.id}`,
         type: 'missing_info',
@@ -89,7 +92,8 @@ export const detectOperationalBlockers = (
   });
 
   // Deal/Shipment Blockers
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     if (d.operationalStatus === 'awaiting_assignment') {
       blockers.push({
         id: `blocker-deal-assign-${d.id}`,
@@ -101,7 +105,7 @@ export const detectOperationalBlockers = (
         propagationRisk: 90,
       });
     }
-    if (d.shipmentStage === 'customs_clearance') {
+    if (String(d.shipmentStage ?? "").toLowerCase().includes('customs_clearance')) {
       // Potentially stuck if no updates for 3 days
       const lastUpdate = d.trackingUpdates?.[0]?.occurredAt;
       if (lastUpdate && (Date.now() - new Date(lastUpdate).getTime() > 1000 * 60 * 60 * 24 * 3)) {
@@ -119,8 +123,8 @@ export const detectOperationalBlockers = (
   });
 
   // Financial Blockers
-  editRequests.forEach(er => {
-    if (er.status === 'pending') {
+  safeEditRequests.forEach(er => {
+    if (er && er.status === 'pending') {
       blockers.push({
         id: `blocker-fin-edit-${er.id}`,
         type: 'financial_lock',
@@ -140,11 +144,13 @@ export const detectWorkflowDependencies = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): WorkflowDependency[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const dependencies: WorkflowDependency[] = [];
 
-  deals.forEach(d => {
-    if (d.sourceRequestId) {
-      const req = requests.find(r => r.id === d.sourceRequestId);
+  safeDeals.forEach(d => {
+    if (d && d.sourceRequestId) {
+      const req = safeRequests.find(r => r && r.id === d.sourceRequestId);
       dependencies.push({
         sourceId: d.sourceRequestId,
         targetId: d.id,
@@ -159,7 +165,9 @@ export const detectWorkflowDependencies = (
 };
 
 export const analyzeBlockerPropagation = (blockers: OperationalBlocker[]): OperationalBlocker[] => {
-  return blockers.map(b => {
+  const safeBlockers = Array.isArray(blockers) ? blockers : [];
+  return safeBlockers.map(b => {
+    if (!b) return b;
     let risk = b.propagationRisk;
     if (b.severity === 'Critical') risk += 20;
     if (b.severity === 'High') risk += 10;
@@ -172,10 +180,13 @@ export const generateExecutionSequence = (
   deals: DealOperation[],
   blockers: OperationalBlocker[]
 ): ExecutionStep[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeBlockers = Array.isArray(blockers) ? blockers : [];
   const steps: ExecutionStep[] = [];
 
   // 1. Critical Assignment fixes
-  blockers.filter(b => b.type === 'partner_assignment' && b.severity === 'Critical').forEach(b => {
+  safeBlockers.filter(b => b && b.type === 'partner_assignment' && b.severity === 'Critical').forEach(b => {
     steps.push({
       id: `step-assign-${b.impactedEntityId}`,
       action: 'Assign Partners',
@@ -187,7 +198,7 @@ export const generateExecutionSequence = (
   });
 
   // 2. Ready for conversion
-  requests.filter(r => r.status === 'ready_for_conversion').forEach(r => {
+  safeRequests.filter(r => r && r.status === 'ready_for_conversion').forEach(r => {
     steps.push({
       id: `step-convert-${r.id}`,
       action: 'Convert to Deal',
@@ -199,7 +210,7 @@ export const generateExecutionSequence = (
   });
 
   // 3. Address High Severity Blockers
-  blockers.filter(b => b.severity === 'High' && b.type === 'missing_info').forEach(b => {
+  safeBlockers.filter(b => b && b.severity === 'High' && b.type === 'missing_info').forEach(b => {
     steps.push({
       id: `step-followup-${b.impactedEntityId}`,
       action: 'Follow up with Customer',
@@ -214,15 +225,17 @@ export const generateExecutionSequence = (
 };
 
 export const calculateReadinessScore = (requests: PurchaseRequest[], deals: DealOperation[]): number => {
-  if (requests.length === 0) return 100;
-  const ready = requests.filter(r => r.status === 'ready_for_conversion').length;
-  const underReview = requests.filter(r => r.status === 'under_review').length;
-  return Math.round(((ready + (underReview * 0.5)) / requests.length) * 100);
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  if (safeRequests.length === 0) return 100;
+  const ready = safeRequests.filter(r => r && r.status === 'ready_for_conversion').length;
+  const underReview = safeRequests.filter(r => r && r.status === 'under_review').length;
+  return Math.round(((ready + (underReview * 0.5)) / safeRequests.length) * 100);
 };
 
 export const calculateExecutionConfidence = (blockers: OperationalBlocker[]): number => {
-  const criticalCount = blockers.filter(b => b.severity === 'Critical').length;
-  const highCount = blockers.filter(b => b.severity === 'High').length;
+  const safeBlockers = Array.isArray(blockers) ? blockers : [];
+  const criticalCount = safeBlockers.filter(b => b && b.severity === 'Critical').length;
+  const highCount = safeBlockers.filter(b => b && b.severity === 'High').length;
   const base = 100;
   const penalty = (criticalCount * 15) + (highCount * 5);
   return Math.max(0, base - penalty);

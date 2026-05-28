@@ -78,6 +78,10 @@ export const generatePartnerProfiles = (
   shipments: any[],
   settlements: PartnerSettlement[]
 ): PartnerProfile[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeShipments = Array.isArray(shipments) ? shipments : [];
+  const safeSettlements = Array.isArray(settlements) ? settlements : [];
   const partnerMap: Record<string, PartnerProfile> = {};
 
   const getOrCreatePartner = (name: string) => {
@@ -98,7 +102,8 @@ export const generatePartnerProfiles = (
     return partnerMap[name];
   };
 
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     const names = [d.turkishPartnerName, d.saudiPartnerName].filter(Boolean) as string[];
     names.forEach(name => {
       const p = getOrCreatePartner(name);
@@ -108,7 +113,8 @@ export const generatePartnerProfiles = (
     });
   });
 
-  shipments.forEach(s => {
+  safeShipments.forEach(s => {
+    if (!s) return;
     // shipments usually linked via dealId, let's assume we can map them back to partners if needed
     // or if shipment has partner fields directly
     const name = getPartnerName(s);
@@ -118,8 +124,8 @@ export const generatePartnerProfiles = (
     }
   });
 
-  settlements.forEach(s => {
-    if (s.partnerName) {
+  safeSettlements.forEach(s => {
+    if (s && s.partnerName) {
       const p = getOrCreatePartner(s.partnerName);
       if (s.status === 'pending_review' || s.status === 'approved') {
         p.pendingSettlements++;
@@ -164,9 +170,12 @@ export const generatePartnerTaskQueue = (
   shipments: any[],
   settlements: PartnerSettlement[]
 ): PartnerTask[] => {
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeShipments = Array.isArray(shipments) ? shipments : [];
+  const safeSettlements = Array.isArray(settlements) ? settlements : [];
   const tasks: PartnerTask[] = [];
 
-  deals.filter(d => d.turkishPartnerName === partnerId || d.saudiPartnerName === partnerId).forEach(d => {
+  safeDeals.filter(d => d && (d.turkishPartnerName === partnerId || d.saudiPartnerName === partnerId)).forEach(d => {
     if (d.operationalStatus === 'awaiting_assignment') {
       tasks.push({
         id: `task-assign-${d.id}`,
@@ -179,8 +188,8 @@ export const generatePartnerTaskQueue = (
     }
   });
 
-  shipments.filter(s => getPartnerName(s) === partnerId).forEach(s => {
-    const daysSinceUpdate = (Date.now() - new Date(s.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+  safeShipments.filter(s => s && getPartnerName(s) === partnerId).forEach(s => {
+    const daysSinceUpdate = s.updatedAt ? (Date.now() - new Date(s.updatedAt).getTime()) / (1000 * 60 * 60 * 24) : 0;
     if (daysSinceUpdate > 3 && s.stage !== 'delivered' && s.stage !== 'closed') {
       tasks.push({
         id: `task-update-${s.id}`,
@@ -193,7 +202,7 @@ export const generatePartnerTaskQueue = (
     }
   });
 
-  settlements.filter(s => s.partnerName === partnerId).forEach(s => {
+  safeSettlements.filter(s => s && s.partnerName === partnerId).forEach(s => {
     if (s.status === 'pending_review') {
       tasks.push({
         id: `task-settle-${s.id}`,
@@ -213,14 +222,15 @@ export const generatePartnerShipmentInsights = (
   partnerId: string,
   shipments: any[]
 ): PartnerShipmentInsight[] => {
-  return shipments
-    .filter(s => getPartnerName(s) === partnerId)
+  const safeShipments = Array.isArray(shipments) ? shipments : [];
+  return safeShipments
+    .filter(s => s && getPartnerName(s) === partnerId)
     .map(s => {
-      const daysSinceUpdate = (Date.now() - new Date(s.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceUpdate = s.updatedAt ? (Date.now() - new Date(s.updatedAt).getTime()) / (1000 * 60 * 60 * 24) : 0;
       return {
         shipmentId: s.id,
         dealNumber: s.dealNumber || 'N/A',
-        currentStage: s.stage,
+        currentStage: s.stage || "Unknown",
         isResponsible: true, // simplified
         staleUpdates: daysSinceUpdate > 2,
         deliveryRisk: daysSinceUpdate > 5 ? 'High' : daysSinceUpdate > 3 ? 'Medium' : 'Low',
@@ -233,7 +243,8 @@ export const generatePartnerSettlementInsights = (
   partnerId: string,
   settlements: PartnerSettlement[]
 ): PartnerSettlementInsight => {
-  const partnerSettlements = settlements.filter(s => s.partnerName === partnerId);
+  const safeSettlements = Array.isArray(settlements) ? settlements : [];
+  const partnerSettlements = safeSettlements.filter(s => s && s.partnerName === partnerId);
   const pending = partnerSettlements.filter(s => s.status === 'pending_review').reduce((acc, s) => acc + s.netDue, 0);
   const approved = partnerSettlements.filter(s => s.status === 'approved').reduce((acc, s) => acc + s.netDue, 0);
   const disputed = partnerSettlements.filter(s => s.status === 'disputed').length;
@@ -253,8 +264,9 @@ export const detectPartnerBottlenecks = (
   deals: DealOperation[],
   shipments: any[]
 ): PartnerBottleneck[] => {
+  const safeShipments = Array.isArray(shipments) ? shipments : [];
   const bottlenecks: PartnerBottleneck[] = [];
-  const staleShipments = shipments.filter(s => getPartnerName(s) === partnerId && (Date.now() - new Date(s.updatedAt).getTime() > 1000 * 60 * 60 * 24 * 5));
+  const staleShipments = safeShipments.filter(s => s && getPartnerName(s) === partnerId && s.updatedAt && (Date.now() - new Date(s.updatedAt).getTime() > 1000 * 60 * 60 * 24 * 5));
 
   if (staleShipments.length > 2) {
     bottlenecks.push({
@@ -274,8 +286,8 @@ export const generatePartnerRecommendations = (
   insights: PartnerSettlementInsight
 ): string[] => {
   const recs = [];
-  if (profile.performanceScore < 70) recs.push("Improve responsiveness to tracking update requests.");
-  if (insights.disputedCount > 0) recs.push("Review and resolve disputed settlements.");
+  if (profile && profile.performanceScore < 70) recs.push("Improve responsiveness to tracking update requests.");
+  if (insights && insights.disputedCount > 0) recs.push("Review and resolve disputed settlements.");
   if (recs.length === 0) recs.push("Maintain current high performance levels.");
   return recs;
 };
@@ -284,7 +296,8 @@ export const generatePartnerFinancialSummary = (
   partnerId: string,
   financials: FinancialEntry[]
 ): { receivable: number; payable: number; net: number } => {
-  const partnerFins = financials.filter(f => f.customerName === partnerId || f.counterparty === partnerId);
+  const safeFinancials = Array.isArray(financials) ? financials : [];
+  const partnerFins = safeFinancials.filter(f => f && (f.customerName === partnerId || f.counterparty === partnerId));
   const receivable = partnerFins.filter(f => f.type === 'income').reduce((acc, f) => acc + f.amount, 0);
   const payable = partnerFins.filter(f => f.type === 'expense').reduce((acc, f) => acc + f.amount, 0);
 

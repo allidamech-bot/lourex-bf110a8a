@@ -47,15 +47,18 @@ export const calculateCustomerHealthScore = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): number => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
   let score = 70; // Base score
 
-  const completedDeals = deals.filter(d => d.operationalStatus === 'closed').length;
+  const completedDeals = safeDeals.filter(d => d && d.operationalStatus === 'closed').length;
   score += completedDeals * 5;
 
-  const pendingFinance = financials.filter(f => !f.locked).length;
+  const pendingFinance = safeFinancials.filter(f => f && !f.locked).length;
   score -= pendingFinance * 2;
 
-  const cancelledRequests = requests.filter(r => r.status === 'cancelled').length;
+  const cancelledRequests = safeRequests.filter(r => r && r.status === 'cancelled').length;
   score -= cancelledRequests * 10;
 
   return Math.max(0, Math.min(100, score));
@@ -65,7 +68,9 @@ export const calculateCustomerRetentionRisk = (
   healthScore: number,
   lastActivityAt: string
 ): number => {
-  let risk = 100 - healthScore;
+  let risk = 100 - (healthScore ?? 70);
+  if (!lastActivityAt) return Math.min(100, risk + 20);
+
   const daysSinceActivity = (Date.now() - new Date(lastActivityAt).getTime()) / (1000 * 60 * 60 * 24);
 
   if (daysSinceActivity > 30) risk += 20;
@@ -78,10 +83,11 @@ export const classifyCustomerPriority = (
   profile: Partial<CustomerProfile>,
   deals: DealOperation[]
 ): CustomerClassification => {
-  const totalValue = deals.reduce((acc, d) => acc + (d.value || 0), 0);
-  const repeatCount = deals.length;
-  const health = profile.healthScore || 0;
-  const daysSinceActivity = (Date.now() - new Date(profile.lastActivityAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const totalValue = safeDeals.reduce((acc, d) => acc + (d?.value || 0), 0);
+  const repeatCount = safeDeals.length;
+  const health = profile?.healthScore || 0;
+  const daysSinceActivity = (Date.now() - new Date(profile?.lastActivityAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24);
 
   if (health < 40) return 'At Risk';
   if (daysSinceActivity > 180) return 'Dormant';
@@ -92,7 +98,8 @@ export const classifyCustomerPriority = (
 };
 
 export const calculateCustomerLifetimeValueEstimate = (deals: DealOperation[]): number => {
-  return deals.reduce((acc, d) => acc + (d.value || 0), 0);
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  return safeDeals.reduce((acc, d) => acc + (d?.value || 0), 0);
 };
 
 export const generateCustomerProfiles = (
@@ -100,6 +107,9 @@ export const generateCustomerProfiles = (
   deals: DealOperation[],
   financials: FinancialEntry[]
 ): CustomerProfile[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeFinancials = Array.isArray(financials) ? financials : [];
   const customerMap: Record<string, {
     reqs: PurchaseRequest[],
     deals: DealOperation[],
@@ -108,16 +118,19 @@ export const generateCustomerProfiles = (
     email: string
   }> = {};
 
-  requests.forEach(r => {
+  safeRequests.forEach(r => {
+    if (!r || !r.customer) return;
     const id = r.customer.id;
-    if (!customerMap[id]) customerMap[id] = { reqs: [], deals: [], fins: [], name: r.customer.fullName, email: r.customer.email };
+    if (!id) return;
+    if (!customerMap[id]) customerMap[id] = { reqs: [], deals: [], fins: [], name: r.customer.fullName || "Unknown", email: r.customer.email || "" };
     customerMap[id].reqs.push(r);
   });
 
-  deals.forEach(d => {
+  safeDeals.forEach(d => {
+    if (!d) return;
     const id = d.customerId;
     if (!id) return;
-    if (!customerMap[id]) customerMap[id] = { reqs: [], deals: [], fins: [], name: d.customerName, email: d.customerEmail || '' };
+    if (!customerMap[id]) customerMap[id] = { reqs: [], deals: [], fins: [], name: d.customerName || "Unknown", email: d.customerEmail || '' };
     customerMap[id].deals.push(d);
   });
 
@@ -132,8 +145,8 @@ export const generateCustomerProfiles = (
       healthScore,
       retentionRisk: calculateCustomerRetentionRisk(healthScore, lastActivity),
       estimatedLTV: calculateCustomerLifetimeValueEstimate(data.deals),
-      activeRequests: data.reqs.filter(r => r.status !== 'completed' && r.status !== 'cancelled').length,
-      activeShipments: data.deals.filter(d => d.operationalStatus !== 'closed' && d.operationalStatus !== 'delivered').length,
+      activeRequests: data.reqs.filter(r => r && r.status !== 'completed' && r.status !== 'cancelled').length,
+      activeShipments: data.deals.filter(d => d && d.operationalStatus !== 'closed' && d.operationalStatus !== 'delivered').length,
       totalDeals: data.deals.length,
       financialConsistency: 90, // Placeholder logic
       lastActivityAt: lastActivity,
@@ -147,8 +160,9 @@ export const generateCustomerProfiles = (
 };
 
 export const detectRepeatRequestPatterns = (requests: PurchaseRequest[]): CustomerSuccessInsight[] => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
   const insights: CustomerSuccessInsight[] = [];
-  const products = requests.map(r => r.productName.toLowerCase());
+  const products = safeRequests.map(r => String(r?.productName ?? "").toLowerCase()).filter(Boolean);
   const duplicates = products.filter((item, index) => products.indexOf(item) !== index);
 
   if (duplicates.length > 0) {
@@ -168,11 +182,13 @@ export const detectCustomerEscalationRisk = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): number => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
   let risk = 0;
-  const longPending = requests.filter(r => r.status === 'intake_submitted' && (Date.now() - new Date(r.createdAt).getTime() > 1000 * 60 * 60 * 24 * 3)).length;
+  const longPending = safeRequests.filter(r => r && r.status === 'intake_submitted' && r.createdAt && (Date.now() - new Date(r.createdAt).getTime() > 1000 * 60 * 60 * 24 * 3)).length;
   risk += longPending * 15;
 
-  const stalledDeals = deals.filter(d => d.operationalStatus === 'awaiting_assignment').length;
+  const stalledDeals = safeDeals.filter(d => d && d.operationalStatus === 'awaiting_assignment').length;
   risk += stalledDeals * 20;
 
   return Math.min(100, risk);
@@ -182,9 +198,12 @@ export const generateCustomerFollowupRecommendations = (
   profiles: CustomerProfile[],
   requests: PurchaseRequest[]
 ): FollowupRecommendation[] => {
+  const safeProfiles = Array.isArray(profiles) ? profiles : [];
+  const safeRequests = Array.isArray(requests) ? requests : [];
   const recommendations: FollowupRecommendation[] = [];
 
-  profiles.forEach(p => {
+  safeProfiles.forEach(p => {
+    if (!p) return;
     if (p.classification === 'At Risk') {
       recommendations.push({
         id: `rec-risk-${p.id}`,
@@ -195,7 +214,7 @@ export const generateCustomerFollowupRecommendations = (
       });
     }
 
-    const customerReqs = requests.filter(r => r.customer.id === p.id);
+    const customerReqs = safeRequests.filter(r => r && r.customer && r.customer.id === p.id);
     if (customerReqs.some(r => r.status === 'awaiting_clarification')) {
       recommendations.push({
         id: `rec-clarify-${p.id}`,
@@ -214,9 +233,10 @@ export const generateCustomerSuccessInsights = (
   requests: PurchaseRequest[],
   deals: DealOperation[]
 ): CustomerSuccessInsight[] => {
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const insights: CustomerSuccessInsight[] = [];
 
-  if (deals.every(d => d.operationalStatus === 'delivered' || d.operationalStatus === 'closed')) {
+  if (safeDeals.length > 0 && safeDeals.every(d => d && (d.operationalStatus === 'delivered' || d.operationalStatus === 'closed'))) {
     insights.push({
       id: 'insight-delivery',
       title: 'Perfect Delivery Rate',
