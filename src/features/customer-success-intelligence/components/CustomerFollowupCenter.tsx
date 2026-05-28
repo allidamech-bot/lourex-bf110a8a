@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { FollowupRecommendation } from '../lib/customerSuccessEngine';
 import { Send, Clock, UserCheck, MessageSquare, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface CustomerFollowupCenterProps {
   recommendations: FollowupRecommendation[];

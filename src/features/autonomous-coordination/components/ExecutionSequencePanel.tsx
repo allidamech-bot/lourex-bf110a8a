@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { ExecutionStep } from '../lib/autonomousCoordinationEngine';
 import { ListChecks, ArrowRight, User, Target, Zap } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface ExecutionSequencePanelProps {
   steps: ExecutionStep[];

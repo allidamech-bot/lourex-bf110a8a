@@ -1,6 +1,6 @@
 import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { OperationalPlan } from '../lib/autonomousCoordinationEngine';
 import { Sparkles, Target, AlertCircle, ArrowRight, ShieldCheck, Zap } from 'lucide-react';

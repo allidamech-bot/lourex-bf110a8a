@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { PartnerBottleneck } from '../lib/partnerIntelligenceEngine';
 import { AlertCircle, ShieldAlert, Zap, Hammer } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface PartnerBottleneckAlertsProps {
   bottlenecks: PartnerBottleneck[];

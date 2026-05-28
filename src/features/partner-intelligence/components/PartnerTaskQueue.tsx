@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { PartnerTask } from '../lib/partnerIntelligenceEngine';
 import { ListChecks, AlertCircle, ArrowRight, Clock, Hammer } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface PartnerTaskQueueProps {
   tasks: PartnerTask[];

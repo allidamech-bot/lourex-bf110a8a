@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { CustomerSuccessAlert } from '../lib/customerSuccessEngine';
 import { AlertCircle, ShieldAlert, Zap, Clock, TrendingDown } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface CustomerRetentionAlertsProps {
   alerts: CustomerSuccessAlert[];

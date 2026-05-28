@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { WorkflowDependency } from '../lib/autonomousCoordinationEngine';
 import { GitMerge, ArrowRight, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface WorkflowDependencyMapProps {
   dependencies: WorkflowDependency[];

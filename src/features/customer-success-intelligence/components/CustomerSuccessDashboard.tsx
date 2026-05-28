@@ -1,6 +1,6 @@
 import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CustomerProfile } from '../lib/customerSuccessEngine';
 import { UserCircle, Heart, ShieldAlert, BarChart3, Receipt, Star } from 'lucide-react';

@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { CriticalAction } from '../lib/executiveWorkspaceEngine';
 import { AlertCircle, ArrowRight, ShieldAlert, Wallet, MessageSquare, ListTodo } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface CriticalActionQueueProps {
   actions: CriticalAction[];

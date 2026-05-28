@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { NextBestAction } from '../lib/autonomousCoordinationEngine';
 import { Star, ArrowRight, UserCircle, Target, CheckCircle2 } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface NextBestActionsPanelProps {
   actions: NextBestAction[];

@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { TeamWorkload } from '../lib/organizationIntelligenceEngine';
 import { Users, AlertCircle, CheckCircle2, ArrowRightLeft, Briefcase } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface TeamWorkloadDistributionProps {
   workloads: TeamWorkload[];

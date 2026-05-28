@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { PartnerShipmentInsight } from '../lib/partnerIntelligenceEngine';
 import { Truck, Clock, AlertTriangle, UserCheck, ArrowUpRight } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 
 interface PartnerShipmentResponsibilityPanelProps {
   insights: PartnerShipmentInsight[];
