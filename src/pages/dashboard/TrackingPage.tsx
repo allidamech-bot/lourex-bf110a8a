@@ -19,6 +19,12 @@ import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
 import { fetchRequests, fetchDeals } from "@/domain/operations/service";
 import { generateRegionalOperationsSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { RegionalOperationsVisibility } from "@/features/organization-intelligence/components/RegionalOperationsVisibility";
+import {
+  detectWorkflowDependencies,
+  generateCoordinationWarnings
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { WorkflowDependencyMap } from "@/features/autonomous-coordination/components/WorkflowDependencyMap";
+import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
 import { getNextShipmentStage, getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
@@ -244,6 +250,16 @@ export default function TrackingPage() {
   const regionalSummary = useMemo(
     () => generateRegionalOperationsSummary(requests, deals),
     [requests, deals]
+  );
+
+  const workflowDependencies = useMemo(
+    () => detectWorkflowDependencies(requests as any, deals as any),
+    [requests, deals]
+  );
+
+  const coordinationWarnings = useMemo(
+    () => generateCoordinationWarnings([], workflowDependencies),
+    [workflowDependencies]
   );
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
   const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
@@ -508,7 +524,11 @@ export default function TrackingPage() {
         ) : null}
 
         {isInternal && !loading && (
-          <RegionalOperationsVisibility regions={regionalSummary} />
+          <div className="space-y-4">
+            <CoordinationWarningsPanel warnings={coordinationWarnings} />
+            <WorkflowDependencyMap dependencies={workflowDependencies} />
+            <RegionalOperationsVisibility regions={regionalSummary} />
+          </div>
         )}
 
         {isInternal ? (

@@ -28,6 +28,11 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { fetchRequests, fetchDeals } from "@/domain/operations/service";
 import { generateRegionalOperationsSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { RegionalOperationsVisibility } from "@/features/organization-intelligence/components/RegionalOperationsVisibility";
+import {
+  analyzeOperationalMomentum,
+  detectOperationalBlockers
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
@@ -100,6 +105,16 @@ export default function ReportsPage() {
   const regionalSummary = useMemo(
     () => generateRegionalOperationsSummary(requests, deals),
     [requests, deals]
+  );
+
+  const autonomousBlockers = useMemo(
+    () => detectOperationalBlockers(requests, deals, [], []),
+    [requests, deals]
+  );
+
+  const operationalMomentum = useMemo(
+    () => analyzeOperationalMomentum(requests, deals, autonomousBlockers),
+    [requests, deals, autonomousBlockers]
   );
 
   const metrics = snapshot?.summary || {
@@ -404,6 +419,12 @@ export default function ReportsPage() {
           onRefresh={() => setExecutiveRefreshKey((current) => current + 1)}
         />
       ) : null}
+
+      {!loading && (
+        <div className="grid gap-4 mb-4">
+          <OperationalMomentumPanel momentum={operationalMomentum} />
+        </div>
+      )}
 
       <div className="grid gap-4">
         <RegionalOperationsVisibility regions={regionalSummary} />

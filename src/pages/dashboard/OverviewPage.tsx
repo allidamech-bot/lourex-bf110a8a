@@ -55,6 +55,14 @@ import {
 } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { BranchPerformanceCenter } from "@/features/organization-intelligence/components/BranchPerformanceCenter";
 import { CrossBranchExecutiveSummary } from "@/features/organization-intelligence/components/CrossBranchExecutiveSummary";
+import {
+  generateAutonomousOperationsPlan,
+  analyzeOperationalMomentum,
+  generateSuggestedNextActions
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { AutonomousOperationsPlan } from "@/features/autonomous-coordination/components/AutonomousOperationsPlan";
+import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
+import { NextBestActionsPanel } from "@/features/autonomous-coordination/components/NextBestActionsPanel";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -389,6 +397,21 @@ export default function OverviewPage() {
     [branchProfiles, teamWorkloads]
   );
 
+  const autonomousPlan = useMemo(
+    () => generateAutonomousOperationsPlan(requests as any, deals as any, financialEntries as any, editRequests as any),
+    [requests, deals, financialEntries, editRequests]
+  );
+
+  const operationalMomentum = useMemo(
+    () => analyzeOperationalMomentum(requests as any, deals as any, autonomousPlan.blockers),
+    [requests, deals, autonomousPlan.blockers]
+  );
+
+  const nextBestActions = useMemo(
+    () => generateSuggestedNextActions(autonomousPlan, operationalMomentum),
+    [autonomousPlan, operationalMomentum]
+  );
+
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -662,6 +685,11 @@ export default function OverviewPage() {
 
       {isInternal && !loading && (
         <div className="space-y-6">
+          <AutonomousOperationsPlan plan={autonomousPlan} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <OperationalMomentumPanel momentum={operationalMomentum} />
+            <NextBestActionsPanel actions={nextBestActions} />
+          </div>
           <CrossBranchExecutiveSummary summary={executiveSummary} />
           <BranchPerformanceCenter branches={branchProfiles} />
         </div>

@@ -47,6 +47,11 @@ import {
 } from "@/domain/operations/service";
 import { generateBranchProfiles, calculateBranchRiskScore } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { BranchRiskScorePanel } from "@/features/organization-intelligence/components/BranchRiskScorePanel";
+import {
+  detectOperationalBlockers,
+  generateExecutionSequence
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { ExecutionSequencePanel } from "@/features/autonomous-coordination/components/ExecutionSequencePanel";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { toast } from "sonner";
@@ -700,6 +705,16 @@ export default function PurchaseRequestsPage() {
         [branchProfiles, rows, deals]
     );
 
+    const autonomousBlockers = useMemo(
+        () => detectOperationalBlockers(rows as any, deals as any, [], []),
+        [rows, deals]
+    );
+
+    const executionSequence = useMemo(
+        () => generateExecutionSequence(rows as any, deals as any, autonomousBlockers),
+        [rows, deals, autonomousBlockers]
+    );
+
     const handleStatusUpdate = async (requestId: string, status: PurchaseRequestStatus) => {
         if (updatingStatusId) return;
         const current = rows.find((row) => row.id === requestId);
@@ -1013,7 +1028,10 @@ export default function PurchaseRequestsPage() {
                         />
                         <PriorityQueueEngine recommendations={recommendations} />
                     </div>
-                    <BranchRiskScorePanel risks={branchRiskScores} />
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <BranchRiskScorePanel risks={branchRiskScores} />
+                        <ExecutionSequencePanel steps={executionSequence} />
+                    </div>
                 </div>
             )}
 

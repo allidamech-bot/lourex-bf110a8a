@@ -12,6 +12,11 @@ import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialE
 import { loadPartnerSettlements } from "@/domain/accounting/partnerSettlements";
 import { generateBranchProfiles, generateBranchFinancialSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { BranchFinancialSummary } from "@/features/organization-intelligence/components/BranchFinancialSummary";
+import {
+  detectOperationalBlockers,
+  generateCoordinationWarnings
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -241,6 +246,16 @@ export default function AccountingPage() {
   const branchFinancialSummaries = useMemo(
     () => branchProfiles.map(b => generateBranchFinancialSummary(b.id, entries as any, settlements as any)),
     [branchProfiles, entries, settlements]
+  );
+
+  const autonomousBlockers = useMemo(
+    () => detectOperationalBlockers([], deals as any, entries as any, editRequests as any),
+    [deals, entries, editRequests]
+  );
+
+  const coordinationWarnings = useMemo(
+    () => generateCoordinationWarnings(autonomousBlockers, []),
+    [autonomousBlockers]
   );
 
   const handleFinanceAiReview = async (mode: FinanceAiMode = "finance_audit_review") => {
@@ -513,7 +528,10 @@ export default function AccountingPage() {
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
         <div className="min-w-0 space-y-4">
           {!loading && !focusDeal && (
-            <BranchFinancialSummary summaries={branchFinancialSummaries} />
+            <div className="space-y-4">
+              <CoordinationWarningsPanel warnings={coordinationWarnings} />
+              <BranchFinancialSummary summaries={branchFinancialSummaries} />
+            </div>
           )}
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <div className="flex min-w-0 items-center gap-3">

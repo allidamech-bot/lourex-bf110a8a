@@ -29,6 +29,13 @@ import {
 } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { BranchRiskScorePanel } from "@/features/organization-intelligence/components/BranchRiskScorePanel";
 import { TeamWorkloadDistribution } from "@/features/organization-intelligence/components/TeamWorkloadDistribution";
+import {
+  detectOperationalBlockers,
+  generateExecutionSequence,
+  analyzeBlockerPropagation
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { BlockerPropagationCenter } from "@/features/autonomous-coordination/components/BlockerPropagationCenter";
+import { ExecutionSequencePanel } from "@/features/autonomous-coordination/components/ExecutionSequencePanel";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
@@ -151,6 +158,21 @@ export function OperationsBriefingWidget() {
     [requests, deals]
   );
 
+  const autonomousBlockers = useMemo(
+    () => detectOperationalBlockers(requests as any, deals as any, [], editRequests as any),
+    [requests, deals, editRequests]
+  );
+
+  const executionSequence = useMemo(
+    () => generateExecutionSequence(requests as any, deals as any, autonomousBlockers),
+    [requests, deals, autonomousBlockers]
+  );
+
+  const propagationAnalysis = useMemo(
+    () => analyzeBlockerPropagation(autonomousBlockers),
+    [autonomousBlockers]
+  );
+
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
   if (loading && !report) {
@@ -215,6 +237,12 @@ export function OperationsBriefingWidget() {
           </div>
 
           <BranchRiskScorePanel risks={branchRiskScores} />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ExecutionSequencePanel steps={executionSequence} />
+            <BlockerPropagationCenter blockers={propagationAnalysis} />
+          </div>
+
           <TeamWorkloadDistribution workloads={teamWorkload} />
         </div>
       )}

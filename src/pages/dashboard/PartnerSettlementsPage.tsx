@@ -23,6 +23,11 @@ import {
 import { fetchRequests, fetchDeals } from "@/domain/operations/service";
 import { generateOwnershipAccountabilityInsights } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
 import { OwnershipAccountabilityPanel } from "@/features/organization-intelligence/components/OwnershipAccountabilityPanel";
+import {
+  detectOperationalBlockers,
+  generateCoordinationWarnings
+} from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
+import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
 import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName } from "@/lib/identity";
@@ -149,6 +154,16 @@ export default function PartnerSettlementsPage() {
     return uniqueOwners.slice(0, 5).map(owner => generateOwnershipAccountabilityInsights(owner, requests as any, deals as any));
   }, [requests, deals]);
 
+  const autonomousBlockers = useMemo(
+    () => detectOperationalBlockers(requests as any, deals as any, [], []),
+    [requests, deals]
+  );
+
+  const coordinationWarnings = useMemo(
+    () => generateCoordinationWarnings(autonomousBlockers, []),
+    [autonomousBlockers]
+  );
+
   const handleCreate = async () => {
     if (!selectedPartner || submitting) return;
     setSubmitting(true);
@@ -210,7 +225,10 @@ export default function PartnerSettlementsPage() {
       </div>
 
       {!loading && (
-        <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
+        <div className="space-y-4">
+          <CoordinationWarningsPanel warnings={coordinationWarnings} />
+          <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
+        </div>
       )}
 
       <ResponsiveInfoGrid min="minmax(min(100%, 11rem), 1fr)">
