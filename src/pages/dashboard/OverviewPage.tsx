@@ -6,12 +6,14 @@ import {
   ClipboardList,
   Clock3,
   FilePenLine,
+  LayoutDashboard,
   Loader2,
   PackageSearch,
   Receipt,
   RefreshCw,
   Sparkles,
   Truck,
+  Users,
   WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -638,66 +640,43 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="w-full max-w-full min-w-0 space-y-5 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="w-full max-w-full min-w-0 space-y-8 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHelpBox pageKey="dashboard_overview" role={profile?.role} />
-      {/* Hero Banner */}
-      <BentoCard
-        span="full"
-        className="rounded-2xl p-4 sm:p-6 md:p-8"
-        style={{
-          background: "linear-gradient(135deg, rgba(120,53,15,0.08) 0%, rgba(12,10,9,0.95) 60%)",
-          border: "1px solid rgba(251,191,36,0.15)",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
-        } as React.CSSProperties}
-      >
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span
-            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200"
-            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.22)" }}
-          >
-            {t("overview.heroEyebrow")}
-          </span>
-          <span
-            className="rounded-full px-3 py-1 text-[11px] text-stone-500"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            {new Date().toLocaleDateString(locale)}
-          </span>
-        </div>
-        <div className="mt-5 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl min-w-0">
-            <h2 className="break-words font-serif text-2xl font-bold text-stone-100 sm:text-3xl md:text-4xl">
-              {t("overview.heroTitle")}
-            </h2>
-            <p className="mt-3 max-w-2xl break-words text-sm leading-7 text-stone-400">{t("overview.heroDescription")}</p>
-          </div>
-          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap">
-            <Button
-              asChild
-              className="rounded-xl font-bold bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 text-stone-950 shadow-2xl hover:brightness-110"
-            >
-              <Link to="/dashboard/requests">
-                {t("overview.openRequests")}
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              asChild
-              className="rounded-xl border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
-            >
-              <Link to="/dashboard/deals">
-                {t("overview.openDeals")}
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </BentoCard>
 
-      {/* KPI Cards */}
-            <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
+      {/* Executive Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
+        <div className="space-y-1">
+          <h1 className="font-serif text-3xl sm:text-4xl font-black text-stone-100 tracking-tight">
+            Executive Command
+          </h1>
+          <p className="text-sm text-stone-500 font-medium max-w-2xl leading-relaxed">
+            Autonomous operational oversight across sourcing, logistics, and financial workflows.
+          </p>
+          <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-widest">System Active</span>
+            </div>
+            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+              Last Synced: {new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => window.location.reload()}
+          disabled={loading}
+          className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 hover:bg-stone-800 transition-all shadow-xl backdrop-blur-md"
+        >
+          <RefreshCw className={cn("me-2 h-4 w-4", refreshing && "animate-spin text-amber-500")} />
+          <span className="font-bold">Sync Intelligence</span>
+        </Button>
+      </div>
+
+      {/* KPI Command Row */}
+      <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
         {(loading ? loadingCards : (metricCards as MetricCard[])).map((item, index) => {
           const cardItem = loading ? null : item as MetricCard;
           return (
@@ -725,36 +704,33 @@ export default function OverviewPage() {
       </ResponsiveInfoGrid>
 
       {isInternal && !loading && (
-        <div className="space-y-12">
+        <div className="space-y-8">
           {/* 1. Executive Command */}
           <ExecutiveCommandSection
-            title="Executive Command"
-            icon={<LayoutDashboard className="h-5 w-5" />}
+            title="Strategic Command"
+            description="Global business stability, systemic priorities, and executive momentum."
+            icon={<LayoutDashboard className="h-6 w-6" />}
           >
-            <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
-              <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix} />
-            </div>
-            <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights} />
-
-            <ExecutiveCommandSection
-              title="Intelligence Details"
-              icon={<Sparkles className="h-4 w-4" />}
-              defaultExpanded={false}
-              className="mt-4"
-            >
+            <div className="space-y-8">
+              <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
               <div className="grid gap-6 lg:grid-cols-2">
-                <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
-                <ExecutiveMomentumTracker momentum={executiveWorkspaceState.momentum} />
+                <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
+                <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix} />
               </div>
-            </ExecutiveCommandSection>
+              <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights} />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2 mt-8">
+              <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
+              <ExecutiveMomentumTracker momentum={executiveWorkspaceState.momentum} />
+            </div>
           </ExecutiveCommandSection>
 
           {/* 2. Operations Command */}
           <ExecutiveCommandSection
             title="Operations Command"
-            icon={<Truck className="h-5 w-5" />}
+            description="Autonomous logistics coordination, health audits, and delivery risk mapping."
+            icon={<Truck className="h-6 w-6" />}
             secondaryWidgets={
               <div className="grid gap-6 lg:grid-cols-2">
                 <OperationalMomentumPanel momentum={operationalMomentum} />
@@ -764,41 +740,49 @@ export default function OverviewPage() {
               </div>
             }
           >
-            <AutonomousOperationsPlan plan={autonomousPlan} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <OperationsHealthCenter
-                activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
-                pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
-                inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
-                delayedCount={deliverySummary.active}
-                blockedWorkflows={pendingEditRequests}
-                completionScore={85}
-              />
-              <OperationalRiskCenter risks={operationalRisks} />
+            <div className="space-y-8">
+              <AutonomousOperationsPlan plan={autonomousPlan} />
+              <div className="grid gap-6 lg:grid-cols-2">
+                <OperationsHealthCenter
+                  activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+                  pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+                  inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
+                  delayedCount={deliverySummary.active}
+                  blockedWorkflows={pendingEditRequests}
+                  completionScore={85}
+                />
+                <OperationalRiskCenter risks={operationalRisks} />
+              </div>
             </div>
           </ExecutiveCommandSection>
 
           {/* 3. Financial Command */}
           <ExecutiveCommandSection
             title="Financial Command"
-            icon={<Receipt className="h-5 w-5" />}
+            description="AI-driven accounting integrity, workflow intelligence, and systemic event logs."
+            icon={<Receipt className="h-6 w-6" />}
+            defaultExpanded={false}
             secondaryWidgets={
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <ProductionLazySection>
                   <RuntimeInfrastructureCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
                 </ProductionLazySection>
-                <ProductionLazySection>
-                  <DistributedRuntimeCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
-                </ProductionLazySection>
-                <ProductionLazySection>
-                  <AutonomousExecutionCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
-                </ProductionLazySection>
-                <ProductionLazySection>
-                  <CognitiveOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
-                </ProductionLazySection>
-                <ProductionLazySection>
-                  <MultiAgentOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
-                </ProductionLazySection>
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <ProductionLazySection>
+                    <DistributedRuntimeCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                  </ProductionLazySection>
+                  <ProductionLazySection>
+                    <AutonomousExecutionCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                  </ProductionLazySection>
+                </div>
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <ProductionLazySection>
+                    <CognitiveOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                  </ProductionLazySection>
+                  <ProductionLazySection>
+                    <MultiAgentOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                  </ProductionLazySection>
+                </div>
                 <ProductionLazySection>
                   <LiveOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
                 </ProductionLazySection>
@@ -808,7 +792,7 @@ export default function OverviewPage() {
               </div>
             }
           >
-            <div className="space-y-6">
+            <div className="space-y-8">
               <ProductionLazySection>
                 <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
               </ProductionLazySection>
@@ -824,7 +808,9 @@ export default function OverviewPage() {
           {/* 4. Partner Command */}
           <ExecutiveCommandSection
             title="Partner Command"
-            icon={<Users className="h-5 w-5" />}
+            description="Verified partner ecosystem metrics, branch performance, and regional throughput."
+            icon={<Users className="h-6 w-6" />}
+            defaultExpanded={false}
             secondaryWidgets={
               <div className="grid gap-6 lg:grid-cols-2">
                 <DailyOperationsBriefing
@@ -838,87 +824,99 @@ export default function OverviewPage() {
               </div>
             }
           >
-            <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <CrossBranchExecutiveSummary summary={executiveSummary} />
-              <BranchPerformanceCenter branches={branchProfiles} />
+            <div className="space-y-8">
+              <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
+              <div className="grid gap-6 lg:grid-cols-2">
+                <CrossBranchExecutiveSummary summary={executiveSummary} />
+                <BranchPerformanceCenter branches={branchProfiles} />
+              </div>
             </div>
           </ExecutiveCommandSection>
 
           {/* 5. Customer Command */}
           <ExecutiveCommandSection
             title="Customer Command"
-            icon={<ClipboardList className="h-5 w-5" />}
+            description="Success metrics, retention predictive alerts, and client engagement timelines."
+            icon={<ClipboardList className="h-6 w-6" />}
+            defaultExpanded={false}
           >
-            <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
-              <CustomerSuccessDashboard profiles={customerProfiles.slice(0, 3)} />
-              <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
-            </div>
+            <div className="space-y-8">
+              <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
+                <CustomerSuccessDashboard profiles={customerProfiles.slice(0, 3)} />
+                <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
+              </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <BentoCard span="1" className="rounded-2xl p-0 border-amber-200/10 bg-stone-900/50">
-                <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-amber-200/10">
-                  <div className="min-w-0">
-                    <p className="whitespace-normal text-[11px] font-semibold text-amber-200/70">{t("customers.activity")}</p>
-                    <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-stone-100">{t("overview.latestRequests")}</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <BentoCard span="1" className="rounded-[2rem] p-0 border-amber-200/10 bg-stone-900/50">
+                  <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-amber-200/10">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/70">{t("customers.activity")}</p>
+                      <h3 className="mt-1 break-words font-serif text-xl font-bold text-stone-100">{t("overview.latestRequests")}</h3>
+                    </div>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl text-amber-500 bg-amber-500/10 border border-amber-500/20 shadow-inner">
+                      <Clock3 className="h-5 w-5" />
+                    </span>
                   </div>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20">
-                    <Clock3 className="h-4 w-4" />
-                  </span>
-                </div>
-                <div className="px-5 pb-5 pt-2">
-                  {recentActivity.length > 0 ? (
-                    <TimelineFlow
-                      items={recentActivity.map((item) => {
-                        let status: TimelineItem["status"] = "default";
-                        if (item.badge === t("overview.status.new")) status = "active";
-                        else if (item.badge === t("overview.status.completed")) status = "success";
-                        else if (item.badge === t("overview.status.pending")) status = "warning";
+                  <div className="px-6 pb-6 pt-4">
+                    {recentActivity.length > 0 ? (
+                      <TimelineFlow
+                        items={recentActivity.map((item) => {
+                          let status: TimelineItem["status"] = "default";
+                          if (item.badge === t("overview.status.new")) status = "active";
+                          else if (item.badge === t("overview.status.completed")) status = "success";
+                          else if (item.badge === t("overview.status.pending")) status = "warning";
 
-                        return {
-                          id: item.id,
-                          title: item.title,
-                          description: item.description || t("overview.genericRequest"),
-                          timestamp: new Date(item.date).toLocaleString(locale),
-                          icon: item.icon,
-                          status,
-                        };
-                      })}
-                    />
-                  ) : (
-                    <div className="py-8 text-center text-sm text-stone-50">{t("overview.noRequests")}</div>
-                  )}
-                </div>
-              </BentoCard>
-
-              <BentoCard className="space-y-4 rounded-2xl border-amber-200/10 bg-stone-900/50">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20">
-                  <FilePenLine className="h-4 w-4" />
-                </div>
-                <h3 className="font-serif text-xl font-semibold text-stone-100">{t("overview.quickActions")}</h3>
-                <div className="grid gap-2">
-                  {[
-                    { label: t("overview.quickReview"), to: "/dashboard/requests" },
-                    { label: t("overview.quickDeals"), to: "/dashboard/deals" },
-                    { label: t("overview.quickTracking"), to: "/dashboard/tracking" },
-                    { label: t("overview.quickEditRequests"), to: "/dashboard/edit-requests" },
-                  ].map((item) => (
-                    <Link
-                      key={item.label}
-                      to={item.to}
-                      className="group flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-300 transition-all bg-stone-950/40 border border-amber-200/10 hover:border-amber-200/20 hover:bg-stone-950/60 hover:text-stone-100"
-                    >
-                      <span className="min-w-0 break-words">{item.label}</span>
-                      <ChevronRight className="h-4 w-4 text-stone-600 transition-colors group-hover:text-amber-200" />
-                    </Link>
-                  ))}
-                </div>
-                {newestFinancialEntry ? (
-                  <div className="rounded-xl p-3.5 text-xs leading-6 text-emerald-100 bg-emerald-500/10 border border-emerald-500/20">
-                    {t("reports.metrics.linkedEntries")}: {metrics.financialEntries.toLocaleString(locale)}
+                          return {
+                            id: item.id,
+                            title: item.title,
+                            description: item.description || t("overview.genericRequest"),
+                            timestamp: new Date(item.date).toLocaleString(locale),
+                            icon: item.icon,
+                            status,
+                          };
+                        })}
+                      />
+                    ) : (
+                      <div className="py-8 text-center text-sm text-stone-500">{t("overview.noRequests")}</div>
+                    )}
                   </div>
-                ) : null}
-              </BentoCard>
+                </BentoCard>
+
+                <BentoCard className="space-y-6 rounded-[2rem] p-6 sm:p-8 border-amber-200/10 bg-stone-900/50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl text-amber-500 bg-amber-500/10 border border-amber-500/20 shadow-inner">
+                      <FilePenLine className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/70">Terminal</p>
+                      <h3 className="font-serif text-xl font-bold text-stone-100">{t("overview.quickActions")}</h3>
+                    </div>
+                  </div>
+                  <div className="grid gap-3">
+                    {[
+                      { label: t("overview.quickReview"), to: "/dashboard/requests" },
+                      { label: t("overview.quickDeals"), to: "/dashboard/deals" },
+                      { label: t("overview.quickTracking"), to: "/dashboard/tracking" },
+                      { label: t("overview.quickEditRequests"), to: "/dashboard/edit-requests" },
+                    ].map((item) => (
+                      <Link
+                        key={item.label}
+                        to={item.to}
+                        className="group flex min-h-14 min-w-0 items-center justify-between gap-4 rounded-2xl px-5 py-3 text-sm font-bold text-stone-300 transition-all bg-stone-950/40 border border-amber-200/10 hover:border-amber-200/30 hover:bg-stone-900 hover:text-white hover:shadow-2xl hover:-translate-y-0.5"
+                      >
+                        <span className="min-w-0 break-words tracking-tight">{item.label}</span>
+                        <ChevronRight className="h-4 w-4 text-stone-600 transition-all group-hover:text-amber-400 group-hover:translate-x-1" />
+                      </Link>
+                    ))}
+                  </div>
+                  {newestFinancialEntry ? (
+                    <div className="rounded-2xl p-4 text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-inner flex items-center justify-between">
+                      <span className="uppercase tracking-widest">{t("reports.metrics.linkedEntries")}</span>
+                      <span className="text-lg font-black">{metrics.financialEntries.toLocaleString(locale)}</span>
+                    </div>
+                  ) : null}
+                </BentoCard>
+              </div>
             </div>
           </ExecutiveCommandSection>
         </div>
