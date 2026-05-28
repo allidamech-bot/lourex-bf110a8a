@@ -33,6 +33,11 @@ import {
   detectOperationalBlockers
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
+import {
+  generatePartnerProfiles,
+  generatePartnerPerformanceScorecard
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerPerformanceScorecard } from "@/features/partner-intelligence/components/PartnerPerformanceScorecard";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
@@ -115,6 +120,19 @@ export default function ReportsPage() {
   const operationalMomentum = useMemo(
     () => analyzeOperationalMomentum(requests, deals, autonomousBlockers),
     [requests, deals, autonomousBlockers]
+  );
+
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles(requests, deals, [], []),
+    [requests, deals]
+  );
+
+  const partnerScorecards = useMemo(
+    () => partnerProfiles.slice(0, 2).map(p => ({
+      name: p.name,
+      scorecard: generatePartnerPerformanceScorecard(p)
+    })),
+    [partnerProfiles]
   );
 
   const metrics = snapshot?.summary || {
@@ -423,6 +441,14 @@ export default function ReportsPage() {
       {!loading && (
         <div className="grid gap-4 mb-4">
           <OperationalMomentumPanel momentum={operationalMomentum} />
+        </div>
+      )}
+
+      {!loading && (
+        <div className="grid gap-6 lg:grid-cols-2 mb-4">
+          {partnerScorecards.map(ps => (
+            <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
+          ))}
         </div>
       )}
 

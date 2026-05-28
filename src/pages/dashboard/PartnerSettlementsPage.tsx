@@ -28,6 +28,13 @@ import {
   generateCoordinationWarnings
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
+import {
+  generatePartnerProfiles,
+  generatePartnerSettlementInsights,
+  generatePartnerTaskQueue
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerSettlementVisibilityPanel } from "@/features/partner-intelligence/components/PartnerSettlementVisibilityPanel";
+import { PartnerTaskQueue } from "@/features/partner-intelligence/components/PartnerTaskQueue";
 import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName } from "@/lib/identity";
@@ -51,6 +58,8 @@ export default function PartnerSettlementsPage() {
   const [partners, setPartners] = useState<PartnerProfile[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [deals, setDeals] = useState<any[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
+  const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [partnerId, setPartnerId] = useState("");
@@ -71,16 +80,18 @@ export default function PartnerSettlementsPage() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [settlementRows, partnerRows, requestsData, dealsData] = await Promise.all([
+      const [settlementRows, partnerRows, requestsData, dealsData, shipmentRows] = await Promise.all([
         loadPartnerSettlements(),
         loadPartnerProfiles(),
         fetchRequests(),
-        fetchDeals()
+        fetchDeals(),
+        loadShipments(),
       ]);
       setSettlements(settlementRows);
       setPartners(partnerRows);
       setRequests(requestsData);
       setDeals(dealsData);
+      setShipments(shipmentRows);
       setPartnerId((current) => current || partnerRows[0]?.id || "");
     } catch (error) {
       logOperationalError("partner_settlements_load", error);
@@ -164,6 +175,26 @@ export default function PartnerSettlementsPage() {
     [autonomousBlockers]
   );
 
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles(requests as any, deals as any, shipments, settlements as any),
+    [requests, deals, shipments, settlements]
+  );
+
+  const activePartnerProfile = useMemo(
+    () => partnerProfiles.find(p => p.id === partnerId) || partnerProfiles[0],
+    [partnerProfiles, partnerId]
+  );
+
+  const partnerSettlementInsight = useMemo(
+    () => activePartnerProfile ? generatePartnerSettlementInsights(activePartnerProfile.id, settlements as any) : null,
+    [activePartnerProfile, settlements]
+  );
+
+  const partnerTasks = useMemo(
+    () => activePartnerProfile ? generatePartnerTaskQueue(activePartnerProfile.id, deals as any, shipments, settlements as any) : [],
+    [activePartnerProfile, deals, shipments, settlements]
+  );
+
   const handleCreate = async () => {
     if (!selectedPartner || submitting) return;
     setSubmitting(true);
@@ -226,6 +257,10 @@ export default function PartnerSettlementsPage() {
 
       {!loading && (
         <div className="space-y-4">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <PartnerTaskQueue tasks={partnerTasks} />
+            {partnerSettlementInsight && <PartnerSettlementVisibilityPanel insight={partnerSettlementInsight} />}
+          </div>
           <CoordinationWarningsPanel warnings={coordinationWarnings} />
           <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
         </div>

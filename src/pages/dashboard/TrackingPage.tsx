@@ -25,6 +25,11 @@ import {
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { WorkflowDependencyMap } from "@/features/autonomous-coordination/components/WorkflowDependencyMap";
 import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
+import {
+  generatePartnerProfiles,
+  generatePartnerShipmentInsights
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerShipmentResponsibilityPanel } from "@/features/partner-intelligence/components/PartnerShipmentResponsibilityPanel";
 import { getNextShipmentStage, getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
@@ -159,6 +164,7 @@ export default function TrackingPage() {
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [deals, setDeals] = useState<any[]>([]);
+  const [settlements, setSettlements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -179,14 +185,16 @@ export default function TrackingPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const [shipmentRows, requestsData, dealsData] = await Promise.all([
+      const [shipmentRows, requestsData, dealsData, settlementData] = await Promise.all([
         loadShipments(),
         fetchRequests(),
-        fetchDeals()
+        fetchDeals(),
+        loadPartnerSettlements().catch(() => []),
       ]);
       setRows(shipmentRows);
       setRequests(requestsData);
       setDeals(dealsData);
+      setSettlements(settlementData);
     } catch (error) {
       logOperationalError("tracking_load", error, { flow: "tracking_workspace" });
       const message = t("tracking.toasts.advanceError");
@@ -260,6 +268,21 @@ export default function TrackingPage() {
   const coordinationWarnings = useMemo(
     () => generateCoordinationWarnings([], workflowDependencies),
     [workflowDependencies]
+  );
+
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles(requests as any, deals as any, rows, settlements),
+    [requests, deals, rows, settlements]
+  );
+
+  const activePartnerProfile = useMemo(
+    () => isPartnerWorkspace ? partnerProfiles.find(p => p.name === profile?.fullName) : null,
+    [partnerProfiles, isPartnerWorkspace, profile?.fullName]
+  );
+
+  const partnerShipmentInsights = useMemo(
+    () => activePartnerProfile ? generatePartnerShipmentInsights(activePartnerProfile.id, rows) : [],
+    [activePartnerProfile, rows]
   );
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
   const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
@@ -525,6 +548,9 @@ export default function TrackingPage() {
 
         {isInternal && !loading && (
           <div className="space-y-4">
+            {isPartnerWorkspace && partnerShipmentInsights.length > 0 && (
+              <PartnerShipmentResponsibilityPanel insights={partnerShipmentInsights} />
+            )}
             <CoordinationWarningsPanel warnings={coordinationWarnings} />
             <WorkflowDependencyMap dependencies={workflowDependencies} />
             <RegionalOperationsVisibility regions={regionalSummary} />

@@ -63,6 +63,10 @@ import {
 import { AutonomousOperationsPlan } from "@/features/autonomous-coordination/components/AutonomousOperationsPlan";
 import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
 import { NextBestActionsPanel } from "@/features/autonomous-coordination/components/NextBestActionsPanel";
+import {
+  generatePartnerProfiles
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerIntelligenceDashboard } from "@/features/partner-intelligence/components/PartnerIntelligenceDashboard";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -412,6 +416,11 @@ export default function OverviewPage() {
     [autonomousPlan, operationalMomentum]
   );
 
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles(requests as any, deals as any, shipments as any, settlements as any),
+    [requests, deals, shipments, settlements]
+  );
+
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -690,6 +699,7 @@ export default function OverviewPage() {
             <OperationalMomentumPanel momentum={operationalMomentum} />
             <NextBestActionsPanel actions={nextBestActions} />
           </div>
+          <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
           <CrossBranchExecutiveSummary summary={executiveSummary} />
           <BranchPerformanceCenter branches={branchProfiles} />
         </div>

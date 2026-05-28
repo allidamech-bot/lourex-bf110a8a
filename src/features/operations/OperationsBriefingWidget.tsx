@@ -36,6 +36,13 @@ import {
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { BlockerPropagationCenter } from "@/features/autonomous-coordination/components/BlockerPropagationCenter";
 import { ExecutionSequencePanel } from "@/features/autonomous-coordination/components/ExecutionSequencePanel";
+import {
+  generatePartnerProfiles,
+  generatePartnerPerformanceScorecard,
+  detectPartnerBottlenecks
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerPerformanceScorecard } from "@/features/partner-intelligence/components/PartnerPerformanceScorecard";
+import { PartnerBottleneckAlerts } from "@/features/partner-intelligence/components/PartnerBottleneckAlerts";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
@@ -173,6 +180,24 @@ export function OperationsBriefingWidget() {
     [autonomousBlockers]
   );
 
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles(requests as any, deals as any, shipments, []),
+    [requests, deals, shipments]
+  );
+
+  const partnerScorecards = useMemo(
+    () => partnerProfiles.slice(0, 2).map(p => ({
+      name: p.name,
+      scorecard: generatePartnerPerformanceScorecard(p)
+    })),
+    [partnerProfiles]
+  );
+
+  const partnerBottlenecks = useMemo(
+    () => partnerProfiles.slice(0, 2).flatMap(p => detectPartnerBottlenecks(p.id, deals as any, shipments)),
+    [partnerProfiles, deals, shipments]
+  );
+
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
   if (loading && !report) {
@@ -242,6 +267,14 @@ export function OperationsBriefingWidget() {
             <ExecutionSequencePanel steps={executionSequence} />
             <BlockerPropagationCenter blockers={propagationAnalysis} />
           </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {partnerScorecards.map(ps => (
+              <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
+            ))}
+          </div>
+
+          {partnerBottlenecks.length > 0 && <PartnerBottleneckAlerts bottlenecks={partnerBottlenecks} />}
 
           <TeamWorkloadDistribution workloads={teamWorkload} />
         </div>

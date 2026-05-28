@@ -17,6 +17,11 @@ import {
   generateCoordinationWarnings
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { CoordinationWarningsPanel } from "@/features/autonomous-coordination/components/CoordinationWarningsPanel";
+import {
+  generatePartnerProfiles,
+  generatePartnerCommunicationInsight
+} from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
+import { PartnerCommunicationCenter } from "@/features/partner-intelligence/components/PartnerCommunicationCenter";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -256,6 +261,17 @@ export default function AccountingPage() {
   const coordinationWarnings = useMemo(
     () => generateCoordinationWarnings(autonomousBlockers, []),
     [autonomousBlockers]
+  );
+
+  const partnerProfiles = useMemo(
+    () => generatePartnerProfiles([], deals as any, [], entries as any),
+    [deals, entries]
+  );
+
+  const firstPartnerId = partnerProfiles[0]?.id;
+  const partnerCommunicationInsight = useMemo(
+    () => firstPartnerId ? generatePartnerCommunicationInsight(firstPartnerId) : null,
+    [firstPartnerId]
   );
 
   const handleFinanceAiReview = async (mode: FinanceAiMode = "finance_audit_review") => {
@@ -530,6 +546,7 @@ export default function AccountingPage() {
           {!loading && !focusDeal && (
             <div className="space-y-4">
               <CoordinationWarningsPanel warnings={coordinationWarnings} />
+              {partnerCommunicationInsight && <PartnerCommunicationCenter insight={partnerCommunicationInsight} />}
               <BranchFinancialSummary summaries={branchFinancialSummaries} />
             </div>
           )}
