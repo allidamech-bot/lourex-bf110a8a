@@ -48,6 +48,13 @@ import { PriorityQueueEngine } from "@/features/operations-intelligence/componen
 import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
 import { DailyOperationsBriefing } from "@/features/operations-intelligence/components/DailyOperationsBriefing";
 import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
+import {
+  generateBranchProfiles,
+  generateTeamWorkloadInsights,
+  generateCrossBranchExecutiveSummary
+} from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { BranchPerformanceCenter } from "@/features/organization-intelligence/components/BranchPerformanceCenter";
+import { CrossBranchExecutiveSummary } from "@/features/organization-intelligence/components/CrossBranchExecutiveSummary";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -367,6 +374,21 @@ export default function OverviewPage() {
     [deals, requests, settlements]
   );
 
+  const branchProfiles = useMemo(
+    () => generateBranchProfiles(requests, deals, financialEntries),
+    [requests, deals, financialEntries]
+  );
+
+  const teamWorkloads = useMemo(
+    () => generateTeamWorkloadInsights(requests, deals),
+    [requests, deals]
+  );
+
+  const executiveSummary = useMemo(
+    () => generateCrossBranchExecutiveSummary(branchProfiles, teamWorkloads),
+    [branchProfiles, teamWorkloads]
+  );
+
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -637,6 +659,13 @@ export default function OverviewPage() {
           );
         })}
       </ResponsiveInfoGrid>
+
+      {isInternal && !loading && (
+        <div className="space-y-6">
+          <CrossBranchExecutiveSummary summary={executiveSummary} />
+          <BranchPerformanceCenter branches={branchProfiles} />
+        </div>
+      )}
 
       {isInternal && !loading && (
         <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">

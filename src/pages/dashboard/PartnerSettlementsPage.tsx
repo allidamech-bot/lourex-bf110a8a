@@ -20,6 +20,9 @@ import {
   loadPartnerSettlements,
   markPartnerSettlementPaid,
 } from "@/domain/accounting/partnerSettlements";
+import { fetchRequests, fetchDeals } from "@/domain/operations/service";
+import { generateOwnershipAccountabilityInsights } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { OwnershipAccountabilityPanel } from "@/features/organization-intelligence/components/OwnershipAccountabilityPanel";
 import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName } from "@/lib/identity";
@@ -41,6 +44,8 @@ export default function PartnerSettlementsPage() {
   const canManage = profile?.role ? canManageAccounting(profile.role) : false;
   const [settlements, setSettlements] = useState<Awaited<ReturnType<typeof loadPartnerSettlements>>>([]);
   const [partners, setPartners] = useState<PartnerProfile[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [partnerId, setPartnerId] = useState("");
@@ -61,9 +66,16 @@ export default function PartnerSettlementsPage() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [settlementRows, partnerRows] = await Promise.all([loadPartnerSettlements(), loadPartnerProfiles()]);
+      const [settlementRows, partnerRows, requestsData, dealsData] = await Promise.all([
+        loadPartnerSettlements(),
+        loadPartnerProfiles(),
+        fetchRequests(),
+        fetchDeals()
+      ]);
       setSettlements(settlementRows);
       setPartners(partnerRows);
+      setRequests(requestsData);
+      setDeals(dealsData);
       setPartnerId((current) => current || partnerRows[0]?.id || "");
     } catch (error) {
       logOperationalError("partner_settlements_load", error);
@@ -127,6 +139,16 @@ export default function PartnerSettlementsPage() {
 
   const settlementVisibility = useMemo(() => summarizeSettlementVisibility(settlements), [settlements]);
 
+  const accountabilityInsights = useMemo(() => {
+    const uniqueOwners = Array.from(new Set([
+      ...requests.map(r => r.customer.fullName),
+      ...deals.map(d => d.turkishPartnerName),
+      ...deals.map(d => d.saudiPartnerName)
+    ])).filter(Boolean) as string[];
+
+    return uniqueOwners.slice(0, 5).map(owner => generateOwnershipAccountabilityInsights(owner, requests as any, deals as any));
+  }, [requests, deals]);
+
   const handleCreate = async () => {
     if (!selectedPartner || submitting) return;
     setSubmitting(true);
@@ -186,6 +208,10 @@ export default function PartnerSettlementsPage() {
         <OperationalRiskCenter risks={operationalRisks} />
         <PriorityQueueEngine recommendations={recommendations} />
       </div>
+
+      {!loading && (
+        <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
+      )}
 
       <ResponsiveInfoGrid min="minmax(min(100%, 11rem), 1fr)">
         <ReadableMetricCard label={t("partnerSettlements.metrics.unpaid")} value={`${formatMoney(totals.unpaid)} SAR`} />

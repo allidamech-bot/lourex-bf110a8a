@@ -16,6 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { createTrackingUpdate, loadShipments } from "@/lib/operationsDomain";
+import { fetchRequests, fetchDeals } from "@/domain/operations/service";
+import { generateRegionalOperationsSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { RegionalOperationsVisibility } from "@/features/organization-intelligence/components/RegionalOperationsVisibility";
 import { getNextShipmentStage, getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
@@ -148,6 +151,8 @@ export default function TrackingPage() {
   const isSaudiPartner = profile?.role === "saudi_partner";
   const isPartnerWorkspace = isTurkishPartner || isSaudiPartner;
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -168,7 +173,14 @@ export default function TrackingPage() {
     setLoading(true);
     setLoadError("");
     try {
-      setRows(await loadShipments());
+      const [shipmentRows, requestsData, dealsData] = await Promise.all([
+        loadShipments(),
+        fetchRequests(),
+        fetchDeals()
+      ]);
+      setRows(shipmentRows);
+      setRequests(requestsData);
+      setDeals(dealsData);
     } catch (error) {
       logOperationalError("tracking_load", error, { flow: "tracking_workspace" });
       const message = t("tracking.toasts.advanceError");
@@ -227,6 +239,11 @@ export default function TrackingPage() {
   const shipmentAnalysis = useMemo(
     () => (activeShipment ? analyzeShipmentIntelligence(activeShipment) : null),
     [activeShipment],
+  );
+
+  const regionalSummary = useMemo(
+    () => generateRegionalOperationsSummary(requests, deals),
+    [requests, deals]
   );
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
   const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
@@ -489,6 +506,10 @@ export default function TrackingPage() {
             onRunAi={(mode) => void handleShipmentIntelligenceAi(mode)}
           />
         ) : null}
+
+        {isInternal && !loading && (
+          <RegionalOperationsVisibility regions={regionalSummary} />
+        )}
 
         {isInternal ? (
           <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-2xl backdrop-blur-xl">

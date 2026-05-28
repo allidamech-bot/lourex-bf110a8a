@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { createFinancialEntry, getFinancialOperationErrorMessage, loadFinancialEditRequests, loadFinancialEntries } from "@/domain/accounting/service";
+import { loadPartnerSettlements } from "@/domain/accounting/partnerSettlements";
+import { generateBranchProfiles, generateBranchFinancialSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { BranchFinancialSummary } from "@/features/organization-intelligence/components/BranchFinancialSummary";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -91,6 +94,7 @@ export default function AccountingPage() {
   const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
   const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof loadFinancialEditRequests>>>([]);
   const [deals, setDeals] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
+  const [settlements, setSettlements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -114,14 +118,16 @@ export default function AccountingPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const [entriesData, editRequestData, dealsData] = await Promise.all([
+      const [entriesData, editRequestData, dealsData, settlementsData] = await Promise.all([
         loadFinancialEntries(),
         loadFinancialEditRequests(),
         loadDeals(),
+        loadPartnerSettlements(),
       ]);
       setEntries(entriesData);
       setEditRequests(editRequestData);
       setDeals(dealsData);
+      setSettlements(settlementsData);
     } catch (error) {
       logOperationalError("accounting_load", error);
       setLoadError(t("accounting.toasts.createError"));
@@ -225,6 +231,16 @@ export default function AccountingPage() {
       })),
     }),
     [financeRiskAnalysis, focusDeal, totals, visibleEntries],
+  );
+
+  const branchProfiles = useMemo(
+    () => generateBranchProfiles([], deals as any, entries as any),
+    [deals, entries]
+  );
+
+  const branchFinancialSummaries = useMemo(
+    () => branchProfiles.map(b => generateBranchFinancialSummary(b.id, entries as any, settlements as any)),
+    [branchProfiles, entries, settlements]
   );
 
   const handleFinanceAiReview = async (mode: FinanceAiMode = "finance_audit_review") => {
@@ -496,6 +512,9 @@ export default function AccountingPage() {
 
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
         <div className="min-w-0 space-y-4">
+          {!loading && !focusDeal && (
+            <BranchFinancialSummary summaries={branchFinancialSummaries} />
+          )}
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <div className="flex min-w-0 items-center gap-3">
               <Receipt className="h-5 w-5 text-amber-500" />

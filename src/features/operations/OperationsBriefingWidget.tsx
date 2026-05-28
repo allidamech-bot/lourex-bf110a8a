@@ -22,6 +22,13 @@ import { logOperationalError } from "@/lib/monitoring";
 import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
 import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
 import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
+import {
+  generateBranchProfiles,
+  generateTeamWorkloadInsights,
+  calculateBranchRiskScore
+} from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { BranchRiskScorePanel } from "@/features/organization-intelligence/components/BranchRiskScorePanel";
+import { TeamWorkloadDistribution } from "@/features/organization-intelligence/components/TeamWorkloadDistribution";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
@@ -129,6 +136,21 @@ export function OperationsBriefingWidget() {
     return risks;
   }, [deals, editRequests]);
 
+  const branchProfiles = useMemo(
+    () => generateBranchProfiles(requests as any, deals as any, []),
+    [requests, deals]
+  );
+
+  const branchRiskScores = useMemo(
+    () => branchProfiles.map(b => calculateBranchRiskScore(b.id, requests as any, deals as any, [])),
+    [branchProfiles, requests, deals]
+  );
+
+  const teamWorkload = useMemo(
+    () => generateTeamWorkloadInsights(requests as any, deals as any),
+    [requests, deals]
+  );
+
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
   if (loading && !report) {
@@ -179,16 +201,21 @@ export function OperationsBriefingWidget() {
       </div>
 
       {!loading && (
-        <div className="grid gap-5 xl:grid-cols-2">
-          <OperationsHealthCenter
-            activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
-            pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
-            inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
-            delayedCount={shipments.filter(s => s.stage !== "delivered" && s.stage !== "closed").length}
-            blockedWorkflows={editRequests.filter(e => e.status === "pending").length}
-            completionScore={82}
-          />
-          <OperationalRiskCenter risks={operationalRisks} />
+        <div className="space-y-6">
+          <div className="grid gap-5 xl:grid-cols-2">
+            <OperationsHealthCenter
+              activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+              pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+              inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
+              delayedCount={shipments.filter(s => s.stage !== "delivered" && s.stage !== "closed").length}
+              blockedWorkflows={editRequests.filter(e => e.status === "pending").length}
+              completionScore={82}
+            />
+            <OperationalRiskCenter risks={operationalRisks} />
+          </div>
+
+          <BranchRiskScorePanel risks={branchRiskScores} />
+          <TeamWorkloadDistribution workloads={teamWorkload} />
         </div>
       )}
 

@@ -25,6 +25,9 @@ import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { fetchRequests, fetchDeals } from "@/domain/operations/service";
+import { generateRegionalOperationsSummary } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { RegionalOperationsVisibility } from "@/features/organization-intelligence/components/RegionalOperationsVisibility";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
@@ -51,6 +54,8 @@ export default function ReportsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: DrillDownItem[] } | null>(null);
   const [loadError, setLoadError] = useState("");
   const [executiveRefreshKey, setExecutiveRefreshKey] = useState(0);
@@ -64,8 +69,14 @@ export default function ReportsPage() {
       setLoadError("");
 
       try {
-        const nextSnapshot = await getDashboardReportSnapshot(rangeStart, rangeEnd);
+        const [nextSnapshot, allRequests, allDeals] = await Promise.all([
+          getDashboardReportSnapshot(rangeStart, rangeEnd),
+          fetchRequests(),
+          fetchDeals()
+        ]);
         setSnapshot(nextSnapshot);
+        setRequests(allRequests);
+        setDeals(allDeals);
       } catch (error: unknown) {
         logOperationalError("reports_snapshot_load", error, {
           start: rangeStart.toISOString(),
@@ -84,6 +95,11 @@ export default function ReportsPage() {
   const executiveReport = useMemo(
     () => (snapshot ? buildExecutiveReportAdvisor(snapshot, lang === "ar" ? "ar" : "en") : null),
     [executiveRefreshKey, lang, snapshot],
+  );
+
+  const regionalSummary = useMemo(
+    () => generateRegionalOperationsSummary(requests, deals),
+    [requests, deals]
   );
 
   const metrics = snapshot?.summary || {
@@ -388,6 +404,10 @@ export default function ReportsPage() {
           onRefresh={() => setExecutiveRefreshKey((current) => current + 1)}
         />
       ) : null}
+
+      <div className="grid gap-4">
+        <RegionalOperationsVisibility regions={regionalSummary} />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
         {[

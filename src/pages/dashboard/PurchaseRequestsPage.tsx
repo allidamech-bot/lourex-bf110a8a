@@ -37,7 +37,16 @@ import {
 import type { PurchaseRequestStatus } from "@/types/lourex";
 import { isInternalRole } from "@/features/auth/rbac";
 import { canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
-import { resubmitPurchaseRequest } from "@/domain/operations/service";
+import {
+    fetchAuditCount,
+    fetchDeals,
+    fetchFinancialEditRequests,
+    fetchRequests,
+    fetchShipments,
+    resubmitPurchaseRequest,
+} from "@/domain/operations/service";
+import { generateBranchProfiles, calculateBranchRiskScore } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
+import { BranchRiskScorePanel } from "@/features/organization-intelligence/components/BranchRiskScorePanel";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { toast } from "sonner";
@@ -349,6 +358,7 @@ export default function PurchaseRequestsPage() {
     const navigate = useNavigate();
 
     const [rows, setRows] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
+    const [deals, setDeals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [convertingId, setConvertingId] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
@@ -460,8 +470,12 @@ export default function PurchaseRequestsPage() {
             setLoadError("");
 
             try {
-                const data = await loadPurchaseRequests();
+                const [data, dealsData] = await Promise.all([
+                    loadPurchaseRequests(),
+                    fetchDeals()
+                ]);
                 setRows(data);
+                setDeals(dealsData);
 
                 if (!preserveSelection) {
                     const requestedRowExists =
@@ -674,6 +688,16 @@ export default function PurchaseRequestsPage() {
             converted: rows.filter((row) => row.status === "in_progress" || row.status === "completed").length,
         }),
         [rows],
+    );
+
+    const branchProfiles = useMemo(
+        () => generateBranchProfiles(rows as any, deals as any, []),
+        [rows, deals]
+    );
+
+    const branchRiskScores = useMemo(
+        () => branchProfiles.map(b => calculateBranchRiskScore(b.id, rows as any, deals as any, [])),
+        [branchProfiles, rows, deals]
     );
 
     const handleStatusUpdate = async (requestId: string, status: PurchaseRequestStatus) => {
@@ -977,16 +1001,19 @@ export default function PurchaseRequestsPage() {
             <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
 
             {isInternal && (
-                <div className="grid gap-4 xl:grid-cols-2">
-                    <OperationsHealthCenter
-                        activeRequests={requestMetrics.total - requestMetrics.converted}
-                        pendingOperations={requestMetrics.review}
-                        inTransitCount={0}
-                        delayedCount={0}
-                        blockedWorkflows={rows.filter(r => r.status === 'transfer_proof_rejected').length}
-                        completionScore={75}
-                    />
-                    <PriorityQueueEngine recommendations={recommendations} />
+                <div className="space-y-6">
+                    <div className="grid gap-4 xl:grid-cols-2">
+                        <OperationsHealthCenter
+                            activeRequests={requestMetrics.total - requestMetrics.converted}
+                            pendingOperations={requestMetrics.review}
+                            inTransitCount={0}
+                            delayedCount={0}
+                            blockedWorkflows={rows.filter(r => r.status === 'transfer_proof_rejected').length}
+                            completionScore={75}
+                        />
+                        <PriorityQueueEngine recommendations={recommendations} />
+                    </div>
+                    <BranchRiskScorePanel risks={branchRiskScores} />
                 </div>
             )}
 
