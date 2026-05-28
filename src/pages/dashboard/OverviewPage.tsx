@@ -26,6 +26,7 @@ import { ReadableMetricCard, ResponsiveInfoGrid } from "@/components/readable/Re
 import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
 import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
