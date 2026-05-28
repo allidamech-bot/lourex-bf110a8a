@@ -28,6 +28,10 @@ import { getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from
 import { useI18n, type Lang } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
+import {
+  generateCustomerSuccessInsights
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerSuccessInsights } from "@/features/customer-success-intelligence/components/CustomerSuccessInsights";
 import { toast } from "sonner";
 import { ShipmentETAIntelligence } from "@/features/customer-intelligence/components/ShipmentETAIntelligence";
 import { CustomerTrustTimeline } from "@/features/customer-intelligence/components/CustomerTrustTimeline";
@@ -245,6 +249,11 @@ export default function CustomerTrackingPage() {
       ? shipmentStages.findIndex((item) => item.code === activeShipment.stage)
       : -1;
   const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
+
+  const successInsights = useMemo(
+    () => generateCustomerSuccessInsights([], rows as any),
+    [rows]
+  );
   const latestShipmentEvent = activeShipment?.shipmentEvents[activeShipment.shipmentEvents.length - 1] || null;
   const shipmentAnalysis = useMemo(
       () => (activeShipment ? analyzeShipmentIntelligence(activeShipment) : null),

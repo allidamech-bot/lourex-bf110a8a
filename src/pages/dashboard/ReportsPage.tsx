@@ -38,6 +38,11 @@ import {
   generatePartnerPerformanceScorecard
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerPerformanceScorecard } from "@/features/partner-intelligence/components/PartnerPerformanceScorecard";
+import {
+  generateCustomerProfiles,
+  calculateCustomerLifetimeValueEstimate
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerLifetimeValuePanel } from "@/features/customer-success-intelligence/components/CustomerLifetimeValuePanel";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
@@ -133,6 +138,11 @@ export default function ReportsPage() {
       scorecard: generatePartnerPerformanceScorecard(p)
     })),
     [partnerProfiles]
+  );
+
+  const customerProfiles = useMemo(
+    () => generateCustomerProfiles(requests as any, deals as any, []),
+    [requests, deals]
   );
 
   const metrics = snapshot?.summary || {
@@ -449,6 +459,12 @@ export default function ReportsPage() {
           {partnerScorecards.map(ps => (
             <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
           ))}
+        </div>
+      )}
+
+      {!loading && (
+        <div className="mb-4">
+          <CustomerLifetimeValuePanel profiles={customerProfiles.slice(0, 2)} />
         </div>
       )}
 

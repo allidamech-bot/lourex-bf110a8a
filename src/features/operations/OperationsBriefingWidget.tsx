@@ -43,6 +43,12 @@ import {
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerPerformanceScorecard } from "@/features/partner-intelligence/components/PartnerPerformanceScorecard";
 import { PartnerBottleneckAlerts } from "@/features/partner-intelligence/components/PartnerBottleneckAlerts";
+import {
+  generateCustomerProfiles,
+  generateCustomerFollowupRecommendations
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerFollowupCenter } from "@/features/customer-success-intelligence/components/CustomerFollowupCenter";
+import { CustomerPriorityMatrix } from "@/features/customer-success-intelligence/components/CustomerPriorityMatrix";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
@@ -198,6 +204,16 @@ export function OperationsBriefingWidget() {
     [partnerProfiles, deals, shipments]
   );
 
+  const customerProfiles = useMemo(
+    () => generateCustomerProfiles(requests as any, deals as any, []),
+    [requests, deals]
+  );
+
+  const customerFollowups = useMemo(
+    () => generateCustomerFollowupRecommendations(customerProfiles, requests as any),
+    [customerProfiles, requests]
+  );
+
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
   if (loading && !report) {
@@ -275,6 +291,11 @@ export function OperationsBriefingWidget() {
           </div>
 
           {partnerBottlenecks.length > 0 && <PartnerBottleneckAlerts bottlenecks={partnerBottlenecks} />}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CustomerFollowupCenter recommendations={customerFollowups.slice(0, 5)} />
+            <CustomerPriorityMatrix profiles={customerProfiles.slice(0, 5)} />
+          </div>
 
           <TeamWorkloadDistribution workloads={teamWorkload} />
         </div>

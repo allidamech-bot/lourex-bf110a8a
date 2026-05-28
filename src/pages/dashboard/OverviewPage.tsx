@@ -67,6 +67,12 @@ import {
   generatePartnerProfiles
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerIntelligenceDashboard } from "@/features/partner-intelligence/components/PartnerIntelligenceDashboard";
+import {
+  generateCustomerProfiles,
+  generateCustomerSuccessAlerts
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerSuccessDashboard } from "@/features/customer-success-intelligence/components/CustomerSuccessDashboard";
+import { CustomerRetentionAlerts } from "@/features/customer-success-intelligence/components/CustomerRetentionAlerts";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -421,6 +427,16 @@ export default function OverviewPage() {
     [requests, deals, shipments, settlements]
   );
 
+  const customerProfiles = useMemo(
+    () => generateCustomerProfiles(requests as any, deals as any, financialEntries as any),
+    [requests, deals, financialEntries]
+  );
+
+  const customerAlerts = useMemo(
+    () => generateCustomerSuccessAlerts(customerProfiles),
+    [customerProfiles]
+  );
+
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -699,6 +715,12 @@ export default function OverviewPage() {
             <OperationalMomentumPanel momentum={operationalMomentum} />
             <NextBestActionsPanel actions={nextBestActions} />
           </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
+            <CustomerSuccessDashboard profiles={customerProfiles.slice(0, 3)} />
+            <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
+          </div>
+
           <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
           <CrossBranchExecutiveSummary summary={executiveSummary} />
           <BranchPerformanceCenter branches={branchProfiles} />

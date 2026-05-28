@@ -31,6 +31,10 @@ import {
 import { CustomerOperationsHealthWidget } from "@/features/customer-intelligence/components/CustomerOperationsHealthWidget";
 import { FinancialVisibilityLayer } from "@/features/customer-intelligence/components/FinancialVisibilityLayer";
 import { CustomerAIAssistantStub } from "@/features/customer-intelligence/components/CustomerAIAssistantStub";
+import {
+  generateCustomerSuccessInsights
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerSuccessInsights } from "@/features/customer-success-intelligence/components/CustomerSuccessInsights";
 
 const getSafeLabel = (value: string, fallback: string) => {
   if (!value || value.includes(".")) {
@@ -294,6 +298,11 @@ const CustomerPortal = () => {
     dealsCount: customerData?.dealsCount || 0,
   });
 
+  const successInsights = useMemo(
+    () => generateCustomerSuccessInsights(recentRequests as any, deals as any),
+    [recentRequests, deals]
+  );
+
   const statementNotice = getSafeLabel(
       t("customerPortal.financial.statementNotice"),
       locale === "ar"
@@ -361,6 +370,12 @@ const CustomerPortal = () => {
             nextActionAr={recentRequestStatus?.label}
           />
         </div>
+
+        {!loading && successInsights.length > 0 && (
+          <div className="mb-8">
+            <CustomerSuccessInsights insights={successInsights} />
+          </div>
+        )}
 
         {loadError ? (
             <div className="mb-6 flex w-full max-w-full items-start gap-3 rounded-[1.5rem] border border-destructive/20 bg-destructive/10 px-4 py-4 text-sm text-destructive sm:px-5">

@@ -44,6 +44,10 @@ import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { SectionHelpBox } from "@/components/readable/ReadableCards";
 import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
 import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
+import {
+  detectRepeatRequestPatterns
+} from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
+import { CustomerSuccessInsights } from "@/features/customer-success-intelligence/components/CustomerSuccessInsights";
 
 type CustomerRequestFilter = "all" | PurchaseRequestStatus | "cancelled";
 type CustomerRequestRow = Omit<Awaited<ReturnType<typeof loadPurchaseRequests>>[number], "status"> & {
@@ -295,6 +299,11 @@ export default function CustomerRequestsPage() {
 
     return filteredRows.find((row) => row.id === selectedRequestId) || filteredRows[0] || null;
   }, [filteredRows, selectedRequestId]);
+
+  const requestPatterns = useMemo(
+    () => detectRepeatRequestPatterns(rows as any),
+    [rows]
+  );
 
   const selectedStatusCopy = selectedRow && selectedRow.status !== "cancelled"
       ? getCustomerRequestStatusCopy(selectedRow.status, locale === "ar" ? "ar" : "en")
@@ -664,6 +673,11 @@ export default function CustomerRequestsPage() {
             </div>
 
             <div className="min-w-0 flex-1 space-y-3 pe-1">
+              {!loading && rows.length > 0 && requestPatterns.length > 0 && (
+                <div className="mb-4">
+                  <CustomerSuccessInsights insights={requestPatterns} />
+                </div>
+              )}
               {filteredRows.length === 0 ? (
                   <EmptyState
                       icon={ClipboardList}
