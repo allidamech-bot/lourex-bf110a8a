@@ -11,6 +11,11 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { useI18n } from "@/lib/i18n";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { fetchRequests, fetchDeals } from "@/domain/operations/service";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { CrossSystemInsightsPanel } from "@/features/executive-command/components/CrossSystemInsightsPanel";
 
 type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
 type JsonObject = { [key: string]: Json | undefined };
@@ -126,6 +131,8 @@ export default function AuditPage() {
   const { profile } = useAuthSession();
   const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditLogRow[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(
     [searchParams.get("deal"), searchParams.get("request"), searchParams.get("customer")]
@@ -138,13 +145,19 @@ export default function AuditPage() {
   const fetchLogs = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("audit_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    const [logsResult, requestsData, dealsData] = await Promise.all([
+      supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200),
+      fetchRequests(),
+      fetchDeals()
+    ]);
 
-    setRows(error ? [] : (data ?? []));
+    setRows(logsResult.error ? [] : (logsResult.data ?? []));
+    setRequests(requestsData);
+    setDeals(dealsData);
     setLoading(false);
   };
 
@@ -186,6 +199,11 @@ export default function AuditPage() {
       ).length,
     }),
     [filteredRows],
+  );
+
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, [], [], []),
+    [requests, deals]
   );
 
   const translate = (key: string, fallback: string) => {
@@ -280,6 +298,12 @@ export default function AuditPage() {
           </BentoCard>
         ))}
       </div>
+
+      {!loading && (
+        <div className="grid gap-4">
+          <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights.filter(i => i.type === 'strategic')} />
+        </div>
+      )}
 
       {filteredRows.length === 0 ? (
         <EmptyState

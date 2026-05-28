@@ -43,6 +43,10 @@ import {
   calculateCustomerLifetimeValueEstimate
 } from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
 import { CustomerLifetimeValuePanel } from "@/features/customer-success-intelligence/components/CustomerLifetimeValuePanel";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { BusinessStabilityPanel } from "@/features/executive-command/components/BusinessStabilityPanel";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 
@@ -142,6 +146,11 @@ export default function ReportsPage() {
 
   const customerProfiles = useMemo(
     () => generateCustomerProfiles(requests as any, deals as any, []),
+    [requests, deals]
+  );
+
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, [], [], []),
     [requests, deals]
   );
 
@@ -459,6 +468,12 @@ export default function ReportsPage() {
           {partnerScorecards.map(ps => (
             <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
           ))}
+        </div>
+      )}
+
+      {!loading && (
+        <div className="mb-4">
+          <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
         </div>
       )}
 

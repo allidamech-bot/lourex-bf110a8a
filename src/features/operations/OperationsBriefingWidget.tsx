@@ -49,6 +49,11 @@ import {
 } from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
 import { CustomerFollowupCenter } from "@/features/customer-success-intelligence/components/CustomerFollowupCenter";
 import { CustomerPriorityMatrix } from "@/features/customer-success-intelligence/components/CustomerPriorityMatrix";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { ExecutiveCommandWorkspace } from "@/features/executive-command/components/ExecutiveCommandWorkspace";
+import { CriticalActionQueue } from "@/features/executive-command/components/CriticalActionQueue";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
@@ -214,6 +219,11 @@ export function OperationsBriefingWidget() {
     [customerProfiles, requests]
   );
 
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, [], [], editRequests as any),
+    [requests, deals, editRequests]
+  );
+
   const topRecommendations = useMemo(() => report?.recommendations.slice(0, 4) || [], [report]);
 
   if (loading && !report) {
@@ -265,6 +275,8 @@ export function OperationsBriefingWidget() {
 
       {!loading && (
         <div className="space-y-6">
+          <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
+
           <div className="grid gap-5 xl:grid-cols-2">
             <OperationsHealthCenter
               activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
@@ -280,8 +292,8 @@ export function OperationsBriefingWidget() {
           <BranchRiskScorePanel risks={branchRiskScores} />
 
           <div className="grid gap-6 lg:grid-cols-2">
+            <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
             <ExecutionSequencePanel steps={executionSequence} />
-            <BlockerPropagationCenter blockers={propagationAnalysis} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">

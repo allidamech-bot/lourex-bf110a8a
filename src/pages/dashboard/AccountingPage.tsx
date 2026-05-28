@@ -22,6 +22,10 @@ import {
   generatePartnerCommunicationInsight
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerCommunicationCenter } from "@/features/partner-intelligence/components/PartnerCommunicationCenter";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { CrossSystemInsightsPanel } from "@/features/executive-command/components/CrossSystemInsightsPanel";
 import { buildDealStatementSummary, summarizeFinancialEntries } from "@/domain/accounting/utils";
 import { FinanceAuditProPanel } from "@/features/accounting/components/FinanceAuditProPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -272,6 +276,11 @@ export default function AccountingPage() {
   const partnerCommunicationInsight = useMemo(
     () => firstPartnerId ? generatePartnerCommunicationInsight(firstPartnerId) : null,
     [firstPartnerId]
+  );
+
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState([], deals as any, entries as any, settlements as any, editRequests as any),
+    [deals, entries, settlements, editRequests]
   );
 
   const handleFinanceAiReview = async (mode: FinanceAiMode = "finance_audit_review") => {
@@ -546,6 +555,7 @@ export default function AccountingPage() {
           {!loading && !focusDeal && (
             <div className="space-y-4">
               <CoordinationWarningsPanel warnings={coordinationWarnings} />
+              <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights.filter(i => i.type === 'financial')} />
               {partnerCommunicationInsight && <PartnerCommunicationCenter insight={partnerCommunicationInsight} />}
               <BranchFinancialSummary summaries={branchFinancialSummaries} />
             </div>

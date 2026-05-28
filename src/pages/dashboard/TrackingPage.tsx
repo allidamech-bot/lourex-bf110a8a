@@ -30,6 +30,11 @@ import {
   generatePartnerShipmentInsights
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerShipmentResponsibilityPanel } from "@/features/partner-intelligence/components/PartnerShipmentResponsibilityPanel";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { OperationalPressureMap } from "@/features/executive-command/components/OperationalPressureMap";
+import { CommandPriorityMatrix } from "@/features/executive-command/components/CommandPriorityMatrix";
 import { getNextShipmentStage, getShipmentProgressPercent, getShipmentStageCopy, shipmentStages } from "@/lib/shipmentStages";
 import { isInternalRole } from "@/features/auth/rbac";
 import { toast } from "sonner";
@@ -283,6 +288,11 @@ export default function TrackingPage() {
   const partnerShipmentInsights = useMemo(
     () => activePartnerProfile ? generatePartnerShipmentInsights(activePartnerProfile.id, rows) : [],
     [activePartnerProfile, rows]
+  );
+
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, [], settlements as any, []),
+    [requests, deals, settlements]
   );
   const activeStageIndex = shipmentStages.findIndex((item) => item.code === activeShipment?.stage);
   const nextStageDefinition = getNextShipmentStage(activeShipment?.stage);
@@ -548,6 +558,8 @@ export default function TrackingPage() {
 
         {isInternal && !loading && (
           <div className="space-y-4">
+            <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap.filter(p => p.zone.includes('Turkey') || p.zone.includes('Logistics'))} />
+            <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix.filter(p => p.pressureType === 'Operational')} />
             {isPartnerWorkspace && partnerShipmentInsights.length > 0 && (
               <PartnerShipmentResponsibilityPanel insights={partnerShipmentInsights} />
             )}

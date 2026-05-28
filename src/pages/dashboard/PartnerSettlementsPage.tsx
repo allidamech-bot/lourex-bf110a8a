@@ -45,6 +45,10 @@ import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
 import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
 import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { OperationalPressureMap } from "@/features/executive-command/components/OperationalPressureMap";
 
 type PartnerProfile = Awaited<ReturnType<typeof loadPartnerProfiles>>[number];
 
@@ -195,6 +199,11 @@ export default function PartnerSettlementsPage() {
     [activePartnerProfile, deals, shipments, settlements]
   );
 
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, [], settlements as any, []),
+    [requests, deals, settlements]
+  );
+
   const handleCreate = async () => {
     if (!selectedPartner || submitting) return;
     setSubmitting(true);
@@ -261,6 +270,7 @@ export default function PartnerSettlementsPage() {
             <PartnerTaskQueue tasks={partnerTasks} />
             {partnerSettlementInsight && <PartnerSettlementVisibilityPanel insight={partnerSettlementInsight} />}
           </div>
+          <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap} />
           <CoordinationWarningsPanel warnings={coordinationWarnings} />
           <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
         </div>

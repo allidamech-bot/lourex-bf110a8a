@@ -73,6 +73,16 @@ import {
 } from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
 import { CustomerSuccessDashboard } from "@/features/customer-success-intelligence/components/CustomerSuccessDashboard";
 import { CustomerRetentionAlerts } from "@/features/customer-success-intelligence/components/CustomerRetentionAlerts";
+import {
+  generateExecutiveWorkspaceState
+} from "@/features/executive-command/lib/executiveWorkspaceEngine";
+import { ExecutiveCommandWorkspace } from "@/features/executive-command/components/ExecutiveCommandWorkspace";
+import { CriticalActionQueue } from "@/features/executive-command/components/CriticalActionQueue";
+import { OperationalPressureMap } from "@/features/executive-command/components/OperationalPressureMap";
+import { BusinessStabilityPanel } from "@/features/executive-command/components/BusinessStabilityPanel";
+import { ExecutiveMomentumTracker } from "@/features/executive-command/components/ExecutiveMomentumTracker";
+import { CrossSystemInsightsPanel } from "@/features/executive-command/components/CrossSystemInsightsPanel";
+import { CommandPriorityMatrix } from "@/features/executive-command/components/CommandPriorityMatrix";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -437,6 +447,11 @@ export default function OverviewPage() {
     [customerProfiles]
   );
 
+  const executiveWorkspaceState = useMemo(
+    () => generateExecutiveWorkspaceState(requests as any, deals as any, financialEntries as any, settlements as any, editRequests as any),
+    [requests, deals, financialEntries, settlements, editRequests]
+  );
+
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -710,6 +725,23 @@ export default function OverviewPage() {
 
       {isInternal && !loading && (
         <div className="space-y-6">
+          <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
+            <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix} />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap} />
+            <div className="lg:col-span-2 space-y-6">
+              <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
+              <ExecutiveMomentumTracker momentum={executiveWorkspaceState.momentum} />
+            </div>
+          </div>
+
+          <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights} />
+
           <AutonomousOperationsPlan plan={autonomousPlan} />
           <div className="grid gap-6 lg:grid-cols-2">
             <OperationalMomentumPanel momentum={operationalMomentum} />
