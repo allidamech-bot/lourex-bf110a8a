@@ -73,6 +73,7 @@ import {
 } from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
 import { CustomerSuccessDashboard } from "@/features/customer-success-intelligence/components/CustomerSuccessDashboard";
 import { CustomerRetentionAlerts } from "@/features/customer-success-intelligence/components/CustomerRetentionAlerts";
+import { ExecutiveCommandSection } from "@/components/executive/ExecutiveCommandSection";
 import {
   generateExecutiveWorkspaceState
 } from "@/features/executive-command/lib/executiveWorkspaceEngine";
@@ -724,163 +725,204 @@ export default function OverviewPage() {
       </ResponsiveInfoGrid>
 
       {isInternal && !loading && (
-        <div className="space-y-6">
-          <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
-            <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix} />
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap} />
-            <div className="lg:col-span-2 space-y-6">
-              <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
-              <ExecutiveMomentumTracker momentum={executiveWorkspaceState.momentum} />
+        <div className="space-y-12">
+          {/* 1. Executive Command */}
+          <ExecutiveCommandSection
+            title="Executive Command"
+            icon={<LayoutDashboard className="h-5 w-5" />}
+          >
+            <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
+              <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix} />
             </div>
-          </div>
+            <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights} />
 
-          <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights} />
+            <ExecutiveCommandSection
+              title="Intelligence Details"
+              icon={<Sparkles className="h-4 w-4" />}
+              defaultExpanded={false}
+              className="mt-4"
+            >
+              <div className="grid gap-6 lg:grid-cols-2">
+                <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
+                <ExecutiveMomentumTracker momentum={executiveWorkspaceState.momentum} />
+              </div>
+            </ExecutiveCommandSection>
+          </ExecutiveCommandSection>
 
-          <AutonomousOperationsPlan plan={autonomousPlan} />
-          <div className="grid gap-6 lg:grid-cols-2">
-            <OperationalMomentumPanel momentum={operationalMomentum} />
-            <NextBestActionsPanel actions={nextBestActions} />
-          </div>
+          {/* 2. Operations Command */}
+          <ExecutiveCommandSection
+            title="Operations Command"
+            icon={<Truck className="h-5 w-5" />}
+            secondaryWidgets={
+              <div className="grid gap-6 lg:grid-cols-2">
+                <OperationalMomentumPanel momentum={operationalMomentum} />
+                <NextBestActionsPanel actions={nextBestActions} />
+                <PriorityQueueEngine recommendations={recommendations} />
+                <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap} />
+              </div>
+            }
+          >
+            <AutonomousOperationsPlan plan={autonomousPlan} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <OperationsHealthCenter
+                activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
+                pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
+                inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
+                delayedCount={deliverySummary.active}
+                blockedWorkflows={pendingEditRequests}
+                completionScore={85}
+              />
+              <OperationalRiskCenter risks={operationalRisks} />
+            </div>
+          </ExecutiveCommandSection>
 
-          <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
-            <CustomerSuccessDashboard profiles={customerProfiles.slice(0, 3)} />
-            <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
-          </div>
+          {/* 3. Financial Command */}
+          <ExecutiveCommandSection
+            title="Financial Command"
+            icon={<Receipt className="h-5 w-5" />}
+            secondaryWidgets={
+              <div className="space-y-6">
+                <ProductionLazySection>
+                  <RuntimeInfrastructureCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <DistributedRuntimeCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <AutonomousExecutionCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <CognitiveOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <MultiAgentOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <LiveOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+                <ProductionLazySection>
+                  <RealtimeOperationsCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+                </ProductionLazySection>
+              </div>
+            }
+          >
+            <div className="space-y-6">
+              <ProductionLazySection>
+                <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+              </ProductionLazySection>
+              <ProductionLazySection>
+                <WorkflowIntelligenceCenter dataset={workflowIntelligenceDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+              </ProductionLazySection>
+              <ProductionLazySection>
+                <OperationsEventCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
+              </ProductionLazySection>
+            </div>
+          </ExecutiveCommandSection>
 
-          <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
-          <CrossBranchExecutiveSummary summary={executiveSummary} />
-          <BranchPerformanceCenter branches={branchProfiles} />
+          {/* 4. Partner Command */}
+          <ExecutiveCommandSection
+            title="Partner Command"
+            icon={<Users className="h-5 w-5" />}
+            secondaryWidgets={
+              <div className="grid gap-6 lg:grid-cols-2">
+                <DailyOperationsBriefing
+                  stats={{
+                    activeShipments: metrics.shipments,
+                    delayedOps: deliverySummary.active,
+                    pendingReviews: requestSummary.review,
+                    settlementAlerts: settlements.filter(s => s.status === "pending_review").length,
+                  }}
+                />
+              </div>
+            }
+          >
+            <PartnerIntelligenceDashboard partners={partnerProfiles.slice(0, 3)} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CrossBranchExecutiveSummary summary={executiveSummary} />
+              <BranchPerformanceCenter branches={branchProfiles} />
+            </div>
+          </ExecutiveCommandSection>
+
+          {/* 5. Customer Command */}
+          <ExecutiveCommandSection
+            title="Customer Command"
+            icon={<ClipboardList className="h-5 w-5" />}
+          >
+            <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
+              <CustomerSuccessDashboard profiles={customerProfiles.slice(0, 3)} />
+              <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+              <BentoCard span="1" className="rounded-2xl p-0 border-amber-200/10 bg-stone-900/50">
+                <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-amber-200/10">
+                  <div className="min-w-0">
+                    <p className="whitespace-normal text-[11px] font-semibold text-amber-200/70">{t("customers.activity")}</p>
+                    <h3 className="mt-1.5 break-words font-serif text-xl font-semibold text-stone-100">{t("overview.latestRequests")}</h3>
+                  </div>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20">
+                    <Clock3 className="h-4 w-4" />
+                  </span>
+                </div>
+                <div className="px-5 pb-5 pt-2">
+                  {recentActivity.length > 0 ? (
+                    <TimelineFlow
+                      items={recentActivity.map((item) => {
+                        let status: TimelineItem["status"] = "default";
+                        if (item.badge === t("overview.status.new")) status = "active";
+                        else if (item.badge === t("overview.status.completed")) status = "success";
+                        else if (item.badge === t("overview.status.pending")) status = "warning";
+
+                        return {
+                          id: item.id,
+                          title: item.title,
+                          description: item.description || t("overview.genericRequest"),
+                          timestamp: new Date(item.date).toLocaleString(locale),
+                          icon: item.icon,
+                          status,
+                        };
+                      })}
+                    />
+                  ) : (
+                    <div className="py-8 text-center text-sm text-stone-50">{t("overview.noRequests")}</div>
+                  )}
+                </div>
+              </BentoCard>
+
+              <BentoCard className="space-y-4 rounded-2xl border-amber-200/10 bg-stone-900/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-200 bg-amber-500/10 border border-amber-500/20">
+                  <FilePenLine className="h-4 w-4" />
+                </div>
+                <h3 className="font-serif text-xl font-semibold text-stone-100">{t("overview.quickActions")}</h3>
+                <div className="grid gap-2">
+                  {[
+                    { label: t("overview.quickReview"), to: "/dashboard/requests" },
+                    { label: t("overview.quickDeals"), to: "/dashboard/deals" },
+                    { label: t("overview.quickTracking"), to: "/dashboard/tracking" },
+                    { label: t("overview.quickEditRequests"), to: "/dashboard/edit-requests" },
+                  ].map((item) => (
+                    <Link
+                      key={item.label}
+                      to={item.to}
+                      className="group flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-300 transition-all bg-stone-950/40 border border-amber-200/10 hover:border-amber-200/20 hover:bg-stone-950/60 hover:text-stone-100"
+                    >
+                      <span className="min-w-0 break-words">{item.label}</span>
+                      <ChevronRight className="h-4 w-4 text-stone-600 transition-colors group-hover:text-amber-200" />
+                    </Link>
+                  ))}
+                </div>
+                {newestFinancialEntry ? (
+                  <div className="rounded-xl p-3.5 text-xs leading-6 text-emerald-100 bg-emerald-500/10 border border-emerald-500/20">
+                    {t("reports.metrics.linkedEntries")}: {metrics.financialEntries.toLocaleString(locale)}
+                  </div>
+                ) : null}
+              </BentoCard>
+            </div>
+          </ExecutiveCommandSection>
         </div>
       )}
-
-      {isInternal && !loading && (
-        <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-5">
-            <OperationsHealthCenter
-              activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
-              pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
-              inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
-              delayedCount={deliverySummary.active}
-              blockedWorkflows={pendingEditRequests}
-              completionScore={85}
-            />
-            <OperationalRiskCenter risks={operationalRisks} />
-          </div>
-          <div className="space-y-5">
-            <DailyOperationsBriefing
-              stats={{
-                activeShipments: metrics.shipments,
-                delayedOps: deliverySummary.active,
-                pendingReviews: requestSummary.review,
-                settlementAlerts: settlements.filter(s => s.status === "pending_review").length,
-              }}
-            />
-            <PriorityQueueEngine recommendations={recommendations} />
-          </div>
-        </div>
-      )}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <WorkflowIntelligenceCenter
-            dataset={workflowIntelligenceDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <OperationsEventCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <RuntimeInfrastructureCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <RealtimeOperationsCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <LiveOperationsCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <DistributedRuntimeCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <AutonomousExecutionCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <CognitiveOperationsCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
-
-      {isInternal && !loading ? (
-        <ProductionLazySection>
-          <MultiAgentOperationsCenter
-            dataset={eventSystemDataset}
-            language={lang === "ar" ? "ar" : "en"}
-            locale={locale}
-          />
-        </ProductionLazySection>
-      ) : null}
 
       {isInternal ? (
         <BentoCard span="full" className="rounded-2xl p-6 md:p-7 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl">
