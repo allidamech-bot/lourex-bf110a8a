@@ -671,7 +671,7 @@ export default function OverviewPage() {
           disabled={loading}
           className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 hover:bg-stone-800 transition-all shadow-xl backdrop-blur-md"
         >
-          <RefreshCw className={cn("me-2 h-4 w-4", refreshing && "animate-spin text-amber-500")} />
+          <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
           <span className="font-bold">Sync Intelligence</span>
         </Button>
       </div>
