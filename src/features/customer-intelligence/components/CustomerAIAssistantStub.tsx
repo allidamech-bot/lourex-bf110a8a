@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bot, MessageSquare, Send, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { formatMoney } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PurchaseRequest, DealOperation } from "@/types/lourex";
@@ -38,9 +39,10 @@ export const CustomerAIAssistantStub = ({ requests, deals }: CustomerAIAssistant
     if (text.includes("pay") || text.includes("كم") || text.includes("دفع") || text.includes("money") || text.includes("remaining")) {
       const totalRemaining = deals.reduce((sum, d) => sum + (d.accountingSummary?.net || 0), 0);
       if (totalRemaining >= 0) return lang === "ar" ? "لا توجد مستحقات معلقة حالياً." : "No outstanding payments at the moment.";
+      const formattedTotal = formatMoney(Math.abs(totalRemaining));
       return lang === "ar"
-        ? `إجمالي المبلغ المتبقي للدفع هو ${Math.abs(totalRemaining)} SAR.`
-        : `Total remaining amount to pay is ${Math.abs(totalRemaining)} SAR.`;
+        ? `إجمالي المبلغ المتبقي للدفع هو ${formattedTotal}.`
+        : `Total remaining amount to pay is ${formattedTotal}.`;
     }
 
     if (text.includes("eta") || text.includes("delivery") || text.includes("متى") || text.includes("وصل")) {

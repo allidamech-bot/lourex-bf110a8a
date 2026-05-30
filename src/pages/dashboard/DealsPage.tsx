@@ -34,6 +34,7 @@ import { pickText, useI18n } from "@/lib/i18n";
 import type { DealOperationalStatus } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterDeals } from "@/lib/adminOperations";
+import { formatMoney } from "@/lib/currency";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { DealCommandCenterPanel } from "@/features/deals/components/DealCommandCenterPanel";
 import { analyzeDealHealth, buildDealAiContext } from "@/features/deals/lib/dealCommand";
@@ -45,7 +46,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
 
 export default function DealsPage() {
-  const { lang, t } = useI18n();
+  const { lang, t, locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuthSession();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
@@ -217,7 +218,7 @@ export default function DealsPage() {
             `- الحالة الصحية: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
             `- المخاطر: ${riskLabels.length ? riskLabels.join("، ") : t("deals.command.noRisks")}`,
             `- الشحنة: ${selectedDeal.trackingId || t("deals.noTracking")}`,
-            `- الإشارة المالية: ${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
+            `- الإشارة المالية: ${formatMoney(selectedDeal.accountingSummary.net, selectedDeal.currency, locale)}`,
             "- التوصية: راجع عناصر المخاطر يدوياً قبل أي اعتماد أو إغلاق أو تحديث مالي أو تغيير مرحلة شحن.",
           ].join("\n")
         : [
@@ -225,7 +226,7 @@ export default function DealsPage() {
             `- Health: ${t(`deals.command.health.${analysis.state}`)} (${analysis.score}/100)`,
             `- Risks: ${riskLabels.length ? riskLabels.join(", ") : t("deals.command.noRisks")}`,
             `- Shipment: ${selectedDeal.trackingId || t("deals.noTracking")}`,
-            `- Financial signal: ${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
+            `- Financial signal: ${formatMoney(selectedDeal.accountingSummary.net, selectedDeal.currency, locale)}`,
             "- Recommendation: review risk items manually before approval, closure, finance changes, or shipment stage changes.",
           ].join("\n");
     }
@@ -491,7 +492,7 @@ export default function DealsPage() {
                   },
                   {
                     label: t("deals.labels.dealValue"),
-                    value: `${selectedDeal.totalValue.toLocaleString()} ${selectedDeal.currency || "SAR"}`,
+                    value: formatMoney(selectedDeal.totalValue, selectedDeal.currency, locale),
                   },
                 ].map((item) => (
                   <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
@@ -537,15 +538,15 @@ export default function DealsPage() {
                   {[
                     {
                       label: t("deals.labels.totalIncome"),
-                      value: `${selectedDeal.accountingSummary.income.toLocaleString()} ${selectedDeal.currency}`,
+                      value: formatMoney(selectedDeal.accountingSummary.income, selectedDeal.currency, locale),
                     },
                     {
                       label: t("deals.labels.totalExpense"),
-                      value: `${selectedDeal.accountingSummary.expense.toLocaleString()} ${selectedDeal.currency}`,
+                      value: formatMoney(selectedDeal.accountingSummary.expense, selectedDeal.currency, locale),
                     },
                     {
                       label: t("deals.labels.netSignal"),
-                      value: `${selectedDeal.accountingSummary.net.toLocaleString()} ${selectedDeal.currency}`,
+                      value: formatMoney(selectedDeal.accountingSummary.net, selectedDeal.currency, locale),
                       className:
                         selectedDeal.accountingSummary.net >= 0
                           ? "text-emerald-400"

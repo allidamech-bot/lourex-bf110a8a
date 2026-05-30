@@ -1,4 +1,5 @@
 import { ShieldAlert, Truck } from "lucide-react";
+import { formatMoney } from "@/lib/currency";
 import type { InsightLanguage, ShipmentRiskProfile, TimelineAnalyticsResult } from "@/features/ai-ops/types/aiOpsTypes";
 
 const labels = {
@@ -62,7 +63,7 @@ export function ShipmentIntelligencePanel({
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t.riskScore}: <span className="text-stone-200">{risk.riskScore}%</span></p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t.exposure}: <span className="text-stone-200">{risk.financialExposure.toLocaleString(locale)} SAR</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t.exposure}: <span className="text-stone-200">{formatMoney(risk.financialExposure)}</span></p>
               <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t.delay}: <span className="text-stone-200">{Math.round(risk.delayProbability * 100)}%</span></p>
             </div>
             {risk.reasons.length ? (

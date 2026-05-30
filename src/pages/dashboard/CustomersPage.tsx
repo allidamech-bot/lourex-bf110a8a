@@ -14,6 +14,7 @@ import {
 import type { AuditPreviewRow } from "@/domain/operations/types";
 import { shipmentStages } from "@/lib/shipmentStages";
 import { useI18n } from "@/lib/i18n";
+import { formatMoney } from "@/lib/currency";
 
 const EMPTY_VALUE = "-";
 const AUDIT_SUMMARY_KEY = "summary";
@@ -106,6 +107,10 @@ export default function CustomersPage() {
   }, [auditRows, selectedCustomer]);
 
   const totals = useMemo(() => {
+    const currencies = new Set(selectedEntries.map((e) => e.currency?.toUpperCase() || "SAR"));
+    const isMixed = currencies.size > 1;
+    const singleCurrency = currencies.size === 1 ? Array.from(currencies)[0] : null;
+
     const income = selectedEntries
       .filter((entry) => entry.type === "income")
       .reduce((sum, entry) => sum + entry.amount, 0);
@@ -117,6 +122,8 @@ export default function CustomersPage() {
       income,
       expense,
       net: income - expense,
+      isMixed,
+      currency: singleCurrency,
     };
   }, [selectedEntries]);
 
@@ -237,11 +244,11 @@ export default function CustomersPage() {
               { label: t("customers.metrics.linkedDeals"), value: selectedDeals.length },
               {
                 label: t("customers.metrics.totalIncome"),
-                value: `${totals.income.toLocaleString(locale)} SAR`,
+                value: totals.isMixed ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(totals.income, totals.currency, locale),
               },
               {
                 label: t("customers.metrics.net"),
-                value: `${totals.net.toLocaleString(locale)} SAR`,
+                value: totals.isMixed ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(totals.net, totals.currency, locale),
                 highlight: totals.net >= 0 ? "text-emerald-400" : "text-rose-400",
               },
             ].map((item) => (
@@ -386,7 +393,7 @@ export default function CustomersPage() {
                   <div className="rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4">
                     <p className="text-[10px] uppercase tracking-wider font-bold text-stone-600">{t("customers.expense")}</p>
                     <p className="mt-2 text-2xl font-bold text-rose-400">
-                      {totals.expense.toLocaleString(locale)} SAR
+                      {totals.isMixed ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(totals.expense, totals.currency, locale)}
                     </p>
                   </div>
                   <div className="rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4">

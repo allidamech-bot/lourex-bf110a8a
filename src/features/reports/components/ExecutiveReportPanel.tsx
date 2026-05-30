@@ -1,6 +1,7 @@
 import { AlertTriangle, BrainCircuit, CheckCircle2, Lightbulb, RefreshCw, Target } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import type { ExecutiveReportAdvisorResult, ExecutiveReportInsight } from "@/features/reports/lib/executiveReportAdvisor";
+import { formatMoney } from "@/lib/currency";
 
 const levelStyles = {
   stable: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
@@ -110,9 +111,9 @@ export function ExecutiveReportPanel({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: isArabic ? "الصافي" : "Net result", value: `${Math.round(result.metrics.netProfit).toLocaleString(locale)} SAR` },
+          { label: isArabic ? "الصافي" : "Net result", value: formatMoney(result.metrics.netProfit) },
           { label: isArabic ? "هامش الربح" : "Profit margin", value: marginPercent },
-          { label: isArabic ? "تعرض التحصيل" : "Collection exposure", value: `${Math.round(result.metrics.collectionExposure).toLocaleString(locale)} SAR` },
+          { label: isArabic ? "تعرض التحصيل" : "Collection exposure", value: formatMoney(result.metrics.collectionExposure) },
           { label: isArabic ? "تغطية التسويات" : "Settlement coverage", value: coveragePercent },
         ].map((metric) => (
           <div key={metric.label} className="rounded-[1.2rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">

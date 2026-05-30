@@ -23,6 +23,7 @@ import {
   getMetricDetails,
   type DashboardReportSnapshot,
 } from "@/lib/reportsDomain";
+import { formatMoney } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError } from "@/lib/monitoring";
 import { buildReportCsv, downloadCsv, printPdfReport } from "@/lib/adminOperations";
@@ -309,9 +310,9 @@ export default function ReportsPage() {
             title: executiveLabels.decisionMetrics,
             headers: [executiveLabels.field, executiveLabels.value],
             rows: [
-              [executiveLabels.netProfit, `${Math.round(executiveReport.metrics.netProfit).toLocaleString(locale)} SAR`],
+              [executiveLabels.netProfit, metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(Math.round(executiveReport.metrics.netProfit), undefined, locale)],
               [executiveLabels.profitMargin, `${Math.round(executiveReport.metrics.profitMargin * 100)}%`],
-              [executiveLabels.collectionExposure, `${Math.round(executiveReport.metrics.collectionExposure).toLocaleString(locale)} SAR`],
+              [executiveLabels.collectionExposure, metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(Math.round(executiveReport.metrics.collectionExposure), undefined, locale)],
               [executiveLabels.settlementCoverage, `${Math.round(executiveReport.metrics.settlementCoverageRatio * 100)}%`],
               [executiveLabels.pendingEditRequests, executiveReport.metrics.pendingEditRequests],
               [executiveLabels.activeDeals, executiveReport.metrics.activeDeals],
@@ -357,9 +358,9 @@ export default function ReportsPage() {
             [t("reports.metrics.deals"), metrics.deals],
             [t("reports.metrics.shipments"), metrics.shipments],
             [t("reports.metrics.customers"), metrics.customers],
-            [t("reports.metrics.income"), `${metrics.income.toLocaleString(locale)} SAR`],
-            [t("reports.metrics.expense"), `${metrics.expense.toLocaleString(locale)} SAR`],
-            [t("reports.metrics.profit"), `${(metrics.income - metrics.expense).toLocaleString(locale)} SAR`],
+            [t("reports.metrics.income"), metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(metrics.income, undefined, locale)],
+            [t("reports.metrics.expense"), metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.expense, undefined, locale)],
+            [t("reports.metrics.profit"), metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.income - metrics.expense, undefined, locale)],
             [t("reports.metrics.lockedEntries"), metrics.lockedEntries],
             [t("reports.metrics.pendingEditRequests"), metrics.pendingEditRequests],
           ],
@@ -379,7 +380,7 @@ export default function ReportsPage() {
           rows: snapshot.topCustomers.map((customer) => [
             customer.fullName,
             customer.requestsCount,
-            `${customer.outstandingBalance.toLocaleString(locale)} SAR`,
+            formatMoney(customer.outstandingBalance, undefined, locale),
           ]),
         },
         {
@@ -387,7 +388,7 @@ export default function ReportsPage() {
           headers: [t("common.category"), t("common.amount")],
           rows: snapshot.topExpenseCategories.map((item) => [
             item.category || t("reports.uncategorized"),
-            `${Number(item.amount).toLocaleString(locale)} SAR`,
+            formatMoney(Number(item.amount), undefined, locale),
           ]),
         },
       ],
@@ -456,7 +457,7 @@ export default function ReportsPage() {
             { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
             { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
             { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
-            { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
+            { label: t("reports.metrics.income"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.income, undefined, locale), icon: Receipt },
           ].map((item) => (
             <BentoCard key={item.label} className={cn("p-5 border-amber-200/10 bg-stone-900/50", item.action && "cursor-pointer hover:border-amber-200/30 transition-all")} onClick={item.action}>
                <div className="flex items-center justify-between mb-4">
@@ -495,8 +496,8 @@ export default function ReportsPage() {
                       <td className="p-4">
                         <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-200 uppercase tracking-widest">{item.status}</span>
                       </td>
-                      <td className="p-4 text-right font-bold text-stone-200">
-                        {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : "-"}
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-stone-200 text-right">
+                        {item.totalValue ? formatMoney(item.totalValue, item.currency, locale) : item.amount ? formatMoney(item.amount, item.currency, locale) : "-"}
                       </td>
                     </tr>
                   ))}
@@ -551,8 +552,8 @@ export default function ReportsPage() {
                 { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries },
                 { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries },
                 { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests },
-                { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR` },
-                { label: t("reports.metrics.averageValue"), value: `${Math.round(metrics.averageOperationValue).toLocaleString()} SAR` },
+                { label: t("reports.metrics.profit"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(metrics.income - metrics.expense, undefined, locale) },
+                { label: t("reports.metrics.averageValue"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(Math.round(metrics.averageOperationValue), undefined, locale) },
               ].map((item) => (
                 <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
                   <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
@@ -596,9 +597,9 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                   <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
-                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">{t("reports.labels.outstandingBalance")}</p>
-                    <p className="font-bold text-stone-200 text-sm">{customer.outstandingBalance.toLocaleString()} SAR</p>
+                  <div className="text-right p-3 rounded-xl bg-stone-950/40 border border-stone-800">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-stone-600 mb-1">{t("reports.labels.outstandingBalance")}</p>
+                    <p className="font-bold text-stone-200 text-sm">{formatMoney(customer.outstandingBalance, undefined, locale)}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
                     <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">Edit Requests</p>
@@ -613,10 +614,10 @@ export default function ReportsPage() {
         <DashboardSection title={t("reports.topExpenses")}>
           <div className="space-y-4">
             {snapshot?.topExpenseCategories.map((item) => (
-              <BentoCard key={item.category} className="p-4 border-amber-200/10 bg-stone-900/50 flex justify-between items-center">
-                <span className="font-black text-xs text-stone-300 uppercase tracking-widest">{item.category}</span>
-                <span className="font-black text-stone-100">{Number(item.amount).toLocaleString()} SAR</span>
-              </BentoCard>
+              <div key={item.category} className="flex items-center justify-between rounded-xl border border-amber-200/5 bg-stone-900/30 p-4 hover:bg-stone-900/50 transition-colors">
+                <span className="font-bold text-stone-400">{item.category}</span>
+                <span className="font-black text-stone-100">{formatMoney(Number(item.amount), undefined, locale)}</span>
+              </div>
             ))}
           </div>
         </DashboardSection>

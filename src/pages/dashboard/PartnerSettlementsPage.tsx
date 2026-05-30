@@ -40,6 +40,7 @@ import { canManageAccounting, type LourexRole } from "@/features/auth/rbac";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
+import { formatMoney as libFormatMoney } from "@/lib/currency";
 import { logOperationalError } from "@/lib/monitoring";
 import type { PartnerSettlementRole } from "@/types/lourex";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -74,7 +75,8 @@ export default function PartnerSettlementsPage() {
   const [commissionRate, setCommissionRate] = useState("5");
 
   const formatMoney = useCallback(
-    (amount: number) => new Intl.NumberFormat(lang === "ar" ? "ar" : "en", { maximumFractionDigits: 2 }).format(amount),
+    (amount: number | string | null | undefined, currency?: string | null) =>
+      libFormatMoney(amount, currency, lang === "ar" ? "ar" : "en"),
     [lang],
   );
 
@@ -283,8 +285,8 @@ export default function PartnerSettlementsPage() {
       >
         <DashboardGrid variant="kpi">
           {[
-            { label: t("partnerSettlements.metrics.unpaid"), value: `${formatMoney(totals.unpaid)} SAR`, icon: Wallet, accent: "text-amber-200" },
-            { label: t("partnerSettlements.metrics.paid"), value: `${formatMoney(totals.paid)} SAR`, icon: TrendingUp, accent: "text-emerald-400" },
+            { label: t("partnerSettlements.metrics.unpaid"), value: formatMoney(totals.unpaid), icon: Wallet, accent: "text-amber-200" },
+            { label: t("partnerSettlements.metrics.paid"), value: formatMoney(totals.paid), icon: TrendingUp, accent: "text-emerald-400" },
             { label: t("partnerSettlements.metrics.disputed"), value: totals.disputed, icon: ShieldAlert, accent: totals.disputed > 0 ? "text-rose-400" : "text-stone-500" },
           ].map((item) => (
             <BentoCard key={item.label} className="p-5 border-amber-200/10 bg-stone-900/50">
@@ -404,19 +406,19 @@ export default function PartnerSettlementsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
                       <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("partnerSettlements.gross")}</p>
-                      <p className="font-bold text-stone-100">{formatMoney(settlement.grossAmount)} SAR</p>
+                      <p className="font-bold text-stone-100">{formatMoney(settlement.grossAmount)}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
                       <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("partnerSettlements.commission")}</p>
-                      <p className="font-bold text-stone-100">{formatMoney(settlement.partnerCommission)} SAR</p>
+                      <p className="font-bold text-stone-100">{formatMoney(settlement.partnerCommission)}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
                       <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("partnerSettlements.expenses")}</p>
-                      <p className="font-bold text-rose-400">{formatMoney(settlement.expenses)} SAR</p>
+                      <p className="font-bold text-rose-400">{formatMoney(settlement.expenses)}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-stone-950/40 border border-amber-500/20">
                       <p className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest mb-1">{t("partnerSettlements.netDue")}</p>
-                      <p className="font-bold text-amber-200 text-lg">{formatMoney(settlement.netDue)} SAR</p>
+                      <p className="font-bold text-amber-200 text-lg">{formatMoney(settlement.netDue)}</p>
                     </div>
                   </div>
 

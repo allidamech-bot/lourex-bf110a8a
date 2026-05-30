@@ -31,8 +31,8 @@ export function SettlementVisibilityPanel({ summary, t, formatMoney }: Settlemen
       />
       <ResponsiveInfoGrid className="mt-4" min="minmax(min(100%, 11rem), 1fr)">
         {[
-          { label: t("partnerSettlements.pro.totalDue"), value: `${formatMoney(summary.totalDue)} SAR` },
-          { label: t("partnerSettlements.pro.paidTotal"), value: `${formatMoney(summary.paidTotal)} SAR` },
+          { label: t("partnerSettlements.pro.totalDue"), value: formatMoney(summary.totalDue) },
+          { label: t("partnerSettlements.pro.paidTotal"), value: formatMoney(summary.paidTotal) },
           { label: t("partnerSettlements.pro.pendingCount"), value: summary.pendingCount },
           { label: t("partnerSettlements.pro.approvedUnpaidCount"), value: summary.approvedUnpaidCount },
         ].map((item) => (

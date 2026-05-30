@@ -1,4 +1,5 @@
 import { Activity, AlertTriangle, CircleDollarSign, Scale } from "lucide-react";
+import { formatMoney } from "@/lib/currency";
 import { ReadableMetricCard, ResponsiveInfoGrid, SectionHelpBox } from "@/components/readable/ReadableCards";
 import type { ExecutiveMetrics, InsightLanguage } from "@/features/ai-ops/types/aiOpsTypes";
 
@@ -37,7 +38,7 @@ export function ExecutiveRiskOverview({
   locale: string;
 }) {
   const t = labels[language];
-  const money = `${metrics.totalFinancialExposure.toLocaleString(locale)} SAR`;
+  const money = formatMoney(metrics.totalFinancialExposure);
 
   return (
     <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 backdrop-blur-xl p-5 shadow-2xl">

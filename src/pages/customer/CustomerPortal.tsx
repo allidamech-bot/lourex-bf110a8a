@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
+import { getRoleDisplayName } from "@/lib/identity";
+import { formatMoney as libFormatMoney } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n";
 import { fetchCustomerDashboard, fetchRequests, fetchDeals } from "@/domain/operations/service";
 import type { OperationsCustomer, OperationsRequest, OperationsDeal } from "@/domain/operations/types";
@@ -47,8 +49,8 @@ const getSafeLabel = (value: string, fallback: string) => {
 const formatNumber = (value: number, locale: string) =>
     new Intl.NumberFormat(locale === "ar" ? "ar" : "en").format(value || 0);
 
-const formatMoney = (value: number, locale: string) =>
-    `${formatNumber(value || 0, locale)} SAR`;
+const formatMoney = (value: number | string | null | undefined, locale: string, currency?: string | null) =>
+    libFormatMoney(value, currency, locale === "ar" ? "ar" : "en");
 
 const formatDate = (value: string | undefined, locale: string) => {
   if (!value) {
