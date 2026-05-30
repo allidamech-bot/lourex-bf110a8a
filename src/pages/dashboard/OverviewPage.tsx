@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -21,8 +21,8 @@ import BentoCard from "@/components/BentoCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ProductionFallbackCard, ProductionSectionSkeleton } from "@/components/production/ProductionFallbacks";
-import { ReadableMetricCard, ResponsiveInfoGrid } from "@/components/readable/ReadableCards";
-import { TimelineFlow, type TimelineItem } from "@/components/timeline/TimelineFlow";
+import { ReadableMetricCard } from "@/components/readable/ReadableCards";
+import { TimelineFlow } from "@/components/timeline/TimelineFlow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -44,11 +44,10 @@ import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
 import { logOperationalError } from "@/lib/monitoring";
-import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import type { PartnerSettlement } from "@/types/lourex";
 import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
 import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
-import { OperationalRiskCenter, type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
+import { type OperationalRisk } from "@/features/operations-intelligence/components/OperationalRiskCenter";
 import { DailyOperationsBriefing } from "@/features/operations-intelligence/components/DailyOperationsBriefing";
 import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
 import {
@@ -65,7 +64,6 @@ import {
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { AutonomousOperationsPlan } from "@/features/autonomous-coordination/components/AutonomousOperationsPlan";
 import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
-import { NextBestActionsPanel } from "@/features/autonomous-coordination/components/NextBestActionsPanel";
 import {
   generatePartnerProfiles
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
@@ -80,13 +78,13 @@ import { ExecutiveCommandSection } from "@/components/executive/ExecutiveCommand
 import {
   generateExecutiveWorkspaceState
 } from "@/features/executive-command/lib/executiveWorkspaceEngine";
-import { ExecutiveCommandWorkspace } from "@/features/executive-command/components/ExecutiveCommandWorkspace";
 import { CriticalActionQueue } from "@/features/executive-command/components/CriticalActionQueue";
 import { OperationalPressureMap } from "@/features/executive-command/components/OperationalPressureMap";
 import { BusinessStabilityPanel } from "@/features/executive-command/components/BusinessStabilityPanel";
 import { ExecutiveMomentumTracker } from "@/features/executive-command/components/ExecutiveMomentumTracker";
 import { CrossSystemInsightsPanel } from "@/features/executive-command/components/CrossSystemInsightsPanel";
 import { CommandPriorityMatrix } from "@/features/executive-command/components/CommandPriorityMatrix";
+import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
 
 const AIOperationsCenter = React.lazy(() =>
   import("@/features/ai-ops/components/AIOperationsCenter").then((module) => ({ default: module.AIOperationsCenter })),
@@ -99,12 +97,6 @@ const OperationsEventCenter = React.lazy(() =>
 );
 const RuntimeInfrastructureCenter = React.lazy(() =>
   import("@/features/runtime-infra/components/RuntimeInfrastructureCenter"),
-);
-const RealtimeOperationsCenter = React.lazy(() =>
-  import("@/features/realtime-collaboration/components/RealtimeOperationsCenter"),
-);
-const LiveOperationsCenter = React.lazy(() =>
-  import("@/features/realtime-transport/components/LiveOperationsCenter"),
 );
 const DistributedRuntimeCenter = React.lazy(() =>
   import("@/features/distributed-runtime/components/DistributedRuntimeCenter"),
@@ -328,40 +320,7 @@ export default function OverviewPage() {
     [requests, deals, financialEntries, settlements, editRequests]
   );
 
-  const operationalRisks = useMemo<OperationalRisk[]>(() => {
-    const risks: OperationalRisk[] = [];
-    const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
-
-    if (delayedShipments.length > 0) {
-      risks.push({
-        id: "risk-delayed",
-        type: "delay",
-        level: delayedShipments.length > 3 ? "HIGH" : "MEDIUM",
-        title: `${delayedShipments.length} shipments in high-latency stages`,
-        titleAr: `${delayedShipments.length} شحنات في مراحل بطيئة`,
-        recommendation: "Check clearing status and follow up with local Saudi agent.",
-        recommendationAr: "تحقق من حالة التخليص وتابع مع وكيل السعودية المحلي.",
-      });
-    }
-
-    const pendingEdits = editRequests.filter(e => e.status === "pending");
-    if (pendingEdits.length > 0) {
-      risks.push({
-        id: "risk-accounting",
-        type: "missing_info",
-        level: "MEDIUM",
-        title: `${pendingEdits.length} pending financial adjustments`,
-        titleAr: `${pendingEdits.length} تعديلات مالية معلقة`,
-        recommendation: "Review and lock financial entries to prevent settlement delays.",
-        recommendationAr: "راجع وأقفل القيود المالية لتجنب تأخير التسويات.",
-      });
-    }
-
-    return risks;
-  }, [deals, editRequests]);
-
   const pendingEditRequests = editRequests.filter((item) => item.status === "pending").length;
-  const newestFinancialEntry = financialEntries[0];
 
   const recentActivity = useMemo(() => {
     const requestActivity = requests.slice(0, 3).map((item) => ({
@@ -431,25 +390,19 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="w-full max-w-full min-w-0 space-y-12 pb-24 lg:pb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <DashboardPageShell dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHelpBox pageKey="dashboard_overview" role={profile?.role} />
 
       {/* 1. Executive Health Bar */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
-          <div className="space-y-1">
-            <h1 className="font-serif text-3xl sm:text-4xl font-black text-stone-100 tracking-tight flex items-center gap-3">
-              <LayoutDashboard className="h-8 w-8 text-amber-500" />
-              Executive Command
-            </h1>
-            <p className="text-sm text-stone-500 font-medium max-w-2xl leading-relaxed">
-              Real-time systemic health and strategic oversight nodes.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
+      <DashboardSection
+        eyebrow="Momentum Tracker"
+        title="Executive Command"
+        description="Real-time systemic health and strategic oversight nodes."
+        icon={<LayoutDashboard className="h-8 w-8" />}
+        headerAction={
+          <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em]">Momentum</p>
+              <p className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em]">System Trend</p>
               <div className="flex items-center gap-2 justify-end text-emerald-400 font-black">
                 <ArrowUpRight className="h-3 w-3" />
                 {executiveWorkspaceState.momentum.trend}
@@ -466,19 +419,19 @@ export default function OverviewPage() {
               <span className="font-bold">Sync System</span>
             </Button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        }
+      >
+        <DashboardGrid variant="kpi">
           <HealthCard label="Business Health" value={executiveWorkspaceState.stability.score} status={executiveWorkspaceState.stability.state} icon={<ShieldCheck className="h-4 w-4" />} />
           <HealthCard label="Operations" value={executiveWorkspaceState.stability.operationalResilience} icon={<Truck className="h-4 w-4" />} />
           <HealthCard label="Financial" value={executiveWorkspaceState.stability.financeResilience} icon={<Receipt className="h-4 w-4" />} />
           <HealthCard label="Customer" value={customerProfiles[0]?.healthScore || 85} icon={<Users className="h-4 w-4" />} />
           <HealthCard label="Partner" value={partnerProfiles[0]?.performanceScore || 90} icon={<ArrowUpRight className="h-4 w-4" />} />
-        </div>
-      </div>
+        </DashboardGrid>
+      </DashboardSection>
 
       {/* KPI Command Row */}
-      <ResponsiveInfoGrid min="minmax(min(100%,11rem),1fr)">
+      <DashboardGrid variant="kpi">
         {(loading ? loadingCards : (metricCards as MetricCard[])).map((item, index) => {
           const cardItem = loading ? null : item as MetricCard;
           return (
@@ -503,21 +456,21 @@ export default function OverviewPage() {
             </div>
           );
         })}
-      </ResponsiveInfoGrid>
+      </DashboardGrid>
 
       {isInternal && !loading && (
         <div className="space-y-16">
           {/* 2. Critical Actions Center */}
-          <section className="space-y-4">
-            <div className="px-2">
-              <h2 className="text-xs font-black uppercase tracking-[0.3em] text-amber-500/80">Critical Path Analysis</h2>
-              <p className="text-sm text-stone-500 font-medium">Unresolved bottlenecks requiring immediate executive intervention.</p>
-            </div>
+          <DashboardSection
+            eyebrow="Critical Path Analysis"
+            title="Strategic Interventions"
+            description="Unresolved bottlenecks requiring immediate executive intervention."
+          >
             <CriticalActionQueue actions={executiveWorkspaceState.criticalActions.slice(0, 5)} />
-          </section>
+          </DashboardSection>
 
           {/* 3. Operations + Finance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <DashboardGrid variant="balanced">
             <ExecutiveCommandSection
               title="Operations Command"
               description="Logistics throughput and coordination."
@@ -568,10 +521,10 @@ export default function OverviewPage() {
                 </div>
               </div>
             </ExecutiveCommandSection>
-          </div>
+          </DashboardGrid>
 
           {/* 4. Customers + Partners */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <DashboardGrid variant="balanced">
             <ExecutiveCommandSection
               title="Customer Command"
               description="Retention risk and success modeling."
@@ -645,7 +598,7 @@ export default function OverviewPage() {
                 />
               </div>
             </ExecutiveCommandSection>
-          </div>
+          </DashboardGrid>
 
           {/* 5. Advanced Intelligence */}
           <ExecutiveCommandSection
@@ -695,7 +648,7 @@ export default function OverviewPage() {
           </ExecutiveCommandSection>
         </div>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 
@@ -718,5 +671,3 @@ const HealthCard = ({ label, value, status, icon }: { label: string; value: numb
     )} />
   </GlassPanel>
 );
-
-

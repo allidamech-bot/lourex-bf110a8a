@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, Loader2, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRightLeft, Loader2, PackageSearch, RefreshCcw, Route, Search, Send, ShieldCheck, Sparkles, Files, ChevronRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -42,10 +42,13 @@ import { useI18n } from "@/lib/i18n";
 import { canAdvanceShipmentStage } from "@/domain/operations/guards";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterShipments } from "@/lib/adminOperations";
+import { loadPartnerSettlements } from "@/domain/accounting/partnerSettlements";
 import { getCustomerNotificationCopy, recordNotificationReadiness } from "@/domain/notifications/readiness";
 import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigation";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
-import { OperationsTimelineIntelligence, type TimelineWorkflowStage } from "@/features/operations-intelligence/components/OperationsTimelineIntelligence";
+import { OperationsTimelineIntelligence } from "@/features/operations-intelligence/components/OperationsTimelineIntelligence";
+import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
+import { cn } from "@/lib/utils";
 
 type ShipmentAiContext = {
   trackingId: string;
@@ -308,6 +311,7 @@ export default function TrackingPage() {
       nextStage: nextStageCode,
     });
   }, [activeShipment, profile, nextStageCode]);
+
   const partnerWorkspaceHint = isTurkishPartner
     ? t("tracking.partnerWorkspaceHintTurkey")
     : isSaudiPartner
@@ -464,27 +468,31 @@ export default function TrackingPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">
-        <Skeleton className="h-[32rem] w-full rounded-[2rem]" />
-        <Skeleton className="h-[32rem] w-full rounded-[2rem]" />
-      </div>
+      <DashboardPageShell>
+        <DashboardGrid variant="balanced">
+          <Skeleton className="h-[32rem] w-full rounded-[2rem]" />
+          <Skeleton className="h-[32rem] w-full rounded-[2rem]" />
+        </DashboardGrid>
+      </DashboardPageShell>
     );
   }
 
   if (!activeShipment) {
     return (
-      <div className="space-y-4">
-        {loadError ? (
-          <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
-            {loadError}
-          </div>
-        ) : null}
-        <EmptyState
-          icon={Route}
-          title={t("tracking.noShipments")}
-          description={t("tracking.noTimelineDescription")}
-        />
-      </div>
+      <DashboardPageShell>
+        <div className="space-y-4">
+          {loadError ? (
+            <div className="rounded-[1.25rem] border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-200">
+              {loadError}
+            </div>
+          ) : null}
+          <EmptyState
+            icon={Route}
+            title={t("tracking.noShipments")}
+            description={t("tracking.noTimelineDescription")}
+          />
+        </div>
+      </DashboardPageShell>
     );
   }
 
@@ -492,335 +500,240 @@ export default function TrackingPage() {
     visibility === "customer_visible" ? t("tracking.visibilityCustomer") : t("tracking.visibilityInternal");
 
   return (
-    <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
-      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-        <div>
-          <p className="whitespace-normal text-[10px] font-semibold uppercase tracking-widest text-stone-500">{t("tracking.contextEyebrow")}</p>
-          <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("tracking.contextTitle")}</h2>
-          {activeShipment.dealNumber ? <p className="mt-2 text-sm text-stone-400 font-bold">{t("tracking.linkedDeal", { deal: activeShipment.dealNumber })}</p> : null}
-          {partnerWorkspaceHint ? <p className="mt-3 text-sm leading-7 text-stone-500 font-medium">{partnerWorkspaceHint}</p> : null}
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="relative">
-            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-            />
+    <DashboardPageShell dir={lang === "ar" ? "rtl" : "ltr"}>
+       <DashboardSection
+        title={t("tracking.contextTitle")}
+        description={partnerWorkspaceHint || t("tracking.contextEyebrow")}
+        icon={<Files className="h-6 w-6" />}
+        headerAction={
+          <div className="flex items-center gap-3">
+            <div className="relative w-64">
+              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={searchPlaceholder}
+                className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 h-10"
+              />
+            </div>
+            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
+              <RefreshCcw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+              <span className="font-bold">{t("common.refresh")}</span>
+            </Button>
           </div>
-          <Button variant="outline" onClick={() => void refresh()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-            <RefreshCcw className={`me-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            {t("common.refresh")}
-          </Button>
-        </div>
+        }
+      >
+        <DashboardGrid variant="main">
+          <div className="space-y-12">
+            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                 <div>
+                  <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{t("tracking.currentStage")}</p>
+                  <h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">{currentStage?.label || t("tracking.noStage")}</h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Progress</p>
+                  <p className="text-2xl font-black text-amber-500">{progressPercent}%</p>
+                </div>
+              </div>
 
-        {loadError ? (
-          <div className="rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
-            {loadError}
-          </div>
-        ) : null}
+              <div className="h-2 w-full rounded-full bg-stone-950/40 mb-6">
+                <div className="h-full rounded-full bg-amber-500 shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
+              </div>
 
-        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-5">
-          <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-amber-500/80">{t("tracking.currentStage")}</p>
-          <p className="mt-2 font-serif text-2xl font-semibold text-stone-100">{currentStage?.label || t("tracking.noStage")}</p>
-          <p className="mt-2 text-xs text-stone-500">
-            {t("tracking.labels.stageCode")}: {activeShipment.stage}
-          </p>
-          <p className="mt-1 text-xs text-stone-500">
-            {t("tracking.labels.nextStage")}: {nextStage?.label || t("tracking.completedMessage")}
-          </p>
-          <div className="mt-4 h-2 rounded-full bg-stone-950/40">
-            <div className="h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.3)]" style={{ width: `${progressPercent}%` }} />
-          </div>
-          <p className="mt-2 text-xs text-stone-500 font-bold">{progressPercent}%</p>
-          <p className="mt-3 text-sm leading-7 text-stone-400">{currentStage?.description}</p>
-          {currentStage?.owner ? <p className="mt-3 text-sm font-bold text-amber-200 uppercase tracking-wide">{t("tracking.owner", { value: currentStage.owner })}</p> : null}
-        </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
+                  <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("tracking.labels.stageCode")}</p>
+                  <p className="font-bold text-stone-300">{activeShipment.stage}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
+                  <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("tracking.labels.nextStage")}</p>
+                  <p className="font-bold text-stone-300 truncate">{nextStage?.label || t("tracking.completedMessage")}</p>
+                </div>
+              </div>
 
-        {isInternal && shipmentAnalysis ? (
-          <ShipmentIntelligencePanel
-            shipment={activeShipment}
-            analysis={shipmentAnalysis}
-            lang={lang}
-            locale={locale}
-            t={t}
-            internal
-            aiOutput={aiReview}
-            aiOutputTitle={aiReviewTitle}
-            aiLoading={aiReviewLoading}
-            aiUsedFallback={aiUsedFallback}
-            onRunAi={(mode) => void handleShipmentIntelligenceAi(mode)}
-          />
-        ) : null}
+              <p className="text-sm text-stone-400 leading-relaxed font-medium mb-6">{currentStage?.description}</p>
+              {currentStage?.owner && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-200 uppercase tracking-widest">
+                  Owner: {currentStage.owner}
+                </div>
+              )}
+            </BentoCard>
 
-        {isInternal && !loading && (
-          <div className="space-y-4">
-            <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap.filter(p => p.zone.includes('Turkey') || p.zone.includes('Logistics'))} />
-            <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix.filter(p => p.pressureType === 'Operational')} />
-            {isPartnerWorkspace && partnerShipmentInsights.length > 0 && (
-              <PartnerShipmentResponsibilityPanel insights={partnerShipmentInsights} />
+            {isInternal && shipmentAnalysis && (
+              <ShipmentIntelligencePanel
+                shipment={activeShipment}
+                analysis={shipmentAnalysis}
+                lang={lang}
+                locale={locale}
+                t={t}
+                internal
+                aiOutput={aiReview}
+                aiOutputTitle={aiReviewTitle}
+                aiLoading={aiReviewLoading}
+                aiUsedFallback={aiUsedFallback}
+                onRunAi={(mode) => void handleShipmentIntelligenceAi(mode)}
+              />
             )}
-            <CoordinationWarningsPanel warnings={coordinationWarnings} />
-            <WorkflowDependencyMap dependencies={workflowDependencies} />
-            <RegionalOperationsVisibility regions={regionalSummary} />
-          </div>
-        )}
 
-        {isInternal ? (
-          <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-2xl backdrop-blur-xl">
-            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
-                <div className="min-w-0">
-                  <p className="break-words text-sm font-bold text-amber-200 uppercase tracking-wide">
-                    {lang === "ar" ? "مراجعة مخاطر الشحنة بالذكاء الاصطناعي" : "AI shipment risk review"}
-                  </p>
-                  <p className="mt-1 break-words text-xs leading-5 text-stone-500">
-                    {lang === "ar" ? "مراجعة إرشادية فقط ولا تغيّر مراحل الشحن." : "Read-only review. It never advances shipment stages."}
-                  </p>
+            <DashboardSection title="Systemic Coordination" description="Deep workflow auditing and cross-branch health.">
+              <div className="space-y-6">
+                <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap.filter(p => p.zone.includes('Turkey') || p.zone.includes('Logistics'))} />
+                <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix.filter(p => p.pressureType === 'Operational')} />
+                <CoordinationWarningsPanel warnings={coordinationWarnings} />
+                <WorkflowDependencyMap dependencies={workflowDependencies} />
+                <RegionalOperationsVisibility regions={regionalSummary} />
+              </div>
+            </DashboardSection>
+
+            <BentoCard className="p-0 border-amber-200/10 bg-stone-900/50 overflow-hidden">
+               <div className="p-6 border-b border-amber-200/10">
+                <h3 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{t("tracking.labels.updatesLog")}</h3>
+              </div>
+              <div className="divide-y divide-amber-200/5 max-h-[40rem] overflow-y-auto">
+                {activeShipment.timeline.length === 0 ? (
+                  <div className="p-12 text-center text-stone-600 italic">No updates logged yet.</div>
+                ) : (
+                  activeShipment.timeline.slice().reverse().map((event) => (
+                    <div key={event.id} className="p-6 hover:bg-stone-800/20 transition-colors">
+                       <div className="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                          <p className="font-bold text-stone-100">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
+                          <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{new Date(event.occurredAt).toLocaleString(locale)}</p>
+                        </div>
+                        {isInternal && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-200 uppercase tracking-widest">
+                            {visibilityLabel(event.visibility)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-stone-400 leading-relaxed font-medium italic">"{event.note || t("tracking.noInternalNote")}"</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </BentoCard>
+          </div>
+
+          <aside className="space-y-12">
+            <BentoCard className="p-6 border-amber-200/15 bg-stone-900/55">
+               <div className="flex items-center gap-3 mb-8">
+                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                  <PackageSearch className="h-5 w-5" />
                 </div>
+                <h3 className="font-serif text-xl font-bold text-stone-100">{t("tracking.labels.officialTimeline")}</h3>
               </div>
-              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleShipmentRiskReview()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin text-amber-500" /> : <Sparkles className="me-2 h-4 w-4 text-amber-500" />}
-                {lang === "ar" ? "راجع المخاطر" : "Review risk"}
-              </Button>
-            </div>
-            {aiUsedFallback ? (
-              <div className="mt-4 rounded-[1rem] border border-amber-400/25 bg-amber-400/10 p-3 text-xs leading-6 text-amber-200">
-                {lang === "ar" ? "مساعد LOUREX AI غير متاح الآن. تم استخدام مراجعة محلية." : "LOUREX AI is unavailable right now. A local review was used."}
-              </div>
-            ) : null}
-            {aiReview ? (
-              <pre className="mt-4 max-h-[22rem] whitespace-pre-wrap break-words rounded-[1rem] border border-amber-200/10 bg-stone-950/40 p-4 font-sans text-sm leading-7 text-stone-300 shadow-inner">
-                {aiReview}
-              </pre>
-            ) : null}
-          </div>
-        ) : null}
+              <ShipmentTimeline currentStage={activeShipment.stage} />
+            </BentoCard>
 
-        <div className="space-y-3">
-          {[
-            { label: t("tracking.labels.trackingNumber"), value: activeShipment.trackingId },
-            { label: t("tracking.labels.customer"), value: activeShipment.clientName },
-            { label: t("tracking.labels.destination"), value: activeShipment.destination },
-            { label: t("tracking.labels.weight"), value: `${activeShipment.weight.toLocaleString(locale)} kg` },
-            { label: t("tracking.labels.pallets"), value: activeShipment.pallets.toLocaleString(locale) },
-            { label: t("tracking.labels.deal"), value: activeShipment.dealNumber || t("tracking.unlinked") },
-            { label: t("tracking.labels.lastUpdated"), value: new Date(activeShipment.updatedAt).toLocaleString(locale) },
-          ].map((item) => {
-            if (item.label === t("tracking.labels.customer") && !isInternal) return null;
-            return (
-              <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4">
-                <p className="text-xs text-stone-500 font-bold uppercase tracking-wider">{item.label}</p>
-                <p className="mt-1 break-words font-medium text-stone-200">{item.value}</p>
-              </div>
-            );
-          })}
-        </div>
+            {isInternal && (
+              <OperationsTimelineIntelligence
+                stages={[
+                  { id: '1', name: 'Order Validation', nameAr: 'تأكيد الطلب', status: 'completed', confidence: 100 },
+                  { id: '2', name: 'Factory Preparation', nameAr: 'تجهيز المصنع', status: activeStageIndex >= 0 ? 'completed' : 'in_progress', confidence: 95 },
+                  { id: '3', name: 'International Transit', nameAr: 'الشحن الدولي', status: activeStageIndex >= 5 ? 'completed' : (activeStageIndex >= 4 ? 'in_progress' : 'pending'), confidence: 85 },
+                  { id: '4', name: 'Customs Clearance', nameAr: 'التخليص الجمركي', status: activeStageIndex >= 7 ? 'completed' : (activeStageIndex >= 6 ? 'in_progress' : 'pending'), confidence: 70 },
+                  { id: '5', name: 'Final Delivery', nameAr: 'التسليم النهائي', status: activeStageIndex >= 9 ? 'completed' : (activeStageIndex >= 8 ? 'in_progress' : 'pending'), confidence: 90 },
+                ]}
+              />
+            )}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { label: t("tracking.labels.completedStages"), value: Math.max(activeStageIndex, 0) },
-            { label: t("tracking.labels.remainingStages"), value: activeStageIndex >= 0 ? shipmentStages.length - activeStageIndex - 1 : shipmentStages.length },
-            { label: t("tracking.labels.loggedUpdates"), value: activeShipment.timeline.length },
-          ].map((item) => (
-            <div key={item.label} className="min-w-0 rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4 text-center">
-              <p className="text-2xl font-bold text-stone-100">{item.value}</p>
-              <p className="mt-1 break-words text-[10px] uppercase tracking-widest text-stone-600 font-bold">{item.label}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          {filteredRows.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-6">
-              <EmptyState icon={Route} title={t("tracking.noTimelineTitle")} description={t("tracking.noMatches")} className="bg-transparent border-0" />
-            </div>
-          ) : (
-            filteredRows.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                aria-current={activeShipment.id === row.id ? "true" : undefined}
-                onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
-                className={`block w-full max-w-full min-w-0 rounded-[1.3rem] border px-4 py-4 text-start transition-colors ${
-                  activeShipment.id === row.id ? "border-amber-500/35 bg-amber-500/10 shadow-[0_12px_40px_-12px_rgba(251,191,36,0.3)]" : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
-                }`}
-              >
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="break-words font-medium text-stone-100">{row.trackingId}</p>
-                    <p className="mt-1 break-words text-sm text-stone-400">{row.dealNumber || t("tracking.unlinked")}</p>
+            {isInternal && nextStage ? (
+              <DashboardSection title="Action Center" icon={<Send className="h-6 w-6" />}>
+                <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50 space-y-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest mb-1">Next Action</p>
+                    <p className="text-sm font-bold text-stone-100">{t("tracking.advance", { stage: nextStage.label })}</p>
                   </div>
-                  <span className="max-w-full self-start break-words rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-wider">
-                    {getShipmentStageCopy(row.stage, lang)?.label || row.stage}
-                  </span>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
 
-        {isInternal && nextStage ? (
-          <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <Send className="h-4 w-4 text-amber-500" />
-              <p className="font-medium text-stone-100">{t("tracking.labels.nextStage")}</p>
-            </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.internalPlaceholder")}</Label>
+                      <Textarea
+                        rows={4}
+                        value={internalNote}
+                        onChange={(event) => setInternalNote(event.target.value)}
+                        className="bg-stone-950/40 border-amber-200/10 text-stone-100"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.customerPlaceholder")}</Label>
+                      <Textarea
+                        rows={3}
+                        value={customerNote}
+                        onChange={(event) => setCustomerNote(event.target.value)}
+                        className="bg-stone-950/40 border-amber-200/10 text-stone-100"
+                      />
+                    </div>
+                  </div>
 
-            <p className="mt-3 text-sm text-stone-400">{t("tracking.nextStageSuggested", { stage: nextStage.label })}</p>
+                  <div className="pt-4 border-t border-amber-200/5">
+                     <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-black text-stone-950 shadow-xl hover:brightness-110 uppercase tracking-widest" disabled={!canAdvance || submitting} onClick={handleAdvance}>
+                      {submitting ? t("tracking.advancing") : t("tracking.advance", { stage: nextStage.label })}
+                    </Button>
+                    <p className="mt-4 text-center text-[10px] font-bold text-stone-600 uppercase tracking-widest leading-relaxed">{trackingRuleText}</p>
+                  </div>
+                </BentoCard>
+              </DashboardSection>
+            ) : (
+               !isInternal && nextStage ? null : (
+                <BentoCard className="p-6 border-emerald-500/20 bg-emerald-500/5 text-center">
+                  <ShieldCheck className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-emerald-200">{t("tracking.completedMessage")}</p>
+                </BentoCard>
+              )
+            )}
 
-            <Textarea
-              rows={4}
-              value={internalNote}
-              onChange={(event) => setInternalNote(event.target.value)}
-              className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-              placeholder={t("tracking.internalPlaceholder")}
-            />
-
-            <Textarea
-              rows={3}
-              value={customerNote}
-              onChange={(event) => setCustomerNote(event.target.value)}
-              className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-              placeholder={t("tracking.customerPlaceholder")}
-            />
-
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-6 text-stone-500 font-medium">
-                {trackingRuleText}
-              </p>
-
-              <Button variant="gold" className="w-full sm:w-auto bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110" disabled={!canAdvance || submitting} onClick={handleAdvance}>
-                {submitting ? t("tracking.advancing") : t("tracking.advance", { stage: nextStage.label })}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          !isInternal && nextStage ? null : (
-            <div className="rounded-[1.35rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
-              {t("tracking.completedMessage")}
-            </div>
-          )
-        )}
-
-        <div className="grid gap-3">
-          {activeShipment.dealNumber ? (
-            <>
-              {isInternal && (
+            <div className="space-y-4">
+               {isInternal && activeShipment.dealNumber && (
                 <>
-                  <Link
-                    to={`/dashboard/deals?deal=${activeShipment.dealNumber}`}
-                    className="flex items-center gap-3 rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 text-sm font-bold text-stone-300 transition-colors hover:border-amber-500/25 hover:text-amber-200 group"
-                  >
-                    <ArrowRightLeft className="h-4 w-4 text-stone-600 group-hover:text-amber-500" />
-                    {t("tracking.backToDeal")}
+                  <Link to={`/dashboard/deals?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-amber-200/10 bg-stone-900/50 hover:bg-stone-800 transition-colors group">
+                    <div className="flex items-center gap-3 text-stone-100 font-bold text-sm">
+                      <ArrowRightLeft className="h-4 w-4 text-amber-500" />
+                      {t("tracking.backToDeal")}
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-stone-600 group-hover:translate-x-1 transition-transform" />
                   </Link>
-
-                  <Link
-                    to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`}
-                    className="flex items-center gap-3 rounded-[1.25rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 text-sm font-bold text-stone-300 transition-colors hover:border-amber-500/25 hover:text-amber-200 group"
-                  >
-                    <PackageSearch className="h-4 w-4 text-stone-600 group-hover:text-amber-500" />
-                    {t("tracking.openAccounting")}
+                   <Link to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-amber-200/10 bg-stone-900/50 hover:bg-stone-800 transition-colors group">
+                    <div className="flex items-center gap-3 text-stone-100 font-bold text-sm">
+                      <PackageSearch className="h-4 w-4 text-amber-500" />
+                      {t("tracking.openAccounting")}
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-stone-600 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </>
               )}
-            </>
-          ) : null}
-        </div>
-      </BentoCard>
-
-      <div ref={detailsRef} tabIndex={-1} className="min-w-0 space-y-4 scroll-mt-24 outline-none">
-        <BentoCard className="p-6 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
-          <div className="mb-6 flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <PackageSearch className="h-5 w-5" />
             </div>
-            <div className="min-w-0">
-              <h2 className="break-words font-serif text-2xl font-semibold text-stone-100">{t("tracking.labels.officialTimeline")}</h2>
-              <p className="break-words text-sm text-stone-500 font-medium">{t("tracking.labels.officialTimelineDescription")}</p>
-            </div>
-          </div>
 
-          <ShipmentTimeline currentStage={activeShipment.stage} />
-        </BentoCard>
-
-        {isInternal && (
-          <OperationsTimelineIntelligence
-            stages={[
-              { id: '1', name: 'Order Validation', nameAr: 'تأكيد الطلب', status: 'completed', confidence: 100 },
-              { id: '2', name: 'Factory Preparation', nameAr: 'تجهيز المصنع', status: activeStageIndex >= 0 ? 'completed' : 'in_progress', confidence: 95 },
-              { id: '3', name: 'International Transit', nameAr: 'الشحن الدولي', status: activeStageIndex >= 5 ? 'completed' : (activeStageIndex >= 4 ? 'in_progress' : 'pending'), confidence: 85 },
-              { id: '4', name: 'Customs Clearance', nameAr: 'التخليص الجمركي', status: activeStageIndex >= 7 ? 'completed' : (activeStageIndex >= 6 ? 'in_progress' : 'pending'), confidence: 70 },
-              { id: '5', name: 'Final Delivery', nameAr: 'التسليم النهائي', status: activeStageIndex >= 9 ? 'completed' : (activeStageIndex >= 8 ? 'in_progress' : 'pending'), confidence: 90 },
-            ]}
-          />
-        )}
-
-        <BentoCard className="space-y-4 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-amber-500" />
-            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("tracking.labels.updatesLog")}</h2>
-          </div>
-
-          {activeShipment.timeline.length === 0 ? (
-            <EmptyState
-              icon={Route}
-              title={t("tracking.noUpdatesTitle")}
-              description={t("tracking.noUpdatesDescription")}
-              className="bg-transparent border-0"
-            />
-          ) : (
-            <div className="space-y-3">
-              {activeShipment.timeline
-                .slice()
-                .reverse()
-                .map((event) => (
-                  <div
-                    key={event.id}
-                    className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm"
+             <DashboardSection title="Recent Shipments">
+              <div className="space-y-3">
+                {filteredRows.slice(0, 10).map((row) => (
+                  <button
+                    key={row.id}
+                    onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
+                    className={cn(
+                      "w-full p-4 rounded-2xl border text-start transition-all",
+                      activeShipment.id === row.id
+                        ? "border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-950/20"
+                        : "border-amber-200/5 bg-stone-900/30 hover:border-amber-200/20"
+                    )}
                   >
-                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="break-words font-bold text-stone-200 uppercase tracking-wide">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
-                        <p className="mt-1 text-[10px] text-stone-600 font-bold uppercase tracking-widest">{new Date(event.occurredAt).toLocaleString(locale)}</p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-stone-100 text-sm">{row.trackingId}</p>
+                        <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{row.dealNumber || "Unlinked"}</p>
                       </div>
-
-                      {isInternal && (
-                        <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-200 uppercase tracking-widest">
-                          {visibilityLabel(event.visibility)}
-                        </span>
-                      )}
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 border border-stone-700">
+                        {row.stage}
+                      </span>
                     </div>
-
-                    {isInternal && (
-                      <p className="mt-3 break-words text-sm leading-7 text-stone-400">
-                        {event.note || t("tracking.noInternalNote")}
-                      </p>
-                    )}
-
-                    {event.customerNote ? (
-                      <div className="mt-3 rounded-[1rem] border border-amber-200/15 bg-amber-500/5 px-4 py-3 text-sm text-stone-400">
-                        <span className="font-bold text-amber-200 uppercase tracking-widest text-[10px] block mb-1">{t("tracking.customerNoteLabel")}</span>
-                        {event.customerNote}
-                      </div>
-                    ) : (
-                      !isInternal && !event.customerNote && (
-                        <p className="mt-3 text-sm italic text-stone-600">
-                          {t("tracking.noCustomerNote")}
-                        </p>
-                      )
-                    )}
-                  </div>
+                  </button>
                 ))}
-            </div>
-          )}
-        </BentoCard>
-      </div>
-    </div>
+              </div>
+            </DashboardSection>
+          </aside>
+        </DashboardGrid>
+      </DashboardSection>
+    </DashboardPageShell>
   );
 }

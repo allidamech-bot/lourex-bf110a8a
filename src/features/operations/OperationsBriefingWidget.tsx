@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BrainCircuit, CheckCircle2, ClipboardList, RefreshCw, ShieldAlert, TrendingUp } from "lucide-react";
+import { AlertTriangle, BrainCircuit, CheckCircle2, RefreshCw, ShieldAlert, TrendingUp, ClipboardList } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import {
   type OperationsRiskLevel,
 } from "@/domain/operations/operationsBriefing";
 import {
-  fetchAuditCount,
   fetchDeals,
   fetchFinancialEditRequests,
   fetchRequests,
@@ -32,9 +31,7 @@ import { TeamWorkloadDistribution } from "@/features/organization-intelligence/c
 import {
   detectOperationalBlockers,
   generateExecutionSequence,
-  analyzeBlockerPropagation
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
-import { BlockerPropagationCenter } from "@/features/autonomous-coordination/components/BlockerPropagationCenter";
 import { ExecutionSequencePanel } from "@/features/autonomous-coordination/components/ExecutionSequencePanel";
 import {
   generatePartnerProfiles,
@@ -55,6 +52,8 @@ import {
 import { ExecutiveCommandWorkspace } from "@/features/executive-command/components/ExecutiveCommandWorkspace";
 import { CriticalActionQueue } from "@/features/executive-command/components/CriticalActionQueue";
 import type { OperationsDeal, OperationsRequest } from "@/domain/operations/types";
+import { DashboardGrid } from "@/components/layout/DashboardGrid";
+import { cn } from "@/lib/utils";
 
 const riskTone: Record<OperationsRiskLevel, string> = {
   excellent: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
@@ -124,11 +123,6 @@ export function OperationsBriefingWidget() {
     void loadReport();
   }, [loadReport]);
 
-  const recommendations = useMemo(
-    () => generateRecommendations(deals, requests),
-    [deals, requests]
-  );
-
   const operationalRisks = useMemo<OperationalRisk[]>(() => {
     const risks: OperationalRisk[] = [];
     const delayedShipments = deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit");
@@ -186,11 +180,6 @@ export function OperationsBriefingWidget() {
     [requests, deals, autonomousBlockers]
   );
 
-  const propagationAnalysis = useMemo(
-    () => analyzeBlockerPropagation(autonomousBlockers),
-    [autonomousBlockers]
-  );
-
   const partnerProfiles = useMemo(
     () => generatePartnerProfiles(requests as any, deals as any, shipments, []),
     [requests, deals, shipments]
@@ -228,14 +217,13 @@ export function OperationsBriefingWidget() {
 
   if (loading && !report) {
     return (
-      <BentoCard className="space-y-4">
-        <Skeleton className="h-10 w-64 rounded-xl" />
-        <div className="grid gap-3 md:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="h-28 rounded-2xl" />
+      <BentoCard className="p-8">
+        <Skeleton className="h-12 w-1/3 mb-8" />
+        <DashboardGrid variant="kpi">
+           {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-32 rounded-2xl" />
           ))}
-        </div>
-        <Skeleton className="h-36 rounded-2xl" />
+        </DashboardGrid>
       </BentoCard>
     );
   }
@@ -245,39 +233,39 @@ export function OperationsBriefingWidget() {
   const RiskIcon = riskIcon[report.riskLevel];
 
   return (
-    <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <BentoCard className="p-8 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl space-y-12">
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <BrainCircuit className="h-5 w-5" />
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-lg shadow-amber-950/20">
+              <BrainCircuit className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">AI Operations Brain</p>
-              <h3 className="font-serif text-2xl font-semibold text-stone-100">Today's operations briefing</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500/80">AI Operations Fabric</p>
+              <h3 className="font-serif text-3xl font-bold text-stone-100 mt-1">Today's operations briefing</h3>
             </div>
           </div>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400 font-medium">
-            Risk-weighted operational summary based on purchase requests, deals, shipments, and financial review queues.
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-stone-500 font-medium">
+            Real-time risk-weighted synthesis of systemic throughput, partner performance, and customer success queues.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge className={`${riskTone[report.riskLevel]} font-bold uppercase tracking-wider text-[10px] px-3 py-1`} variant="outline">
-            <RiskIcon className="mr-1.5 h-3.5 w-3.5" />
-            {riskLabel[report.riskLevel]} · {report.riskScore}/100
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge className={cn("font-black uppercase tracking-widest text-[10px] px-4 py-1.5 h-10 flex items-center border", riskTone[report.riskLevel])} variant="outline">
+            <RiskIcon className="mr-2 h-4 w-4" />
+            {riskLabel[report.riskLevel]} · {report.riskScore}% Readiness
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => void loadReport()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-            <RefreshCw className={`me-2 h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
-            Refresh
+          <Button variant="outline" size="lg" onClick={() => void loadReport()} disabled={loading} className="rounded-xl border-amber-200/10 bg-stone-950/40 text-stone-200 hover:text-amber-200 h-10">
+            <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+            Sync Fabric
           </Button>
         </div>
       </div>
 
       {!loading && (
-        <div className="space-y-6">
+        <div className="space-y-12">
           <ExecutiveCommandWorkspace state={executiveWorkspaceState} />
 
-          <div className="grid gap-5 xl:grid-cols-2">
+          <DashboardGrid variant="balanced">
             <OperationsHealthCenter
               activeRequests={requests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
               pendingOperations={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
@@ -287,81 +275,87 @@ export function OperationsBriefingWidget() {
               completionScore={82}
             />
             <OperationalRiskCenter risks={operationalRisks} />
-          </div>
+          </DashboardGrid>
 
-          <BranchRiskScorePanel risks={branchRiskScores} />
-
-          <div className="grid gap-6 lg:grid-cols-2">
+          <DashboardGrid variant="balanced">
             <CriticalActionQueue actions={executiveWorkspaceState.criticalActions} />
             <ExecutionSequencePanel steps={executionSequence} />
+          </DashboardGrid>
+
+          <div className="space-y-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-600 text-center">Branch & Partner Audit</p>
+            <DashboardGrid variant="balanced">
+              <div className="space-y-6">
+                {partnerScorecards.map(ps => (
+                  <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
+                ))}
+              </div>
+              <BranchRiskScorePanel risks={branchRiskScores} />
+            </DashboardGrid>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            {partnerScorecards.map(ps => (
-              <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
-            ))}
+          <div className="space-y-8">
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-600 text-center">Success & Workload</p>
+             <DashboardGrid variant="balanced">
+              <CustomerFollowupCenter recommendations={customerFollowups.slice(0, 5)} />
+              <TeamWorkloadDistribution workloads={teamWorkload} />
+            </DashboardGrid>
           </div>
-
-          {partnerBottlenecks.length > 0 && <PartnerBottleneckAlerts bottlenecks={partnerBottlenecks} />}
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <CustomerFollowupCenter recommendations={customerFollowups.slice(0, 5)} />
-            <CustomerPriorityMatrix profiles={customerProfiles.slice(0, 5)} />
-          </div>
-
-          <TeamWorkloadDistribution workloads={teamWorkload} />
         </div>
       )}
 
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-        {report.metrics.map((metric) => (
-          <div key={metric.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <ClipboardList className="h-4 w-4 text-stone-600" />
-              <Badge className={`${severityTone[metric.severity]} text-[10px] font-bold uppercase tracking-widest px-2 py-0.5`} variant="outline">
-                {metric.severity}
-              </Badge>
+      <div className="space-y-8 pt-12 border-t border-amber-200/5">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-600">Metric Breakdown</p>
+        <DashboardGrid variant="kpi">
+          {report.metrics.map((metric) => (
+            <div key={metric.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <ClipboardList className="h-4 w-4 text-stone-700" />
+                <Badge className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border", severityTone[metric.severity])} variant="outline">
+                  {metric.severity}
+                </Badge>
+              </div>
+              <p className="text-3xl font-black text-stone-100">{metric.value}</p>
+              <p className="mt-1 text-[10px] font-black text-stone-500 uppercase tracking-widest">{metric.label}</p>
+              <p className="mt-3 text-xs leading-5 text-stone-600 font-medium">{metric.description}</p>
             </div>
-            <p className="text-2xl font-bold text-stone-100">{metric.value}</p>
-            <p className="mt-1 text-sm font-bold text-stone-300 uppercase tracking-tight">{metric.label}</p>
-            <p className="mt-2 text-xs leading-5 text-stone-500 font-medium">{metric.description}</p>
-          </div>
-        ))}
+          ))}
+        </DashboardGrid>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
-        <div className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600 mb-4">Source coverage</p>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="grid gap-8 xl:grid-cols-[0.8fr_1.2fr] pt-8">
+        <BentoCard className="p-6 border-amber-200/5 bg-stone-950/40">
+          <p className="text-[10px] font-black uppercase tracking-widest text-stone-600 mb-6">Synthesis Coverage</p>
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <SourceCount label="Requests" value={report.sourceCounts.requests} />
             <SourceCount label="Deals" value={report.sourceCounts.deals} />
             <SourceCount label="Shipments" value={report.sourceCounts.shipments} />
-            <SourceCount label="Finance reviews" value={report.sourceCounts.financialEditRequests} />
+            <SourceCount label="Finance" value={report.sourceCounts.financialEditRequests} />
           </div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-stone-700">Generated {new Date(report.generatedAt).toLocaleString()}</p>
-        </div>
+          <p className="mt-8 text-[9px] font-black uppercase tracking-[0.2em] text-stone-800 text-center">Verified at {new Date(report.generatedAt).toLocaleTimeString()}</p>
+        </BentoCard>
 
-        <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">Recommended priorities</p>
-          {topRecommendations.length === 0 ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-400 font-medium">
-              No urgent operational priorities detected from the current data.
-            </div>
-          ) : (
-            topRecommendations.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 shadow-sm">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="font-bold text-stone-200 uppercase tracking-tight">{item.title}</p>
-                  <Badge className={`${priorityTone[item.priority]} text-[10px] font-bold uppercase tracking-widest px-2 py-0.5`} variant="outline">
+        <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-stone-600 px-2">Priority Directives</p>
+          <div className="grid grid-cols-1 gap-4">
+            {topRecommendations.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 group hover:border-amber-200/20 transition-all">
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                  <div>
+                    <p className="font-bold text-stone-200 uppercase tracking-tight text-sm">{item.title}</p>
+                    {item.entityLabel && <p className="mt-1 text-[10px] font-black text-amber-500/50 uppercase tracking-widest">{item.entityLabel}</p>}
+                  </div>
+                  <Badge className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border", priorityTone[item.priority])} variant="outline">
                     {item.priority}
                   </Badge>
                 </div>
-                {item.entityLabel ? <p className="mt-1 text-[10px] font-bold text-stone-500 uppercase tracking-widest">{item.entityLabel}</p> : null}
-                <p className="mt-2 text-sm leading-6 text-stone-400 font-medium">{item.reason}</p>
-                <p className="mt-3 text-sm leading-7 text-amber-200 font-bold border-t border-amber-200/10 pt-3">{item.action}</p>
+                <p className="text-xs leading-6 text-stone-500 font-medium mb-4 italic">"{item.reason}"</p>
+                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                  <p className="text-xs leading-6 text-amber-200 font-bold">{item.action}</p>
+                </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </BentoCard>
@@ -369,8 +363,8 @@ export function OperationsBriefingWidget() {
 }
 
 const SourceCount = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-xl bg-stone-950/40 border border-amber-200/5 p-3">
-    <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{label}</p>
-    <p className="mt-1 text-lg font-bold text-stone-200">{value}</p>
+  <div className="p-4 rounded-xl bg-stone-900/50 border border-stone-800">
+    <p className="text-[9px] font-black uppercase tracking-widest text-stone-600 mb-1">{label}</p>
+    <p className="text-xl font-black text-stone-200">{value}</p>
   </div>
 );

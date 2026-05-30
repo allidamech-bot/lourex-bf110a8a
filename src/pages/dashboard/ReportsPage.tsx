@@ -11,6 +11,8 @@ import {
   Users,
   Clock,
   ExternalLink,
+  RefreshCw,
+  Calendar,
 } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,8 +41,7 @@ import {
 } from "@/features/partner-intelligence/lib/partnerIntelligenceEngine";
 import { PartnerPerformanceScorecard } from "@/features/partner-intelligence/components/PartnerPerformanceScorecard";
 import {
-  generateCustomerProfiles,
-  calculateCustomerLifetimeValueEstimate
+  generateCustomerProfiles
 } from "@/features/customer-success-intelligence/lib/customerSuccessEngine";
 import { CustomerLifetimeValuePanel } from "@/features/customer-success-intelligence/components/CustomerLifetimeValuePanel";
 import {
@@ -49,6 +50,9 @@ import {
 import { BusinessStabilityPanel } from "@/features/executive-command/components/BusinessStabilityPanel";
 import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveReportPanel";
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
+import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -82,33 +86,33 @@ export default function ReportsPage() {
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
 
+  const refresh = async () => {
+    setLoading(true);
+    setLoadError("");
+
+    try {
+      const [nextSnapshot, allRequests, allDeals] = await Promise.all([
+        getDashboardReportSnapshot(rangeStart, rangeEnd),
+        fetchRequests(),
+        fetchDeals()
+      ]);
+      setSnapshot(nextSnapshot);
+      setRequests(allRequests);
+      setDeals(allDeals);
+    } catch (error: unknown) {
+      logOperationalError("reports_snapshot_load", error, {
+        start: rangeStart.toISOString(),
+        end: rangeEnd.toISOString(),
+      });
+      setSnapshot(null);
+      setLoadError(error instanceof Error ? error.message : t("common.error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setLoadError("");
-
-      try {
-        const [nextSnapshot, allRequests, allDeals] = await Promise.all([
-          getDashboardReportSnapshot(rangeStart, rangeEnd),
-          fetchRequests(),
-          fetchDeals()
-        ]);
-        setSnapshot(nextSnapshot);
-        setRequests(allRequests);
-        setDeals(allDeals);
-      } catch (error: unknown) {
-        logOperationalError("reports_snapshot_load", error, {
-          start: rangeStart.toISOString(),
-          end: rangeEnd.toISOString(),
-        });
-        setSnapshot(null);
-        setLoadError(error instanceof Error ? error.message : t("common.error"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    void refresh();
   }, [rangeStart, rangeEnd, t]);
 
   const executiveReport = useMemo(
@@ -397,276 +401,234 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-60 w-full rounded-[2rem]" />
-        <Skeleton className="h-60 w-full rounded-[2rem]" />
-      </div>
+      <DashboardPageShell>
+        <DashboardGrid variant="balanced">
+          <Skeleton className="h-60 w-full rounded-[2rem]" />
+          <Skeleton className="h-60 w-full rounded-[2rem]" />
+        </DashboardGrid>
+      </DashboardPageShell>
     );
   }
 
   return (
-    <div className="w-full max-w-full min-w-0 space-y-4">
+    <DashboardPageShell dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHelpBox pageKey="reports" role={profile?.role} />
-      <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="whitespace-normal text-[10px] font-semibold uppercase tracking-widest text-stone-500">{t("reports.window")}</p>
-            <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("reports.title")}</h2>
-          </div>
-          <div className="grid w-full grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))] lg:w-auto">
-            <select
-              value={range}
-              onChange={(event) => setRange(event.target.value as ReportRange)}
-            className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
-            >
-              <option value="monthly" className="bg-stone-900">{t("reports.ranges.monthly")}</option>
-              <option value="quarterly" className="bg-stone-900">{t("reports.ranges.quarterly")}</option>
-              <option value="semiannual" className="bg-stone-900">{t("reports.ranges.semiannual")}</option>
-              <option value="annual" className="bg-stone-900">{t("reports.ranges.annual")}</option>
-              <option value="custom" className="bg-stone-900">{t("reports.ranges.custom")}</option>
-            </select>
-            <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20" />
-            <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20" />
-            <button onClick={handleExport} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
-              <span className="inline-flex min-w-0 items-center gap-2"><Download className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.exportCsv")}</span></span>
-            </button>
-            <button onClick={handleExportPdf} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
-              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.exportPdf")}</span></span>
-            </button>
-            <button onClick={() => window.print()} className="h-11 w-full rounded-xl border border-amber-200/15 bg-stone-50/5 text-stone-100 px-3 py-2 text-sm hover:bg-stone-50/10 transition-colors">
-              <span className="inline-flex min-w-0 items-center gap-2"><Printer className="h-4 w-4 shrink-0 text-amber-500" /><span className="break-words">{t("common.print")}</span></span>
-            </button>
-          </div>
-        </div>
-        {loadError ? (
-          <div className="rounded-[1.35rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
-            {loadError}
-          </div>
-        ) : null}
-        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400 font-medium">
-          {statementExportHint}
-        </div>
-      </BentoCard>
 
-      {executiveReport ? (
+      <DashboardSection
+        title={t("reports.title")}
+        description={t("reports.structuredHint")}
+        icon={<BarChart3 className="h-6 w-6" />}
+        headerAction={
+          <div className="flex flex-wrap items-center gap-3">
+             <div className="flex items-center gap-2 px-4 h-11 rounded-xl bg-stone-900/40 border border-amber-200/10">
+              <Calendar className="h-4 w-4 text-stone-500" />
+              <select
+                value={range}
+                onChange={(event) => setRange(event.target.value as ReportRange)}
+                className="bg-transparent text-sm text-stone-200 outline-none"
+              >
+                <option value="monthly" className="bg-stone-900">{t("reports.ranges.monthly")}</option>
+                <option value="quarterly" className="bg-stone-900">{t("reports.ranges.quarterly")}</option>
+                <option value="semiannual" className="bg-stone-900">{t("reports.ranges.semiannual")}</option>
+                <option value="annual" className="bg-stone-900">{t("reports.ranges.annual")}</option>
+                <option value="custom" className="bg-stone-900">{t("reports.ranges.custom")}</option>
+              </select>
+            </div>
+            {range === 'custom' && (
+              <>
+                <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100" />
+                <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100" />
+              </>
+            )}
+            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
+              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+              <span className="font-bold">{t("common.refresh")}</span>
+            </Button>
+          </div>
+        }
+      >
+        <DashboardGrid variant="kpi">
+          {[
+            { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown("pending_requests") },
+            { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
+            { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
+            { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
+            { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
+          ].map((item) => (
+            <BentoCard key={item.label} className={cn("p-5 border-amber-200/10 bg-stone-900/50", item.action && "cursor-pointer hover:border-amber-200/30 transition-all")} onClick={item.action}>
+               <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
+                <item.icon className="h-4 w-4 text-amber-500/50" />
+              </div>
+              <div className="flex items-end justify-between">
+                <p className="text-3xl font-black text-stone-100">{item.value}</p>
+                {item.action && <ExternalLink className="h-3 w-3 text-stone-700" />}
+              </div>
+            </BentoCard>
+          ))}
+        </DashboardGrid>
+      </DashboardSection>
+
+      {drillDownData && (
+        <DashboardSection title={t(`reports.drilldowns.${drillDownData.type}`)}>
+          <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 overflow-hidden">
+            <div className="p-6 border-b border-amber-200/10 flex justify-between items-center">
+              <h3 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{drillDownData.type} Details</h3>
+              <Button variant="ghost" size="sm" onClick={() => setDrillDownData(null)} className="text-stone-500 hover:text-stone-300">Close</Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-stone-300">
+                <thead>
+                  <tr className="border-b border-amber-200/10 text-left text-stone-500 font-bold uppercase tracking-widest text-[10px]">
+                    <th className="p-4">{t("common.id")}</th>
+                    <th className="p-4">{t("common.status")}</th>
+                    <th className="p-4 text-right">{t("common.value")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-200/5">
+                  {drillDownData.items.map((item) => (
+                    <tr key={item.id} className="hover:bg-stone-800/30 transition-colors">
+                      <td className="p-4 font-mono text-xs text-stone-400">{item.id}</td>
+                      <td className="p-4">
+                        <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-200 uppercase tracking-widest">{item.status}</span>
+                      </td>
+                      <td className="p-4 text-right font-bold text-stone-200">
+                        {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </BentoCard>
+        </DashboardSection>
+      )}
+
+      {executiveReport && (
         <ExecutiveReportPanel
           result={executiveReport}
           language={lang === "ar" ? "ar" : "en"}
           locale={locale}
           onRefresh={() => setExecutiveRefreshKey((current) => current + 1)}
         />
-      ) : null}
+      )}
 
-      {!loading && (
-        <div className="grid gap-4 mb-4">
+      <DashboardGrid variant="balanced">
+        <DashboardSection title="Operational Momentum" description="Strategic flow and coordination blockers.">
           <OperationalMomentumPanel momentum={operationalMomentum} />
-        </div>
-      )}
+        </DashboardSection>
+        <DashboardSection title="Regional Visibility" description="Global logistics distribution analysis.">
+          <RegionalOperationsVisibility regions={regionalSummary} />
+        </DashboardSection>
+      </DashboardGrid>
 
-      {!loading && (
-        <div className="grid gap-6 lg:grid-cols-2 mb-4">
-          {partnerScorecards.map(ps => (
-            <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
-          ))}
-        </div>
-      )}
-
-      {!loading && (
-        <div className="mb-4">
+      <DashboardGrid variant="balanced">
+        <DashboardSection title="Partner Performance" description="Top branch and logistics partner auditing.">
+          <div className="space-y-6">
+            {partnerScorecards.map(ps => (
+              <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
+            ))}
+          </div>
+        </DashboardSection>
+        <DashboardSection title="System Stability" description="Risk resilience and business continuity scores.">
           <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
-        </div>
-      )}
+        </DashboardSection>
+      </DashboardGrid>
 
-      {!loading && (
-        <div className="mb-4">
-          <CustomerLifetimeValuePanel profiles={customerProfiles.slice(0, 2)} />
-        </div>
-      )}
+      <DashboardSection title="Customer Intelligence" description="Lifetime value and retention analytics.">
+        <CustomerLifetimeValuePanel profiles={customerProfiles.slice(0, 2)} />
+      </DashboardSection>
 
-      <div className="grid gap-4">
-        <RegionalOperationsVisibility regions={regionalSummary} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-        {[
-          { label: t("reports.metrics.requests"), value: metrics.requests, icon: ClipboardList, action: () => handleDrillDown("pending_requests") },
-          { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
-          { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
-          { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
-        ].map((item) => (
-          <BentoCard key={item.label} className={`space-y-3 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl ${item.action ? "cursor-pointer hover:bg-stone-800/50 transition-colors" : ""}`} onClick={item.action}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <item.icon className="h-5 w-5" />
+      <DashboardGrid variant="balanced">
+        <DashboardSection title={t("reports.operationsRead")} description="Audit trail and financial integrity metrics.">
+          <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { label: t("reports.metrics.audits"), value: metrics.audits },
+                { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries },
+                { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries },
+                { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests },
+                { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR` },
+                { label: t("reports.metrics.averageValue"), value: `${Math.round(metrics.averageOperationValue).toLocaleString()} SAR` },
+              ].map((item) => (
+                <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
+                  <p className="mt-1 text-xl font-bold text-stone-100">{item.value}</p>
+                </div>
+              ))}
             </div>
-            <div className="flex min-w-0 items-center justify-between">
-              <p className="break-words font-serif text-4xl font-bold text-stone-100">{item.value}</p>
-              {item.action ? <ExternalLink className="h-4 w-4 text-stone-600" /> : null}
-            </div>
-            <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-500">{item.label}</p>
           </BentoCard>
-        ))}
-      </div>
+        </DashboardSection>
 
-      {drillDownData ? (
-        <BentoCard className="space-y-4 animate-in fade-in slide-in-from-top-4 border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="break-words font-serif text-xl font-semibold capitalize text-stone-100">
-              {t(`reports.drilldowns.${drillDownData.type}`)} {t("reports.title")}
-            </h2>
-            <button onClick={() => setDrillDownData(null)} className="text-sm font-bold text-amber-500 hover:text-amber-400 transition-colors">
-              {t("common.close")}
-            </button>
-          </div>
-          <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[34rem] text-sm text-stone-300">
-              <thead>
-                <tr className="border-b border-amber-200/10 text-left text-stone-500 font-bold uppercase tracking-widest text-[10px]">
-                  <th className="pb-3 px-2 font-bold">{t("common.id")}</th>
-                  <th className="pb-3 px-2 font-bold">{t("common.status")}</th>
-                  <th className="pb-3 px-2 font-bold text-right">{t("common.value")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-amber-200/10">
-                {drillDownData.items.map((item) => (
-                  <tr key={item.id} className="hover:bg-stone-800/30 transition-colors">
-                    <td className="py-4 px-2 font-mono text-xs text-stone-400">{item.id.substring(0, 8)}...</td>
-                    <td className="py-4 px-2">
-                      <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-200 uppercase tracking-wider">{item.status}</span>
-                    </td>
-                    <td className="py-4 px-2 text-right font-bold text-stone-200">
-                      {item.totalValue ? `${item.totalValue.toLocaleString()} SAR` : item.amount ? `${item.amount.toLocaleString()} SAR` : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </BentoCard>
-      ) : null}
+        <DashboardSection title={t("reports.shipmentSummary")} description="Global logistics throughput status.">
+          <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <div className="space-y-4">
+              {[
+                { label: t("reports.inTransit"), value: metrics.inTransit },
+                { label: t("reports.destination"), value: metrics.destination },
+                { label: t("reports.delivered"), value: metrics.delivered },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
+                  <p className="text-2xl font-black text-amber-500">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </BentoCard>
+        </DashboardSection>
+      </DashboardGrid>
 
-      <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-3">
-            <BarChart3 className="h-5 w-5 text-amber-500" />
-            <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.operationsRead")}</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              { label: t("reports.metrics.audits"), value: metrics.audits, icon: ShieldCheck },
-              { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries, icon: Receipt },
-              { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries, icon: Receipt },
-              { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests, icon: Receipt },
-              { label: t("reports.currencyGroups"), value: metrics.currencyGroups, icon: Receipt },
-              { label: t("reports.metrics.income"), value: `${metrics.income.toLocaleString()} SAR`, icon: Receipt },
-              { label: t("reports.metrics.expense"), value: `${metrics.expense.toLocaleString()} SAR`, icon: Receipt },
-              { label: t("reports.metrics.profit"), value: `${(metrics.income - metrics.expense).toLocaleString()} SAR`, icon: Receipt },
-              { label: t("reports.metrics.averageValue"), value: `${Math.round(metrics.averageOperationValue).toLocaleString()} SAR`, icon: Receipt },
-              { label: t("common.active"), value: snapshot?.operations.activeDeals || 0, icon: PackageSearch },
-              { label: t("reports.metrics.avgTime"), value: `${Math.round(snapshot?.operations.averageProcessingTimeDays || 0)} ${t("common.days")}`, icon: Clock },
-            ].map((item) => (
-              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
-                <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-600">{item.label}</p>
-                <p className="mt-1 break-words text-2xl font-bold text-stone-100">{item.value}</p>
-              </div>
+      <DashboardGrid variant="balanced">
+        <DashboardSection title={t("reports.topCustomers")}>
+          <div className="space-y-4">
+            {snapshot?.topCustomers.map((customer) => (
+              <BentoCard key={customer.customerId} className="p-5 border-amber-200/10 bg-stone-900/50">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-bold text-stone-100">{customer.fullName}</h4>
+                    <p className="text-xs text-stone-500">{customer.email}</p>
+                  </div>
+                  <div className="text-right text-[10px] font-black text-amber-500/70 uppercase tracking-widest">
+                    {customer.dealsCount} {t("dashboardNav.deals")}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                   <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
+                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">{t("reports.labels.outstandingBalance")}</p>
+                    <p className="font-bold text-stone-200 text-sm">{customer.outstandingBalance.toLocaleString()} SAR</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
+                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">Edit Requests</p>
+                    <p className="font-bold text-stone-200 text-sm">{customer.pendingEditRequests}</p>
+                  </div>
+                </div>
+              </BentoCard>
             ))}
           </div>
-          <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400 font-medium">
-            {t("reports.structuredHint")}
-          </div>
-        </BentoCard>
+        </DashboardSection>
 
-        <BentoCard className="space-y-5 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.shipmentSummary")}</h2>
-          <div className="grid gap-3">
-            {[
-              { label: t("reports.inTransit"), value: metrics.inTransit },
-              { label: t("reports.destination"), value: metrics.destination },
-              { label: t("reports.delivered"), value: metrics.delivered },
-            ].map((item) => (
-              <div key={item.label} className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
-                <p className="break-words text-[10px] font-bold uppercase tracking-widest text-stone-600">{item.label}</p>
-                <p className="mt-1 text-3xl font-bold text-stone-100">{item.value}</p>
-              </div>
+        <DashboardSection title={t("reports.topExpenses")}>
+          <div className="space-y-4">
+            {snapshot?.topExpenseCategories.map((item) => (
+              <BentoCard key={item.category} className="p-4 border-amber-200/10 bg-stone-900/50 flex justify-between items-center">
+                <span className="font-black text-xs text-stone-300 uppercase tracking-widest">{item.category}</span>
+                <span className="font-black text-stone-100">{Number(item.amount).toLocaleString()} SAR</span>
+              </BentoCard>
             ))}
           </div>
-        </BentoCard>
-      </div>
+        </DashboardSection>
+      </DashboardGrid>
 
-      <div className="grid w-full max-w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.topCustomers")}</h2>
-          <div className="space-y-3">
-            {snapshot?.topCustomers.length ? (
-              snapshot.topCustomers.map((customer) => (
-                <div key={customer.customerId} className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4">
-                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="break-words font-bold text-stone-200">{customer.fullName}</p>
-                      <p className="mt-1 break-words text-xs text-stone-500 font-medium">{customer.email}</p>
-                    </div>
-                    <div className="text-start text-[10px] font-bold uppercase tracking-widest text-stone-600 sm:text-end">
-                      <div>{t("reports.requestsCount", { count: customer.requestsCount })}</div>
-                      <div>{t("reports.dealsCount", { count: customer.dealsCount })}</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="min-w-0 rounded-[1rem] bg-stone-950/40 border border-amber-200/5 p-3 text-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("reports.labels.outstandingBalance")}</p>
-                      <p className="mt-1 break-words font-bold text-stone-300">{customer.outstandingBalance.toLocaleString()} SAR</p>
-                    </div>
-                    <div className="min-w-0 rounded-[1rem] bg-stone-950/40 border border-amber-200/5 p-3 text-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("reports.labels.pendingEditRequests")}</p>
-                      <p className="mt-1 font-bold text-stone-300">{customer.pendingEditRequests}</p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[1.3rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500 text-center font-medium">
-                {t("reports.noCustomers")}
-              </div>
-            )}
-          </div>
-        </BentoCard>
-
-        <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-          <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("reports.topExpenses")}</h2>
-          <div className="space-y-3">
-            {snapshot?.financialSummary.trends.length ? (
-              <div className="mb-4 rounded-[1.3rem] border border-amber-500/20 bg-amber-500/5 p-4">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-amber-200">
-                  {t("reports.monthlyTrend")}
-                </p>
-                <div className="space-y-2">
-                  {snapshot.financialSummary.trends.slice(-3).map((trend) => (
-                    <div key={trend.month} className="flex items-center justify-between text-sm">
-                      <span className="text-stone-500 font-bold uppercase tracking-widest text-[10px]">{trend.month}</span>
-                      <span className={`font-bold ${trend.net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                        {trend.net > 0 ? "+" : ""}
-                        {trend.net.toLocaleString()} SAR
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {snapshot?.topExpenseCategories.length ? (
-              snapshot.topExpenseCategories.map((item) => (
-                  <div key={item.category} className="rounded-[1.3rem] border border-amber-200/10 bg-stone-950/40 p-4">
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                    <p className="break-words font-bold text-stone-200 uppercase tracking-wide text-sm">{item.category}</p>
-                    <p className="break-words text-sm font-bold text-stone-100">{Number(item.amount).toLocaleString()} SAR</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[1.3rem] border border-dashed border-amber-200/10 bg-stone-950/20 p-4 text-sm text-stone-500 text-center font-medium">
-                {t("reports.noExpenses")}
-              </div>
-            )}
-          </div>
-        </BentoCard>
+      <div className="flex flex-wrap items-center justify-center gap-4 pt-12 border-t border-amber-200/5">
+        <Button onClick={handleExport} variant="outline" className="h-12 rounded-2xl border-amber-200/15 bg-stone-900/50 text-stone-200 hover:text-amber-200">
+          <Download className="h-4 w-4 me-2" />
+          {t("common.exportCsv")}
+        </Button>
+        <Button onClick={handleExportPdf} variant="outline" className="h-12 rounded-2xl border-amber-200/15 bg-stone-900/50 text-stone-200 hover:text-amber-200">
+          <Printer className="h-4 w-4 me-2" />
+          {t("common.exportPdf")}
+        </Button>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

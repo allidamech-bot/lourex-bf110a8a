@@ -64,7 +64,7 @@ export const DashboardLayout = () => {
 
       <div className="relative z-10">
         <SiteHeader />
-        <div className="mx-auto grid w-full max-w-[1500px] gap-5 overflow-x-hidden px-4 pb-5 pt-16 sm:px-6 lg:px-8 xl:grid-cols-[270px_minmax(0,1fr)]">
+        <div className="mx-auto grid w-full max-w-[1700px] gap-5 overflow-x-hidden px-4 pb-5 pt-16 sm:px-6 lg:px-8 xl:grid-cols-[270px_minmax(0,1fr)]">
           <aside
             className="w-full max-w-full min-w-0 rounded-[1.75rem] border border-amber-200/10 bg-stone-900/65 p-3 shadow-2xl shadow-black/35 backdrop-blur-xl xl:sticky xl:top-[4.5rem] xl:self-start"
             aria-label="Sidebar"

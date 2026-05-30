@@ -91,7 +91,7 @@ export const SiteHeader = () => {
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
-        <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-4 sm:px-6 lg:hidden">
+        <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center px-4 sm:px-6 lg:hidden">
           <div className="flex w-full items-center justify-between gap-4">
             <Link
                 to="/"
@@ -119,7 +119,7 @@ export const SiteHeader = () => {
 
         {/* Desktop header */}
         <div
-            className="mx-auto hidden h-16 w-full max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
+            className="mx-auto hidden h-16 w-full max-w-[1700px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
             dir={isRtl ? "rtl" : "ltr"}
         >
           <Link

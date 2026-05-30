@@ -16,6 +16,7 @@ import {
     ShieldCheck,
     Sparkles,
     StickyNote,
+    RefreshCw,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BentoCard from "@/components/BentoCard";
@@ -38,11 +39,7 @@ import type { PurchaseRequestStatus } from "@/types/lourex";
 import { isInternalRole } from "@/features/auth/rbac";
 import { canConvertPurchaseRequest, canTransitionPurchaseRequestStatus } from "@/domain/operations/guards";
 import {
-    fetchAuditCount,
     fetchDeals,
-    fetchFinancialEditRequests,
-    fetchRequests,
-    fetchShipments,
     resubmitPurchaseRequest,
 } from "@/domain/operations/service";
 import { generateBranchProfiles, calculateBranchRiskScore } from "@/features/organization-intelligence/lib/organizationIntelligenceEngine";
@@ -66,6 +63,9 @@ import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
 import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
 import { PriorityQueueEngine } from "@/features/operations-intelligence/components/PriorityQueueEngine";
 import { generateRecommendations } from "@/features/operations-intelligence/lib/operationsRecommendationEngine";
+import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type PurchaseRequests = Awaited<ReturnType<typeof loadPurchaseRequests>>;
 type PurchaseRequestRow = PurchaseRequests[number];
@@ -993,217 +993,185 @@ export default function PurchaseRequestsPage() {
 
     if (loading) {
         return (
-            <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                {Array.from({ length: 4 }).map((_, index) => (
-                    <Skeleton key={index} className="h-32 w-full rounded-2xl border border-white/10 bg-white/[0.04]" />
-                ))}
-            </div>
+            <DashboardPageShell>
+                <DashboardGrid variant="balanced">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                        <Skeleton key={index} className="h-32 w-full rounded-2xl border border-white/10 bg-white/[0.04]" />
+                    ))}
+                </DashboardGrid>
+            </DashboardPageShell>
         );
     }
 
     if (rows.length === 0) {
         return (
-            <EmptyState
-                icon={ClipboardList}
-                title={t("requests.emptyTitle")}
-                description={t("requests.emptyDescription")}
-            />
+            <DashboardPageShell>
+                <EmptyState
+                    icon={ClipboardList}
+                    title={t("requests.emptyTitle")}
+                    description={t("requests.emptyDescription")}
+                />
+            </DashboardPageShell>
         );
     }
 
     return (
-        <div className="w-full max-w-full min-w-0 space-y-4">
+        <DashboardPageShell dir={lang === "ar" ? "rtl" : "ltr"}>
             <PageHelpBox pageKey="purchase_requests" role={profile?.role} />
 
             {isInternal && (
-                <div className="space-y-6">
-                    <div className="grid gap-4 xl:grid-cols-2">
-                        <OperationsHealthCenter
-                            activeRequests={requestMetrics.total - requestMetrics.converted}
-                            pendingOperations={requestMetrics.review}
-                            inTransitCount={0}
-                            delayedCount={0}
-                            blockedWorkflows={rows.filter(r => r.status === 'transfer_proof_rejected').length}
-                            completionScore={75}
-                        />
-                        <PriorityQueueEngine recommendations={recommendations} />
-                    </div>
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        <BranchRiskScorePanel risks={branchRiskScores} />
-                        <ExecutionSequencePanel steps={executionSequence} />
-                    </div>
+                <div className="space-y-12">
+                     <DashboardGrid variant="balanced">
+                        <DashboardSection title="Health Monitor">
+                            <OperationsHealthCenter
+                                activeRequests={requestMetrics.total - requestMetrics.converted}
+                                pendingOperations={requestMetrics.review}
+                                inTransitCount={0}
+                                delayedCount={0}
+                                blockedWorkflows={rows.filter(r => r.status === 'transfer_proof_rejected').length}
+                                completionScore={75}
+                            />
+                        </DashboardSection>
+                        <DashboardSection title="Action Pipeline">
+                            <PriorityQueueEngine recommendations={recommendations} />
+                        </DashboardSection>
+                    </DashboardGrid>
+
+                    <DashboardGrid variant="balanced">
+                        <DashboardSection title="Branch Risk">
+                            <BranchRiskScorePanel risks={branchRiskScores} />
+                        </DashboardSection>
+                        <DashboardSection title="Execution Flow">
+                            <ExecutionSequencePanel steps={executionSequence} />
+                        </DashboardSection>
+                    </DashboardGrid>
                 </div>
             )}
 
-            <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(24rem,0.82fr)_minmax(0,1.18fr)]">
-                <BentoCard className="space-y-5 rounded-[1.5rem] border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-                    <div>
-                        <p className="whitespace-normal text-xs font-semibold text-stone-500">{t("requests.inboxEyebrow")}</p>
-                        <h2 className="mt-2 font-serif text-2xl font-semibold text-stone-100">{t("requests.inboxTitle")}</h2>
-                        <p className="mt-3 text-sm leading-7 text-stone-400">{t("requests.inboxDescription")}</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-                        {[
-                            { label: t("requests.total"), value: requestMetrics.total },
-                            { label: t("requests.review"), value: requestMetrics.review },
-                            { label: t("requests.ready"), value: requestMetrics.ready },
-                            { label: t("requests.converted"), value: requestMetrics.converted },
-                        ].map((item) => (
-                            <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4 text-center transition-colors hover:border-amber-500/25">
-                                <p className="text-2xl font-bold text-stone-100">{item.value}</p>
-                                <p className="mt-1 whitespace-normal text-xs leading-tight text-stone-500">{item.label}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-                        <div className="relative">
+            <DashboardSection
+                title={t("requests.inboxTitle")}
+                description={t("requests.inboxDescription")}
+                icon={<ClipboardList className="h-6 w-6" />}
+                headerAction={
+                    <div className="flex flex-wrap items-center gap-3">
+                         <div className="relative w-64">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
                             <Input
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder={t("requests.searchPlaceholder")}
-                                className="h-10 rounded-xl border-amber-200/10 bg-stone-950/40 text-stone-100 focus:ring-amber-500/20 ps-9"
+                                className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 h-10"
                             />
                         </div>
+                        <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
+                            <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+                            <span className="font-bold">{t("common.refresh")}</span>
+                        </Button>
+                    </div>
+                }
+            >
+                <DashboardGrid variant="main">
+                    <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            {[
+                                { label: t("requests.total"), value: requestMetrics.total },
+                                { label: t("requests.review"), value: requestMetrics.review },
+                                { label: t("requests.ready"), value: requestMetrics.ready },
+                                { label: t("requests.converted"), value: requestMetrics.converted },
+                            ].map((item) => (
+                                <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800 text-center">
+                                    <p className="text-2xl font-black text-stone-100">{item.value}</p>
+                                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mt-1">{item.label}</p>
+                                </div>
+                            ))}
+                        </div>
 
-                        <div className="flex w-full flex-wrap gap-2 md:w-auto">
-                            <Button variant="outline" size="sm" className="h-10 min-w-fit rounded-xl whitespace-nowrap border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10" onClick={() => void refresh()}>
-                                {t("common.refresh")}
-                            </Button>
+                        <div className="flex flex-wrap gap-2 mb-6">
                             {requestFilters.map((filter) => (
                                 <Button
                                     key={filter.key}
                                     variant={activeFilter === filter.key ? "default" : "outline"}
                                     size="sm"
-                                    className={`h-10 min-w-fit rounded-xl whitespace-nowrap ${
+                                    className={cn(
+                                        "h-9 rounded-xl px-4 text-xs font-bold uppercase tracking-widest transition-all",
                                         activeFilter === filter.key
-                                        ? "bg-amber-500/10 text-amber-200 border-amber-500/30 hover:bg-amber-500/20"
-                                        : "border-amber-200/15 bg-stone-50/5 text-stone-400 hover:bg-stone-50/10 hover:text-stone-100"
-                                    }`}
+                                        ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
+                                        : "border-stone-800 bg-stone-950/40 text-stone-500 hover:text-stone-300"
+                                    )}
                                     onClick={() => setActiveFilter(filter.key)}
                                 >
-                                    <Filter className="me-2 h-4 w-4" />
                                     {filter.label}
                                 </Button>
                             ))}
                         </div>
-                    </div>
 
-                    {loadError ? (
-                        <div className="rounded-[1.25rem] border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
-                            {loadError}
-                        </div>
-                    ) : null}
-
-                    {filteredRows.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6">
-                            <EmptyState
-                                icon={ClipboardList}
-                                title={t("requests.emptyFilteredTitle")}
-                                description={t("requests.emptyFilteredDescription")}
-                                className="bg-transparent border-0"
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {filteredRows.map((row) => {
-                                const isSelected = selectedRow?.id === row.id;
-                                const isBusy = updatingStatusId === row.id;
-                                const isCancelled = row.status === "cancelled";
-                                const canCancel = canTransitionPurchaseRequestStatus(row.status, "cancelled");
-                                const canResubmit = canResubmitPurchaseRequest(row.status);
-
-                                return (
+                        <div className="space-y-4 max-h-[50rem] overflow-y-auto pr-2 custom-scrollbar">
+                            {filteredRows.length === 0 ? (
+                                <div className="py-12 text-center text-stone-600 italic">No matching requests found.</div>
+                            ) : (
+                                filteredRows.map((row) => (
                                     <div
                                         key={row.id}
-                                        className={`w-full max-w-full min-w-0 rounded-[1.35rem] border transition-colors ${
-                                            isCancelled
-                                                ? isSelected
-                                                    ? "border-stone-600 bg-stone-800 shadow-[0_18px_46px_-36px_rgba(0,0,0,0.5)]"
-                                                    : "border-stone-800 bg-stone-900/40 opacity-80 hover:border-stone-700 hover:bg-stone-800"
-                                                : isSelected
-                                                ? "border-amber-500/35 bg-amber-500/10 shadow-[0_18px_46px_-34px_rgba(251,191,36,0.3)]"
-                                                : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
-                                        }`}
+                                        className={cn(
+                                            "w-full rounded-[1.5rem] border transition-all group overflow-hidden",
+                                            selectedRow?.id === row.id
+                                                ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-950/20"
+                                                : "border-amber-200/5 bg-stone-950/30 hover:border-amber-200/20"
+                                        )}
                                     >
                                         <button
                                             type="button"
-                                            aria-current={isSelected ? "true" : undefined}
                                             onClick={() => setSelectedRequest(row.id, true)}
-                                            className="w-full px-4 py-4 text-start"
+                                            className="w-full p-6 text-start"
                                         >
-                                            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                            <div className="min-w-0 flex-1">
-                                                <p className="whitespace-nowrap text-xs font-semibold text-stone-500">
-                                                    {row.requestNumber}
-                                                </p>
-                                                <p className="mt-2 text-base font-semibold text-stone-100 sm:truncate">
-                                                    {row.productName || t("requests.genericRequest")}
-                                                </p>
-                                                <p className="mt-1 text-sm text-stone-400 sm:truncate">{row.customer.fullName}</p>
-                                                {isCancelled ? (
-                                                    <p className="mt-2 break-words text-xs font-medium text-stone-500">
-                                                        {t("requests.dashboardActions.cancelledNotice")}
-                                                    </p>
-                                                ) : null}
+                                            <div className="flex justify-between items-start gap-4 mb-4">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{row.requestNumber}</p>
+                                                    <h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors">
+                                                        {row.productName || t("requests.genericRequest")}
+                                                    </h4>
+                                                    <p className="text-xs text-stone-500 font-medium mt-1">{row.customer.fullName}</p>
+                                                </div>
+                                                <span className={cn(
+                                                    "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
+                                                    getStatusBadgeClass(row.status)
+                                                )}>
+                                                    {t(`statuses.${row.status}`)}
+                                                </span>
                                             </div>
 
-                                            <span className={`max-w-full self-start truncate rounded-full border px-3 py-1 text-[11px] font-semibold ${getStatusBadgeClass(row.status)}`}>
-                        {t(`statuses.${row.status}`)}
-                      </span>
-                                        </div>
-
-                                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-stone-500">
-                                            <span>{t("requests.attachmentsCount", { count: row.attachments.length })}</span>
-                                            <span>•</span>
-                                            <span>{new Date(row.createdAt).toLocaleDateString(locale)}</span>
-                                        </div>
+                                            <div className="flex items-center gap-4 text-[10px] font-black text-stone-700 uppercase tracking-widest">
+                                                <span>{t("requests.attachmentsCount", { count: row.attachments.length })}</span>
+                                                <span>•</span>
+                                                <span>{new Date(row.createdAt).toLocaleDateString(locale)}</span>
+                                            </div>
                                         </button>
 
-                                        <div className="flex flex-wrap gap-2 border-t border-amber-200/10 px-4 py-3">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
+                                        <div className="flex items-center gap-2 p-3 bg-stone-900/40 border-t border-amber-200/5">
+                                             <Button
+                                                variant="ghost"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-amber-200/15 bg-stone-50/5 text-stone-100 px-2.5 text-xs whitespace-nowrap hover:bg-stone-50/10"
+                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200"
                                                 onClick={() => setSelectedRequest(row.id, true)}
                                             >
                                                 <Eye className="me-1.5 h-3.5 w-3.5" />
                                                 {actionLabels.open}
                                             </Button>
                                             <Button
-                                                type="button"
-                                                variant="outline"
+                                                variant="ghost"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-amber-500/20 bg-amber-500/10 px-2.5 text-xs text-amber-200 whitespace-nowrap hover:bg-amber-500/20"
-                                                disabled={isBusy || !canResubmit}
+                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                                                disabled={updatingStatusId === row.id || !canResubmitPurchaseRequest(row.status)}
                                                 onClick={() => void handleResubmitRequest(row)}
-                                                title={!canResubmit ? requestResubmitLabels.unavailable : undefined}
                                             >
                                                 <RotateCcw className="me-1.5 h-3.5 w-3.5" />
                                                 {requestResubmitLabels.resubmit}
                                             </Button>
-                                            {!isCancelled ? (
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-8 min-w-fit rounded-lg border-stone-700 bg-stone-800 px-2.5 text-xs text-stone-300 whitespace-nowrap hover:bg-stone-700"
-                                                    disabled={isBusy || !canCancel}
-                                                    onClick={() => void handleCancelRequest(row)}
-                                                >
-                                                    {isBusy ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
-                                                    {requestArchiveLabels.cancel}
-                                                </Button>
-                                            ) : null}
-                                            <Button
-                                                type="button"
-                                                variant="outline"
+                                             <Button
+                                                variant="ghost"
                                                 size="sm"
-                                                className="h-8 min-w-fit rounded-lg border-red-500/20 bg-red-500/10 px-2.5 text-xs text-red-200 whitespace-nowrap hover:bg-red-500/20"
-                                                disabled={isBusy}
+                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/5"
+                                                disabled={updatingStatusId === row.id}
                                                 onClick={() => void handleArchiveRequest(row)}
                                             >
                                                 <Archive className="me-1.5 h-3.5 w-3.5" />
@@ -1211,564 +1179,179 @@ export default function PurchaseRequestsPage() {
                                             </Button>
                                         </div>
                                     </div>
-                                );
-                            })}
+                                ))
+                            )}
                         </div>
-                    )}
-                </BentoCard>
+                    </BentoCard>
 
-                {selectedRow ? (
-                    <BentoCard
-                        ref={detailsPanelRef}
-                        tabIndex={-1}
-                        className={`rounded-[1.5rem] p-0 shadow-2xl backdrop-blur-xl ${
-                            selectedRow.status === "cancelled"
-                                ? "border-stone-700 bg-[linear-gradient(180deg,rgba(28,25,23,0.9),rgba(12,10,9,0.95))]"
-                                : "border-amber-200/15 bg-[linear-gradient(180deg,rgba(12,10,9,0.95),rgba(28,25,23,0.9))]"
-                        }`}
-                    >
-                        <div className="border-b border-amber-200/10 p-4 sm:p-6">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                                <div className="min-w-0">
-                                    <p className="whitespace-normal text-xs font-semibold text-amber-200/70">
-                                        {selectedRow.requestNumber}
-                                    </p>
-                                    <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-stone-100 sm:text-3xl">
-                                        {selectedRow.productName || t("requests.genericRequest")}
-                                    </h2>
-                                    <p className="mt-2 break-words text-sm text-stone-400">
-                                        {selectedRow.customer.fullName} • {selectedRow.customer.email}
-                                    </p>
-                                </div>
-
-                                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
-                                    {isInternal && selectedRow.convertedDealNumber ? (
-                                        <Button variant="outline" asChild className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                                            <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
-                                                <Eye className="me-2 h-4 w-4" />
-                                                {t("requests.openDeal")}
-                                            </Link>
-                                        </Button>
-                                    ) : null}
-
-                                    {isInternal && (
-                                        <Button
-                                            disabled={
-                                                convertingId === selectedRow.id ||
-                                                (!selectedRow.convertedDealNumber &&
-                                                    !canConvertPurchaseRequest({
-                                                        role: profile?.role,
-                                                        status: selectedRow.status,
-                                                        convertedDealNumber: selectedRow.convertedDealNumber,
-                                                    }))
-                                            }
-                                            onClick={handleConvert}
-                                            className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
-                                        >
-                                            {convertingId === selectedRow.id ? (
-                                                <>
-                                                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                                    {t("requests.converting")}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ArrowRightLeft className="me-2 h-4 w-4" />
-                                                    {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
-                                                </>
+                    <aside className="space-y-12">
+                        {selectedRow ? (
+                            <div className="space-y-12">
+                                <BentoCard className="p-8 border-amber-200/10 bg-stone-900/50">
+                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{selectedRow.requestNumber}</p>
+                                            <h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">
+                                                {selectedRow.productName || t("requests.genericRequest")}
+                                            </h3>
+                                            <p className="text-sm text-stone-500 font-medium mt-2">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            {isInternal && selectedRow.convertedDealNumber && (
+                                                <Button variant="outline" asChild className="h-10 border-stone-800 bg-stone-900/40 text-stone-200">
+                                                    <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
+                                                        <Eye className="me-2 h-4 w-4" />
+                                                        {t("requests.openDeal")}
+                                                    </Link>
+                                                </Button>
                                             )}
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap gap-2">
-                                {(() => {
-                                    return (
-                                        <span className={`max-w-full break-words rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(selectedRow.status)}`}>
-            {t(`statuses.${selectedRow.status}`)}
-        </span>
-                                    );
-                                })()}
-
-                                {selectedRow.convertedDealNumber ? (
-                                    <span className="max-w-full break-words rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-medium text-amber-200">
-                    {t("requests.linkedDeal", { deal: selectedRow.convertedDealNumber })}
-                  </span>
-                                ) : null}
-
-                                {selectedRow.isLegacyFallback ? (
-                                    <span className="max-w-full break-words rounded-full bg-stone-800 px-3 py-1 text-xs font-medium text-stone-500">
-                    {t("requests.legacy")}
-                  </span>
-                                ) : null}
-                            </div>
-
-                            {selectedRow.status === "cancelled" ? (
-                                <div className="mt-4 rounded-2xl border border-stone-700 bg-stone-800 p-4 text-sm leading-7 text-stone-300">
-                                    {t("requests.dashboardActions.cancelledNotice")}
-                                </div>
-                            ) : null}
-
-                            <div className="mt-5 grid grid-cols-1 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-                                {[
-                                    { label: t("requests.labels.requestNumber"), value: selectedRow.requestNumber },
-                                    { label: t("requests.labels.status"), value: t(`statuses.${selectedRow.status}`) },
-                                    {
-                                        label: t("requests.labels.date"),
-                                        value: new Date(selectedRow.createdAt).toLocaleString(locale),
-                                    },
-                                    {
-                                        label: t("requests.labels.customer"),
-                                        value: selectedRow.customer.fullName || t("common.notAvailable"),
-                                    },
-                                ].map((item) => (
-                                    <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 px-4 py-3">
-                                        <p className="break-words text-[11px] font-medium uppercase tracking-[0.12em] text-stone-500">
-                                            {item.label}
-                                        </p>
-                                        <p className="mt-1 break-words text-sm font-semibold text-stone-200">{item.value}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
-                            <div className="min-w-0 border-b border-amber-200/10 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
-                                <div className="space-y-5">
-                                    <div className="space-y-2">
-                                        <p className="whitespace-normal text-xs font-semibold text-amber-500">
-                                            {t("requests.intake.productTitle")}
-                                        </p>
-                                        <p className="text-sm leading-7 text-stone-400">
-                                            {selectedRow.productDescription || t("requests.noDescription")}
-                                        </p>
+                                            {isInternal && (
+                                                <Button
+                                                    disabled={convertingId === selectedRow.id || (!selectedRow.convertedDealNumber && !canConvertPurchaseRequest({ role: profile?.role, status: selectedRow.status, convertedDealNumber: selectedRow.convertedDealNumber }))}
+                                                    onClick={handleConvert}
+                                                    className="h-10 rounded-xl bg-gradient-to-r from-amber-100 to-amber-700 font-black text-stone-950 shadow-xl uppercase text-xs tracking-widest"
+                                                >
+                                                    {convertingId === selectedRow.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4 me-2" />}
+                                                    {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <p className="whitespace-normal text-xs font-semibold text-stone-500">
-                                        {t("requests.labels.details")}
-                                    </p>
-
-                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                        {[
-                                            { label: t("requests.labels.customer"), value: selectedRow.customer.fullName },
-                                            { label: t("requests.labels.email"), value: selectedRow.customer.email },
-                                            { label: t("requests.labels.phone"), value: selectedRow.customer.phone || t("requests.noPhone") },
-                                            {
-                                                label: t("requests.labels.location"),
-                                                value: `${selectedRow.customer.country || "—"} / ${selectedRow.customer.city || "—"}`,
-                                            },
-                                            { label: t("requests.labels.trackingCode"), value: selectedRow.trackingCode || "—" },
-                                            { label: t("requests.labels.quantity"), value: String(selectedRow.quantity || "—") },
-                                            { label: t("requests.labels.shipping"), value: selectedRow.preferredShippingMethod || "—" },
-                                            { label: t("requests.labels.destination"), value: selectedRow.destination || "—" },
-                                            { label: t("requests.labels.expectedDate"), value: selectedRow.expectedSupplyDate || "—" },
-                                            { label: t("requests.labels.weight"), value: selectedRow.weight || "—" },
-                                            { label: t("requests.labels.brand"), value: selectedRow.brand || "—" },
-                                            { label: t("requests.labels.qualityLevel"), value: selectedRow.qualityLevel || "—" },
-                                            { label: t("requests.labels.manufacturingCountry"), value: selectedRow.manufacturingCountry || "—" },
-                                            {
-                                                label: t("requests.labels.sourcingType"),
-                                                value: selectedRow.isFullSourcing
-                                                    ? t("requests.labels.fullSourcing")
-                                                    : t("requests.labels.shippingOnly"),
-                                            },
-                                            {
-                                                label: t("requests.labels.product"),
-                                                value: selectedRow.isReadyMade
-                                                    ? t("requests.labels.readyMade")
-                                                    : t("requests.labels.manufacturing"),
-                                            },
-                                            {
-                                                label: t("requests.labels.hasSample"),
-                                                value: selectedRow.hasPreviousSample ? t("common.yes") : t("common.no"),
-                                            },
-                                            { label: t("requests.labels.size"), value: selectedRow.sizeDimensions || "—" },
-                                            { label: t("requests.labels.material"), value: selectedRow.material || "—" },
-                                            { label: t("requests.labels.color"), value: selectedRow.color || "—" },
-                                            { label: t("requests.labels.reference"), value: selectedRow.referenceLink || t("requests.noReference") },
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                         {[
+                                            { label: t("requests.labels.location"), value: `${selectedRow.customer.country || "—"} / ${selectedRow.customer.city || "—"}` },
+                                            { label: t("requests.labels.quantity"), value: selectedRow.quantity },
+                                            { label: t("requests.labels.shipping"), value: selectedRow.preferredShippingMethod },
+                                            { label: t("requests.labels.expectedDate"), value: selectedRow.expectedSupplyDate },
                                         ].map((item) => (
-                                            <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-stone-950/40 px-4 py-3">
-                                                <p className="break-words text-xs text-stone-500">{item.label}</p>
-                                                <p className="mt-1 break-words text-sm font-medium text-stone-200">{item.value}</p>
+                                            <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
+                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{item.label}</p>
+                                                <p className="font-bold text-stone-300">{item.value || "—"}</p>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
-                                        <div className="flex items-center gap-3">
-                                            <ShieldCheck className="h-4 w-4 text-amber-500" />
-                                            <p className="font-medium text-stone-100">{t("requests.labels.technicalSpecs")}</p>
-                                        </div>
-                                        <p className="mt-3 break-words text-sm leading-7 text-stone-400">
-                                            {selectedRow.technicalSpecs || t("requests.noSpecs")}
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
-                                        <div className="flex items-center gap-3">
-                                            <FileImage className="h-4 w-4 text-amber-500" />
-                                            <p className="font-medium text-stone-100">{t("requests.labels.attachments")}</p>
-                                        </div>
-
-                                        {selectedRow.attachments.length === 0 ? (
-                                            <p className="mt-3 text-sm text-stone-500">{t("requests.noAttachments")}</p>
-                                        ) : (
-                                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                {selectedRow.attachments.map((attachment) => (
-                                                    <a
-                                                        key={attachment.id}
-                                                        href={attachment.fileUrl}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="rounded-[1.2rem] border border-amber-200/10 bg-stone-950/40 px-4 py-4 transition-colors hover:border-amber-500/25"
-                                                    >
-                                                        <p className="break-words font-medium text-stone-200">{attachment.fileName}</p>
-                                                        <p className="mt-1 text-xs text-stone-500">{attachment.category}</p>
-                                                    </a>
-                                                ))}
+                                    <DashboardSection title={t("requests.labels.details")}>
+                                        <div className="space-y-6">
+                                            <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
+                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.intake.productTitle")}</p>
+                                                <p className="text-sm text-stone-400 leading-relaxed">{selectedRow.productDescription || "No description provided."}</p>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                                            <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
+                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.labels.technicalSpecs")}</p>
+                                                <p className="text-sm text-stone-400 leading-relaxed font-mono">{selectedRow.technicalSpecs || "None."}</p>
+                                            </div>
+                                        </div>
+                                    </DashboardSection>
 
-                            {isInternal && (
-                            <div className="min-w-0 p-4 sm:p-6">
-                                    <div className="space-y-5">
-                                        {selectedRow.status === "transfer_proof_pending" && (
-                                            <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 sm:p-6">
-                                                <div className="flex items-center gap-3">
-                                                    <FileImage className="h-5 w-5 text-amber-500" />
-                                                    <h3 className="text-lg font-semibold text-stone-100">{t("requests.transferProof.title")}</h3>
-                                                </div>
-                                                <p className="mt-2 text-sm text-stone-400">{t("requests.transferProof.description")}</p>
+                                    {isInternal && (
+                                        <div className="mt-12 space-y-12">
+                                            <DashboardSection title="Action Center" icon={<Sparkles className="h-6 w-6" />}>
+                                                <div className="space-y-6">
+                                                    <SmartPurchaseRequestPanel
+                                                        request={selectedRow}
+                                                        lang={lang}
+                                                        t={t}
+                                                        clarificationDraft={clarificationDraft}
+                                                        onClarificationDraftChange={setClarificationDraft}
+                                                        clarificationBusy={clarificationBusy}
+                                                        disabled={Boolean(selectedRow.isLegacyFallback || updatingStatusId === selectedRow.id || selectedRow.convertedDealNumber)}
+                                                        onRequestClarification={() => void handleSmartClarificationRequest()}
+                                                        onMarkReady={() => void handleSmartReadyForSourcing()}
+                                                    />
 
-                                                {proofSignedUrl && (
-                                                    <div className="mt-4">
-                                                        <a
-                                                            href={proofSignedUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="inline-flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                            {selectedRow.transferProofName || t("requests.transferProof.viewProof")}
-                                                        </a>
-                                                    </div>
-                                                )}
-
-                                                <form className="mt-6 space-y-4" onSubmit={handleAcceptTransfer}>
-                                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                        <label className="space-y-1.5 text-sm">
-                                                            <span className="text-stone-500">{transferPaymentLabels.paymentType}</span>
-                                                            <select
-                                                                value={transferPaymentType}
-                                                                onChange={(event) => setTransferPaymentType(event.target.value as TransferPaymentType)}
-                                                                disabled={actingOnProof}
-                                                                className="h-10 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
-                                                            >
-                                                                <option value="first_payment" className="bg-stone-900">{transferPaymentLabels.firstPayment}</option>
-                                                                <option value="second_payment" className="bg-stone-900">{transferPaymentLabels.secondPayment}</option>
-                                                                <option value="full_payment" className="bg-stone-900">{transferPaymentLabels.fullPayment}</option>
-                                                            </select>
-                                                        </label>
-                                                        <label className="space-y-1.5 text-sm">
-                                                            <span className="text-stone-500">{transferPaymentLabels.receivedAmount}</span>
-                                                            <Input
-                                                                type="number"
-                                                                min="0"
-                                                                step="0.01"
-                                                                value={transferReceivedAmount}
-                                                                onChange={(event) => setTransferReceivedAmount(event.target.value)}
-                                                                disabled={actingOnProof}
-                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                            />
-                                                        </label>
-                                                        <label className="space-y-1.5 text-sm">
-                                                            <span className="text-stone-500">{transferPaymentLabels.currency}</span>
-                                                            <Input
-                                                                value={transferCurrency}
-                                                                onChange={(event) => setTransferCurrency(event.target.value)}
-                                                                disabled={actingOnProof}
-                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                            />
-                                                        </label>
-                                                        <label className="space-y-1.5 text-sm">
-                                                            <span className="text-stone-500">{transferPaymentLabels.paymentMethod}</span>
-                                                            <Input
-                                                                value={transferPaymentMethod}
-                                                                onChange={(event) => setTransferPaymentMethod(event.target.value)}
-                                                                disabled={actingOnProof}
-                                                                placeholder={transferPaymentLabels.bankTransfer}
-                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                            />
-                                                        </label>
-                                                        <label className="space-y-1.5 text-sm md:col-span-2">
-                                                            <span className="text-stone-500">{transferPaymentLabels.transferReferenceNumber}</span>
-                                                            <Input
-                                                                value={transferReferenceNumber}
-                                                                onChange={(event) => setTransferReferenceNumber(event.target.value)}
-                                                                disabled={actingOnProof}
-                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                            />
-                                                        </label>
-                                                        <label className="space-y-1.5 text-sm md:col-span-2">
-                                                            <span className="text-stone-500">{transferPaymentLabels.internalNote}</span>
-                                                            <Textarea
-                                                                value={transferInternalNote}
-                                                                onChange={(event) => setTransferInternalNote(event.target.value)}
-                                                                disabled={actingOnProof}
-                                                                rows={3}
-                                                                className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                            />
-                                                        </label>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                                                        <Button
-                                                            type="submit"
-                                                            disabled={actingOnProof}
-                                                            className="bg-emerald-600 text-stone-950 font-bold hover:bg-emerald-500 shadow-xl"
-                                                        >
-                                                            {actingOnProof ? (
-                                                                <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <CheckCircle2 className="me-2 h-4 w-4" />
+                                                    <BentoCard className="p-6 border-amber-200/10 bg-stone-950/40">
+                                                        <div className="flex items-center justify-between mb-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                                    <Sparkles className="h-4 w-4" />
+                                                                </div>
+                                                                <h4 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{t("requests.ai.title")}</h4>
+                                                            </div>
+                                                            {aiOutput && (
+                                                                <Button variant="ghost" size="sm" onClick={() => void handleCopyAiOutput()} className="text-stone-500 hover:text-amber-200">
+                                                                    <Copy className="h-4 w-4" />
+                                                                </Button>
                                                             )}
-                                                            {transferPaymentLabels.acceptAndRecord}
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            onClick={handleRejectTransfer}
-                                                            disabled={actingOnProof}
-                                                            className="border-red-500/50 text-red-400 hover:bg-red-500/10"
-                                                        >
-                                                            <MessageSquareWarning className="me-2 h-4 w-4" />
-                                                            {t("requests.actions.rejectTransfer")}
-                                                        </Button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        )}
-
-                                        {selectedRow.status === "transfer_proof_rejected" && (
-                                            <div className="rounded-[1.35rem] border border-red-500/20 bg-red-500/10 p-4 text-red-100 sm:p-6">
-                                                <p className="font-bold">{t("requests.transferProof.rejected")}</p>
-                                                <p className="mt-1 break-words text-sm">
-                                                    {t("requests.transferProof.rejectionReason")} {selectedRow.transferRejectionReason}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        <div className="rounded-[1.35rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
-                                            {t("requests.reviewPanel")}
-                                        </div>
-
-                                        <SmartPurchaseRequestPanel
-                                            request={selectedRow}
-                                            lang={lang}
-                                            t={t}
-                                            clarificationDraft={clarificationDraft}
-                                            onClarificationDraftChange={setClarificationDraft}
-                                            clarificationBusy={clarificationBusy}
-                                            disabled={Boolean(
-                                                selectedRow.isLegacyFallback ||
-                                                    updatingStatusId === selectedRow.id ||
-                                                    selectedRow.convertedDealNumber,
-                                            )}
-                                            onRequestClarification={() => void handleSmartClarificationRequest()}
-                                            onMarkReady={() => void handleSmartReadyForSourcing()}
-                                        />
-
-                                        <OfficialOrderConversationBox
-                                            requestId={selectedRow.id}
-                                            requestNumber={selectedRow.requestNumber}
-                                            dealId={selectedRow.convertedDealId}
-                                            customerId={selectedRow.customer.id}
-                                            status={selectedRow.status}
-                                            role="admin"
-                                            assignedAdminId={profile?.id}
-                                        />
-
-                                        <OrderFollowupTimeline
-                                            requestId={selectedRow.id}
-                                            dealId={selectedRow.convertedDealId}
-                                            customerId={selectedRow.customer.id}
-                                            mode="admin"
-                                        />
-
-                                        <div className="rounded-[1.35rem] border border-amber-200/15 bg-stone-950/40 p-4 shadow-2xl backdrop-blur-xl">
-                                            <div className="flex flex-wrap items-start justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <div className="flex min-w-0 items-center gap-2">
-                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-200">
-                                                            <Sparkles className="h-4 w-4" />
-                                                        </span>
-                                                        <div>
-                                                            <p className="text-xs uppercase tracking-[0.18em] text-amber-200">
-                                                                {t("requests.ai.title")}
-                                                            </p>
-                                                            <p className="mt-1 break-words text-xs leading-6 text-stone-500">
-                                                                {t("requests.ai.description")}
-                                                            </p>
                                                         </div>
-                                                    </div>
-                                                </div>
 
-                                                {aiOutput ? (
-                                                    <Button variant="outline" size="sm" onClick={() => void handleCopyAiOutput()} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                                                        <Copy className="me-2 h-4 w-4" />
-                                                        {t("requests.ai.copy")}
-                                                    </Button>
-                                                ) : null}
-                                            </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
+                                                            {purchaseRequestAiActions.map((action) => (
+                                                                <Button
+                                                                    key={action.mode}
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="justify-start h-9 border-stone-800 bg-stone-900/40 text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200 hover:border-amber-200/20"
+                                                                    disabled={Boolean(aiActionLoading)}
+                                                                    onClick={() => void handleAiAction(action.mode)}
+                                                                >
+                                                                    {aiActionLoading === action.mode ? <Loader2 className="h-3 w-3 animate-spin me-2" /> : <Sparkles className="h-3 w-3 me-2" />}
+                                                                    {lang === "ar" ? action.labelAr : action.label}
+                                                                </Button>
+                                                            ))}
+                                                        </div>
 
-                                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                                                {purchaseRequestAiActions.map((action) => {
-                                                    const isLoading = aiActionLoading === action.mode;
-
-                                                    return (
-                                                        <Button
-                                                            key={action.mode}
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="justify-start border-amber-200/10 bg-stone-900/30 text-start text-stone-300 hover:border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-100"
-                                                            disabled={Boolean(aiActionLoading)}
-                                                            onClick={() => void handleAiAction(action.mode)}
-                                                        >
-                                                            {isLoading ? (
-                                                                <Loader2 className="me-2 h-4 w-4 shrink-0 animate-spin text-amber-500" />
-                                                            ) : (
-                                                                <Sparkles className="me-2 h-4 w-4 shrink-0 text-amber-500" />
-                                                            )}
-                                                        <span className="min-w-0 break-words sm:truncate">
-                                                                {lang === "ar" ? action.labelAr : action.label}
-                                                            </span>
-                                                        </Button>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {aiUsedFallback ? (
-                                                <div className="mt-4 rounded-[1rem] border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-6 text-amber-200">
-                                                    {t("requests.ai.unavailable")}
-                                                </div>
-                                            ) : null}
-
-                                            {aiOutput ? (
-                                                <div className="mt-4 rounded-[1rem] border border-amber-200/15 bg-stone-950/40 p-4">
-                                                    <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                        <p className="break-words text-sm font-semibold text-amber-200">{aiOutputTitle}</p>
-                                                        <span className="max-w-full self-start break-words rounded-full border border-amber-200/10 px-2.5 py-1 text-[11px] text-stone-500">
-                                                            {t("requests.ai.advisory")}
-                                                        </span>
-                                                    </div>
-                                                    <pre className="max-h-[24rem] whitespace-pre-wrap break-words font-sans text-sm leading-7 text-stone-300">{aiOutput}</pre>
-                                                </div>
-                                            ) : null}
-                                        </div>
-
-                                        <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
-                                            <div className="flex items-center gap-3">
-                                                <StickyNote className="h-4 w-4 text-amber-500" />
-                                                <p className="font-medium text-stone-100">{t("requests.labels.internalNotes")}</p>
-                                            </div>
-
-                                            <Textarea
-                                                rows={8}
-                                                value={internalNotesDraft}
-                                                onChange={(event) => setInternalNotesDraft(event.target.value)}
-                                                className="mt-4 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
-                                                placeholder={t("requests.notesPlaceholder")}
-                                            />
-
-                                            <Button
-                                                className="mt-4 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
-                                                variant="outline"
-                                                onClick={handleSaveNotes}
-                                                disabled={savingNotesId === selectedRow.id}
-                                            >
-                                                {savingNotesId === selectedRow.id ? (
-                                                    <>
-                                                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                                                        {t("requests.savingNotes")}
-                                                    </>
-                                                ) : (
-                                                    t("requests.saveNotes")
-                                                )}
-                                            </Button>
-                                        </div>
-
-                                        {!selectedRow.convertedDealNumber ? (
-                                            <div className="grid gap-3">
-                                                {statusActions.map((action) => (
-                                                    <Button
-                                                        key={action.value}
-                                                        variant={selectedRow.status === action.value ? "default" : "outline"}
-                                                        disabled={
-                                                            updatingStatusId === selectedRow.id ||
-                                                            selectedRow.status === action.value ||
-                                                            Boolean(selectedRow.isLegacyFallback) ||
-                                                            !canTransitionPurchaseRequestStatus(selectedRow.status, action.value)
-                                                        }
-                                                        onClick={() => handleStatusUpdate(selectedRow.id, action.value)}
-                                                        className={selectedRow.status === action.value
-                                                            ? "bg-amber-500/20 text-amber-200 border-amber-500/30 hover:bg-amber-500/30"
-                                                            : "border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
-                                                        }
-                                                    >
-                                                        {updatingStatusId === selectedRow.id && selectedRow.status !== action.value ? (
-                                                            <Loader2 className="me-2 h-4 w-4 animate-spin text-amber-500" />
-                                                        ) : action.value === "ready_for_conversion" ? (
-                                                            <CheckCircle2 className="me-2 h-4 w-4 text-amber-500" />
-                                                        ) : (
-                                                            <MessageSquareWarning className="me-2 h-4 w-4 text-amber-500" />
+                                                        {aiOutput && (
+                                                            <div className="p-4 rounded-2xl bg-stone-900/60 border border-amber-200/5 animate-in fade-in slide-in-from-top-2">
+                                                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">{aiOutputTitle}</p>
+                                                                <pre className="font-sans text-xs text-stone-400 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">{aiOutput}</pre>
+                                                            </div>
                                                         )}
-                                                        {action.label}
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="rounded-[1.25rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-7 text-emerald-100">
-                                                {t("requests.convertedHint")}
-                                            </div>
-                                        )}
+                                                    </BentoCard>
 
-                                        <div className="rounded-[1.25rem] border border-amber-200/10 bg-stone-900/50 p-4 text-sm">
-                                            <div className="flex items-center gap-3">
-                                                <ShieldCheck className="h-4 w-4 text-amber-500" />
-                                                <p className="font-medium text-stone-100">{t("requests.labels.reviewHistory")}</p>
-                                            </div>
+                                                    <div className="space-y-4">
+                                                        <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("requests.labels.internalNotes")}</Label>
+                                                        <Textarea
+                                                            rows={6}
+                                                            value={internalNotesDraft}
+                                                            onChange={(event) => setInternalNotesDraft(event.target.value)}
+                                                            className="bg-stone-950/40 border-amber-200/10 text-stone-100 text-sm"
+                                                            placeholder={t("requests.notesPlaceholder")}
+                                                        />
+                                                        <Button
+                                                            variant="outline"
+                                                            className="w-full h-11 border-stone-800 bg-stone-900/40 text-stone-300 font-bold uppercase tracking-widest text-[10px]"
+                                                            onClick={handleSaveNotes}
+                                                            disabled={savingNotesId === selectedRow.id}
+                                                        >
+                                                            {savingNotesId === selectedRow.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("requests.saveNotes")}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </DashboardSection>
 
-                                            <p className="mt-2 text-stone-500">
-                                                {t("requests.receivedAt", {
-                                                    value: new Date(selectedRow.createdAt).toLocaleString(locale),
-                                                })}
-                                            </p>
-
-                                            <p className="mt-1 text-stone-500">
-                                                {selectedRow.reviewedAt
-                                                    ? t("requests.reviewedAt", {
-                                                        value: new Date(selectedRow.reviewedAt).toLocaleString(locale),
-                                                    })
-                                                    : t("requests.noReviewYet")}
-                                            </p>
+                                            <DashboardSection title="Communication Node">
+                                                <div className="space-y-6">
+                                                    <OfficialOrderConversationBox
+                                                        requestId={selectedRow.id}
+                                                        requestNumber={selectedRow.requestNumber}
+                                                        dealId={selectedRow.convertedDealId}
+                                                        customerId={selectedRow.customer.id}
+                                                        status={selectedRow.status}
+                                                        role="admin"
+                                                        assignedAdminId={profile?.id}
+                                                    />
+                                                    <OrderFollowupTimeline
+                                                        requestId={selectedRow.id}
+                                                        dealId={selectedRow.convertedDealId}
+                                                        customerId={selectedRow.customer.id}
+                                                        mode="admin"
+                                                    />
+                                                </div>
+                                            </DashboardSection>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </BentoCard>
-                ) : (
-                    <EmptyState
-                        icon={ClipboardList}
-                        title={t("requests.emptyFilteredTitle")}
-                        description={t("requests.emptyFilteredDescription")}
-                    />
-                )}
-            </div>
-        </div>
+                                    )}
+                                </BentoCard>
+                            </div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center p-12 rounded-[2rem] bg-stone-900/20 border border-dashed border-stone-800">
+                                <p className="text-stone-600 font-medium italic">Select a request to view its architectural details.</p>
+                            </div>
+                        )}
+                    </aside>
+                </DashboardGrid>
+            </DashboardSection>
+        </DashboardPageShell>
     );
 }
