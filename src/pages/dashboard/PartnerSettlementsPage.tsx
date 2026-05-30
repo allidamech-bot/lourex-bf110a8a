@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, CircleDollarSign, RefreshCcw, Scale, ShieldAlert, Wallet, TrendingUp, TrendingDown, History } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, CircleDollarSign, RefreshCw, Scale, ShieldAlert, Wallet, TrendingUp, TrendingDown, History } from "lucide-react";
 import { toast } from "sonner";
 
 import BentoCard from "@/components/BentoCard";
