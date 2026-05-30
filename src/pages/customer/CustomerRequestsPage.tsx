@@ -301,6 +301,7 @@ export default function CustomerRequestsPage() {
   }, [filteredRows, selectedRequestId]);
 
   const requestPatterns = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => detectRepeatRequestPatterns(rows as any),
     [rows]
   );

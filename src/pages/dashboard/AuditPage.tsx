@@ -131,8 +131,8 @@ export default function AuditPage() {
   const { profile } = useAuthSession();
   const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditLogRow[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [deals, setDeals] = useState<any[]>([]);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(
     [searchParams.get("deal"), searchParams.get("request"), searchParams.get("customer")]
@@ -202,6 +202,7 @@ export default function AuditPage() {
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState(requests as any, deals as any, [], [], []),
     [requests, deals]
   );

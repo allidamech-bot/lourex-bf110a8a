@@ -66,16 +66,19 @@ export interface PartnerCommunicationInsight {
   nextCheckIn: string;
 }
 
+type PartnerItem = Record<string, unknown> & { turkishPartnerName?: string; saudiPartnerName?: string; partnerName?: string; supplierName?: string; brokerName?: string; assignedPartner?: string };
+type ShipmentItem = PartnerItem & { id?: string; stage?: string; updatedAt?: string; dealNumber?: string };
+
 const FALLBACK_PARTNER = "Primary Partner";
 
-const getPartnerName = (item: any): string => {
+const getPartnerName = (item: PartnerItem): string => {
   return item.turkishPartnerName || item.saudiPartnerName || item.partnerName || item.supplierName || item.brokerName || item.assignedPartner || FALLBACK_PARTNER;
 };
 
 export const generatePartnerProfiles = (
   requests: PurchaseRequest[],
   deals: DealOperation[],
-  shipments: any[],
+  shipments: ShipmentItem[],
   settlements: PartnerSettlement[]
 ): PartnerProfile[] => {
   const safeRequests = Array.isArray(requests) ? requests : [];
@@ -167,7 +170,7 @@ export const calculatePartnerResponsibilityScore = (partner: Partial<PartnerProf
 export const generatePartnerTaskQueue = (
   partnerId: string,
   deals: DealOperation[],
-  shipments: any[],
+  shipments: ShipmentItem[],
   settlements: PartnerSettlement[]
 ): PartnerTask[] => {
   const safeDeals = Array.isArray(deals) ? deals : [];
@@ -220,7 +223,7 @@ export const generatePartnerTaskQueue = (
 
 export const generatePartnerShipmentInsights = (
   partnerId: string,
-  shipments: any[]
+  shipments: ShipmentItem[]
 ): PartnerShipmentInsight[] => {
   const safeShipments = Array.isArray(shipments) ? shipments : [];
   return safeShipments
@@ -262,7 +265,7 @@ export const generatePartnerSettlementInsights = (
 export const detectPartnerBottlenecks = (
   partnerId: string,
   deals: DealOperation[],
-  shipments: any[]
+  shipments: ShipmentItem[]
 ): PartnerBottleneck[] => {
   const safeShipments = Array.isArray(shipments) ? shipments : [];
   const bottlenecks: PartnerBottleneck[] = [];

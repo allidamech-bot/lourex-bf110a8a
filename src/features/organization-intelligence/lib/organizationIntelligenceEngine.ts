@@ -77,14 +77,16 @@ export interface ExecutiveSummary {
 const FALLBACK_BRANCH = "Main Branch";
 const FALLBACK_REGION = "General Operations";
 
-const getBranchName = (item: any): string => {
+type OperationalItem = Record<string, unknown> & { turkishPartnerName?: string; saudiPartnerName?: string; destination?: string; customer?: { country?: string } };
+
+const getBranchName = (item: OperationalItem): string => {
   if (item.turkishPartnerName) return item.turkishPartnerName;
   if (item.saudiPartnerName) return item.saudiPartnerName;
   if (item.destination) return `${item.destination} Operations`;
   return FALLBACK_BRANCH;
 };
 
-const getRegionName = (item: any): string => {
+const getRegionName = (item: OperationalItem): string => {
   if (item.destination) return item.destination;
   if (item.customer?.country) return item.customer.country;
   return FALLBACK_REGION;

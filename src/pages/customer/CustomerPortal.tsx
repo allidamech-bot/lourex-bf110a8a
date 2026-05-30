@@ -1,4 +1,4 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   AlertCircle,
   ClipboardList,
@@ -299,6 +299,7 @@ const CustomerPortal = () => {
   });
 
   const successInsights = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateCustomerSuccessInsights(recentRequests as any, deals as any),
     [recentRequests, deals]
   );

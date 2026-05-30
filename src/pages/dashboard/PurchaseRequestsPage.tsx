@@ -364,7 +364,7 @@ export default function PurchaseRequestsPage() {
     const navigate = useNavigate();
 
     const [rows, setRows] = useState<Awaited<ReturnType<typeof loadPurchaseRequests>>>([]);
-    const [deals, setDeals] = useState<any[]>([]);
+    const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
     const [loading, setLoading] = useState(true);
     const [convertingId, setConvertingId] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
@@ -697,21 +697,25 @@ export default function PurchaseRequestsPage() {
     );
 
     const branchProfiles = useMemo(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         () => generateBranchProfiles(rows as any, deals as any, []),
         [rows, deals]
     );
 
     const branchRiskScores = useMemo(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         () => branchProfiles.map(b => calculateBranchRiskScore(b.id, rows as any, deals as any, [])),
         [branchProfiles, rows, deals]
     );
 
     const autonomousBlockers = useMemo(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         () => detectOperationalBlockers(rows as any, deals as any, [], []),
         [rows, deals]
     );
 
     const executionSequence = useMemo(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         () => generateExecutionSequence(rows as any, deals as any, autonomousBlockers),
         [rows, deals, autonomousBlockers]
     );

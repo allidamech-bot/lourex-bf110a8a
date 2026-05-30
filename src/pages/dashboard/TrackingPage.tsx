@@ -171,9 +171,9 @@ export default function TrackingPage() {
   const isSaudiPartner = profile?.role === "saudi_partner";
   const isPartnerWorkspace = isTurkishPartner || isSaudiPartner;
   const [rows, setRows] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [deals, setDeals] = useState<any[]>([]);
-  const [settlements, setSettlements] = useState<any[]>([]);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
+  const [settlements, setSettlements] = useState<Awaited<ReturnType<typeof loadPartnerSettlements>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -270,6 +270,7 @@ export default function TrackingPage() {
   );
 
   const workflowDependencies = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => detectWorkflowDependencies(requests as any, deals as any),
     [requests, deals]
   );
@@ -280,6 +281,7 @@ export default function TrackingPage() {
   );
 
   const partnerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generatePartnerProfiles(requests as any, deals as any, rows, settlements),
     [requests, deals, rows, settlements]
   );
@@ -295,6 +297,7 @@ export default function TrackingPage() {
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState(requests as any, deals as any, [], settlements as any, []),
     [requests, deals, settlements]
   );

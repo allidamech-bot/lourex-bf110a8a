@@ -153,7 +153,7 @@ export const CustomerRequestDetailProView = ({
   locale,
 }: {
   request: OperationsRequest;
-  shipment?: any; // Using any for quick integration with OperationsShipment
+  shipment?: Record<string, unknown>; // Opaque shipment record for display integration
   paymentSummary?: CustomerPaymentSummary;
   locale: string;
 }) => {

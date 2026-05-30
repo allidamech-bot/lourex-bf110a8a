@@ -1,7 +1,10 @@
 export type Priority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type Escalation = "NORMAL" | "ATTENTION" | "HIGH" | "CRITICAL";
 
-export const calculateNotificationPriority = (type: string, data: any): Priority => {
+type NotificationData = Record<string, unknown>;
+type NotificationRecord = { priority?: string; [key: string]: unknown };
+
+export const calculateNotificationPriority = (type: string, data: NotificationData): Priority => {
   if (type === "shipment_delayed" || type === "finance_action_required") return "CRITICAL";
   if (type === "overdue_settlement") return "HIGH";
   if (type === "missing_document") return "MEDIUM";
@@ -31,7 +34,7 @@ export const generateSuggestedAction = (type: string): string => {
   return "Monitor status.";
 };
 
-export const generateDigestSummary = (notifications: any[]) => ({
+export const generateDigestSummary = (notifications: NotificationRecord[]) => ({
   count: notifications.length,
   criticalCount: notifications.filter(n => n.priority === "CRITICAL").length
 });

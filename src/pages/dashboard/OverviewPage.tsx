@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -286,11 +286,13 @@ export default function OverviewPage() {
   );
 
   const autonomousPlan = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateAutonomousOperationsPlan(requests as any, deals as any, financialEntries as any, editRequests as any),
     [requests, deals, financialEntries, editRequests]
   );
 
   const operationalMomentum = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => analyzeOperationalMomentum(requests as any, deals as any, autonomousPlan.blockers),
     [requests, deals, autonomousPlan.blockers]
   );
@@ -301,11 +303,13 @@ export default function OverviewPage() {
   );
 
   const partnerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generatePartnerProfiles(requests as any, deals as any, shipments as any, settlements as any),
     [requests, deals, shipments, settlements]
   );
 
   const customerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateCustomerProfiles(requests as any, deals as any, financialEntries as any),
     [requests, deals, financialEntries]
   );
@@ -316,6 +320,7 @@ export default function OverviewPage() {
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState(requests as any, deals as any, financialEntries as any, settlements as any, editRequests as any),
     [requests, deals, financialEntries, settlements, editRequests]
   );

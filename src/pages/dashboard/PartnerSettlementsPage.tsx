@@ -64,9 +64,9 @@ export default function PartnerSettlementsPage() {
   const canManage = profile?.role ? canManageAccounting(profile.role) : false;
   const [settlements, setSettlements] = useState<Awaited<ReturnType<typeof loadPartnerSettlements>>>([]);
   const [partners, setPartners] = useState<PartnerProfile[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [deals, setDeals] = useState<any[]>([]);
-  const [shipments, setShipments] = useState<any[]>([]);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
+  const [shipments, setShipments] = useState<Awaited<ReturnType<typeof loadShipments>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [partnerId, setPartnerId] = useState("");
@@ -169,10 +169,12 @@ export default function PartnerSettlementsPage() {
       ...deals.map(d => d.saudiPartnerName)
     ])).filter(Boolean) as string[];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return uniqueOwners.slice(0, 5).map(owner => generateOwnershipAccountabilityInsights(owner, requests as any, deals as any));
   }, [requests, deals]);
 
   const autonomousBlockers = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => detectOperationalBlockers(requests as any, deals as any, [], []),
     [requests, deals]
   );
@@ -183,6 +185,7 @@ export default function PartnerSettlementsPage() {
   );
 
   const partnerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generatePartnerProfiles(requests as any, deals as any, shipments, settlements as any),
     [requests, deals, shipments, settlements]
   );
@@ -193,16 +196,19 @@ export default function PartnerSettlementsPage() {
   );
 
   const partnerSettlementInsight = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => activePartnerProfile ? generatePartnerSettlementInsights(activePartnerProfile.id, settlements as any) : null,
     [activePartnerProfile, settlements]
   );
 
   const partnerTasks = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => activePartnerProfile ? generatePartnerTaskQueue(activePartnerProfile.id, deals as any, shipments, settlements as any) : [],
     [activePartnerProfile, deals, shipments, settlements]
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState(requests as any, deals as any, [], settlements as any, []),
     [requests, deals, settlements]
   );

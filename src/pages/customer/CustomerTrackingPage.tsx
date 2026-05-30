@@ -251,6 +251,7 @@ export default function CustomerTrackingPage() {
   const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
 
   const successInsights = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateCustomerSuccessInsights([], rows as any),
     [rows]
   );

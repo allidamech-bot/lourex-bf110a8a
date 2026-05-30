@@ -147,7 +147,7 @@ export const SharedAccountPanel = ({
     };
 
     void load();
-  }, []);
+  }, [t]);
 
   const canDelete = useMemo(() => deleteConfirm === "DELETE", [deleteConfirm]);
 

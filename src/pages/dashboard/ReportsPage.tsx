@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
@@ -78,8 +78,8 @@ export default function ReportsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [snapshot, setSnapshot] = useState<DashboardReportSnapshot | null>(null);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [deals, setDeals] = useState<any[]>([]);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof fetchRequests>>>([]);
+  const [deals, setDeals] = useState<Awaited<ReturnType<typeof fetchDeals>>>([]);
   const [drillDownData, setDrillDownData] = useState<{ type: string; items: DrillDownItem[] } | null>(null);
   const [loadError, setLoadError] = useState("");
   const [executiveRefreshKey, setExecutiveRefreshKey] = useState(0);
@@ -87,7 +87,7 @@ export default function ReportsPage() {
   const rangeStart = useMemo(() => getRangeStart(range, customStart), [range, customStart]);
   const rangeEnd = useMemo(() => (range === "custom" && customEnd ? new Date(customEnd) : new Date()), [range, customEnd]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setLoadError("");
 
@@ -110,15 +110,15 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [rangeStart, rangeEnd, t]);
 
   useEffect(() => {
     void refresh();
-  }, [rangeStart, rangeEnd, t]);
+  }, [refresh]);
 
   const executiveReport = useMemo(
     () => (snapshot ? buildExecutiveReportAdvisor(snapshot, lang === "ar" ? "ar" : "en") : null),
-    [executiveRefreshKey, lang, snapshot],
+    [lang, snapshot],
   );
 
   const regionalSummary = useMemo(
@@ -150,11 +150,13 @@ export default function ReportsPage() {
   );
 
   const customerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateCustomerProfiles(requests as any, deals as any, []),
     [requests, deals]
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState(requests as any, deals as any, [], [], []),
     [requests, deals]
   );

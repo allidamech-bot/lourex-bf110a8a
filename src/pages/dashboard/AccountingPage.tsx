@@ -110,7 +110,7 @@ export default function AccountingPage() {
   const [entries, setEntries] = useState<Awaited<ReturnType<typeof loadFinancialEntries>>>([]);
   const [editRequests, setEditRequests] = useState<Awaited<ReturnType<typeof loadFinancialEditRequests>>>([]);
   const [deals, setDeals] = useState<Awaited<ReturnType<typeof loadDeals>>>([]);
-  const [settlements, setSettlements] = useState<any[]>([]);
+  const [settlements, setSettlements] = useState<Awaited<ReturnType<typeof loadPartnerSettlements>>>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -250,16 +250,19 @@ export default function AccountingPage() {
   );
 
   const branchProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateBranchProfiles([], deals as any, entries as any),
     [deals, entries]
   );
 
   const branchFinancialSummaries = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => branchProfiles.map(b => generateBranchFinancialSummary(b.id, entries as any, settlements as any)),
     [branchProfiles, entries, settlements]
   );
 
   const autonomousBlockers = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => detectOperationalBlockers([], deals as any, entries as any, editRequests as any),
     [deals, entries, editRequests]
   );
@@ -270,6 +273,7 @@ export default function AccountingPage() {
   );
 
   const partnerProfiles = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generatePartnerProfiles([], deals as any, [], entries as any),
     [deals, entries]
   );
@@ -281,6 +285,7 @@ export default function AccountingPage() {
   );
 
   const executiveWorkspaceState = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => generateExecutiveWorkspaceState([], deals as any, entries as any, settlements as any, editRequests as any),
     [deals, entries, settlements, editRequests]
   );
