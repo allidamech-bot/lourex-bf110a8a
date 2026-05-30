@@ -43,6 +43,7 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { canManageAccounting } from "@/features/auth/rbac";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
+import { cn } from "@/lib/utils";
 
 type FinanceAiContext = {
   focusDeal: string | null;
