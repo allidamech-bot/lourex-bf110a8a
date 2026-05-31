@@ -15,7 +15,8 @@ import {
   SlidersHorizontal,
   Users,
 } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { dashboardRoutePermissions } from "@/features/auth/rbac";
@@ -27,11 +28,36 @@ import { SidebarNavBadge } from "./SidebarNavBadge";
 export const DashboardLayout = () => {
   const { profile } = useAuthSession();
   const { t, lang } = useI18n();
+  const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
   const workspaceTitle = profile ? getWorkspaceTitle(profile, t) : t("identity.workspaces.operations_employee.title");
   const workspaceDescription = profile ? getWorkspaceDescription(profile, t) : "";
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : t("identity.labels.role");
   const entityLabel = profile ? getEntityLabel(profile, t) : null;
   const alertSummary = useSidebarAlertSummary();
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const timer = setTimeout(() => {
+      const activeItem = nav.querySelector('.active-nav-item');
+      const badgedItems = nav.querySelectorAll('.badged-nav-item');
+      
+      let targetEl = activeItem;
+      if (activeItem && activeItem.classList.contains('badged-nav-item')) {
+        targetEl = activeItem;
+      } else if (badgedItems.length > 0) {
+        targetEl = badgedItems[0];
+      }
+
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname, alertSummary]);
 
   const dashboardLinks = [
     { to: "/dashboard", label: t("dashboardNav.overview"), icon: LayoutDashboard, end: true, roles: dashboardRoutePermissions.overview },
@@ -102,18 +128,18 @@ export const DashboardLayout = () => {
               </div>
             </div>
 
-            <nav className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1 xl:overflow-visible xl:pb-0" aria-label={t("nav.dashboardNavigation")}>
+            <nav ref={navRef} className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1 xl:overflow-visible xl:pb-0 scroll-smooth" aria-label={t("nav.dashboardNavigation")}>
               {visibleLinks.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   end={link.end}
                   className={({ isActive }) =>
-                    `flex min-w-fit items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 xl:min-w-0 ${
+                    `flex min-w-fit items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 xl:min-w-0 nav-item ${
                       isActive
-                        ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20 shadow-lg shadow-black/20"
+                        ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20 shadow-lg shadow-black/20 active-nav-item"
                         : "text-stone-400 hover:bg-stone-800/70 hover:text-stone-100"
-                    }`
+                    } ${link.badge ? 'badged-nav-item' : ''}`
                   }
                 >
                   <link.icon className="h-4 w-4 shrink-0" />
