@@ -21,6 +21,8 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { dashboardRoutePermissions } from "@/features/auth/rbac";
 import { getEntityLabel, getRoleDisplayName, getWorkspaceDescription, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
+import { useSidebarAlertSummary } from "./useSidebarAlertSummary";
+import { SidebarNavBadge } from "./SidebarNavBadge";
 
 export const DashboardLayout = () => {
   const { profile } = useAuthSession();
@@ -29,27 +31,29 @@ export const DashboardLayout = () => {
   const workspaceDescription = profile ? getWorkspaceDescription(profile, t) : "";
   const roleLabel = profile ? getRoleDisplayName(profile.role, t) : t("identity.labels.role");
   const entityLabel = profile ? getEntityLabel(profile, t) : null;
+  const alertSummary = useSidebarAlertSummary();
 
   const dashboardLinks = [
     { to: "/dashboard", label: t("dashboardNav.overview"), icon: LayoutDashboard, end: true, roles: dashboardRoutePermissions.overview },
     { to: "/dashboard/predictive-intelligence", label: lang === "ar" ? "الذكاء التنبؤي" : "Predictive Intelligence", icon: BrainCircuit, roles: dashboardRoutePermissions.predictiveIntelligence },
-    { to: "/dashboard/requests", label: t("dashboardNav.requests"), icon: ClipboardList, roles: dashboardRoutePermissions.requests },
+    { to: "/dashboard/requests", label: t("dashboardNav.requests"), icon: ClipboardList, roles: dashboardRoutePermissions.requests, badge: alertSummary.purchaseRequests },
     { to: "/dashboard/products", label: lang === "ar" ? "المنتجات" : "Products", icon: Boxes, roles: dashboardRoutePermissions.products },
     { to: "/dashboard/customers", label: t("dashboardNav.customers"), icon: Users, roles: dashboardRoutePermissions.customers },
-    { to: "/dashboard/deals", label: t("dashboardNav.deals"), icon: PackageSearch, roles: dashboardRoutePermissions.deals },
-    { to: "/dashboard/tracking", label: t("dashboardNav.tracking"), icon: Files, roles: dashboardRoutePermissions.tracking },
-    { to: "/dashboard/accounting", label: t("dashboardNav.accounting"), icon: Receipt, roles: dashboardRoutePermissions.accounting },
-    { to: "/dashboard/edit-requests", label: t("dashboardNav.editRequests"), icon: FilePenLine, roles: dashboardRoutePermissions.editRequests },
-    { to: "/dashboard/settlements", label: t("dashboardNav.settlements"), icon: Scale, roles: dashboardRoutePermissions.settlements },
+    { to: "/dashboard/deals", label: t("dashboardNav.deals"), icon: PackageSearch, roles: dashboardRoutePermissions.deals, badge: alertSummary.deals },
+    { to: "/dashboard/tracking", label: t("dashboardNav.tracking"), icon: Files, roles: dashboardRoutePermissions.tracking, badge: alertSummary.tracking },
+    { to: "/dashboard/accounting", label: t("dashboardNav.accounting"), icon: Receipt, roles: dashboardRoutePermissions.accounting, badge: alertSummary.accounting },
+    { to: "/dashboard/edit-requests", label: t("dashboardNav.editRequests"), icon: FilePenLine, roles: dashboardRoutePermissions.editRequests, badge: alertSummary.editRequests },
+    { to: "/dashboard/settlements", label: t("dashboardNav.settlements"), icon: Scale, roles: dashboardRoutePermissions.settlements, badge: alertSummary.settlements },
     { to: "/dashboard/audit", label: t("dashboardNav.audit"), icon: ShieldCheck, roles: dashboardRoutePermissions.audit },
     { to: "/dashboard/reports", label: t("dashboardNav.reports"), icon: BarChart3, roles: dashboardRoutePermissions.reports },
-    { to: "/dashboard/notifications", label: lang === "ar" ? "الإشعارات" : "Notifications", icon: BellRing, roles: dashboardRoutePermissions.system },
-    { to: "/dashboard/system", label: t("dashboardNav.system"), icon: SlidersHorizontal, roles: dashboardRoutePermissions.system },
+    { to: "/dashboard/notifications", label: lang === "ar" ? "الإشعارات" : "Notifications", icon: BellRing, roles: dashboardRoutePermissions.system, badge: alertSummary.notifications },
+    { to: "/dashboard/system", label: t("dashboardNav.system"), icon: SlidersHorizontal, roles: dashboardRoutePermissions.system, badge: alertSummary.system },
     {
       to: "/dashboard/health",
       label: lang === "ar" ? "الصحة والجاهزية" : "Health & Readiness",
       icon: Activity,
-      roles: dashboardRoutePermissions.system
+      roles: dashboardRoutePermissions.system,
+      badge: alertSummary.system
     },
   ];
 
@@ -114,6 +118,13 @@ export const DashboardLayout = () => {
                 >
                   <link.icon className="h-4 w-4 shrink-0" />
                   <span className="whitespace-nowrap xl:truncate">{link.label}</span>
+                  {link.badge && (
+                    <SidebarNavBadge
+                      count={link.badge.count}
+                      severity={link.badge.severity}
+                      pulse={link.badge.severity === "critical"}
+                    />
+                  )}
                 </NavLink>
               ))}
             </nav>
