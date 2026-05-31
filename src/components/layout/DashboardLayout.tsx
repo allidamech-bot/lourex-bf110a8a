@@ -117,7 +117,7 @@ export const DashboardLayout = () => {
                   }
                 >
                   <link.icon className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap xl:truncate">{link.label}</span>
+                  <span className="min-w-0 whitespace-nowrap xl:truncate">{link.label}</span>
                   {link.badge && (
                     <SidebarNavBadge
                       count={link.badge.count}
