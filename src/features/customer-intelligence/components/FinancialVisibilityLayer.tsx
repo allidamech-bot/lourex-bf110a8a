@@ -18,7 +18,7 @@ export const FinancialVisibilityLayer = ({
   paymentProofStatus,
   completionState,
 }: FinancialVisibilityLayerProps) => {
-  const { lang, locale } = useI18n();
+  const { lang, locale, t } = useI18n();
 
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat(locale === "ar" ? "ar" : "en", {
@@ -60,7 +60,7 @@ export const FinancialVisibilityLayer = ({
             <Receipt className="h-5 w-5 text-amber-500" />
             <div>
               <p className="text-xs font-bold text-stone-200 uppercase tracking-wide">
-                {lang === "ar" ? "حالة الدفع" : "Payment Visibility"}
+                {t("commandCenter.paymentVisibility")}
               </p>
               <p className="mt-1 text-xs text-stone-500">
                 {lang === "ar" ? "رؤية حصرية لبياناتك المالية المسجلة." : "Exclusive view of your recorded financial data."}

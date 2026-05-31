@@ -315,7 +315,7 @@ export default function PartnerSettlementsPage() {
             <DashboardSection title="Partner Tasks" description="Active workload and pending coordination.">
               <PartnerTaskQueue tasks={partnerTasks} />
             </DashboardSection>
-            <DashboardSection title="Settlement Visibility" description="Partner-side financial transparency nodes.">
+            <DashboardSection title={t("commandCenter.settlementVisibility")} description={t("commandCenter.settlementVisibilityDescription")}>
               {partnerSettlementInsight && <PartnerSettlementVisibilityPanel insight={partnerSettlementInsight} />}
             </DashboardSection>
           </DashboardGrid>
@@ -325,7 +325,7 @@ export default function PartnerSettlementsPage() {
           </DashboardSection>
 
           <DashboardGrid variant="balanced">
-             <DashboardSection title="Systemic Coordination">
+             <DashboardSection title={t("commandCenter.systemicCoordination")}>
               <CoordinationWarningsPanel warnings={coordinationWarnings} />
             </DashboardSection>
             <DashboardSection title="Accountability Mapping">
@@ -376,7 +376,7 @@ export default function PartnerSettlementsPage() {
         </DashboardSection>
       )}
 
-      <DashboardSection title="Settlement History" description="Audited records of past and current settlements.">
+      <DashboardSection title={t("commandCenter.settlementHistory")} description={t("commandCenter.settlementHistoryDescription")}>
         <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 overflow-hidden">
           <div className="divide-y divide-amber-200/5">
             {settlements.length === 0 ? (

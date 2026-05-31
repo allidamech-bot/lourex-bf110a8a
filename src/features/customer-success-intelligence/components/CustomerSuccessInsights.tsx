@@ -2,17 +2,19 @@ import React from 'react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { CustomerSuccessInsight } from '../lib/customerSuccessEngine';
 import { Lightbulb, CheckCircle2, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 interface CustomerSuccessInsightsProps {
   insights: CustomerSuccessInsight[];
 }
 
 export const CustomerSuccessInsights: React.FC<CustomerSuccessInsightsProps> = ({ insights }) => {
+  const { t } = useI18n();
   return (
     <GlassPanel className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <Lightbulb className="w-5 h-5 text-amber-400" />
-        <h3 className="text-lg font-bold text-white">Strategic Success Insights</h3>
+        <h3 className="text-lg font-bold text-white">{t("commandCenter.strategicSuccessInsights")}</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

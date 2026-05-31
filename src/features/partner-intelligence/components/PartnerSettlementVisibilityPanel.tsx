@@ -3,12 +3,14 @@ import { GlassPanel } from '@/components/ui/GlassPanel';
 import { PartnerSettlementInsight } from '../lib/partnerIntelligenceEngine';
 import { Wallet, Info, AlertOctagon, TrendingUp, DollarSign } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useI18n } from '@/lib/i18n';
 
 interface PartnerSettlementVisibilityPanelProps {
   insight: PartnerSettlementInsight;
 }
 
 export const PartnerSettlementVisibilityPanel: React.FC<PartnerSettlementVisibilityPanelProps> = ({ insight }) => {
+  const { t } = useI18n();
   return (
     <GlassPanel className="p-6">
       <div className="flex items-center gap-2 mb-6">
@@ -47,7 +49,7 @@ export const PartnerSettlementVisibilityPanel: React.FC<PartnerSettlementVisibil
       <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3">
         <div className="mt-0.5"><TrendingUp className="w-4 h-4 text-blue-400" /></div>
         <div>
-          <p className="text-[10px] uppercase text-blue-400 font-black tracking-widest">Strategic Mitigation</p>
+          <p className="text-[10px] uppercase text-blue-400 font-black tracking-widest">{t("commandCenter.strategicMitigation")}</p>
           <p className="text-sm text-slate-300 mt-1">{insight.mitigation}</p>
         </div>
       </div>

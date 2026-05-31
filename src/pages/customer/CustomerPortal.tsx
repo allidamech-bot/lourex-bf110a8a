@@ -515,7 +515,7 @@ const CustomerPortal = () => {
 
                   <div className="pt-6 mt-6 border-t border-amber-200/5">
                     <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-4">
-                      {lang === "ar" ? "تفصيل الرؤية المالية" : "Financial Visibility Detail"}
+                      {t("commandCenter.financialVisibilityDetail")}
                     </p>
                     <FinancialVisibilityLayer
                       paidAmount={customerData.financialIncome}

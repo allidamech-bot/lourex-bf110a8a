@@ -468,7 +468,7 @@ export default function OverviewPage() {
           {/* 2. Critical Actions Center */}
           <DashboardSection
             eyebrow="Critical Path Analysis"
-            title="Strategic Interventions"
+            title={t("commandCenter.strategicInterventions")}
             description="Unresolved bottlenecks requiring immediate executive intervention."
           >
             <CriticalActionQueue actions={executiveWorkspaceState.criticalActions.slice(0, 5)} />
@@ -477,7 +477,7 @@ export default function OverviewPage() {
           {/* 3. Operations + Finance */}
           <DashboardGrid variant="balanced">
             <ExecutiveCommandSection
-              title="Operations Command"
+              title={t("commandCenter.operationsCommand")}
               description="Logistics throughput and coordination."
               icon={<Truck className="h-5 w-5" />}
               secondaryWidgets={
@@ -502,7 +502,7 @@ export default function OverviewPage() {
             </ExecutiveCommandSection>
 
             <ExecutiveCommandSection
-              title="Financial Command"
+              title={t("commandCenter.financialCommand")}
               description="AI-audited accounting and settlement integrity."
               icon={<Receipt className="h-5 w-5" />}
               secondaryWidgets={
@@ -531,7 +531,7 @@ export default function OverviewPage() {
           {/* 4. Customers + Partners */}
           <DashboardGrid variant="balanced">
             <ExecutiveCommandSection
-              title="Customer Command"
+              title={t("commandCenter.customerCommand")}
               description="Retention risk and success modeling."
               icon={<ClipboardList className="h-5 w-5" />}
               defaultExpanded={false}
@@ -580,7 +580,7 @@ export default function OverviewPage() {
             </ExecutiveCommandSection>
 
             <ExecutiveCommandSection
-              title="Partner Command"
+              title={t("commandCenter.partnerCommand")}
               description="Ecosystem performance and regional health."
               icon={<Users className="h-5 w-5" />}
               defaultExpanded={false}
@@ -607,7 +607,7 @@ export default function OverviewPage() {
 
           {/* 5. Advanced Intelligence */}
           <ExecutiveCommandSection
-            title="Advanced Intelligence"
+            title={t("commandCenter.advancedIntelligence")}
             description="Deep correlate analysis and experimental systemic nodes."
             icon={<Sparkles className="h-5 w-5" />}
             defaultExpanded={false}

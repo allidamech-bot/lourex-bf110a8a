@@ -518,23 +518,23 @@ export default function ReportsPage() {
       )}
 
       <DashboardGrid variant="balanced">
-        <DashboardSection title="Operational Momentum" description="Strategic flow and coordination blockers.">
+        <DashboardSection title={t("commandCenter.operationalMomentum")} description={t("commandCenter.strategicFlowDescription")}>
           <OperationalMomentumPanel momentum={operationalMomentum} />
         </DashboardSection>
-        <DashboardSection title="Regional Visibility" description="Global logistics distribution analysis.">
+        <DashboardSection title={t("commandCenter.regionalVisibility")} description={t("commandCenter.regionalVisibilityDescription")}>
           <RegionalOperationsVisibility regions={regionalSummary} />
         </DashboardSection>
       </DashboardGrid>
 
       <DashboardGrid variant="balanced">
-        <DashboardSection title="Partner Performance" description="Top branch and logistics partner auditing.">
+        <DashboardSection title={t("commandCenter.partnerPerformance")} description={t("commandCenter.partnerPerformanceDescription")}>
           <div className="space-y-6">
             {partnerScorecards.map(ps => (
               <PartnerPerformanceScorecard key={ps.name} details={ps.scorecard} partnerName={ps.name} />
             ))}
           </div>
         </DashboardSection>
-        <DashboardSection title="System Stability" description="Risk resilience and business continuity scores.">
+        <DashboardSection title={t("commandCenter.systemStability")} description={t("commandCenter.systemStabilityDescription")}>
           <BusinessStabilityPanel stability={executiveWorkspaceState.stability} />
         </DashboardSection>
       </DashboardGrid>

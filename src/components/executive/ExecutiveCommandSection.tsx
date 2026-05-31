@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 interface ExecutiveCommandSectionProps {
   title: string;
@@ -25,6 +26,7 @@ export const ExecutiveCommandSection: React.FC<ExecutiveCommandSectionProps> = (
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showSecondary, setShowSecondary] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div
@@ -94,12 +96,12 @@ export const ExecutiveCommandSection: React.FC<ExecutiveCommandSectionProps> = (
                     {showSecondary ? (
                       <>
                         <Minimize2 className="h-3.5 w-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Hide Advanced Nodes</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t("commandCenter.hideAdvancedNodes")}</span>
                       </>
                     ) : (
                       <>
                         <Maximize2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Reveal Advanced Intelligence Nodes</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t("commandCenter.revealAdvancedNodes")}</span>
                       </>
                     )}
                   </Button>

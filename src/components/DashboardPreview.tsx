@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 
 const DashboardPreview = () => {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
 
   const panels = [
     {
@@ -77,7 +77,7 @@ const DashboardPreview = () => {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.6rem] border border-border/60 bg-secondary/20 px-5 py-4">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                {lang === "ar" ? "سياق القيادة" : "Command Context"}
+                {t("commandCenter.commandContext")}
               </p>
               <p className="mt-2 font-serif text-2xl font-semibold">Lourex Operating System</p>
             </div>

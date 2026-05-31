@@ -580,7 +580,7 @@ export default function TrackingPage() {
               />
             )}
 
-            <DashboardSection title="Systemic Coordination" description="Deep workflow auditing and cross-branch health.">
+            <DashboardSection title={t("commandCenter.systemicCoordination")} description={t("commandCenter.systemicCoordinationDescription")}>
               <div className="space-y-6">
                 <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap.filter(p => p.zone.includes('Turkey') || p.zone.includes('Logistics'))} />
                 <CommandPriorityMatrix priorities={executiveWorkspaceState.priorityMatrix.filter(p => p.pressureType === 'Operational')} />
