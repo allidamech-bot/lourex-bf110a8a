@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
-import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase, isTableUnavailable, markTableUnavailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
@@ -94,7 +94,7 @@ type FinancialEntryRow = {
   customer_id: string | null;
   amount: number | null;
   currency: string | null;
-  category: string | null;
+  type: string | null;
   note: string | null;
   created_at: string;
 };
@@ -115,9 +115,11 @@ const optionalQuery = async <T,>(
   runner: () => PromiseLike<{ data: T[] | null; error: unknown | null }>,
   feature: string,
 ) => {
+  if (isTableUnavailable(feature)) return [] as T[];
   const result = await runner();
   if (result.error) {
     if (isOptionalBackendUnavailable(result.error)) {
+      markTableUnavailable(feature);
       logOptionalBackendUnavailableOnce(feature, result.error);
       return [] as T[];
     }
@@ -206,7 +208,7 @@ export default function SystemControlsPage() {
           () =>
             adminDb
               .from("financial_entries")
-              .select("id, entry_number, deal_id, customer_id, amount, currency, category, note, created_at")
+              .select("id, entry_number, deal_id, customer_id, amount, currency, type, note, created_at")
               .ilike("entry_number", "FE-CORR-%")
               .order("created_at", { ascending: false })
               .limit(100),
@@ -703,7 +705,7 @@ export default function SystemControlsPage() {
                           {entry.amount ?? 0} {entry.currency || ""}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">{entry.category || "No category"}</p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">{entry.type || "No category"}</p>
                       <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{entry.note || "No note recorded."}</p>
                       <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Created {dateTime(entry.created_at)}</p>
                     </div>

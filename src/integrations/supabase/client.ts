@@ -38,6 +38,13 @@ export const optionalBackendUnavailableMessage =
   "This optional backend feature is not available in the current Lovable Cloud configuration.";
 
 const warnedOptionalBackendKeys = new Set<string>();
+const unavailableTables = new Set<string>();
+
+export const isTableUnavailable = (tableName: string) => unavailableTables.has(tableName);
+
+export const markTableUnavailable = (tableName: string) => {
+  unavailableTables.add(tableName);
+};
 
 export const logOptionalBackendUnavailableOnce = (feature: string, error?: unknown) => {
   if (!import.meta.env.DEV || warnedOptionalBackendKeys.has(feature)) return;

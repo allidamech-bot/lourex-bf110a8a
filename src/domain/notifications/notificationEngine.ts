@@ -1,4 +1,4 @@
-import { isOptionalBackendUnavailable, logOptionalBackendUnavailableOnce, supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, logOptionalBackendUnavailableOnce, supabase, isTableUnavailable, markTableUnavailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 
 export type NotificationChannel = "email" | "whatsapp_sms" | "in_app" | "system";
@@ -330,12 +330,14 @@ const optionalList = async <T extends Record<string, unknown>>(
   table: string,
   runner: () => PromiseLike<{ data: T[] | null; error: unknown | null }>,
 ) => {
+  if (isTableUnavailable(table)) return [];
   try {
     const { data, error } = await runner();
     if (error) throw error;
     return data || [];
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
+      markTableUnavailable(table);
       logOptionalBackendUnavailableOnce(table, error);
       return [];
     }

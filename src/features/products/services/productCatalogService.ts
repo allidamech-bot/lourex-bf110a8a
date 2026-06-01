@@ -1,6 +1,6 @@
 import { productCatalogCategories, productCatalogItems } from "@/features/products/data/productCatalogData";
 import type { ProductCatalogItem, ProductRequestPrefill } from "@/features/products/types/productTypes";
-import { isOptionalBackendUnavailable, supabase } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, supabase, isTableUnavailable, markTableUnavailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 
 const productDb = supabase as unknown as LooseDomainClient;
@@ -164,6 +164,9 @@ export const listActiveProducts = () => fallbackActiveProducts();
 
 export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => {
   try {
+    if (isTableUnavailable("product_catalog_products")) {
+      return includeInactive ? productCatalogItems : fallbackActiveProducts();
+    }
     let query = productDb.from("product_catalog_products").select(PRODUCT_SELECT).order("is_featured", { ascending: false }).order("updated_at", { ascending: false });
 
     if (!includeInactive) {
@@ -174,6 +177,7 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
 
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
+        markTableUnavailable("product_catalog_products");
         return includeInactive ? productCatalogItems : fallbackActiveProducts();
       }
       throw error;
@@ -188,6 +192,7 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
     return mapped;
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
+      markTableUnavailable("product_catalog_products");
       return includeInactive ? productCatalogItems : fallbackActiveProducts();
     }
     throw error;
@@ -196,6 +201,9 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
 
 export const fetchCatalogProductBySlug = async (slug: string) => {
   try {
+    if (isTableUnavailable("product_catalog_products")) {
+      return getProductBySlug(slug);
+    }
     const { data, error } = await productDb
       .from("product_catalog_products")
       .select(PRODUCT_SELECT)
@@ -204,6 +212,7 @@ export const fetchCatalogProductBySlug = async (slug: string) => {
 
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
+        markTableUnavailable("product_catalog_products");
         return getProductBySlug(slug);
       }
       throw error;
@@ -212,6 +221,7 @@ export const fetchCatalogProductBySlug = async (slug: string) => {
     return data ? mapProductRow(data as ProductCatalogProductRow) : getProductBySlug(slug);
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
+      markTableUnavailable("product_catalog_products");
       return getProductBySlug(slug);
     }
     throw error;
