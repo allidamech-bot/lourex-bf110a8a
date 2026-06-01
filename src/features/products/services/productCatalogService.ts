@@ -1,6 +1,6 @@
 import { productCatalogCategories, productCatalogItems } from "@/features/products/data/productCatalogData";
 import type { ProductCatalogItem, ProductRequestPrefill } from "@/features/products/types/productTypes";
-import { isOptionalBackendUnavailable, supabase, isTableUnavailable, markTableUnavailable } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, supabase, isTableUnavailable, markTableUnavailable, checkOptionalTableAvailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 
 const productDb = supabase as unknown as LooseDomainClient;
@@ -164,7 +164,8 @@ export const listActiveProducts = () => fallbackActiveProducts();
 
 export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => {
   try {
-    if (isTableUnavailable("product_catalog_products")) {
+    const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
+    if (!isAvailable) {
       return includeInactive ? productCatalogItems : fallbackActiveProducts();
     }
     let query = productDb.from("product_catalog_products").select(PRODUCT_SELECT).order("is_featured", { ascending: false }).order("updated_at", { ascending: false });
@@ -201,7 +202,8 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
 
 export const fetchCatalogProductBySlug = async (slug: string) => {
   try {
-    if (isTableUnavailable("product_catalog_products")) {
+    const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
+    if (!isAvailable) {
       return getProductBySlug(slug);
     }
     const { data, error } = await productDb

@@ -39,12 +39,64 @@ export const optionalBackendUnavailableMessage =
 
 const warnedOptionalBackendKeys = new Set<string>();
 const unavailableTables = new Set<string>();
+const inFlightTableProbes = new Map<string, Promise<boolean>>();
 
 export const isTableUnavailable = (tableName: string) => unavailableTables.has(tableName);
 
 export const markTableUnavailable = (tableName: string) => {
   unavailableTables.add(tableName);
 };
+
+export const checkOptionalTableAvailable = (tableName: string): Promise<boolean> => {
+  if (unavailableTables.has(tableName)) return Promise.resolve(false);
+
+  if (inFlightTableProbes.has(tableName)) {
+    return inFlightTableProbes.get(tableName)!;
+  }
+
+  const probePromise = (async () => {
+    try {
+      const { error } = await supabase.from(tableName).select("id").limit(1);
+      if (error && isMissingBackendResourceError(error)) {
+        unavailableTables.add(tableName);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return true;
+    } finally {
+      inFlightTableProbes.delete(tableName);
+    }
+  })();
+
+  inFlightTableProbes.set(tableName, probePromise);
+  return probePromise;
+};
+
+export async function safeOptionalSelect<T>(
+  tableName: string,
+  queryFactory: () => Promise<{ data: T | null; error: unknown }>,
+  fallback: T
+): Promise<T> {
+  const isAvailable = await checkOptionalTableAvailable(tableName);
+  if (!isAvailable) return fallback;
+
+  try {
+    const { data, error } = await queryFactory();
+    if (error) {
+      if (isMissingBackendResourceError(error)) {
+        unavailableTables.add(tableName);
+        return fallback;
+      }
+      logOptionalBackendUnavailableOnce(tableName, error);
+      return fallback;
+    }
+    return data !== null ? data : fallback;
+  } catch (err) {
+    logOptionalBackendUnavailableOnce(tableName, err);
+    return fallback;
+  }
+}
 
 export const logOptionalBackendUnavailableOnce = (feature: string, error?: unknown) => {
   if (!import.meta.env.DEV || warnedOptionalBackendKeys.has(feature)) return;

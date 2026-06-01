@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
-import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase, isTableUnavailable, markTableUnavailable } from "@/integrations/supabase/client";
+import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase, isTableUnavailable, markTableUnavailable, checkOptionalTableAvailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
 import { toast } from "sonner";
 
@@ -115,7 +115,8 @@ const optionalQuery = async <T,>(
   runner: () => PromiseLike<{ data: T[] | null; error: unknown | null }>,
   feature: string,
 ) => {
-  if (isTableUnavailable(feature)) return [] as T[];
+  const isAvailable = await checkOptionalTableAvailable(feature);
+  if (!isAvailable) return [] as T[];
   const result = await runner();
   if (result.error) {
     if (isOptionalBackendUnavailable(result.error)) {
