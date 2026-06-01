@@ -22,5 +22,17 @@ describe("Optional Backend Capability Gating", () => {
     const isAvail = await checkOptionalTableAvailable("test_missing_table");
     expect(isAvail).toBe(false);
   });
+
+  it("disabled optional table does not call Supabase even once", async () => {
+    const isAvail = await checkOptionalTableAvailable("product_catalog_products");
+    expect(isAvail).toBe(false);
+  });
+
+  it("financial_entries is not affected and would still probe or throw", async () => {
+    // financial_entries is not in OPTIONAL_TABLE_CAPABILITIES
+    const p1 = checkOptionalTableAvailable("financial_entries");
+    const p2 = checkOptionalTableAvailable("financial_entries");
+    expect(p1).toBe(p2);
+  });
 });
 

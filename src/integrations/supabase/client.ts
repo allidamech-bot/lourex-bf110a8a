@@ -47,7 +47,22 @@ export const markTableUnavailable = (tableName: string) => {
   unavailableTables.add(tableName);
 };
 
+export const OPTIONAL_TABLE_CAPABILITIES: Record<string, boolean> = {
+  product_catalog_products: false,
+  notification_templates: false,
+  notification_settings: false,
+  notification_delivery_queue: false,
+  business_rules: false,
+  system_events: false,
+  security_audit_events: false,
+  system_health_snapshots: false,
+};
+
 export const checkOptionalTableAvailable = (tableName: string): Promise<boolean> => {
+  if (OPTIONAL_TABLE_CAPABILITIES[tableName] === false) {
+    return Promise.resolve(false);
+  }
+
   if (unavailableTables.has(tableName)) return Promise.resolve(false);
 
   if (inFlightTableProbes.has(tableName)) {
