@@ -12,7 +12,7 @@ const QuickActionFab = () => {
   const actions = [
     { label: t("admin.addShipment") || "New Shipment", icon: Truck, href: "/admin" },
     { label: t("nav.orders") || "Orders", icon: ShoppingBag, href: "/orders" },
-    { label: t("nav.catalog") || "Products", icon: Package, href: "/catalog" },
+    { label: t("nav.catalog") || "Products", icon: Package, href: "/products" },
   ];
 
   return (

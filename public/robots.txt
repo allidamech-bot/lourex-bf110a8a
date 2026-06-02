@@ -1,6 +1,6 @@
 User-agent: Googlebot
 Allow: /
-Allow: /catalog
+Allow: /products
 Allow: /track
 Allow: /about
 Allow: /why-lourex
@@ -16,7 +16,7 @@ Disallow: /messages
 
 User-agent: Bingbot
 Allow: /
-Allow: /catalog
+Allow: /products
 Allow: /track
 Allow: /about
 Allow: /why-lourex
@@ -35,7 +35,7 @@ Allow: /
 
 User-agent: *
 Allow: /
-Allow: /catalog
+Allow: /products
 Allow: /track
 Allow: /about
 Allow: /why-lourex

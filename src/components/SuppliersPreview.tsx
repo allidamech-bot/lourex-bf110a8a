@@ -203,7 +203,7 @@ const SuppliersPreview = () => {
 
         <div className="mt-10 text-center">
           <Button variant="gold-outline" size="lg" asChild>
-            <Link to="/catalog">
+            <Link to="/products">
               {lang === "ar" ? "استعرض جميع الموردين" : "Browse all suppliers"}
             </Link>
           </Button>

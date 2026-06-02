@@ -20,7 +20,7 @@ const CommandPalette = () => {
   const actions: QuickAction[] = useMemo(
     () => [
       { label: t("nav.orders"), icon: ShoppingBag, href: "/orders" },
-      { label: t("nav.catalog"), icon: Factory, href: "/catalog" },
+      { label: t("nav.catalog"), icon: Factory, href: "/products" },
       { label: t("nav.track"), icon: Truck, href: "/track" },
       { label: t("nav.dashboard"), icon: Package, href: "/dashboard" },
       { label: t("nav.admin"), icon: Package, href: "/admin" },
