@@ -145,7 +145,7 @@ const buildAnalytics = (orders: FactoryCommandCenterOrder[]) => {
 const findOwnedOrAssignedFactory = async (userId: string, email: string | null) => {
   const { data: ownedFactory, error: ownedError } = await supabase
     .from("factories")
-    .select("*")
+    .select("id, name, owner_user_id")
     .eq("owner_user_id", userId)
     .maybeSingle();
 
@@ -179,7 +179,7 @@ const findOwnedOrAssignedFactory = async (userId: string, email: string | null) 
 
   const { data: teamFactory, error: teamFactoryError } = await supabase
     .from("factories")
-    .select("*")
+    .select("id, name, owner_user_id")
     .eq("owner_user_id", staffRow.owner_id)
     .maybeSingle();
 
@@ -202,7 +202,7 @@ export const fetchFactoryCommandCenter = async (
   try {
     const [profileRes, roleRes, factory] = await Promise.all([
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase as any).from("profiles").select("*").eq("id", normalizedUserId).maybeSingle(),
+      (supabase as any).from("profiles").select("id, full_name, verification_status").eq("id", normalizedUserId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", normalizedUserId),
       findOwnedOrAssignedFactory(normalizedUserId, email),
     ]);
@@ -236,8 +236,8 @@ export const fetchFactoryCommandCenter = async (
 
     const [{ data: orders, error: ordersError }, { data: products, error: productsError }, staffCountRes] =
       await Promise.all([
-        supabase.from("orders").select("*").eq("factory_id", factory.id).order("created_at", { ascending: false }),
-        supabase.from("products").select("*").eq("factory_id", factory.id).order("created_at", { ascending: false }),
+        supabase.from("orders").select("id, order_number, quantity, weight_kg, status, created_at").eq("factory_id", factory.id).order("created_at", { ascending: false }),
+        supabase.from("products").select("id, name, category, price_per_unit, image_url, is_active").eq("factory_id", factory.id).order("created_at", { ascending: false }),
         supabase
           .from("organization_staff")
           .select("id", { count: "exact", head: true })

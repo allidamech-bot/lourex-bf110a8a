@@ -44,7 +44,7 @@ export const OrderManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     const [{ data: o }, { data: f }] = await Promise.all([
-      supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      supabase.from("orders").select("id, order_number, status, buyer_id, factory_id, total_amount, currency, deposit_paid, balance_paid, payment_status, weight_kg, total_pallets, shipping_tracking_id, created_at").order("created_at", { ascending: false }),
       supabase.from("factories").select("id, name").order("name"),
     ]);
     setOrders((o as Order[]) || []);

@@ -35,8 +35,8 @@ export const KYCPanel = () => {
   const fetchData = async () => {
     setLoading(true);
     const [{ data: d }, { data: p }] = await Promise.all([
-      supabase.from("kyc_documents").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("*"),
+      supabase.from("kyc_documents").select("id, user_id, doc_type, file_url, status, notes, created_at").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name, company_name, verification_status, phone, country"),
     ]);
     setDocs((d as KYCDoc[]) || []);
     setProfiles((p as Profile[]) || []);

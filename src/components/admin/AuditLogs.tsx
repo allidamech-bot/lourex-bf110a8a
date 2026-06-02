@@ -24,7 +24,7 @@ export const AuditLogs = () => {
     setLoading(true);
     const { data } = await supabase
       .from("audit_logs")
-      .select("*")
+      .select("id, table_name, record_id, action, new_values, old_values, changed_by, created_at")
       .order("created_at", { ascending: false })
       .limit(50);
     setLogs((data as AuditLog[]) || []);

@@ -272,10 +272,10 @@ export const loadCustomerNotificationInbox = async (
 
   const [inAppRows, eventRows, requestRows, auditRows] = await Promise.all([
     safeList<NotificationRow>("notifications", () =>
-      db.from<NotificationRow>("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+      db.from<NotificationRow>("notifications").select("id, user_id, type, title, message, link, read, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
     ),
     safeList<NotificationEventRow>("notification_events", () =>
-      db.from<NotificationEventRow>("notification_events").select("*").eq("customer_id", user.id).order("created_at", { ascending: false }).limit(50),
+      db.from<NotificationEventRow>("notification_events").select("id, event_type, customer_id, order_id, tracking_id, channel_hint, metadata, status, delivery_status, created_at").eq("customer_id", user.id).order("created_at", { ascending: false }).limit(50),
     ),
     safeList<PurchaseRequestLite>("purchase_requests", () =>
       db

@@ -59,8 +59,7 @@ import { BranchPerformanceCenter } from "@/features/organization-intelligence/co
 import { CrossBranchExecutiveSummary } from "@/features/organization-intelligence/components/CrossBranchExecutiveSummary";
 import {
   generateAutonomousOperationsPlan,
-  analyzeOperationalMomentum,
-  generateSuggestedNextActions
+  analyzeOperationalMomentum
 } from "@/features/autonomous-coordination/lib/autonomousCoordinationEngine";
 import { AutonomousOperationsPlan } from "@/features/autonomous-coordination/components/AutonomousOperationsPlan";
 import { OperationalMomentumPanel } from "@/features/autonomous-coordination/components/OperationalMomentumPanel";
@@ -227,17 +226,19 @@ export default function OverviewPage() {
 
   const aiOpsResult = useMemo(
     () =>
-      buildOperationsAdvisor(
-        {
-          shipments,
-          deals,
-          financialEntries,
-          financialEditRequests: editRequests,
-          settlements,
-        },
-        lang === "ar" ? "ar" : "en",
-      ),
-    [deals, editRequests, financialEntries, lang, settlements, shipments],
+      isInternal
+        ? buildOperationsAdvisor(
+            {
+              shipments,
+              deals,
+              financialEntries,
+              financialEditRequests: editRequests,
+              settlements,
+            },
+            lang === "ar" ? "ar" : "en",
+          )
+        : null,
+    [isInternal, deals, editRequests, financialEntries, lang, settlements, shipments],
   );
 
   const workflowIntelligenceDataset = useMemo<WorkflowIntelligenceDataset>(
@@ -266,40 +267,35 @@ export default function OverviewPage() {
   );
 
   const recommendations = useMemo(
-    () => generateRecommendations(deals, requests, settlements),
-    [deals, requests, settlements]
+    () => isInternal ? generateRecommendations(deals, requests, settlements) : [],
+    [isInternal, deals, requests, settlements]
   );
 
   const branchProfiles = useMemo(
-    () => generateBranchProfiles(requests, deals, financialEntries),
-    [requests, deals, financialEntries]
+    () => isInternal ? generateBranchProfiles(requests, deals, financialEntries) : [],
+    [isInternal, requests, deals, financialEntries]
   );
 
   const teamWorkloads = useMemo(
-    () => generateTeamWorkloadInsights(requests, deals),
-    [requests, deals]
+    () => isInternal ? generateTeamWorkloadInsights(requests, deals) : [],
+    [isInternal, requests, deals]
   );
 
   const executiveSummary = useMemo(
-    () => generateCrossBranchExecutiveSummary(branchProfiles, teamWorkloads),
-    [branchProfiles, teamWorkloads]
+    () => isInternal ? generateCrossBranchExecutiveSummary(branchProfiles, teamWorkloads) : null,
+    [isInternal, branchProfiles, teamWorkloads]
   );
 
   const autonomousPlan = useMemo(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    () => generateAutonomousOperationsPlan(requests as any, deals as any, financialEntries as any, editRequests as any),
-    [requests, deals, financialEntries, editRequests]
+    () => isInternal ? generateAutonomousOperationsPlan(requests as any, deals as any, financialEntries as any, editRequests as any) : null,
+    [isInternal, requests, deals, financialEntries, editRequests]
   );
 
   const operationalMomentum = useMemo(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    () => analyzeOperationalMomentum(requests as any, deals as any, autonomousPlan.blockers),
-    [requests, deals, autonomousPlan.blockers]
-  );
-
-  const nextBestActions = useMemo(
-    () => generateSuggestedNextActions(autonomousPlan, operationalMomentum),
-    [autonomousPlan, operationalMomentum]
+    () => isInternal && autonomousPlan ? analyzeOperationalMomentum(requests as any, deals as any, autonomousPlan.blockers) : null,
+    [isInternal, requests, deals, autonomousPlan]
   );
 
   const partnerProfiles = useMemo(

@@ -33,7 +33,7 @@ export const FactoryApplications = ({ filter = "active" }: FactoryApplicationsPr
     setLoading(true);
     let query = supabase
       .from("factory_applications")
-      .select("*")
+      .select("id, company_name, contact_name, email, phone, cr_number, tax_id, location, status, created_at, user_id")
       .order("created_at", { ascending: false });
     
     if (filter === "archived") {

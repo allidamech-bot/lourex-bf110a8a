@@ -38,7 +38,7 @@ export const TeamManagement = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from("profiles")
-      .select("*")
+      .select("id, email, full_name, role, status, created_at")
       .in("role", INTERNAL_ROLES)
       .order("created_at", { ascending: false });
     setStaff((data as unknown as StaffMember[]) || []);

@@ -31,7 +31,7 @@ export const FiscalEngine = () => {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data } = await supabase.from("site_settings").select("*");
+    const { data } = await supabase.from("site_settings").select("id, key, value");
     const settings = (data || []) as { key: string; value: string; id: string }[];
 
     const rateMap: Record<string, string> = {};

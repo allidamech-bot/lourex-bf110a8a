@@ -29,12 +29,12 @@ const FactoryRfqInbox = ({ factoryId }: Props) => {
     setLoading(true);
     const { data: rfqRows } = await supabase
       .from("rfqs")
-      .select("*")
+      .select("id, title, product_name, rfq_number, quantity, category, visibility, notes, status, created_at")
       .in("status", ["open", "pending", "quoted"])
       .order("created_at", { ascending: false });
     setRfqs(rfqRows || []);
 
-    const { data: quoteRows } = await supabase.from("quotes").select("*").eq("factory_id", factoryId);
+    const { data: quoteRows } = await supabase.from("quotes").select("id, rfq_id, factory_id, status, price_per_unit, moq, lead_time, currency, notes").eq("factory_id", factoryId);
     const mappedQuotes = (quoteRows || []).reduce<Record<string, QuoteRow>>((accumulator, row) => {
       accumulator[row.rfq_id] = row;
       return accumulator;
