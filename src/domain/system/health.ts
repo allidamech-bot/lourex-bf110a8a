@@ -7,6 +7,8 @@ import {
   optionalBackendTables,
   SUPABASE_URL,
   supabase,
+  checkOptionalTableAvailable,
+  OPTIONAL_TABLE_CAPABILITIES,
 } from "@/integrations/supabase/client";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import { logOperationalError } from "@/lib/monitoring";
@@ -106,6 +108,20 @@ const checkTableReadable = async (tableName: string, critical: boolean): Promise
   }
 
   try {
+    const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[tableName] === false;
+    if (!critical && (isExplicitlyDisabled || optionalBackendTables.has(tableName))) {
+      const isAvailable = await checkOptionalTableAvailable(tableName);
+      if (!isAvailable) {
+        return {
+          id: `table-${tableName}`,
+          label: `Optional table: ${tableName}`,
+          status: "warning",
+          details: "Table is disabled statically in capability configuration (no network request made).",
+          metadata: { missingBackendResource: true },
+        };
+      }
+    }
+
     const { error } = await supabase.from(tableName).select("*").limit(1);
 
     if (!error) {

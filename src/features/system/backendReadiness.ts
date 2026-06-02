@@ -5,6 +5,8 @@ import {
   isSupabaseConfigured,
   optionalBackendTables,
   supabase,
+  checkOptionalTableAvailable,
+  OPTIONAL_TABLE_CAPABILITIES,
 } from "@/integrations/supabase/client";
 
 export type BackendReadinessRequirement = "critical" | "recommended" | "optional" | "manual";
@@ -318,6 +320,24 @@ async function probeTable(definition: TableProbeDefinition): Promise<BackendRead
   }
 
   try {
+    const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[definition.table] === false;
+    if (definition.requirement !== "critical" && (isExplicitlyDisabled || optionalBackendTables.has(definition.table))) {
+      const isAvailable = await checkOptionalTableAvailable(definition.table);
+      if (!isAvailable) {
+        return {
+          id: definition.id,
+          label: definition.label,
+          area: definition.area,
+          table: definition.table,
+          type: "table",
+          requirement: definition.requirement,
+          status: "warning",
+          message: "Table is disabled statically in capability configuration (no network request made).",
+          details: { description: definition.description, disabled: true },
+        };
+      }
+    }
+
     const { error } = await readinessDb.from(definition.table).select("id").limit(1);
 
     if (!error) {
