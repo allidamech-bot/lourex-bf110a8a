@@ -305,6 +305,21 @@ function buildEnvironmentProbes(): BackendReadinessProbe[] {
 }
 
 async function probeTable(definition: TableProbeDefinition): Promise<BackendReadinessProbe> {
+  const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[definition.table] === false;
+  if (definition.requirement !== "critical" && isExplicitlyDisabled) {
+    return {
+      id: definition.id,
+      label: definition.label,
+      area: definition.area,
+      table: definition.table,
+      type: "table",
+      requirement: definition.requirement,
+      status: "warning",
+      message: "Table is disabled statically in capability configuration (no network request made).",
+      details: { description: definition.description, disabled: true },
+    };
+  }
+
   if (!isSupabaseConfigured) {
     return {
       id: definition.id,
@@ -320,8 +335,7 @@ async function probeTable(definition: TableProbeDefinition): Promise<BackendRead
   }
 
   try {
-    const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[definition.table] === false;
-    if (definition.requirement !== "critical" && (isExplicitlyDisabled || optionalBackendTables.has(definition.table))) {
+    if (definition.requirement !== "critical" && optionalBackendTables.has(definition.table)) {
       const isAvailable = await checkOptionalTableAvailable(definition.table);
       if (!isAvailable) {
         return {

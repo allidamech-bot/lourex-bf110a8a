@@ -98,6 +98,17 @@ const checkSupabaseConfiguration = (): SystemHealthCheck => {
 };
 
 const checkTableReadable = async (tableName: string, critical: boolean): Promise<SystemHealthCheck> => {
+  const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[tableName] === false;
+  if (!critical && isExplicitlyDisabled) {
+    return {
+      id: `table-${tableName}`,
+      label: `Optional table: ${tableName}`,
+      status: "warning",
+      details: "Table is disabled statically in capability configuration (no network request made).",
+      metadata: { missingBackendResource: true },
+    };
+  }
+
   if (!isSupabaseConfigured) {
     return {
       id: `table-${tableName}`,
@@ -108,8 +119,7 @@ const checkTableReadable = async (tableName: string, critical: boolean): Promise
   }
 
   try {
-    const isExplicitlyDisabled = OPTIONAL_TABLE_CAPABILITIES[tableName] === false;
-    if (!critical && (isExplicitlyDisabled || optionalBackendTables.has(tableName))) {
+    if (!critical && optionalBackendTables.has(tableName)) {
       const isAvailable = await checkOptionalTableAvailable(tableName);
       if (!isAvailable) {
         return {
