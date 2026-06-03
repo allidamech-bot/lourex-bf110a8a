@@ -1129,16 +1129,16 @@ export default function PurchaseRequestsPage() {
                                             onClick={() => setSelectedRequest(row.id, true)}
                                             className="w-full p-6 text-start"
                                         >
-                                            <div className="flex justify-between items-start gap-4 mb-4">
-                                                <div>
+                                            <div className="flex min-w-0 justify-between items-start gap-4 mb-4">
+                                                <div className="min-w-0 flex-1">
                                                     <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{row.requestNumber}</p>
-                                                    <h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors">
+                                                    <h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors truncate">
                                                         {row.productName || t("requests.genericRequest")}
                                                     </h4>
-                                                    <p className="text-xs text-stone-500 font-medium mt-1">{row.customer.fullName}</p>
+                                                    <p className="text-xs text-stone-500 font-medium mt-1 truncate">{row.customer.fullName}</p>
                                                 </div>
                                                 <span className={cn(
-                                                    "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
+                                                    "shrink-0 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
                                                     getStatusBadgeClass(row.status)
                                                 )}>
                                                     {t(`statuses.${row.status}`)}

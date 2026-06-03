@@ -432,7 +432,7 @@ export default function OverviewPage() {
       </DashboardSection>
 
       {/* KPI Command Row */}
-      <DashboardGrid variant="kpi">
+      <DashboardGrid variant="kpi" className="xl:grid-cols-4">
         {(loading ? loadingCards : (metricCards as MetricCard[])).map((item, index) => {
           const cardItem = loading ? null : item as MetricCard;
           return (
