@@ -748,9 +748,17 @@ export default function AccountingPage() {
                         </div>
                         <span className={cn(
                           "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border self-start",
-                          row.locked ? "bg-amber-500/10 text-amber-200 border-amber-500/20" : "bg-stone-800 text-stone-400 border-stone-700"
+                          visibleEditRequests.some(r => r.financialEntryId === row.id && r.status === "pending")
+                            ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                            : row.locked 
+                              ? "bg-amber-500/10 text-amber-200 border-amber-500/20" 
+                              : "bg-stone-800 text-stone-400 border-stone-700"
                         )}>
-                          {row.locked ? t("accounting.locked") : t("accounting.openState")}
+                          {visibleEditRequests.some(r => r.financialEntryId === row.id && r.status === "pending")
+                            ? t("editRequests.pending")
+                            : row.locked 
+                              ? t("accounting.locked") 
+                              : t("accounting.openState")}
                         </span>
                       </div>
 

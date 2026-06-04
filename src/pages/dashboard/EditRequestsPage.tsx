@@ -155,6 +155,11 @@ export default function EditRequestsPage() {
       return;
     }
 
+    if (status === "rejected" && !reviewNotes[id]?.trim()) {
+      toast.error(t("editRequests.validation"));
+      return;
+    }
+
     setUpdatingId(id);
 
     try {

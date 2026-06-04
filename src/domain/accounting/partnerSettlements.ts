@@ -198,6 +198,14 @@ export const recalculatePartnerSettlement = async (
 ) => {
   const { profile } = await assertSettlementActor();
   if (!canManageAccounting(profile.role as LourexRole)) throw new Error("Only owner or operations can recalculate partner settlements.");
+  
+  const visibleSettlements = await loadPartnerSettlements();
+  const settlement = visibleSettlements.find((row) => row.id === settlementId);
+  if (!settlement) throw new Error("Settlement not found.");
+  if (settlement.status === "approved" || settlement.status === "paid") {
+    throw new Error("Cannot recalculate an approved or paid settlement.");
+  }
+
   const { error } = await db.rpc("recalculate_partner_settlement", {
     p_settlement_id: settlementId,
     p_gross_amount: amounts.grossAmount,
@@ -216,6 +224,14 @@ export const recalculatePartnerSettlement = async (
 export const approvePartnerSettlement = async (settlementId: string) => {
   const { profile } = await assertSettlementActor();
   if (!canManageAccounting(profile.role as LourexRole)) throw new Error("Only owner or operations can approve partner settlements.");
+
+  const visibleSettlements = await loadPartnerSettlements();
+  const settlement = visibleSettlements.find((row) => row.id === settlementId);
+  if (!settlement) throw new Error("Settlement not found.");
+  if (settlement.status === "approved" || settlement.status === "paid") {
+    throw new Error("Settlement is already approved or paid.");
+  }
+
   const { error } = await db.rpc("approve_partner_settlement", { p_settlement_id: settlementId });
   if (error) throwOptionalSettlementUnavailable(error);
   await writeAuditLog({ action: "partner_settlement.approved", tableName: "partner_settlements", recordId: settlementId });
