@@ -1,6 +1,6 @@
 import { canMoveShipmentStage, getNextShipmentStage, getShipmentStage } from "@/lib/shipmentStages";
 import type { LourexRole } from "@/features/auth/rbac";
-import type { PurchaseRequestStatus, ShipmentStageCode } from "@/types/lourex";
+import type { PurchaseRequestStatus, ShipmentStageCode, DealOperationalStatus } from "@/types/lourex";
 
 const REQUEST_STATUS_TRANSITIONS: Record<PurchaseRequestStatus, PurchaseRequestStatus[]> = {
   intake_submitted: ["under_review", "awaiting_clarification", "cancelled"],
@@ -36,6 +36,7 @@ export const canAdvanceShipmentStage = (input: {
   role: LourexRole | null | undefined;
   currentStage: ShipmentStageCode | null | undefined;
   nextStage: ShipmentStageCode | null | undefined;
+  dealOperationalStatus?: DealOperationalStatus | null;
 }) => {
   const expectedNextStage = getNextShipmentStageCode(input.currentStage);
 
@@ -43,7 +44,19 @@ export const canAdvanceShipmentStage = (input: {
     return false;
   }
 
+  if (input.dealOperationalStatus === "closed") {
+    return false;
+  }
+
   const nextOrder = getShipmentStage(input.nextStage).order;
+
+  if (
+    input.currentStage === "factory" &&
+    nextOrder > 1 &&
+    (input.dealOperationalStatus === "awaiting_assignment" || input.dealOperationalStatus === "partner_assigned")
+  ) {
+    return false;
+  }
 
   if (input.role === "owner" || input.role === "operations_employee") {
     return true;

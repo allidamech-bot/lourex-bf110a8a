@@ -309,12 +309,14 @@ export default function TrackingPage() {
 
   const canAdvance = useMemo(() => {
     if (!profile || !activeShipment) return false;
+    const activeDeal = deals.find(d => d.id === activeShipment.dealId || d.dealNumber === activeShipment.dealNumber);
     return canAdvanceShipmentStage({
       role: profile.role,
       currentStage: activeShipment.stage,
       nextStage: nextStageCode,
+      dealOperationalStatus: activeDeal?.operationalStatus,
     });
-  }, [activeShipment, profile, nextStageCode]);
+  }, [activeShipment, profile, nextStageCode, deals]);
 
   const partnerWorkspaceHint = isTurkishPartner
     ? t("tracking.partnerWorkspaceHintTurkey")

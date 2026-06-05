@@ -70,7 +70,6 @@ export default function DealsPage() {
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDealNumber = searchParams.get("deal");
-  const canManageDeal = profile?.role === "owner" || profile?.role === "operations_employee";
   const isTurkishPartner = profile?.role === "turkish_partner";
   const isSaudiPartner = profile?.role === "saudi_partner";
   const isPartnerWorkspace = isTurkishPartner || isSaudiPartner;
@@ -98,6 +97,7 @@ export default function DealsPage() {
 
   const filteredRows = useMemo(() => filterDeals(rows, deferredSearch), [deferredSearch, rows]);
   const selectedDeal = filteredRows.find((row) => row.dealNumber === selectedDealNumber) || filteredRows[0] || null;
+  const canManageDeal = (profile?.role === "owner" || profile?.role === "operations_employee") && selectedDeal?.operationalStatus !== "closed";
   const assignedSummary = useMemo(
     () => ({
       assigned: rows.length,

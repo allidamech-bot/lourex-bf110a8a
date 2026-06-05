@@ -2410,7 +2410,12 @@ export const createTrackingUpdate = async (input: {
   }
   const currentStage = normalizeShipmentStageCode(shipment.current_stage_code || mapShipmentStatusToStage(shipment.status));
   const nextStage = normalizeShipmentStageCode(input.stageCode);
-  if (!canAdvanceShipmentStage({ role: profile.role, currentStage, nextStage })) {
+  if (!canAdvanceShipmentStage({ 
+    role: profile.role, 
+    currentStage, 
+    nextStage,
+    dealOperationalStatus: accessibleDeal?.operationalStatus 
+  })) {
     throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
   }
 
