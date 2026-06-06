@@ -2250,6 +2250,16 @@ export const updateDealOperation = async (
       },
     });
 
+    const { logSystemEvent } = await import("@/domain/audit/auditLogger");
+    await logSystemEvent({
+      eventType: nextOperationalStatus === "closed" && current.operationalStatus !== "closed" ? "DEAL_CLOSED" : "DEAL_CREATED", // Use appropriate type
+      targetId: dealId,
+      payload: {
+        beforeState: { operational_status: current?.operationalStatus },
+        afterState: { operational_status: nextOperationalStatus || current?.operationalStatus },
+      }
+    });
+
     if (nextOperationalStatus === "closed" && current.operationalStatus !== "closed") {
       try {
         const { createPartnerSettlement } = await import("@/domain/accounting/partnerSettlements");
@@ -2338,6 +2348,16 @@ export const uploadDealAttachment = async (input: {
       summary: `تم رفع مرفق جديد إلى الصفقة ${input.dealNumber}`,
       entity_label: input.dealNumber,
     },
+  });
+
+  const { logSystemEvent } = await import("@/domain/audit/auditLogger");
+  await logSystemEvent({
+    eventType: "ATTACHMENT_UPLOADED",
+    targetId: inserted.data.id,
+    payload: {
+      afterState: { file_name: input.file.name, category: input.category },
+      metadata: { dealId: input.dealId, dealNumber: input.dealNumber }
+    }
   });
 
   return mapAttachment(inserted.data);
@@ -2602,6 +2622,17 @@ export const createTrackingUpdate = async (input: {
     dealId: input.dealId || null,
     stageCode: nextStage,
     visibility: input.visibility || (input.customerNote ? "customer_visible" : "internal"),
+  });
+
+  const { logSystemEvent } = await import("@/domain/audit/auditLogger");
+  await logSystemEvent({
+    eventType: "TRACKING_STAGE_MUTATED",
+    targetId: input.shipmentId,
+    payload: {
+      beforeState: { stage_code: currentStage },
+      afterState: { stage_code: nextStage },
+      metadata: { dealId: input.dealId || shipment.deal_id || null }
+    }
   });
 
   return inserted.data;
