@@ -18,6 +18,15 @@ export const verifyLedgerIntegrity = (
     .filter((l) => l.direction === "CREDIT")
     .reduce((sum, l) => sum + l.amount, 0);
 
+  // Cross-Currency validation
+  const currencies = new Set(ledgerLines.map(l => l.currency));
+  if (currencies.size > 1) {
+    discrepancies.push(`Mixed currencies in ledger detected: ${Array.from(currencies).join(", ")}`);
+  }
+  if (!currencies.has(operationalData.currency) && currencies.size > 0) {
+    discrepancies.push(`Ledger currency mismatch. Expected ${operationalData.currency}, found ${Array.from(currencies)[0]}`);
+  }
+
   // Check 1: Debits == Credits
   if (totalDebits !== totalCredits) {
     discrepancies.push(`Ledger imbalance: Debits (${totalDebits}) != Credits (${totalCredits})`);

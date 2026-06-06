@@ -1,3 +1,5 @@
+import type { CurrencyCode } from "@/domain/currency/types";
+
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
 export type LedgerDirection = "DEBIT" | "CREDIT";
 
@@ -12,6 +14,7 @@ export interface LedgerLine {
   accountId: string;
   dealId?: string;
   amount: number; // Stored in integer cents/halalas
+  currency: CurrencyCode;
   direction: LedgerDirection;
   description: string;
 }
@@ -27,6 +30,7 @@ export interface DealFinancialInput {
   dealId: string;
   totalRevenue: number; // Stored in integer cents/halalas
   totalCosts: number; // Stored in integer cents/halalas
+  currency: CurrencyCode;
   saudiPartnerId?: string;
   turkishPartnerId?: string;
 }

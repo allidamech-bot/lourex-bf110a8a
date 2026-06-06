@@ -26,6 +26,7 @@ export const calculateDealSettlement = (input: DealFinancialInput): SettlementRe
     accountId: "REV-CLEARING-01",
     dealId,
     amount: totalRevenue,
+    currency: input.currency,
     direction: "DEBIT",
     description: `Clear Total Revenue for Deal ${dealId}`,
   });
@@ -36,6 +37,7 @@ export const calculateDealSettlement = (input: DealFinancialInput): SettlementRe
     accountId: "EXP-COSTS-01",
     dealId,
     amount: totalCosts,
+    currency: input.currency,
     direction: "CREDIT",
     description: `Record Costs for Deal ${dealId}`,
   });
@@ -45,6 +47,7 @@ export const calculateDealSettlement = (input: DealFinancialInput): SettlementRe
     accountId: "LIAB-SAUDI-01",
     dealId,
     amount: saudiProfit,
+    currency: input.currency,
     direction: "CREDIT",
     description: `Saudi Partner Profit Share for Deal ${dealId}`,
   });
@@ -54,6 +57,7 @@ export const calculateDealSettlement = (input: DealFinancialInput): SettlementRe
     accountId: "LIAB-TURKEY-01",
     dealId,
     amount: turkishProfit,
+    currency: input.currency,
     direction: "CREDIT",
     description: `Turkey Broker Profit Share for Deal ${dealId}`,
   });

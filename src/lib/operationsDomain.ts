@@ -2182,6 +2182,9 @@ export const updateDealOperation = async (
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
 
+  const { assertClientReadOnlyAccess } = await import("@/domain/clientPortal/portalService");
+  assertClientReadOnlyAccess(profile.role);
+
   const currentDeals = await loadDeals();
   const current = currentDeals.find((deal) => deal.id === dealId);
   if (!current) throw new Error("تعذر العثور على الصفقة المطلوبة.");
@@ -2446,6 +2449,10 @@ export const createTrackingUpdate = async (input: {
 }) => {
   const { user, profile } = await getCurrentUserContext();
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
+
+  const { assertClientReadOnlyAccess } = await import("@/domain/clientPortal/portalService");
+  assertClientReadOnlyAccess(profile.role);
+
   if (!isValidRole(profile.role)) throw new Error("صلاحيات الحساب الحالية غير صالحة.");
 
   const shipments = await safeStructuredSelect<ShipmentRow>("shipments");
@@ -2651,6 +2658,9 @@ export const logShipmentEvent = async (input: {
   if (!user || !profile) {
     throw new Error("يجب تسجيل الدخول للقيام بهذا الإجراء.");
   }
+
+  const { assertClientReadOnlyAccess } = await import("@/domain/clientPortal/portalService");
+  assertClientReadOnlyAccess(profile.role);
 
   // Security check for partners and customers
   if (profile.role !== "owner" && profile.role !== "operations_employee") {
