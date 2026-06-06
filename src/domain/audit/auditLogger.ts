@@ -36,6 +36,56 @@ export const logSystemEvent = async (input: {
       _systemEnforced: true,
     },
   });
+  // Intercept events and route to Notification System
+  const { sendNotification } = await import("@/domain/notifications/notificationService");
+
+  if (entry.eventType === "DEAL_CLOSED") {
+    // Notify Saudi Partner
+    const { loadDeals } = await import("@/lib/operationsDomain");
+    const deals = await loadDeals();
+    const deal = deals.find((d) => d.id === entry.targetId);
+
+    if (deal && deal.saudiPartnerId) {
+      await sendNotification({
+        recipientId: deal.saudiPartnerId,
+        title: "تم إغلاق الصفقة (Settlement Ready)",
+        body: `تم إغلاق الصفقة ${deal.dealNumber} وبدء عملية التسوية المالية الآلية.`,
+        channel: "IN_APP",
+        priority: "CRITICAL",
+        metadata: {
+          dealId: deal.id,
+          dealNumber: deal.dealNumber,
+        },
+      });
+    }
+  } else if (entry.eventType === "TRACKING_STAGE_MUTATED") {
+    const nextStage = entry.payload.afterState?.stage_code;
+    
+    // Notify on critical tracking stages (e.g., 'closed' or 'arrived_ksa')
+    if (nextStage === "closed" || nextStage === "arrived_ksa") {
+      const dealId = entry.payload.metadata?.dealId as string | undefined;
+      if (dealId) {
+        const { loadDeals } = await import("@/lib/operationsDomain");
+        const deals = await loadDeals();
+        const deal = deals.find((d) => d.id === dealId);
+
+        if (deal && deal.saudiPartnerId) {
+          await sendNotification({
+            recipientId: deal.saudiPartnerId,
+            title: `تحديث هام للشحنة في الصفقة ${deal.dealNumber}`,
+            body: `انتقلت إحدى الشحنات إلى مرحلة: ${nextStage}`,
+            channel: "IN_APP",
+            priority: "HIGH",
+            metadata: {
+              dealId: deal.id,
+              dealNumber: deal.dealNumber,
+              trackingId: entry.targetId,
+            },
+          });
+        }
+      }
+    }
+  }
 
   return entry;
 };
