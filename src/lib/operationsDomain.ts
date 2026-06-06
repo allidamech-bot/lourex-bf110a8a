@@ -2480,13 +2480,44 @@ export const createTrackingUpdate = async (input: {
 
     // Execute pure engine calculation inside atomic boundary
     // If net profit is zero/negative or debits !== credits, this throws and halts the mutation.
-    calculateDealSettlement({
+    const settlement = calculateDealSettlement({
       dealId: accessibleDeal.id,
       totalRevenue: totalRevenueCents,
       totalCosts: totalCostsCents,
       saudiPartnerId: accessibleDeal.saudiPartnerId || undefined,
       turkishPartnerId: accessibleDeal.turkishPartnerId || undefined,
     });
+
+    // Phase 13 Part 2: Discrepancy Detection & Financial Reconciliation
+    const { verifyLedgerIntegrity } = await import("@/domain/financial/reconciliationEngine");
+    const reconciliationReport = verifyLedgerIntegrity(
+      accessibleDeal.id,
+      settlement.ledgerEntry.lines,
+      {
+        dealId: accessibleDeal.id,
+        totalRevenue: totalRevenueCents,
+        totalCosts: totalCostsCents,
+        saudiPartnerId: accessibleDeal.saudiPartnerId || undefined,
+        turkishPartnerId: accessibleDeal.turkishPartnerId || undefined,
+      }
+    );
+
+    if (!reconciliationReport.isValid) {
+      // Trigger a drift alert by writing an audit log
+      await writeAuditLog({
+        action: "financial.drift_alert",
+        tableName: "deals",
+        recordId: accessibleDeal.id,
+        oldValues: {},
+        newValues: {
+          discrepancies: reconciliationReport.discrepancies,
+          checksum: reconciliationReport.checksum,
+          summary: "CRITICAL DRIFT ALERT: Financial discrepancy detected during ledger reconciliation.",
+          entity_label: accessibleDeal.dealNumber,
+        },
+      });
+      throw new Error(`Financial Reconciliation Failed: ${reconciliationReport.discrepancies.join(" | ")}`);
+    }
   }
 
   const inserted = await db

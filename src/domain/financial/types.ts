@@ -37,3 +37,9 @@ export interface SettlementResult {
   turkishProfit: number;
   ledgerEntry: LedgerEntry;
 }
+
+export interface ReconciliationReport {
+  isValid: boolean;
+  checksum: number;
+  discrepancies: string[];
+}
