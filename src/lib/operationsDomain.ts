@@ -2187,120 +2187,125 @@ export const updateDealOperation = async (
   const { assertClientReadOnlyAccess } = await import("@/domain/clientPortal/portalService");
   assertClientReadOnlyAccess(profile.role);
 
-  const currentDeals = await loadDeals();
-  const current = currentDeals.find((deal) => deal.id === dealId);
-  if (!current) throw new Error("تعذر العثور على الصفقة المطلوبة.");
+  try {
+    const currentDeals = await loadDeals();
+    const current = currentDeals.find((deal) => deal.id === dealId);
+    if (!current) throw new Error("تعذر العثور على الصفقة المطلوبة.");
 
-  if (current.operationalStatus === "closed") {
-    throw new Error("Operation forbidden: Deal is closed.");
-  }
+    if (current.operationalStatus === "closed") {
+      throw new Error("Operation forbidden: Deal is closed.");
+    }
 
-  const payload: Record<string, unknown> = {};
-  if (typeof input.notes === "string") payload.notes = input.notes;
-  if (input.operationalStatus) payload.operational_status = input.operationalStatus;
-  if (Object.prototype.hasOwnProperty.call(input, "turkishPartnerId")) {
-    payload.assigned_turkish_partner_id = input.turkishPartnerId || null;
-  }
-  if (Object.prototype.hasOwnProperty.call(input, "saudiPartnerId")) {
-    payload.assigned_saudi_partner_id = input.saudiPartnerId || null;
-  }
+    const payload: Record<string, unknown> = {};
+    if (typeof input.notes === "string") payload.notes = input.notes;
+    if (input.operationalStatus) payload.operational_status = input.operationalStatus;
+    if (Object.prototype.hasOwnProperty.call(input, "turkishPartnerId")) {
+      payload.assigned_turkish_partner_id = input.turkishPartnerId || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(input, "saudiPartnerId")) {
+      payload.assigned_saudi_partner_id = input.saudiPartnerId || null;
+    }
 
-  if (Object.keys(payload).length === 0) return { data: null, error: null };
+    if (Object.keys(payload).length === 0) return { data: null, error: null };
 
-  const canManageDeal = profile.role === "owner" || profile.role === "operations_employee";
-  if (!canManageDeal) {
-    throw new Error("صلاحياتك الحالية لا تسمح بتعديل مركز الصفقة.");
-  }
+    const canManageDeal = profile.role === "owner" || profile.role === "operations_employee";
+    if (!canManageDeal) {
+      throw new Error("صلاحياتك الحالية لا تسمح بتعديل مركز الصفقة.");
+    }
 
-  const nextTurkishPartnerId =
-    Object.prototype.hasOwnProperty.call(input, "turkishPartnerId") ? input.turkishPartnerId || null : current.turkishPartnerId || null;
-  const nextSaudiPartnerId =
-    Object.prototype.hasOwnProperty.call(input, "saudiPartnerId") ? input.saudiPartnerId || null : current.saudiPartnerId || null;
-  const nextOperationalStatus = (input.operationalStatus || current.operationalStatus) as DealOperationalStatus;
+    const nextTurkishPartnerId =
+      Object.prototype.hasOwnProperty.call(input, "turkishPartnerId") ? input.turkishPartnerId || null : current.turkishPartnerId || null;
+    const nextSaudiPartnerId =
+      Object.prototype.hasOwnProperty.call(input, "saudiPartnerId") ? input.saudiPartnerId || null : current.saudiPartnerId || null;
+    const nextOperationalStatus = (input.operationalStatus || current.operationalStatus) as DealOperationalStatus;
 
-  if (
-    ["partner_assigned", "sourcing", "origin_execution", "in_transit", "destination_execution", "delivered", "closed"].includes(
-      nextOperationalStatus,
-    ) &&
-    (!nextTurkishPartnerId || !nextSaudiPartnerId)
-  ) {
-    throw new Error("يجب تعيين الشريك التركي والشريك السعودي قبل نقل الصفقة إلى هذه الحالة.");
-  }
+    if (
+      ["partner_assigned", "sourcing", "origin_execution", "in_transit", "destination_execution", "delivered", "closed"].includes(
+        nextOperationalStatus,
+      ) &&
+      (!nextTurkishPartnerId || !nextSaudiPartnerId)
+    ) {
+      throw new Error("يجب تعيين الشريك التركي والشريك السعودي قبل نقل الصفقة إلى هذه الحالة.");
+    }
 
-  if (nextOperationalStatus === "closed" && current.stage !== "delivered") {
-    throw new Error("لا يمكن إغلاق الصفقة قبل اكتمال مرحلة تم التسليم.");
-  }
+    if (nextOperationalStatus === "closed" && current.stage !== "delivered") {
+      throw new Error("لا يمكن إغلاق الصفقة قبل اكتمال مرحلة تم التسليم.");
+    }
 
-  const result = await safeStructuredMutation(() =>
-    db.from<DealRow>("deals").update(payload).eq("id", dealId).select("*").single(),
-  );
+    const result = await safeStructuredMutation(() =>
+      db.from<DealRow>("deals").update(payload).eq("id", dealId).select("*").single(),
+    );
 
-  if (!result.error) {
-    CacheService.invalidatePattern(`deal_${dealId}`);
-    CacheService.invalidatePattern(`partner_${current.turkishPartnerId || "none"}`);
-    CacheService.invalidatePattern(`partner_${current.saudiPartnerId || "none"}`);
+    if (!result.error) {
+      CacheService.invalidatePattern(`deal_${dealId}`);
+      CacheService.invalidatePattern(`partner_${current.turkishPartnerId || "none"}`);
+      CacheService.invalidatePattern(`partner_${current.saudiPartnerId || "none"}`);
 
-    await writeAuditLog({
-      action: "deal.updated",
-      tableName: "deals",
-      recordId: dealId,
-      oldValues: {
-        notes: current?.notes || "",
-        operational_status: current?.operationalStatus || "",
-        assigned_turkish_partner_id: current?.turkishPartnerId || null,
-        assigned_saudi_partner_id: current?.saudiPartnerId || null,
-      },
-      newValues: {
-        deal_id: dealId,
-        deal_number: current?.dealNumber,
-        summary: `تم تحديث مركز الصفقة ${current?.dealNumber || dealId}`,
-        entity_label: current?.dealNumber || "Deal",
-        ...payload,
-      },
-    });
+      await writeAuditLog({
+        action: "deal.updated",
+        tableName: "deals",
+        recordId: dealId,
+        oldValues: {
+          notes: current?.notes || "",
+          operational_status: current?.operationalStatus || "",
+          assigned_turkish_partner_id: current?.turkishPartnerId || null,
+          assigned_saudi_partner_id: current?.saudiPartnerId || null,
+        },
+        newValues: {
+          deal_id: dealId,
+          deal_number: current?.dealNumber,
+          summary: `تم تحديث مركز الصفقة ${current?.dealNumber || dealId}`,
+          entity_label: current?.dealNumber || "Deal",
+          ...payload,
+        },
+      });
 
-    const { logSystemEvent } = await import("@/domain/audit/auditLogger");
-    await logSystemEvent({
-      eventType: nextOperationalStatus === "closed" && current.operationalStatus !== "closed" ? "DEAL_CLOSED" : "DEAL_CREATED", // Use appropriate type
-      targetId: dealId,
-      payload: {
-        beforeState: { operational_status: current?.operationalStatus },
-        afterState: { operational_status: nextOperationalStatus || current?.operationalStatus },
-      }
-    });
-
-    if (nextOperationalStatus === "closed" && current.operationalStatus !== "closed") {
-      try {
-        const { createPartnerSettlement } = await import("@/domain/accounting/partnerSettlements");
-        const settlementPeriod = `DEAL-${current.dealNumber}`;
-        
-        if (current.turkishPartnerId) {
-          await createPartnerSettlement({
-            partnerId: current.turkishPartnerId,
-            partnerRole: "turkish_partner",
-            settlementPeriod,
-            explicitDealId: dealId,
-          }).catch(console.error);
+      const { logSystemEvent } = await import("@/domain/audit/auditLogger");
+      await logSystemEvent({
+        eventType: nextOperationalStatus === "closed" && current.operationalStatus !== "closed" ? "DEAL_CLOSED" : "DEAL_CREATED", // Use appropriate type
+        targetId: dealId,
+        payload: {
+          beforeState: { operational_status: current?.operationalStatus },
+          afterState: { operational_status: nextOperationalStatus || current?.operationalStatus },
         }
-        
-        if (current.saudiPartnerId) {
-          await createPartnerSettlement({
-            partnerId: current.saudiPartnerId,
-            partnerRole: "saudi_partner",
-            settlementPeriod,
-            explicitDealId: dealId,
-          }).catch(console.error);
-        }
+      });
 
-        // Lock associated financial entries
-        await db.from("financial_entries").update({ locked: true }).eq("deal_id", dealId);
-      } catch (err) {
-        console.error("Failed to process automated settlements for closed deal", err);
+      if (nextOperationalStatus === "closed" && current.operationalStatus !== "closed") {
+        try {
+          const { createPartnerSettlement } = await import("@/domain/accounting/partnerSettlements");
+          const settlementPeriod = `DEAL-${current.dealNumber}`;
+          
+          if (current.turkishPartnerId) {
+            await createPartnerSettlement({
+              partnerId: current.turkishPartnerId,
+              partnerRole: "turkish_partner",
+              settlementPeriod,
+              explicitDealId: dealId,
+            }).catch(console.error);
+          }
+          
+          if (current.saudiPartnerId) {
+            await createPartnerSettlement({
+              partnerId: current.saudiPartnerId,
+              partnerRole: "saudi_partner",
+              settlementPeriod,
+              explicitDealId: dealId,
+            }).catch(console.error);
+          }
+
+          // Lock associated financial entries
+          await db.from("financial_entries").update({ locked: true }).eq("deal_id", dealId);
+        } catch (err) {
+          console.error("Failed to process automated settlements for closed deal", err);
+        }
       }
     }
-  }
 
-  return result;
+    return result;
+  } catch (err) {
+    const { telemetry } = await import("@/domain/telemetry/telemetryService");
+    throw telemetry.captureException(err, "Failed to update deal operation", { dealId, userId: user.id });
+  }
 };
 
 import { STORAGE_BUCKETS, STORAGE_PATHS, uploadFile, uploadFileToStorage, deleteFolder } from "./storage";

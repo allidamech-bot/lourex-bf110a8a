@@ -193,82 +193,87 @@ export const createFinancialEntry = async (input: {
   entryDate: string;
   referenceLabel?: string;
 }) => {
-  const { user } = await assertAccountingActor("create");
-  if (!user) throw new Error("Authentication required.");
-  if (!(await getLourexDomainAvailability())) throw new Error("The Lourex domain must be activated in Supabase first.");
+  try {
+    const { user } = await assertAccountingActor("create");
+    if (!user) throw new Error("Authentication required.");
+    if (!(await getLourexDomainAvailability())) throw new Error("The Lourex domain must be activated in Supabase first.");
 
-  const validationError = validateFinancialEntryInput(input);
-  if (validationError) {
-    throw new Error(validationError);
-  }
-
-  const normalizedCurrency = normalizeFinancialCurrency(input.currency);
-  const normalizedNote = input.note.trim();
-  const normalizedMethod = input.method.trim();
-  const normalizedCounterparty = input.counterparty.trim();
-  const normalizedCategory = input.category.trim();
-  const normalizedReferenceLabel = input.referenceLabel?.trim() || "";
-
-  if (input.dealId) {
-    const linkedDeal = (await loadDeals()).find((deal) => deal.id === input.dealId);
-
-    if (!linkedDeal) {
-      throw new Error("The linked deal could not be found for this financial entry.");
-    }
-    if (linkedDeal.operationalStatus === "closed") {
-      throw new Error("Cannot add financial entries to a closed deal. Create an adjustment entry instead.");
+    const validationError = validateFinancialEntryInput(input);
+    if (validationError) {
+      throw new Error(validationError);
     }
 
-    if (input.customerId && linkedDeal.customerId !== input.customerId) {
-      throw new Error("The selected customer does not match the linked deal.");
+    const normalizedCurrency = normalizeFinancialCurrency(input.currency);
+    const normalizedNote = input.note.trim();
+    const normalizedMethod = input.method.trim();
+    const normalizedCounterparty = input.counterparty.trim();
+    const normalizedCategory = input.category.trim();
+    const normalizedReferenceLabel = input.referenceLabel?.trim() || "";
+
+    if (input.dealId) {
+      const linkedDeal = (await loadDeals()).find((deal) => deal.id === input.dealId);
+
+      if (!linkedDeal) {
+        throw new Error("The linked deal could not be found for this financial entry.");
+      }
+      if (linkedDeal.operationalStatus === "closed") {
+        throw new Error("Cannot add financial entries to a closed deal. Create an adjustment entry instead.");
+      }
+
+      if (input.customerId && linkedDeal.customerId !== input.customerId) {
+        throw new Error("The selected customer does not match the linked deal.");
+      }
     }
-  }
 
-  const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-  const relationType =
-    input.scope === "deal_linked" ? "deal_linked" : input.customerId ? "customer_linked" : "general";
+    const entryNumber = `FE-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+    const relationType =
+      input.scope === "deal_linked" ? "deal_linked" : input.customerId ? "customer_linked" : "general";
 
-  const inserted = await db.rpc("create_locked_financial_entry", {
-    p_entry_number: entryNumber,
-    p_deal_id: input.dealId || null,
-    p_customer_id: input.customerId || null,
-    p_type: input.type,
-    p_scope: input.scope,
-    p_relation_type: relationType,
-    p_amount: input.amount,
-    p_currency: normalizedCurrency,
-    p_note: normalizedNote,
-    p_entry_date: input.entryDate,
-    p_method: normalizedMethod,
-    p_counterparty: normalizedCounterparty,
-    p_category: normalizedCategory,
-    p_reference_label: normalizedReferenceLabel,
-  });
+    const inserted = await db.rpc("create_locked_financial_entry", {
+      p_entry_number: entryNumber,
+      p_deal_id: input.dealId || null,
+      p_customer_id: input.customerId || null,
+      p_type: input.type,
+      p_scope: input.scope,
+      p_relation_type: relationType,
+      p_amount: input.amount,
+      p_currency: normalizedCurrency,
+      p_note: normalizedNote,
+      p_entry_date: input.entryDate,
+      p_method: normalizedMethod,
+      p_counterparty: normalizedCounterparty,
+      p_category: normalizedCategory,
+      p_reference_label: normalizedReferenceLabel,
+    });
 
-  if (inserted.error) {
-    logOperationalError("financial_entry_create", inserted.error, {
+    if (inserted.error) {
+      logOperationalError("financial_entry_create", inserted.error, {
+        flow: "accounting",
+        dealId: input.dealId || null,
+        customerId: input.customerId || null,
+      });
+      throw inserted.error;
+    }
+
+    const { CacheService } = await import("@/domain/performance/cacheService");
+    if (input.dealId) {
+      CacheService.invalidatePattern(`deal_${input.dealId}`);
+    }
+
+    trackEvent("financial_entry_created", {
       flow: "accounting",
       dealId: input.dealId || null,
       customerId: input.customerId || null,
+      scope: input.scope,
+      type: input.type,
+      currency: normalizedCurrency,
     });
-    throw inserted.error;
+
+    return { id: inserted.data, entry_number: entryNumber };
+  } catch (err) {
+    const { telemetry } = await import("@/domain/telemetry/telemetryService");
+    throw telemetry.captureException(err, "Failed to create financial entry", { dealId: input.dealId });
   }
-
-  const { CacheService } = await import("@/domain/performance/cacheService");
-  if (input.dealId) {
-    CacheService.invalidatePattern(`deal_${input.dealId}`);
-  }
-
-  trackEvent("financial_entry_created", {
-    flow: "accounting",
-    dealId: input.dealId || null,
-    customerId: input.customerId || null,
-    scope: input.scope,
-    type: input.type,
-    currency: normalizedCurrency,
-  });
-
-  return { id: inserted.data, entry_number: entryNumber };
 };
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
