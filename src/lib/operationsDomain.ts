@@ -2170,6 +2170,8 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
   });
 };
 
+import { CacheService } from "@/domain/performance/cacheService";
+
 export const updateDealOperation = async (
   dealId: string,
   input: {
@@ -2234,6 +2236,10 @@ export const updateDealOperation = async (
   );
 
   if (!result.error) {
+    CacheService.invalidatePattern(`deal_${dealId}`);
+    CacheService.invalidatePattern(`partner_${current.turkishPartnerId || "none"}`);
+    CacheService.invalidatePattern(`partner_${current.saudiPartnerId || "none"}`);
+
     await writeAuditLog({
       action: "deal.updated",
       tableName: "deals",

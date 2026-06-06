@@ -254,6 +254,11 @@ export const createFinancialEntry = async (input: {
     throw inserted.error;
   }
 
+  const { CacheService } = await import("@/domain/performance/cacheService");
+  if (input.dealId) {
+    CacheService.invalidatePattern(`deal_${input.dealId}`);
+  }
+
   trackEvent("financial_entry_created", {
     flow: "accounting",
     dealId: input.dealId || null,
