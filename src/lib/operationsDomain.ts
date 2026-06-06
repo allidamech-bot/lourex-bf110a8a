@@ -2186,6 +2186,10 @@ export const updateDealOperation = async (
   const current = currentDeals.find((deal) => deal.id === dealId);
   if (!current) throw new Error("تعذر العثور على الصفقة المطلوبة.");
 
+  if (current.operationalStatus === "closed") {
+    throw new Error("Operation forbidden: Deal is closed.");
+  }
+
   const payload: Record<string, unknown> = {};
   if (typeof input.notes === "string") payload.notes = input.notes;
   if (input.operationalStatus) payload.operational_status = input.operationalStatus;
@@ -2245,6 +2249,36 @@ export const updateDealOperation = async (
         ...payload,
       },
     });
+
+    if (nextOperationalStatus === "closed" && current.operationalStatus !== "closed") {
+      try {
+        const { createPartnerSettlement } = await import("@/domain/accounting/partnerSettlements");
+        const settlementPeriod = `DEAL-${current.dealNumber}`;
+        
+        if (current.turkishPartnerId) {
+          await createPartnerSettlement({
+            partnerId: current.turkishPartnerId,
+            partnerRole: "turkish_partner",
+            settlementPeriod,
+            explicitDealId: dealId,
+          }).catch(console.error);
+        }
+        
+        if (current.saudiPartnerId) {
+          await createPartnerSettlement({
+            partnerId: current.saudiPartnerId,
+            partnerRole: "saudi_partner",
+            settlementPeriod,
+            explicitDealId: dealId,
+          }).catch(console.error);
+        }
+
+        // Lock associated financial entries
+        await db.from("financial_entries").update({ locked: true }).eq("deal_id", dealId);
+      } catch (err) {
+        console.error("Failed to process automated settlements for closed deal", err);
+      }
+    }
   }
 
   return result;
@@ -2263,6 +2297,13 @@ export const uploadDealAttachment = async (input: {
   if (!user || !profile) throw new Error("يجب تسجيل الدخول أولاً.");
   if (!assertInternalUser(profile.role)) {
     throw new Error("صلاحياتك الحالية لا تسمح بإضافة مرفقات الصفقة.");
+  }
+
+  const currentDeals = await loadDeals();
+  const currentDeal = currentDeals.find((d) => d.id === input.dealId);
+  if (!currentDeal) throw new Error("تعذر العثور على الصفقة.");
+  if (currentDeal.operationalStatus === "closed") {
+    throw new Error("Operation forbidden: Deal is closed.");
   }
 
   const filePath = `${STORAGE_PATHS.DEAL_ATTACHMENTS(input.dealNumber)}/${Date.now()}-${input.file.name}`;
@@ -2408,8 +2449,18 @@ export const createTrackingUpdate = async (input: {
   ) {
     throw new Error("لا يمكنك تحديث هذه الشحنة لأنها ليست ضمن العمليات المعيّنة لك.");
   }
+  
+  if (accessibleDeal?.operationalStatus === "closed") {
+    throw new Error("Operation forbidden: Deal is closed.");
+  }
+
   const currentStage = normalizeShipmentStageCode(shipment.current_stage_code || mapShipmentStatusToStage(shipment.status));
   const nextStage = normalizeShipmentStageCode(input.stageCode);
+  
+  if (nextStage !== "factory" && (accessibleDeal?.operationalStatus === "awaiting_assignment" || accessibleDeal?.operationalStatus === "partner_assigned")) {
+    throw new Error("Operation forbidden: Cannot progress shipment before assignment is completed.");
+  }
+
   if (!canAdvanceShipmentStage({ 
     role: profile.role, 
     currentStage, 
@@ -2417,6 +2468,25 @@ export const createTrackingUpdate = async (input: {
     dealOperationalStatus: accessibleDeal?.operationalStatus 
   })) {
     throw new Error("لا يمكن نقل الشحنة إلى هذه المرحلة من حالتها الحالية أو بصلاحياتك الحالية.");
+  }
+
+  // Phase 13 Ledger Interception: Enforce strict financial validation before closing
+  if (nextStage === "closed" && accessibleDeal) {
+    const { calculateDealSettlement } = await import("@/domain/financial/ledgerEngine");
+    
+    // Convert floating point to strict integer cents/halalas to prevent drift
+    const totalRevenueCents = Math.round((accessibleDeal.accountingSummary?.income || 0) * 100);
+    const totalCostsCents = Math.round((accessibleDeal.accountingSummary?.expense || 0) * 100);
+
+    // Execute pure engine calculation inside atomic boundary
+    // If net profit is zero/negative or debits !== credits, this throws and halts the mutation.
+    calculateDealSettlement({
+      dealId: accessibleDeal.id,
+      totalRevenue: totalRevenueCents,
+      totalCosts: totalCostsCents,
+      saudiPartnerId: accessibleDeal.saudiPartnerId || undefined,
+      turkishPartnerId: accessibleDeal.turkishPartnerId || undefined,
+    });
   }
 
   const inserted = await db

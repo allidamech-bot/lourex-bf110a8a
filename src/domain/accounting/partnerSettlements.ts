@@ -42,6 +42,7 @@ type SettlementCalculationInput = {
   partnerRole: PartnerSettlementRole;
   settlementPeriod: string;
   commissionRate?: number;
+  explicitDealId?: string;
 };
 
 type SettlementAmounts = {
@@ -138,11 +139,17 @@ export const calculatePartnerSettlement = async (
   const [deals, entries] = await Promise.all([loadDeals(), loadFinancialEntries()]);
   const normalizedRate = input.commissionRate ?? 0.05;
   const periodPrefix = input.settlementPeriod.trim();
+
   const assignedDeals = deals.filter((deal) => {
+    if (input.explicitDealId && deal.id !== input.explicitDealId) return false;
+    
     const assigned =
       input.partnerRole === "turkish_partner"
         ? deal.turkishPartnerId === input.partnerId
         : deal.saudiPartnerId === input.partnerId;
+        
+    if (input.explicitDealId) return assigned;
+
     return assigned && (!periodPrefix || deal.createdAt?.startsWith(periodPrefix));
   });
   const dealIds = new Set(assignedDeals.map((deal) => deal.id));

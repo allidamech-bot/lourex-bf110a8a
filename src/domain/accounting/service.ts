@@ -215,6 +215,9 @@ export const createFinancialEntry = async (input: {
     if (!linkedDeal) {
       throw new Error("The linked deal could not be found for this financial entry.");
     }
+    if (linkedDeal.operationalStatus === "closed") {
+      throw new Error("Cannot add financial entries to a closed deal. Create an adjustment entry instead.");
+    }
 
     if (input.customerId && linkedDeal.customerId !== input.customerId) {
       throw new Error("The selected customer does not match the linked deal.");
@@ -347,9 +350,13 @@ export const createFinancialEditRequest = async (input: {
     throw new Error("The requested financial entry could not be found.");
   }
   const linkedDealId = input.dealId || targetEntry.deal_id || null;
-  const linkedDealNumber = linkedDealId
-    ? (await loadDeals()).find((deal) => deal.id === linkedDealId)?.dealNumber || null
-    : null;
+  const deals = await loadDeals();
+  const linkedDeal = linkedDealId ? deals.find((deal) => deal.id === linkedDealId) : null;
+  const linkedDealNumber = linkedDeal?.dealNumber || null;
+
+  if (linkedDeal && linkedDeal.operationalStatus === "closed") {
+    throw new Error("Cannot submit financial edit requests for a closed deal. Create an adjustment entry instead.");
+  }
 
   if (!targetEntry.locked) {
     throw new Error("Only locked financial entries can be updated through edit requests.");
