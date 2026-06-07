@@ -19,6 +19,18 @@ export const prepareClientShipmentView = (shipment: OperationalShipment): Client
         occurredAt: update.occurredAt,
         customerNote: update.customerNote || "",
       })),
+    dealId: shipment.dealId,
+    dealNumber: shipment.dealNumber,
+    requestNumber: shipment.requestNumber,
+    destination: shipment.destination || "",
+    pallets: shipment.pallets || 0,
+    weight: shipment.weight || 0,
+    updatedAt: shipment.updatedAt,
+    customerVisibleNote: shipment.customerVisibleNote,
+    shipmentEvents: shipment.shipmentEvents || [],
+    timeline: shipment.timeline || [],
+    stage: shipment.stage,
+    customerEmail: shipment.customerEmail,
   };
 };
 
@@ -54,4 +66,18 @@ export const assertClientReadOnlyAccess = (role: string | null | undefined): voi
   if (role === "customer") {
     throw new Error("Operation forbidden: Client account has read-only privileges.");
   }
+};
+
+export const fetchClientDeals = async (): Promise<ClientPortalDealView[]> => {
+  // Dynamic import to avoid circular dependencies
+  const { fetchDeals, fetchShipments } = await import("@/domain/operations/service");
+  const deals = await fetchDeals();
+  const shipments = await fetchShipments();
+  return deals.map((deal) => prepareClientDealView(deal, shipments));
+};
+
+export const fetchClientShipments = async (): Promise<ClientPortalShipmentView[]> => {
+  const { fetchShipments } = await import("@/domain/operations/service");
+  const shipments = await fetchShipments();
+  return shipments.map((shipment) => prepareClientShipmentView(shipment));
 };

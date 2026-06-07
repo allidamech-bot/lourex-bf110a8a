@@ -42,7 +42,7 @@ import {
 } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
-import { canManageAccounting, isInternalRole } from "@/features/auth/rbac";
+import { canViewAccounting, isInternalRole } from "@/features/auth/rbac";
 import { logOperationalError } from "@/lib/monitoring";
 import type { PartnerSettlement } from "@/types/lourex";
 import { OperationsHealthCenter } from "@/features/operations-intelligence/components/OperationsHealthCenter";
@@ -165,7 +165,7 @@ export default function OverviewPage() {
       setLoading(true);
 
       try {
-        const canReadAccountingManagement = profile?.role ? canManageAccounting(profile.role) : false;
+        const canReadAccountingManagement = profile?.role ? canViewAccounting(profile.role) : false;
         const [requestsDomain, dealsDomain, shipmentsDomain, auditCount, editsDomain, financialEntriesDomain, settlementRows] = await Promise.all([
           fetchRequests(),
           fetchDeals(),
@@ -459,7 +459,53 @@ export default function OverviewPage() {
         })}
       </DashboardGrid>
 
-      {isInternal && !loading && (
+      {profile?.role === "saudi_partner" && !loading && (
+        <div className="space-y-16">
+          <DashboardSection
+            eyebrow="Financial Intelligence"
+            title="Executive Ledger Overview"
+            description="Aggregated financial metrics derived directly from the immutable ledger."
+            icon={<Receipt className="h-5 w-5" />}
+          >
+            <DashboardGrid variant="kpi">
+              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Total Income</p>
+                  <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+                </div>
+                <p className="mt-4 text-2xl font-black text-emerald-400">
+                  {financialEntries.filter(e => e.type === "income").reduce((sum, e) => sum + e.amount, 0).toLocaleString()} <span className="text-xs">SAR</span>
+                </p>
+              </BentoCard>
+
+              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Operational Costs</p>
+                  <Truck className="h-4 w-4 text-rose-400" />
+                </div>
+                <p className="mt-4 text-2xl font-black text-rose-400">
+                  {financialEntries.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0).toLocaleString()} <span className="text-xs">SAR</span>
+                </p>
+              </BentoCard>
+
+              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Net Revenue</p>
+                  <WalletCards className="h-4 w-4 text-amber-200" />
+                </div>
+                <p className="mt-4 text-2xl font-black text-stone-100">
+                  {(
+                    financialEntries.filter(e => e.type === "income").reduce((sum, e) => sum + e.amount, 0) -
+                    financialEntries.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0)
+                  ).toLocaleString()} <span className="text-xs">SAR</span>
+                </p>
+              </BentoCard>
+            </DashboardGrid>
+          </DashboardSection>
+        </div>
+      )}
+
+      {isInternal && profile?.role !== "saudi_partner" && !loading && (
         <div className="space-y-16">
           {/* 2. Critical Actions Center */}
           <DashboardSection

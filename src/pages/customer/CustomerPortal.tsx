@@ -23,8 +23,10 @@ import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { getRoleDisplayName } from "@/lib/identity";
 import { formatMoney as libFormatMoney } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n";
-import { fetchCustomerDashboard, fetchRequests, fetchDeals } from "@/domain/operations/service";
-import type { OperationsCustomer, OperationsRequest, OperationsDeal } from "@/domain/operations/types";
+import { fetchCustomerDashboard, fetchRequests } from "@/domain/operations/service";
+import type { OperationsCustomer, OperationsRequest } from "@/domain/operations/types";
+import { fetchClientDeals } from "@/domain/clientPortal/portalService";
+import type { ClientPortalDealView } from "@/domain/clientPortal/types";
 import { logOperationalError } from "@/lib/monitoring";
 import {
   getCustomerFinancialSummaryCopy,
@@ -102,7 +104,7 @@ const CustomerPortal = () => {
 
   const [customerData, setCustomerData] = useState<OperationsCustomer | null>(null);
   const [recentRequests, setRecentRequests] = useState<OperationsRequest[]>([]);
-  const [deals, setDeals] = useState<OperationsDeal[]>([]);
+  const [deals, setDeals] = useState<ClientPortalDealView[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -128,7 +130,7 @@ const CustomerPortal = () => {
     try {
       let dashboard: OperationsCustomer | null = null;
       let requests: OperationsRequest[] = [];
-      let dealsData: OperationsDeal[] = [];
+      let dealsData: ClientPortalDealView[] = [];
       let dashboardError: unknown = null;
       let requestsError: unknown = null;
 
@@ -151,7 +153,7 @@ const CustomerPortal = () => {
       }
 
       try {
-        dealsData = await fetchDeals();
+        dealsData = await fetchClientDeals();
         setDeals(dealsData);
       } catch (error) {
         logOperationalError("customer_portal_deals_load", error, {
@@ -367,7 +369,7 @@ const CustomerPortal = () => {
           <CustomerOperationsHealthWidget
             activeShipmentsCount={deals.filter(d => d.operationalStatus !== "delivered" && d.operationalStatus !== "closed").length}
             openRequestsCount={recentRequests.filter(r => r.status !== "completed" && r.status !== "cancelled").length}
-            delayedCount={deals.filter(d => d.shipmentStage === "customs_clearance" || d.shipmentStage === "in_transit").length}
+            delayedCount={deals.filter(d => d.shipment?.currentStage === "customs_clearance" || d.shipment?.currentStage === "in_transit").length}
             lastUpdateDate={deals[0]?.createdAt || recentRequests[0]?.createdAt}
             nextAction={recentRequestStatus?.label}
             nextActionAr={recentRequestStatus?.label}

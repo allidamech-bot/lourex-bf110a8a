@@ -97,7 +97,14 @@ export default function DealsPage() {
 
   const filteredRows = useMemo(() => filterDeals(rows, deferredSearch), [deferredSearch, rows]);
   const selectedDeal = filteredRows.find((row) => row.dealNumber === selectedDealNumber) || filteredRows[0] || null;
-  const canManageDeal = (profile?.role === "owner" || profile?.role === "operations_employee") && selectedDeal?.operationalStatus !== "closed";
+  const isAssignedToMe = isTurkishPartner 
+    ? profile?.id === selectedDeal?.turkishPartnerId 
+    : isSaudiPartner 
+      ? profile?.id === selectedDeal?.saudiPartnerId 
+      : false;
+  const isInternalManager = profile?.role === "owner" || profile?.role === "operations_employee";
+  const isDealLocked = selectedDeal?.operationalStatus === "closed" || selectedDeal?.stage === "delivered" || selectedDeal?.stage === "closed";
+  const canManageDeal = (isInternalManager || isAssignedToMe) && !isDealLocked;
   const assignedSummary = useMemo(
     () => ({
       assigned: rows.length,
@@ -581,7 +588,7 @@ export default function DealsPage() {
                       <select
                         value={turkishPartnerId}
                         onChange={(event) => setTurkishPartnerId(event.target.value)}
-                        disabled={!canManageDeal}
+                        disabled={!isInternalManager || isDealLocked}
                         className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <option value="" className="bg-stone-900">{t("deals.unassigned")}</option>
@@ -599,7 +606,7 @@ export default function DealsPage() {
                       <select
                         value={saudiPartnerId}
                         onChange={(event) => setSaudiPartnerId(event.target.value)}
-                        disabled={!canManageDeal}
+                        disabled={!isInternalManager || isDealLocked}
                         className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <option value="" className="bg-stone-900">{t("deals.unassigned")}</option>
@@ -619,7 +626,7 @@ export default function DealsPage() {
                         onChange={(event) =>
                           setOperationalStatus(event.target.value as DealOperationalStatus)
                         }
-                        disabled={!canManageDeal}
+                        disabled={!isInternalManager || isDealLocked}
                         className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {Object.entries(operationalStatusMeta).map(([key]) => (

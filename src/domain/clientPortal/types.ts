@@ -13,6 +13,18 @@ export interface ClientPortalShipmentView {
   originCountry: string | null;
   destinationCountry: string | null;
   updatesHistory: ClientPortalTrackingUpdate[];
+  dealId?: string | null;
+  dealNumber?: string;
+  requestNumber?: string;
+  destination: string;
+  pallets: number;
+  weight: number;
+  updatedAt: string;
+  customerVisibleNote?: string;
+  shipmentEvents: any[];
+  timeline: any[];
+  stage: ShipmentStageCode;
+  customerEmail?: string | null;
 }
 
 export interface ClientPortalDealView {

@@ -9,10 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { useI18n } from "@/lib/i18n";
 import { loadShipments } from "@/lib/operationsDomain";
+import { fetchClientShipments } from "@/domain/clientPortal/portalService";
+import type { ClientPortalShipmentView } from "@/domain/clientPortal/types";
 import { logOperationalError } from "@/lib/monitoring";
 
-type CustomerShipmentRows = Awaited<ReturnType<typeof loadShipments>>;
-type CustomerShipmentRow = CustomerShipmentRows[number];
+type CustomerShipmentRow = ClientPortalShipmentView;
 type ShipmentOwnershipFields = {
   customerEmail?: string | null;
   customer_email?: string | null;
@@ -41,7 +42,7 @@ const CustomerTrackingProPage = () => {
     setError("");
 
     try {
-      const data = await loadShipments();
+      const data = await fetchClientShipments();
       const visibleShipments = normalizedEmail
         ? data.filter((row: CustomerShipmentRow & ShipmentOwnershipFields) => {
             const rowEmail = (row.customerEmail || row.customer_email || row.customer?.email || "").trim().toLowerCase();
