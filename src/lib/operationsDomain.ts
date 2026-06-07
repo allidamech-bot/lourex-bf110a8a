@@ -2556,6 +2556,69 @@ export const createTrackingUpdate = async (input: {
       });
       throw new Error(`Financial Reconciliation Failed: ${reconciliationReport.discrepancies.join(" | ")}`);
     }
+
+    // Phase 24: Active Ledger Persistence
+    try {
+      const { telemetry } = await import("@/domain/telemetry/telemetryService");
+      const { CacheService } = await import("@/domain/performance/cacheService");
+      
+      const entryResult = await db.from("ledger_entries").insert({
+        deal_id: accessibleDeal.id,
+        event_type: "DEAL_CLOSURE_SETTLEMENT",
+        created_at: new Date().toISOString()
+      }).select("id").single();
+
+      if (entryResult.error) throw entryResult.error;
+      const entryId = entryResult.data.id;
+
+      // Ensure accounts exist and get their UUIDs
+      const accountIds = new Map<string, string>();
+      for (const line of settlement.ledgerEntry.lines) {
+        if (!accountIds.has(line.accountId)) {
+          const accResult = await db.from("ledger_accounts").select("id").eq("name", line.accountId).single();
+          if (accResult.error || !accResult.data) {
+             // Create it dynamically
+             const newAcc = await db.from("ledger_accounts").insert({
+               name: line.accountId,
+               type: line.accountId.startsWith("REV") ? "REVENUE" : line.accountId.startsWith("EXP") ? "EXPENSE" : "LIABILITY",
+               currency: line.currency
+             }).select("id").single();
+             if (newAcc.error) throw newAcc.error;
+             accountIds.set(line.accountId, newAcc.data.id);
+          } else {
+             accountIds.set(line.accountId, accResult.data.id);
+          }
+        }
+      }
+
+      const linesPayload = settlement.ledgerEntry.lines.map(line => ({
+        entry_id: entryId,
+        account_id: accountIds.get(line.accountId)!,
+        amount: line.amount,
+        direction: line.direction,
+        created_at: new Date().toISOString()
+      }));
+
+      const linesResult = await db.from("ledger_lines").insert(linesPayload);
+      if (linesResult.error) throw linesResult.error;
+
+      // Evict caches to force fresh fetch
+      CacheService.invalidatePattern(`deal_${accessibleDeal.id}`);
+      if (accessibleDeal.turkishPartnerId) CacheService.invalidatePattern(`partner_${accessibleDeal.turkishPartnerId}`);
+      if (accessibleDeal.saudiPartnerId) CacheService.invalidatePattern(`partner_${accessibleDeal.saudiPartnerId}`);
+
+      telemetry.trackMetric(
+        "SYSTEM_EVENT",
+        "INFO",
+        "Ledger lines successfully persisted to database.",
+        { dealId: accessibleDeal.id, linesCount: linesPayload.length }
+      );
+
+    } catch (err: any) {
+      const { telemetry } = await import("@/domain/telemetry/telemetryService");
+      telemetry.captureException(err, "Failed to persist ledger to database", { dealId: accessibleDeal.id });
+      throw new Error(`Critical Error: Failed to persist ledger to database. Aborting closure. Details: ${err.message}`);
+    }
   }
 
   const inserted = await db

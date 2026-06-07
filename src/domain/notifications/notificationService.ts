@@ -1,15 +1,14 @@
 import type { NotificationPayload } from "./types";
 import { createNotifications } from "@/lib/operationsDomain";
+import { dispatchEmailPayload } from "./providers/emailProviderAdapter";
+import { dispatchSmsPayload } from "./providers/smsProviderAdapter";
 
 /**
  * Centralized Notification Dispatcher.
- * Processes internal notifications and simulates external delivery loggers (like SMS/WhatsApp).
+ * Processes internal notifications and routes external delivery loggers (like SMS/WhatsApp).
  */
 export const sendNotification = async (payload: NotificationPayload) => {
-  // Always log to console to simulate external logging for future integrations
   console.log(`[NOTIFICATION DISPATCHED] Priority: ${payload.priority} | Channel: ${payload.channel}`);
-  console.log(`To: ${payload.recipientId} | Title: ${payload.title}`);
-  console.log(`Body: ${payload.body}`);
 
   // In this phase, IN_APP and SYSTEM channels map to our existing database table via `createNotifications`.
   if (payload.channel === 'IN_APP' || payload.channel === 'SYSTEM') {
@@ -36,8 +35,15 @@ export const sendNotification = async (payload: NotificationPayload) => {
     }
   }
 
-  // Future integration point for EMAIL/SMS
-  if (payload.channel === 'EMAIL') {
-    console.log(`[EMAIL DISPATCHER] Simulated sending email to user ${payload.recipientId}...`);
+  // Phase 25: Abstract External Notification Gateways
+  // Automatically escalate HIGH/CRITICAL alerts to SMS or EMAIL if explicitly requested or implicitly needed.
+  if (payload.channel === 'EMAIL' || payload.priority === 'CRITICAL') {
+    await dispatchEmailPayload(payload);
+  }
+
+  if (payload.channel === 'SMS' || payload.priority === 'CRITICAL') {
+    // In a real system, you'd map the recipientId (UUID) to their phone number via a profile lookup.
+    // For this simulation phase, we dispatch directly to the adapter.
+    await dispatchSmsPayload(payload);
   }
 };
