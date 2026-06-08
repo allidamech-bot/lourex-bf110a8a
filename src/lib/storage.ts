@@ -35,6 +35,12 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
   "application/pdf": "pdf",
+  // Cargo & commercial document types (Phase 27)
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel": "xls",
+  "text/plain": "txt",
+  "text/csv": "csv",
 };
 
 const sanitizePathSegment = (value: string) => {
@@ -136,8 +142,16 @@ const validateUploadFile = (file: File) => {
     throw new Error("Only JPG, PNG, WEBP, or GIF images are supported.");
   }
 
-  if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-    throw new Error("Only PNG, JPG, WEBP, or PDF files are supported.");
+  const isDocument =
+    file.type === "application/pdf" ||
+    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.type === "application/vnd.ms-excel" ||
+    file.type === "text/plain" ||
+    file.type === "text/csv";
+
+  if (!file.type.startsWith("image/") && !isDocument) {
+    throw new Error("Supported formats: PNG, JPG, WEBP, PDF, Word (.docx), Excel (.xlsx), CSV, or plain text.");
   }
 };
 

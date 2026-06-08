@@ -31,13 +31,14 @@ import {
 } from "@/lib/operationsDomain";
 import { getShipmentStageCopy } from "@/lib/shipmentStages";
 import { pickText, useI18n } from "@/lib/i18n";
-import type { DealOperationalStatus } from "@/types/lourex";
+import type { DealOperationalStatus, LogisticsMetrics } from "@/types/lourex";
 import { logOperationalError } from "@/lib/monitoring";
 import { filterDeals } from "@/lib/adminOperations";
 import { formatMoney } from "@/lib/currency";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { DealCommandCenterPanel } from "@/features/deals/components/DealCommandCenterPanel";
 import { analyzeDealHealth, buildDealAiContext } from "@/features/deals/lib/dealCommand";
+import { LogisticsMetricsPanel } from "@/components/shared/LogisticsMetricsPanel";
 
 const HEADER_SEPARATOR = " | ";
 type DealAiMode = "deal_briefing" | "deal_risk_review";
@@ -58,6 +59,7 @@ export default function DealsPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [notesDraft, setNotesDraft] = useState("");
+  const [logisticsDraft, setLogisticsDraft] = useState<LogisticsMetrics | null>(null);
   const [turkishPartnerId, setTurkishPartnerId] = useState("");
   const [saudiPartnerId, setSaudiPartnerId] = useState("");
   const [operationalStatus, setOperationalStatus] =
@@ -119,6 +121,8 @@ export default function DealsPage() {
   useEffect(() => {
     if (!selectedDeal) return;
     setNotesDraft(selectedDeal.notes || "");
+    // Default to empty if not present, but use cast for now as backend integration continues
+    setLogisticsDraft((selectedDeal as any).logistics || null);
     setTurkishPartnerId(selectedDeal.turkishPartnerId || "");
     setSaudiPartnerId(selectedDeal.saudiPartnerId || "");
     setOperationalStatus(selectedDeal.operationalStatus);
@@ -648,7 +652,15 @@ export default function DealsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
+                <div className="mt-5">
+                  <LogisticsMetricsPanel
+                    metrics={logisticsDraft}
+                    isEditable={canManageDeal}
+                    onChange={setLogisticsDraft}
+                  />
+                </div>
+
+                <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium text-stone-100">{t("deals.labels.notes")}</p>
                   </div>

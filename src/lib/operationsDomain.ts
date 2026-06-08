@@ -2331,7 +2331,7 @@ export const uploadDealAttachment = async (input: {
   }
 
   const filePath = `${STORAGE_PATHS.DEAL_ATTACHMENTS(input.dealNumber)}/${Date.now()}-${input.file.name}`;
-  const publicUrl = await uploadFile("PRODUCT_IMAGES", filePath, input.file);
+  const publicUrl = await uploadFile("DOCUMENTS", filePath, input.file);
 
   const inserted = await db
     .from<AttachmentRow>("attachments")

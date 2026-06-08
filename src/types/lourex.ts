@@ -175,7 +175,32 @@ export interface DealOperation {
   };
 }
 
+// ─── Phase 27: Physical Logistics Metrics ───────────────────────────────────
+
+export type ContainerType = "20ft" | "40ft" | "40ft_hc" | "LCL";
+
+/**
+ * Physical logistics metrics for a deal/shipment.
+ * These values power customs declarations, freight costing, and CBM-based billing.
+ * They are persisted client-side (notes JSON) until the DB migration adds dedicated columns.
+ */
+export interface LogisticsMetrics {
+  /** Total gross weight of the shipment in kilograms */
+  weightKg: number | null;
+  /** Volumetric Cubic Metres — L(cm) × W(cm) × H(cm) / 1,000,000 */
+  volumetricCbm: number | null;
+  /** Container specification */
+  containerType: ContainerType | null;
+  /** Number of full containers booked */
+  containerCount: number | null;
+  /** Number of standard pallets */
+  palletsCount: number | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type FinancialEntryScope = "global" | "deal" | "customer";
+
 export type FinancialRelationType = "general" | "deal_linked" | "customer_linked";
 
 export interface FinancialEntry {

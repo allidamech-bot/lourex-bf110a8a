@@ -50,6 +50,7 @@ import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { OperationsTimelineIntelligence } from "@/features/operations-intelligence/components/OperationsTimelineIntelligence";
 import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
 import { cn } from "@/lib/utils";
+import { LogisticsMetricsPanel } from "@/components/shared/LogisticsMetricsPanel";
 
 type ShipmentAiContext = {
   trackingId: string;
@@ -307,16 +308,20 @@ export default function TrackingPage() {
   const nextStage = nextStageCode ? getShipmentStageCopy(nextStageCode, lang) : null;
   const progressPercent = activeShipment ? getShipmentProgressPercent(activeShipment.stage) : 0;
 
+  const activeDeal = useMemo(() => {
+    if (!activeShipment) return null;
+    return deals.find(d => d.id === activeShipment.dealId || d.dealNumber === activeShipment.dealNumber) || null;
+  }, [activeShipment, deals]);
+
   const canAdvance = useMemo(() => {
     if (!profile || !activeShipment) return false;
-    const activeDeal = deals.find(d => d.id === activeShipment.dealId || d.dealNumber === activeShipment.dealNumber);
     return canAdvanceShipmentStage({
       role: profile.role,
       currentStage: activeShipment.stage,
       nextStage: nextStageCode,
       dealOperationalStatus: activeDeal?.operationalStatus,
     });
-  }, [activeShipment, profile, nextStageCode, deals]);
+  }, [activeShipment, profile, nextStageCode, activeDeal]);
 
   const partnerWorkspaceHint = isTurkishPartner
     ? t("tracking.partnerWorkspaceHintTurkey")
@@ -564,6 +569,13 @@ export default function TrackingPage() {
                   Owner: {currentStage.owner}
                 </div>
               )}
+            </BentoCard>
+
+            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+              <LogisticsMetricsPanel
+                metrics={(activeDeal as any)?.logistics || null}
+                isEditable={false}
+              />
             </BentoCard>
 
             {isInternal && shipmentAnalysis && (

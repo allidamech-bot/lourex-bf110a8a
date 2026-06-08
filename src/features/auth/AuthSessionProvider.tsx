@@ -27,6 +27,8 @@ type AuthContextValue = {
   loading: boolean;
   profileError: boolean;
   profileMissing: boolean;
+  /** True when Supabase is configured and reachable. False in unconfigured/dev environments. */
+  isSupabaseReady: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -207,6 +209,7 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
         loading,
         profileError,
         profileMissing,
+        isSupabaseReady: isSupabaseConfigured,
         refreshProfile,
         signOut,
       }),
