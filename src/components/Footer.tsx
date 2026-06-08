@@ -47,7 +47,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
           </div>
 
           <FooterColumn title={lang === "ar" ? "المنصة" : "Platform"} links={platformLinks} />
-          <FooterColumn title={lang === "ar" ? "الشركة" : "Company"} links={navLinks} />
+          <FooterColumn title={lang === "ar" ? "المؤسسة" : "MIM Import"} links={navLinks} />
 
           <div>
             <h4 className="mb-4 text-sm font-semibold text-stone-100">{lang === "ar" ? "تواصل" : "Contact"}</h4>
@@ -80,7 +80,9 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-amber-200/10 py-6 sm:flex-row">
           <p className="text-xs text-stone-500">
-            {"\u00A9"} {new Date().getFullYear()} LOUREX. {t("footer.tagline")}
+            {"\u00A9"} {new Date().getFullYear()}{" "}
+            {lang === "ar" ? "مؤسسة ميم للاستيراد" : "MIM Import Establishment"}.
+            {" "}{t("footer.tagline")}
           </p>
           <p className="text-xs uppercase tracking-wider text-stone-600">
             Private Smart Operations Platform
