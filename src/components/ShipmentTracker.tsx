@@ -248,16 +248,48 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
 
                 {/* Desktop: current stage description */}
                 {currentStage >= 0 && (
-                  <div className="hidden md:block mt-5 p-3 rounded-lg bg-card border border-border">
+                  <div className="hidden md:block mt-5 p-4 rounded-lg bg-card border border-border">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                       {lang === "ar" ? "المرحلة الحالية" : "Current Stage"}
                     </p>
                     <p className="text-sm font-medium text-gold">
                       {lang === "ar" ? shipmentStages[currentStage]?.label : shipmentStages[currentStage]?.labelEn}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                       {lang === "ar" ? shipmentStages[currentStage]?.description : shipmentStages[currentStage]?.descriptionEn}
                     </p>
+                    
+                    {/* Stage 4: Customs Clearance Micro-Interactions */}
+                    {currentStage === 3 && (
+                      <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-2">
+                            {lang === "ar" ? "جاهزية الوثائق" : "Document Readiness"}
+                          </p>
+                          <div className="flex items-center gap-2 text-sm text-stone-300">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            <span>{lang === "ar" ? "الفاتورة التجارية" : "Commercial Invoice"}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-stone-300">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            <span>{lang === "ar" ? "بوليصة الشحن" : "Bill of Lading"}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-stone-400">
+                            <div className="w-4 h-4 rounded-full border border-stone-600 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-stone-600 animate-pulse" />
+                            </div>
+                            <span>{lang === "ar" ? "دفع الرسوم الجمركية" : "Tariff Paid Status"}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col justify-end gap-2">
+                          <Button variant="outline" size="sm" className="w-full border-amber-200/10 bg-black/40 hover:bg-gold/10 hover:text-gold text-stone-300 transition-colors">
+                            <FileCheck className="w-4 h-4 me-2" />
+                            {lang === "ar" ? "تحميل البيان الجمركي (PDF)" : "Download Customs Manifest (PDF)"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

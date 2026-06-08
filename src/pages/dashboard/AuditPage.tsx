@@ -16,6 +16,7 @@ import {
   generateExecutiveWorkspaceState
 } from "@/features/executive-command/lib/executiveWorkspaceEngine";
 import { CrossSystemInsightsPanel } from "@/features/executive-command/components/CrossSystemInsightsPanel";
+import { AdminAuditLogs } from "@/components/admin/AdminAuditLogs";
 
 type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
 type JsonObject = { [key: string]: Json | undefined };
@@ -301,7 +302,8 @@ export default function AuditPage() {
       </div>
 
       {!loading && (
-        <div className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-2 items-start">
+          <AdminAuditLogs />
           <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights.filter(i => i.type === 'strategic')} />
         </div>
       )}

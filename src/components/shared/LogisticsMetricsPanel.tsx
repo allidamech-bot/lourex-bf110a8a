@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { LogisticsMetrics, ContainerType } from "@/types/lourex";
-import { Scale, Box, Truck, Package } from "lucide-react";
+import { Scale, Box, Truck, Package, Calculator, Plus, Trash2 } from "lucide-react";
+import { calculateTotalCBM, type PackingItem } from "@/lib/logisticsUtils";
 
 interface LogisticsMetricsPanelProps {
   metrics?: LogisticsMetrics | null;
@@ -28,6 +31,15 @@ export const LogisticsMetricsPanel = ({
   };
 
   const currentMetrics = metrics || defaultMetrics;
+  
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [packingItems, setPackingItems] = useState<PackingItem[]>([{ length: 0, width: 0, height: 0, quantity: 1 }]);
+
+  const handleCalculateCBM = () => {
+    const totalCBM = calculateTotalCBM(packingItems);
+    handleChange("volumetricCbm", String(totalCBM));
+    setShowCalculator(false);
+  };
 
   const handleChange = (field: keyof LogisticsMetrics, value: string | null) => {
     if (!onChange || !isEditable) return;
@@ -121,9 +133,20 @@ export const LogisticsMetricsPanel = ({
         </div>
 
         <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-muted-foreground">
-            <Box className="w-4 h-4" /> {labels.cbm}
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2 text-muted-foreground">
+              <Box className="w-4 h-4" /> {labels.cbm}
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCalculator(!showCalculator)}
+              className="h-6 px-2 text-xs text-gold hover:text-gold hover:bg-gold/10"
+            >
+              <Calculator className="w-3 h-3 me-1" />
+              {isAr ? "حاسبة" : "Calc"}
+            </Button>
+          </div>
           <Input
             type="number"
             min="0"
@@ -185,6 +208,81 @@ export const LogisticsMetricsPanel = ({
           </div>
         </div>
       </div>
+
+      {showCalculator && (
+        <div className="mt-4 p-4 rounded-lg bg-black/40 border border-gold/20 space-y-4">
+          <h4 className="text-sm font-medium text-gold flex items-center gap-2">
+            <Calculator className="w-4 h-4" />
+            {isAr ? "حاسبة الحجم التقديري (CBM)" : "CBM Volumetric Calculator"}
+          </h4>
+          
+          <div className="space-y-3">
+            {packingItems.map((item, index) => (
+              <div key={index} className="flex flex-wrap md:flex-nowrap items-end gap-2">
+                <div className="space-y-1 flex-1">
+                  <Label className="text-[10px] uppercase text-muted-foreground">L (cm)</Label>
+                  <Input type="number" min="0" value={item.length || ""} onChange={(e) => {
+                    const newItems = [...packingItems];
+                    newItems[index].length = Number(e.target.value);
+                    setPackingItems(newItems);
+                  }} className="h-9 bg-card" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <Label className="text-[10px] uppercase text-muted-foreground">W (cm)</Label>
+                  <Input type="number" min="0" value={item.width || ""} onChange={(e) => {
+                    const newItems = [...packingItems];
+                    newItems[index].width = Number(e.target.value);
+                    setPackingItems(newItems);
+                  }} className="h-9 bg-card" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <Label className="text-[10px] uppercase text-muted-foreground">H (cm)</Label>
+                  <Input type="number" min="0" value={item.height || ""} onChange={(e) => {
+                    const newItems = [...packingItems];
+                    newItems[index].height = Number(e.target.value);
+                    setPackingItems(newItems);
+                  }} className="h-9 bg-card" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <Label className="text-[10px] uppercase text-muted-foreground">Qty</Label>
+                  <Input type="number" min="1" value={item.quantity || ""} onChange={(e) => {
+                    const newItems = [...packingItems];
+                    newItems[index].quantity = Number(e.target.value);
+                    setPackingItems(newItems);
+                  }} className="h-9 bg-card" />
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  onClick={() => {
+                    const newItems = packingItems.filter((_, i) => i !== index);
+                    setPackingItems(newItems.length ? newItems : [{ length: 0, width: 0, height: 0, quantity: 1 }]);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex items-center justify-between pt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPackingItems([...packingItems, { length: 0, width: 0, height: 0, quantity: 1 }])}
+              className="border-dashed border-border"
+            >
+              <Plus className="w-3 h-3 me-1" />
+              {isAr ? "إضافة عنصر" : "Add Item"}
+            </Button>
+            
+            <Button size="sm" variant="gold" onClick={handleCalculateCBM}>
+              {isAr ? "تطبيق الحساب" : "Apply Calculation"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
