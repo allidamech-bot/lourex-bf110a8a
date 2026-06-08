@@ -3,6 +3,10 @@ export type PlatformRole =
   | "turkish_partner"
   | "saudi_partner"
   | "operations_employee"
+  | "employee"
+  | "customs_broker"
+  | "carrier"
+  | "supplier"
   | "customer";
 
 export type PurchaseRequestStatus =

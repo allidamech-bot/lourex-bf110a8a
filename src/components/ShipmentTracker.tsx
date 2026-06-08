@@ -1,11 +1,12 @@
 import { forwardRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, CheckCircle2, FileCheck, Truck, Factory, Warehouse, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { shipmentStages } from "@/lib/shipmentStages";
+import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 
 interface Shipment {
   tracking_id: string;
@@ -27,6 +28,10 @@ const statusToStage: Record<string, number> = Object.fromEntries(
 
 const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
   const { t, lang } = useI18n();
+  // Silently read profile role, degrades gracefully for public
+  const { profile } = useAuthSession();
+  const userRole = profile?.role;
+
   const [trackingId, setTrackingId] = useState("");
   const [result, setResult] = useState<Shipment | null>(null);
   const [error, setError] = useState("");
@@ -165,6 +170,37 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                     </div>
                   ))}
                 </div>
+                
+                {/* Carrier Conditional Role Overlay */}
+                {userRole === "carrier" && (
+                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-between bg-black/20 p-4 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Truck className="w-5 h-5 text-amber-500" />
+                      <span className="text-sm font-semibold text-amber-400">Carrier Active Transit Session</span>
+                    </div>
+                    <Button variant="outline" size="sm" className="border-amber-500/20 text-amber-500 hover:bg-amber-500/10">
+                      Update Transit Checkpoint
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Supplier Conditional Role Overlay */}
+                {userRole === "supplier" && currentStage < 3 && (
+                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-between bg-black/20 p-4 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Factory className="w-5 h-5 text-emerald-500" />
+                      <span className="text-sm font-semibold text-emerald-400">Supplier Origin Dashboard</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10">
+                        Manufacturing
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10">
+                        Ready for Pickup
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 11-Stage Progress Stepper */}
@@ -287,6 +323,14 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                             <FileCheck className="w-4 h-4 me-2" />
                             {lang === "ar" ? "تحميل البيان الجمركي (PDF)" : "Download Customs Manifest (PDF)"}
                           </Button>
+                          
+                          {/* Customs Broker Conditional Role Overlay */}
+                          {userRole === "customs_broker" && (
+                            <Button variant="gold" size="sm" className="w-full">
+                              <CheckCircle2 className="w-4 h-4 me-2" />
+                              Secure Upload
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )}

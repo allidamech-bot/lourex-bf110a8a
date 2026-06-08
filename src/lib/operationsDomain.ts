@@ -600,6 +600,10 @@ export type OperationalShipment = {
   trackingId: string;
   clientName: string;
   destination: string;
+  origin_country?: string;
+  origin_city?: string;
+  destination_country?: string;
+  destination_city?: string;
   pallets: number;
   weight: number;
   cbm?: number;
@@ -1707,7 +1711,7 @@ export const convertRequestToDeal = async (
       customer_id: customer.id,
       status: "in_progress",
       destination_country: request.customer.country || null,
-      origin_country: "Turkey",
+      origin_country: request.manufacturingCountry || "Turkey",
       notes: [
         `Request Number: ${request.requestNumber}`,
         `Customer Name: ${request.customer.fullName}`,
@@ -1874,7 +1878,7 @@ export const convertRequestToDeal = async (
       operational_status:
         options?.turkishPartnerId || options?.saudiPartnerId ? "partner_assigned" : "awaiting_assignment",
       destination_country: request.customer.country || null,
-      origin_country: "Turkey",
+      origin_country: request.manufacturingCountry || "Turkey",
       total_value: 0,
       currency: "SAR",
       notes: operationalSummary,
