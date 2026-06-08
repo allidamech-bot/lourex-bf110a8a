@@ -602,6 +602,9 @@ export type OperationalShipment = {
   destination: string;
   pallets: number;
   weight: number;
+  cbm?: number;
+  container_20ft?: number;
+  container_40ft?: number;
   dealId?: string | null;
   dealNumber?: string;
   requestNumber?: string;

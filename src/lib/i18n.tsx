@@ -2392,17 +2392,6 @@ const translations: Record<Lang, TranslationTree> = {
       backHome: "العودة إلى الرئيسية",
       customerPortal: "بوابة العميل",
       myArea: "الذهاب إلى مساحتي",
-      internalOnlyTitle: "وصول داخلي فقط",
-      internalOnlyDescription:
-        "هذا الحساب مصنّف كحساب عميل ويمكنه الوصول فقط إلى مسارات الطلبات والتتبع.",
-      forbiddenTitle: "ليس لديك صلاحية الوصول إلى هذه المنطقة",
-      forbiddenDescription:
-        "الدور الحالي لهذا الحساب هو {{role}}، وهذه الصفحة مخصّصة لنطاق صلاحيات مختلف.",
-      backToAuth: "العودة إلى تسجيل الدخول",
-      signOut: "تسجيل الخروج",
-      backHome: "العودة إلى الرئيسية",
-      customerPortal: "بوابة العميل",
-      myArea: "الذهاب إلى مساحتي",
     },
     account: {
       settings: "إعدادات الحساب",

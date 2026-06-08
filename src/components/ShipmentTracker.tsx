@@ -13,6 +13,9 @@ interface Shipment {
   destination: string;
   pallets: number;
   weight: number;
+  cbm?: number;
+  container_20ft?: number;
+  container_40ft?: number;
 }
 
 const SEARCH_TIMEOUT_MS = 8000;
@@ -152,6 +155,9 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                     { label: t("track.destination"), value: result.destination },
                     { label: t("track.pallets"), value: result.pallets },
                     { label: t("track.weight"), value: `${result.weight} kg` },
+                    ...(result.cbm ? [{ label: "CBM", value: `${result.cbm} m³` }] : []),
+                    ...(result.container_20ft ? [{ label: "20ft Container", value: result.container_20ft }] : []),
+                    ...(result.container_40ft ? [{ label: "40ft Container", value: result.container_40ft }] : []),
                   ].map((item) => (
                     <div key={item.label}>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">{item.label}</p>

@@ -19,6 +19,9 @@ export interface ClientPortalShipmentView {
   destination: string;
   pallets: number;
   weight: number;
+  cbm?: number;
+  container_20ft?: number;
+  container_40ft?: number;
   updatedAt: string;
   customerVisibleNote?: string;
   shipmentEvents: any[];
