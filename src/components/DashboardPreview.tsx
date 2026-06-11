@@ -1,70 +1,77 @@
 import { motion } from "framer-motion";
-import { Activity, BarChart3, ClipboardList, Receipt, Route, ShieldCheck } from "lucide-react";
+import { Activity, ClipboardList, LockKeyhole, Receipt, Route, ShieldCheck, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 
 const DashboardPreview = () => {
   const { lang, t } = useI18n();
+  const isArabic = lang === "ar";
 
-  const panels = [
+  const queues = [
     {
+      label: isArabic ? "طلبات تحتاج مراجعة" : "Requests need review",
+      value: isArabic ? "ملف طلب + صور + مواصفات" : "Request file + images + specs",
       icon: ClipboardList,
-      label: lang === "ar" ? "طلبات المراجعة" : "Review inbox",
-      value: lang === "ar" ? "فرز الطلبات وتحديد الجاهز للتحويل" : "Review requests and mark conversion-ready files",
-      color: "text-sky-400",
     },
     {
+      label: isArabic ? "صفقات قيد التنفيذ" : "Deals in execution",
+      value: isArabic ? "مسؤوليات الشركاء محددة" : "Partner responsibilities assigned",
+      icon: Users2,
+    },
+    {
+      label: isArabic ? "شحنات في المسار" : "Shipments on path",
+      value: isArabic ? "مرحلة حالية ومسؤول تالي" : "Current stage and next owner",
       icon: Route,
-      label: lang === "ar" ? "غرفة الصفقات" : "Deals center",
-      value: lang === "ar" ? "ربط الطلب بالعميل والشحنة والمحاسبة" : "Connect the request with customer, shipment, and accounting context",
-      color: "text-primary",
-    },
-    {
-      icon: Activity,
-      label: lang === "ar" ? "سياق التتبع" : "Tracking context",
-      value: lang === "ar" ? "متابعة المرحلة الحالية والمسؤول التالي" : "See the current stage and the next responsible party",
-      color: "text-emerald-400",
-    },
-    {
-      icon: Receipt,
-      label: lang === "ar" ? "المحاسبة المقفلة" : "Locked accounting",
-      value: lang === "ar" ? "قيود عامة أو مرتبطة بالصفقات مع طلب تعديل رسمي" : "Global and deal-linked entries with formal edit requests",
-      color: "text-amber-300",
-    },
-    {
-      icon: ShieldCheck,
-      label: lang === "ar" ? "الأثر التدقيقي" : "Audit trace",
-      value: lang === "ar" ? "من فعل ماذا وعلى أي كيان ومتى" : "Who did what, on which object, and when",
-      color: "text-rose-300",
-    },
-    {
-      icon: BarChart3,
-      label: lang === "ar" ? "التقارير" : "Reports",
-      value: lang === "ar" ? "قراءة تشغيلية على مستوى المنصة والعميل والصفقة" : "Operational reporting at platform, customer, and deal level",
-      color: "text-violet-300",
     },
   ];
 
+  const commandRows = [
+    {
+      label: isArabic ? "طلب شراء" : "Purchase request",
+      status: isArabic ? "جاهز للتحويل" : "Ready to convert",
+      owner: isArabic ? "فريق العمليات" : "Operations team",
+    },
+    {
+      label: isArabic ? "صفقة تشغيلية" : "Operational deal",
+      status: isArabic ? "قيد التوريد" : "Sourcing active",
+      owner: isArabic ? "الشريك التركي" : "Turkish partner",
+    },
+    {
+      label: isArabic ? "تخليص الوجهة" : "Destination clearance",
+      status: isArabic ? "يتطلب تحديث" : "Update required",
+      owner: isArabic ? "الشريك السعودي" : "Saudi partner",
+    },
+  ];
+
+  const auditItems = [
+    isArabic ? "قيد مالي مقفل" : "Locked financial entry",
+    isArabic ? "طلب تعديل رسمي" : "Formal edit request",
+    isArabic ? "أثر تدقيقي محفوظ" : "Audit trail preserved",
+  ];
+
   return (
-    <section className="py-24">
-      <div className="container mx-auto px-4 md:px-8">
+    <section className="relative overflow-hidden bg-stone-950 py-28">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(214,160,74,0.10),transparent_28%),radial-gradient(circle_at_80%_70%,rgba(245,245,244,0.04),transparent_28%)]" />
+      <div className="container relative mx-auto px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-12 text-center"
+          className="mb-14 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end"
         >
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
-            {lang === "ar" ? "غرفة العمليات" : "Operations Room"}
-          </p>
-          <h2 className="mb-4 font-serif text-3xl font-bold md:text-5xl">
-            {lang === "ar" ? "هذه ليست لوحة إدارة تقليدية" : "This is not a generic admin dashboard"}
-          </h2>
-          <p className="mx-auto max-w-3xl leading-8 text-muted-foreground">
-            {lang === "ar"
-              ? "داخل Lourex تعمل الصفقة كمركز تشغيل حقيقي: يبدأ القرار من الطلب، ويمتد إلى التتبع والمحاسبة والتدقيق والتقارير ضمن بيئة واحدة."
-              : "Inside Lourex, the deal becomes the center of execution. Decisions move from request review into tracking, accounting, audit, and reporting within one controlled workspace."}
+          <div>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/90">
+              {isArabic ? "غرفة العمليات" : "Operations room"}
+            </p>
+            <h2 className="font-serif text-3xl font-bold text-stone-100 md:text-5xl">
+              {isArabic ? "لوحة قرار مبنية حول الصفقة، لا حول الأرقام فقط" : "A decision room built around the deal, not just numbers"}
+            </h2>
+          </div>
+          <p className="max-w-3xl leading-8 text-stone-300">
+            {isArabic
+              ? "داخل Lourex لا ترى بطاقات منفصلة؛ ترى حالة الطلب، مسؤولية الشريك، مرحلة الشحنة، القيد المالي، والأثر التدقيقي في سياق واحد قابل للتنفيذ."
+              : "Inside Lourex you do not see isolated cards; request state, partner ownership, shipment stage, financial lock, and audit memory stay in one executable context."}
           </p>
         </motion.div>
 
@@ -72,33 +79,121 @@ const DashboardPreview = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="rounded-[2.3rem] border border-primary/10 bg-[linear-gradient(180deg,hsla(var(--card)/0.98),hsla(var(--card)/0.9))] p-6 shadow-[0_28px_70px_-40px_rgba(0,0,0,0.24)] dark:shadow-[0_28px_70px_-40px_rgba(0,0,0,0.8)] md:p-8"
+          className="rounded-[2.25rem] border border-stone-200/10 bg-stone-900/55 p-4 shadow-2xl shadow-stone-950/40 md:p-6"
         >
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.6rem] border border-border/60 bg-secondary/20 px-5 py-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                {t("commandCenter.commandContext")}
-              </p>
-              <p className="mt-2 font-serif text-2xl font-semibold">Lourex Operating System</p>
-            </div>
-            <div className="rounded-full bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
-              Request → Deal → Tracking → Accounting → Audit
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {panels.map((panel) => (
-              <div key={panel.label} className="rounded-[1.6rem] border border-border/50 bg-background/60 p-5">
-                <panel.icon className={`h-8 w-8 ${panel.color}`} />
-                <h4 className="mt-4 font-serif text-xl font-semibold">{panel.label}</h4>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{panel.value}</p>
+          <div className="grid gap-4 xl:grid-cols-[0.72fr_1.28fr]">
+            <aside className="rounded-[1.75rem] border border-stone-200/10 bg-stone-950/50 p-5">
+              <div className="flex items-center justify-between gap-4 border-b border-stone-200/10 pb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.22em] text-stone-500">
+                    {t("commandCenter.commandContext")}
+                  </p>
+                  <h3 className="mt-2 font-serif text-2xl font-semibold text-stone-100">
+                    {isArabic ? "مركز تشغيل Lourex" : "Lourex command center"}
+                  </h3>
+                </div>
+                <Activity className="h-6 w-6 text-amber-300" />
               </div>
-            ))}
+
+              <div className="mt-5 grid gap-3">
+                {queues.map((item, index) => (
+                  <div key={item.label} className="rounded-2xl border border-stone-200/10 bg-stone-900/65 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-300/10 text-amber-300">
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-stone-100">{item.label}</p>
+                        <p className="mt-1 text-xs leading-5 text-stone-400">{item.value}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-800">
+                      <div className="h-full rounded-full bg-amber-300/70" style={{ width: `${72 - index * 12}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            <div className="grid gap-4">
+              <div className="rounded-[1.75rem] border border-stone-200/10 bg-stone-950/45 p-5">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.22em] text-amber-300/90">
+                      {isArabic ? "سلسلة التنفيذ" : "Execution chain"}
+                    </p>
+                    <h3 className="mt-2 font-serif text-2xl font-semibold text-stone-100">
+                      Request → Deal → Tracking → Finance → Audit
+                    </h3>
+                  </div>
+                  <span className="rounded-full border border-amber-300/15 bg-amber-300/10 px-3 py-1.5 text-xs text-amber-100">
+                    {isArabic ? "سياق واحد" : "One context"}
+                  </span>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-3">
+                  {commandRows.map((row, index) => (
+                    <div key={row.label} className="rounded-2xl border border-stone-200/10 bg-stone-900/55 p-4">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-stone-100 text-xs font-bold text-stone-950">
+                          {index + 1}
+                        </span>
+                        <span className="rounded-full bg-stone-950/70 px-2.5 py-1 text-[11px] text-stone-300">
+                          {row.owner}
+                        </span>
+                      </div>
+                      <p className="font-serif text-lg font-semibold text-stone-100">{row.label}</p>
+                      <p className="mt-2 text-sm leading-6 text-stone-400">{row.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-[1.75rem] border border-stone-200/10 bg-stone-950/45 p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-300/10 text-amber-300">
+                      <Receipt className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-serif text-xl font-semibold text-stone-100">
+                        {isArabic ? "المالية تحت السيطرة" : "Finance under control"}
+                      </p>
+                      <p className="text-sm text-stone-400">
+                        {isArabic ? "لا تعديل مباشر بعد القفل" : "No direct edits after lock"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex items-center gap-2 rounded-2xl border border-stone-200/10 bg-stone-900/55 p-4 text-sm text-stone-300">
+                    <LockKeyhole className="h-4 w-4 text-amber-300" />
+                    {isArabic ? "كل تصحيح يمر بطلب تعديل قابل للمراجعة." : "Every correction moves through a reviewable edit request."}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-stone-200/10 bg-stone-950/45 p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-300/10 text-amber-300">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <p className="font-serif text-xl font-semibold text-stone-100">
+                      {isArabic ? "ذاكرة تدقيق لا تختفي" : "Audit memory that does not disappear"}
+                    </p>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {auditItems.map((item) => (
+                      <span key={item} className="rounded-full border border-stone-200/10 bg-stone-900/60 px-3 py-1.5 text-xs text-stone-300">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <Button variant="default" className="shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]" asChild>
-              <Link to="/dashboard">{lang === "ar" ? "فتح غرفة العمليات" : "Open operations room"}</Link>
+          <div className="mt-6 text-center">
+            <Button variant="default" className="bg-amber-300 text-stone-950 hover:bg-amber-200" asChild>
+              <Link to="/dashboard">{isArabic ? "فتح غرفة العمليات" : "Open operations room"}</Link>
             </Button>
           </div>
         </motion.div>
