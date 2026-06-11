@@ -332,3 +332,21 @@ export interface PublicTrackingResult {
   progressRatio: number;
   timeline: TrackingUpdateRecord[];
 }
+
+export interface PackingListItem {
+  itemName: string;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+  weightKg: number;
+  quantity: number;
+}
+
+export interface PackingListIngress {
+  id: string;
+  shipmentId: string;
+  supplierId: string;
+  items: PackingListItem[];
+  isSubmitted: boolean;
+  submittedAt?: string;
+}
