@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SupplierPackingListForm } from "@/components/admin/SupplierPackingListForm";
-import { submitSupplierPackingList } from "@/domain/logistics/supplierPackingLists";
+import {
+  loadRecentSupplierPackingLists,
+  submitSupplierPackingList,
+  type SupplierPackingListSummary,
+} from "@/domain/logistics/supplierPackingLists";
 import type { PackingListItem } from "@/types/lourex";
 import {
   getDomainActivationStatus,
@@ -25,7 +29,25 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [packingShipmentId, setPackingShipmentId] = useState("");
+  const [packingLists, setPackingLists] = useState<SupplierPackingListSummary[]>([]);
+  const [packingHistoryError, setPackingHistoryError] = useState("");
   const isArabic = lang === "ar";
+
+  const loadPackingHistory = async () => {
+    const result = await loadRecentSupplierPackingLists();
+    if (result.error || !result.data) {
+      setPackingLists([]);
+      setPackingHistoryError(
+        isArabic
+          ? "سجل قوائم التعبئة غير جاهز بعد. طبّق migration الجديد في Supabase أولاً."
+          : "Packing list history is not ready yet. Apply the new Supabase migration first.",
+      );
+      return;
+    }
+
+    setPackingLists(result.data);
+    setPackingHistoryError("");
+  };
 
   const refresh = async () => {
     setLoading(true);
@@ -36,6 +58,7 @@ export default function Admin() {
     setUsers(usersData);
     setActivation(activationData);
     setLoading(false);
+    await loadPackingHistory();
   };
 
   useEffect(() => {
@@ -66,6 +89,7 @@ export default function Admin() {
         ? `تم حفظ قائمة التعبئة: ${payload.cbm.toFixed(2)} CBM / ${payload.totalWeight.toFixed(2)} KG`
         : `Packing list saved: ${payload.cbm.toFixed(2)} CBM / ${payload.totalWeight.toFixed(2)} KG`,
     );
+    await loadPackingHistory();
   };
 
   const handleUpdate = async (
@@ -206,6 +230,56 @@ export default function Admin() {
           </div>
 
           <SupplierPackingListForm shipmentId={packingShipmentId} onSync={handlePackingSync} />
+
+          <div className="rounded-[1.25rem] border border-emerald-500/10 bg-stone-950/40 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="font-serif text-xl font-semibold text-stone-100">
+                  {isArabic ? "آخر قوائم التعبئة" : "Recent packing lists"}
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-stone-500">
+                  {isArabic ? "تظهر بعد تطبيق migration وحفظ أول قائمة." : "Shown after the migration is applied and the first list is saved."}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => void loadPackingHistory()} className="border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/10">
+                {isArabic ? "تحديث" : "Refresh"}
+              </Button>
+            </div>
+
+            {packingHistoryError ? (
+              <p className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-sm text-amber-200">
+                {packingHistoryError}
+              </p>
+            ) : packingLists.length === 0 ? (
+              <p className="mt-4 text-sm text-stone-500">
+                {isArabic ? "لا توجد قوائم تعبئة محفوظة بعد." : "No packing lists saved yet."}
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                {packingLists.map((list) => (
+                  <div key={list.id} className="rounded-xl border border-emerald-500/10 bg-black/25 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-xs font-semibold text-emerald-300">{list.shipmentReference}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-widest text-stone-600">{list.submittedByRole} · {list.status}</p>
+                      </div>
+                      <p className="text-[10px] text-stone-500">{list.createdAt ? new Date(list.createdAt).toLocaleString() : "—"}</p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-lg border border-emerald-500/10 bg-stone-950/60 p-3">
+                        <p className="text-[10px] uppercase tracking-widest text-stone-600">CBM</p>
+                        <p className="mt-1 font-mono text-sm text-emerald-300">{list.totalCbm.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-amber-500/10 bg-stone-950/60 p-3">
+                        <p className="text-[10px] uppercase tracking-widest text-stone-600">KG</p>
+                        <p className="mt-1 font-mono text-sm text-amber-300">{list.totalWeightKg.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </BentoCard>
 
         <BentoCard className="relative space-y-4 border-amber-200/15 bg-stone-900/50 shadow-2xl backdrop-blur-xl">
