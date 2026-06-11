@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SupplierPackingListForm } from "@/components/admin/SupplierPackingListForm";
+import { submitSupplierPackingList } from "@/domain/logistics/supplierPackingLists";
+import type { PackingListItem } from "@/types/lourex";
 import {
   getDomainActivationStatus,
   loadOperationalUsers,
@@ -42,11 +44,27 @@ export default function Admin() {
 
   const internalUsers = useMemo(() => users.filter((user) => user.role !== "customer"), [users]);
 
-  const handlePackingSync = async (cbm: number, totalWeight: number) => {
+  const handlePackingSync = async (payload: {
+    items: PackingListItem[];
+    cbm: number;
+    totalWeight: number;
+  }) => {
+    const result = await submitSupplierPackingList({
+      shipmentReference: packingShipmentId,
+      items: payload.items,
+      totalCbm: payload.cbm,
+      totalWeightKg: payload.totalWeight,
+    });
+
+    if (result.error || !result.data) {
+      toast.error(result.error?.message || (isArabic ? "تعذر حفظ قائمة التعبئة." : "Unable to save the packing list."));
+      throw result.error || new Error("Unable to save the packing list.");
+    }
+
     toast.success(
       isArabic
-        ? `تم تجهيز القياسات: ${cbm.toFixed(2)} CBM / ${totalWeight.toFixed(2)} KG`
-        : `Volumetrics prepared: ${cbm.toFixed(2)} CBM / ${totalWeight.toFixed(2)} KG`,
+        ? `تم حفظ قائمة التعبئة: ${payload.cbm.toFixed(2)} CBM / ${payload.totalWeight.toFixed(2)} KG`
+        : `Packing list saved: ${payload.cbm.toFixed(2)} CBM / ${payload.totalWeight.toFixed(2)} KG`,
     );
   };
 
@@ -170,8 +188,8 @@ export default function Admin() {
               </div>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400">
                 {isArabic
-                  ? "أداة تشغيلية لحساب CBM والوزن الإجمالي من عناصر التعبئة قبل ربطها لاحقاً بسجل الشحنة الدائم."
-                  : "Operational tool for calculating CBM and gross weight from packing items before permanent shipment persistence is wired."}
+                  ? "أداة تشغيلية لحفظ قائمة التعبئة الفعلية وربطها بمرجع الشحنة أو الصفقة مع حساب CBM والوزن الإجمالي."
+                  : "Operational tool for saving supplier packing lists against a shipment or deal reference with CBM and gross weight calculations."}
               </p>
             </div>
             <div className="w-full max-w-md">
@@ -215,12 +233,7 @@ export default function Admin() {
                   <div className="grid gap-3 md:grid-cols-3 xl:min-w-[620px]">
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.role")}</label>
-                      <select
-                        value={user.role}
-                        onChange={(event) => handleUpdate(user.id, "role", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
-                        disabled={savingId === user.id}
-                      >
+                      <select value={user.role} onChange={(event) => handleUpdate(user.id, "role", event.target.value)} className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20" disabled={savingId === user.id}>
                         <option value="owner" className="bg-stone-900">owner</option>
                         <option value="turkish_partner" className="bg-stone-900">turkish_partner</option>
                         <option value="saudi_partner" className="bg-stone-900">saudi_partner</option>
@@ -230,12 +243,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.status")}</label>
-                      <select
-                        value={user.status}
-                        onChange={(event) => handleUpdate(user.id, "status", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
-                        disabled={savingId === user.id}
-                      >
+                      <select value={user.status} onChange={(event) => handleUpdate(user.id, "status", event.target.value)} className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20" disabled={savingId === user.id}>
                         <option value="active" className="bg-stone-900">active</option>
                         <option value="inactive" className="bg-stone-900">inactive</option>
                         <option value="pending" className="bg-stone-900">pending</option>
@@ -243,12 +251,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.partnerType")}</label>
-                      <select
-                        value={user.partnerType || ""}
-                        onChange={(event) => handleUpdate(user.id, "partnerType", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
-                        disabled={savingId === user.id}
-                      >
+                      <select value={user.partnerType || ""} onChange={(event) => handleUpdate(user.id, "partnerType", event.target.value)} className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20" disabled={savingId === user.id}>
                         <option value="" className="bg-stone-900">—</option>
                         <option value="turkish" className="bg-stone-900">turkish</option>
                         <option value="saudi" className="bg-stone-900">saudi</option>
