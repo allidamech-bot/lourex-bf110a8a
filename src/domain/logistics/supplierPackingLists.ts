@@ -11,6 +11,16 @@ export interface SubmitSupplierPackingListInput {
   totalWeightKg: number;
 }
 
+export interface SupplierPackingListSummary {
+  id: string;
+  shipmentReference: string;
+  submittedByRole: string;
+  totalCbm: number;
+  totalWeightKg: number;
+  status: string;
+  createdAt: string;
+}
+
 const normalizePackingItems = (items: PackingListItem[]): PackingListItem[] =>
   items
     .map((item) => ({
@@ -77,6 +87,43 @@ export const submitSupplierPackingList = async (
     return {
       data: null,
       error: createDomainError(error, "Unable to submit the supplier packing list."),
+    };
+  }
+};
+
+export const loadRecentSupplierPackingLists = async (
+  limit = 8,
+): Promise<DomainResult<SupplierPackingListSummary[]>> => {
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.trunc(limit), 25) : 8;
+
+  try {
+    const { data, error } = await (supabase as any)
+      .from("supplier_packing_lists")
+      .select("id, shipment_reference, submitted_by_role, total_cbm, total_weight_kg, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(safeLimit);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = (data ?? []).map((row: any) => ({
+      id: String(row.id),
+      shipmentReference: normalizeText(row.shipment_reference),
+      submittedByRole: normalizeText(row.submitted_by_role),
+      totalCbm: Number(row.total_cbm || 0),
+      totalWeightKg: Number(row.total_weight_kg || 0),
+      status: normalizeText(row.status) || "submitted",
+      createdAt: normalizeText(row.created_at),
+    }));
+
+    return success(rows);
+  } catch (error) {
+    logOperationalError("supplier_packing_list_history_load", error);
+
+    return {
+      data: null,
+      error: createDomainError(error, "Unable to load supplier packing lists."),
     };
   }
 };
