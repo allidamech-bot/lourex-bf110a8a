@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, ShieldCheck, UserCog, Users } from "lucide-react";
+import { Activity, PackageCheck, ShieldCheck, UserCog, Users } from "lucide-react";
 import BentoCard from "@/components/BentoCard";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SupplierPackingListForm } from "@/components/admin/SupplierPackingListForm";
 import {
   getDomainActivationStatus,
   loadOperationalUsers,
@@ -15,11 +17,13 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
 export default function Admin() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [users, setUsers] = useState<Awaited<ReturnType<typeof loadOperationalUsers>>>([]);
   const [activation, setActivation] = useState<Awaited<ReturnType<typeof getDomainActivationStatus>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [packingShipmentId, setPackingShipmentId] = useState("");
+  const isArabic = lang === "ar";
 
   const refresh = async () => {
     setLoading(true);
@@ -37,6 +41,14 @@ export default function Admin() {
   }, []);
 
   const internalUsers = useMemo(() => users.filter((user) => user.role !== "customer"), [users]);
+
+  const handlePackingSync = async (cbm: number, totalWeight: number) => {
+    toast.success(
+      isArabic
+        ? `تم تجهيز القياسات: ${cbm.toFixed(2)} CBM / ${totalWeight.toFixed(2)} KG`
+        : `Volumetrics prepared: ${cbm.toFixed(2)} CBM / ${totalWeight.toFixed(2)} KG`,
+    );
+  };
 
   const handleUpdate = async (
     userId: string,
@@ -86,23 +98,23 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SiteHeader />
-      <div className="container mx-auto space-y-4 px-4 py-12 md:px-8 relative">
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.02),transparent_40%)] pointer-events-none" />
-        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr] relative">
-          <BentoCard className="border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
+      <div className="container relative mx-auto space-y-4 px-4 py-12 md:px-8">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.02),transparent_40%)]" />
+        <div className="relative grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <BentoCard className="border-amber-200/15 bg-stone-900/55 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-500">
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
                 <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-stone-500">{t("admin.ownerControl")}</p>
                 <h1 className="mt-2 font-serif text-3xl font-semibold text-stone-100">{t("admin.title")}</h1>
-                <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{t("admin.description")}</p>
+                <p className="mt-2 text-sm font-medium leading-7 text-stone-400">{t("admin.description")}</p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard className="border-amber-200/15 bg-stone-900/55 backdrop-blur-xl shadow-2xl">
+          <BentoCard className="border-amber-200/15 bg-stone-900/55 shadow-2xl backdrop-blur-xl">
             <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-stone-500">{t("admin.runtimeStatus")}</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {[
@@ -120,15 +132,15 @@ export default function Admin() {
           </BentoCard>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 relative">
+        <div className="relative grid gap-4 md:grid-cols-3">
           {[
             { icon: Users, label: t("admin.internalUsers"), value: internalUsers.length },
             { icon: ShieldCheck, label: t("admin.ownerAccounts"), value: users.filter((user) => user.role === "owner").length },
             { icon: Activity, label: t("admin.partnerAccounts"), value: users.filter((user) => user.role === "saudi_partner" || user.role === "turkish_partner").length },
           ].map((item) => (
-            <BentoCard key={item.label} className="border-amber-200/15 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
+            <BentoCard key={item.label} className="border-amber-200/15 bg-stone-900/50 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-500">
                   <item.icon className="h-5 w-5" />
                 </div>
                 <div>
@@ -140,11 +152,49 @@ export default function Admin() {
           ))}
         </div>
 
-        <BentoCard className="space-y-4 border-amber-200/15 bg-stone-900/50 backdrop-blur-xl shadow-2xl relative">
+        <BentoCard className="relative space-y-4 border-emerald-500/15 bg-stone-900/50 shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+                  <PackageCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300/70">
+                    {isArabic ? "أداة لوجستية" : "Logistics tool"}
+                  </p>
+                  <h2 className="font-serif text-2xl font-semibold text-stone-100">
+                    {isArabic ? "قائمة تعبئة المورد" : "Supplier packing list"}
+                  </h2>
+                </div>
+              </div>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400">
+                {isArabic
+                  ? "أداة تشغيلية لحساب CBM والوزن الإجمالي من عناصر التعبئة قبل ربطها لاحقاً بسجل الشحنة الدائم."
+                  : "Operational tool for calculating CBM and gross weight from packing items before permanent shipment persistence is wired."}
+              </p>
+            </div>
+            <div className="w-full max-w-md">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                {isArabic ? "مرجع الشحنة / الصفقة" : "Shipment / deal reference"}
+              </label>
+              <Input
+                value={packingShipmentId}
+                onChange={(event) => setPackingShipmentId(event.target.value)}
+                placeholder={isArabic ? "مثال: SHP- أو رقم الصفقة" : "Example: SHP- or deal number"}
+                className="mt-2 border-emerald-500/20 bg-stone-950/50 text-stone-100 focus:ring-emerald-500/20"
+              />
+            </div>
+          </div>
+
+          <SupplierPackingListForm shipmentId={packingShipmentId} onSync={handlePackingSync} />
+        </BentoCard>
+
+        <BentoCard className="relative space-y-4 border-amber-200/15 bg-stone-900/50 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("admin.accessProfiles")}</h2>
-              <p className="mt-2 text-sm text-stone-400 font-medium">{t("admin.accessDescription")}</p>
+              <p className="mt-2 text-sm font-medium text-stone-400">{t("admin.accessDescription")}</p>
             </div>
             <Button variant="outline" asChild className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
               <Link to="/dashboard">{t("admin.backToDashboard")}</Link>
@@ -156,19 +206,19 @@ export default function Admin() {
               <div key={user.id} className="rounded-[1.4rem] border border-amber-200/10 bg-stone-950/40 p-5 shadow-sm">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div>
-                    <p className="font-bold text-stone-100 uppercase tracking-tight">{user.fullName || t("admin.noName")}</p>
+                    <p className="font-bold uppercase tracking-tight text-stone-100">{user.fullName || t("admin.noName")}</p>
                     <p className="mt-1 text-sm text-stone-500">{user.email}</p>
-                    <p className="mt-1 text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-600">
                       {t("admin.updatedAt")}: {new Date(user.updatedAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="grid gap-3 md:grid-cols-3 xl:min-w-[620px]">
                     <div>
-                      <label className="text-[10px] font-bold text-stone-600 uppercase tracking-widest">{t("common.role")}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.role")}</label>
                       <select
                         value={user.role}
                         onChange={(event) => handleUpdate(user.id, "role", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
+                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
                         disabled={savingId === user.id}
                       >
                         <option value="owner" className="bg-stone-900">owner</option>
@@ -179,11 +229,11 @@ export default function Admin() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-stone-600 uppercase tracking-widest">{t("common.status")}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.status")}</label>
                       <select
                         value={user.status}
                         onChange={(event) => handleUpdate(user.id, "status", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
+                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
                         disabled={savingId === user.id}
                       >
                         <option value="active" className="bg-stone-900">active</option>
@@ -192,11 +242,11 @@ export default function Admin() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-stone-600 uppercase tracking-widest">{t("common.partnerType")}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("common.partnerType")}</label>
                       <select
                         value={user.partnerType || ""}
                         onChange={(event) => handleUpdate(user.id, "partnerType", event.target.value)}
-                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 focus:ring-amber-500/20 outline-none"
+                        className="mt-2 flex h-11 w-full rounded-xl border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 outline-none focus:ring-amber-500/20"
                         disabled={savingId === user.id}
                       >
                         <option value="" className="bg-stone-900">—</option>
