@@ -3,7 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DomainResult } from "@/domain/operations/types";
 import { createDomainError, success } from "@/domain/shared/utils";
 
-export const getCurrentUser = async (): Promise<DomainResult<User | null>> => {
+const CURRENT_USER_CACHE_TTL_MS = 1500;
+
+let inFlightCurrentUser: Promise<DomainResult<User | null>> | null = null;
+let cachedCurrentUser: {
+  expiresAt: number;
+  result: DomainResult<User | null>;
+} | null = null;
+
+const resolveCurrentUser = async (): Promise<DomainResult<User | null>> => {
   try {
     const {
       data: { user },
@@ -24,4 +32,31 @@ export const getCurrentUser = async (): Promise<DomainResult<User | null>> => {
       error: createDomainError(error, "Unable to resolve the current user."),
     };
   }
+};
+
+export const getCurrentUser = async (): Promise<DomainResult<User | null>> => {
+  const now = Date.now();
+
+  if (cachedCurrentUser && cachedCurrentUser.expiresAt > now) {
+    return cachedCurrentUser.result;
+  }
+
+  if (inFlightCurrentUser) {
+    return inFlightCurrentUser;
+  }
+
+  inFlightCurrentUser = resolveCurrentUser()
+    .then((result) => {
+      cachedCurrentUser = {
+        expiresAt: Date.now() + CURRENT_USER_CACHE_TTL_MS,
+        result,
+      };
+
+      return result;
+    })
+    .finally(() => {
+      inFlightCurrentUser = null;
+    });
+
+  return inFlightCurrentUser;
 };
