@@ -11,6 +11,8 @@ interface SupplierPackingListFormProps {
   onSync: (cbm: number, totalWeight: number) => Promise<void>;
 }
 
+const ORIGIN_PACKING_ROLES = new Set(["owner", "operations_employee", "turkish_partner"]);
+
 export const SupplierPackingListForm = ({ shipmentId, onSync }: SupplierPackingListFormProps) => {
   const { lang } = useI18n();
   const { profile } = useAuthSession();
@@ -18,12 +20,16 @@ export const SupplierPackingListForm = ({ shipmentId, onSync }: SupplierPackingL
   const [items, setItems] = useState<PackingListItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Security enforcement
-  if (profile?.role !== "supplier") {
+  const isAr = lang === "ar";
+  const canPreparePackingList = Boolean(profile?.role && ORIGIN_PACKING_ROLES.has(profile.role));
+
+  if (!canPreparePackingList) {
     return (
-      <div className="p-6 bg-red-950/20 border border-red-900/50 rounded-xl">
-        <p className="text-red-500 font-mono text-sm">
-          UNAUTHORIZED ACCESS: This endpoint is restricted to authenticated Suppliers only.
+      <div className="rounded-xl border border-red-900/50 bg-red-950/20 p-6">
+        <p className="font-mono text-sm text-red-400">
+          {isAr
+            ? "صلاحيات غير كافية: قوائم التعبئة مخصصة للمالك، العمليات، أو الشريك التركي."
+            : "Unauthorized access: packing lists are restricted to owner, operations, or Turkish partner roles."}
         </p>
       </div>
     );
@@ -48,7 +54,6 @@ export const SupplierPackingListForm = ({ shipmentId, onSync }: SupplierPackingL
     setItems(newItems);
   };
 
-  // Derive sync metrics
   const packingItemsForCbm: PackingItem[] = items.map(item => ({
     length: item.lengthCm,
     width: item.widthCm,
@@ -69,90 +74,93 @@ export const SupplierPackingListForm = ({ shipmentId, onSync }: SupplierPackingL
     }
   };
 
-  const isAr = lang === "ar";
-
   return (
-    <div className="bg-stone-950 border border-emerald-900/30 rounded-xl overflow-hidden shadow-2xl">
-      <div className="p-4 border-b border-emerald-900/20 bg-black/60 flex items-center justify-between">
+    <div className="overflow-hidden rounded-xl border border-emerald-900/30 bg-stone-950 shadow-2xl">
+      <div className="flex flex-col gap-4 border-b border-emerald-900/20 bg-black/60 p-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
-          <Box className="w-5 h-5 text-emerald-500" />
-          <h3 className="font-mono text-sm font-semibold text-emerald-400 tracking-wider">
-            {isAr ? "بوابة قوائم التعبئة للمصانع" : "SUPPLIER PACKING LIST INGRESS"}
-          </h3>
+          <Box className="h-5 w-5 text-emerald-500" />
+          <div>
+            <h3 className="font-mono text-sm font-semibold tracking-wider text-emerald-400">
+              {isAr ? "بوابة قوائم التعبئة للمصانع" : "SUPPLIER PACKING LIST INGRESS"}
+            </h3>
+            <p className="mt-1 text-xs text-stone-500">
+              {isAr ? `مرجع الشحنة: ${shipmentId || "غير محدد"}` : `Shipment reference: ${shipmentId || "not specified"}`}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-[10px] text-stone-500 uppercase tracking-wider">Total Volume</p>
-            <p className="text-sm font-mono text-emerald-400">{totalCBM.toFixed(2)} CBM</p>
+            <p className="text-[10px] uppercase tracking-wider text-stone-500">Total Volume</p>
+            <p className="font-mono text-sm text-emerald-400">{totalCBM.toFixed(2)} CBM</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-stone-500 uppercase tracking-wider">Gross Weight</p>
-            <p className="text-sm font-mono text-amber-400">{totalWeight.toFixed(2)} KG</p>
+            <p className="text-[10px] uppercase tracking-wider text-stone-500">Gross Weight</p>
+            <p className="font-mono text-sm text-amber-400">{totalWeight.toFixed(2)} KG</p>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="space-y-6 p-6">
         <div className="space-y-4">
           {items.map((item, index) => (
-            <div key={index} className="flex flex-col md:flex-row gap-3 items-end bg-black/40 p-3 rounded-lg border border-stone-800/50 hover:border-emerald-900/50 transition-colors">
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3 flex-1 w-full">
+            <div key={index} className="flex flex-col items-end gap-3 rounded-lg border border-stone-800/50 bg-black/40 p-3 transition-colors hover:border-emerald-900/50 md:flex-row">
+              <div className="grid w-full flex-1 grid-cols-2 gap-3 md:grid-cols-6">
                 <div className="col-span-2 md:col-span-1">
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">Item</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">Item</label>
                   <input
                     type="text"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     placeholder="Product Name"
                     value={item.itemName}
                     onChange={(e) => handleUpdateItem(index, "itemName", e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">L (cm)</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">L (cm)</label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     value={item.lengthCm || ""}
                     onChange={(e) => handleUpdateItem(index, "lengthCm", parseFloat(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">W (cm)</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">W (cm)</label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     value={item.widthCm || ""}
                     onChange={(e) => handleUpdateItem(index, "widthCm", parseFloat(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">H (cm)</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">H (cm)</label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     value={item.heightCm || ""}
                     onChange={(e) => handleUpdateItem(index, "heightCm", parseFloat(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">Weight/U (kg)</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">Weight/U (kg)</label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     value={item.weightKg || ""}
                     onChange={(e) => handleUpdateItem(index, "weightKg", parseFloat(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 block">Qty</label>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-stone-500">Qty</label>
                   <input
                     type="number"
                     min="1"
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="w-full rounded border border-stone-800 bg-stone-900 px-3 py-1.5 text-sm text-stone-200 transition-colors focus:border-emerald-500/50 focus:outline-none"
                     value={item.quantity || ""}
                     onChange={(e) => handleUpdateItem(index, "quantity", parseInt(e.target.value, 10) || 1)}
                   />
@@ -161,39 +169,39 @@ export const SupplierPackingListForm = ({ shipmentId, onSync }: SupplierPackingL
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-red-500 hover:bg-red-500/10 hover:text-red-400 mb-0.5"
+                className="mb-0.5 text-red-500 hover:bg-red-500/10 hover:text-red-400"
                 onClick={() => handleRemoveItem(index)}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-stone-800/50">
+        <div className="flex flex-col gap-3 border-t border-stone-800/50 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Button
             variant="outline"
             size="sm"
             onClick={handleAddItem}
-            className="border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+            className="border-emerald-500/20 text-emerald-500 transition-colors hover:bg-emerald-500/10"
           >
-            <Plus className="w-4 h-4 me-2" />
+            <Plus className="me-2 h-4 w-4" />
             {isAr ? "إضافة عنصر للإنتاج" : "Add Production Item"}
           </Button>
 
           <Button
             variant="default"
             size="sm"
-            disabled={items.length === 0 || isSubmitting}
+            disabled={items.length === 0 || isSubmitting || !shipmentId.trim()}
             onClick={handleSubmit}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-mono uppercase tracking-wider text-xs"
+            className="bg-emerald-600 font-mono text-xs uppercase tracking-wider text-white hover:bg-emerald-500"
           >
             {isSubmitting ? (
-              <Activity className="w-4 h-4 me-2 animate-spin" />
+              <Activity className="me-2 h-4 w-4 animate-spin" />
             ) : (
-              <Save className="w-4 h-4 me-2" />
+              <Save className="me-2 h-4 w-4" />
             )}
-            {isAr ? "تزامن البيانات اللوجستية" : "Synchronize Volumetrics"}
+            {isAr ? "تحضير القياسات اللوجستية" : "Prepare Volumetrics"}
           </Button>
         </div>
       </div>
