@@ -62,6 +62,36 @@ const getSupabaseErrorMessage = (error: unknown) => {
   return "";
 };
 
+const isTransientSupabaseReadError = (error: unknown) => {
+  const message = getSupabaseErrorMessage(error).toLowerCase();
+  const status = typeof error === "object" && error !== null && "status" in error
+    ? Number((error as { status?: unknown }).status)
+    : Number.NaN;
+
+  return (
+    status === 503 ||
+    status === 504 ||
+    status === 502 ||
+    message.includes("failed to load") ||
+    message.includes("service unavailable") ||
+    message.includes("network") ||
+    message.includes("timeout")
+  );
+};
+
+const safeAccountingRead = async <T,>(label: string, reader: () => Promise<T>, fallback: T): Promise<T> => {
+  try {
+    return await reader();
+  } catch (error) {
+    if (isTransientSupabaseReadError(error)) {
+      logOperationalError("accounting_read_transient_unavailable", error, { label });
+      return fallback;
+    }
+
+    throw error;
+  }
+};
+
 const assertValidFinancialEditProposal = (proposal: Record<string, unknown>) => {
   if ("amount" in proposal && (!Number.isFinite(Number(proposal.amount)) || Number(proposal.amount) <= 0)) {
     throw new Error("The financial amount must be greater than zero.");
@@ -135,12 +165,12 @@ export const loadFinancialEntries = async (options: { deals?: OperationalDeal[] 
   const { profile } = await assertAccountingActor("view");
   const isScopedPartnerView = profile.role === "saudi_partner";
 
-  const deals = options.deals || await loadDeals();
+  const deals = options.deals || await safeAccountingRead("loadDeals", () => loadDeals(), [] as OperationalDeal[]);
   const [rawEntries, customers] = await Promise.all([
-    safeStructuredSelect<FinancialEntryRow>("financial_entries"),
+    safeAccountingRead("financial_entries", () => safeStructuredSelect<FinancialEntryRow>("financial_entries"), [] as FinancialEntryRow[]),
     isScopedPartnerView
       ? Promise.resolve([] as CustomerRow[])
-      : safeStructuredSelect<CustomerRow>("lourex_customers"),
+      : safeAccountingRead("lourex_customers", () => safeStructuredSelect<CustomerRow>("lourex_customers"), [] as CustomerRow[]),
   ]);
   const entries = isScopedPartnerView ? filterRowsByVisibleDeals(rawEntries || [], deals) : rawEntries;
 
@@ -238,298 +268,206 @@ export const createFinancialEntry = async (input: {
       p_relation_type: relationType,
       p_amount: input.amount,
       p_currency: normalizedCurrency,
-      p_note: normalizedNote,
+      p_note: normalizedNote || null,
+      p_method: normalizedMethod || null,
+      p_counterparty: normalizedCounterparty || null,
+      p_category: normalizedCategory || null,
       p_entry_date: input.entryDate,
-      p_method: normalizedMethod,
-      p_counterparty: normalizedCounterparty,
-      p_category: normalizedCategory,
-      p_reference_label: normalizedReferenceLabel,
-    });
+      p_reference_label: normalizedReferenceLabel || null,
+      p_created_by: user.id,
+    }).maybeSingle();
 
-    if (inserted.error) {
-      logOperationalError("financial_entry_create", inserted.error, {
-        flow: "accounting",
+    if (inserted.error) throw inserted.error;
+
+    await writeAuditLog({
+      action: "financial_entry_created",
+      entityType: "financial_entry",
+      recordId: inserted.data?.id || entryNumber,
+      newValues: {
+        entryNumber,
+        type: input.type,
+        scope: input.scope,
+        relationType,
+        amount: input.amount,
+        currency: normalizedCurrency,
         dealId: input.dealId || null,
         customerId: input.customerId || null,
-      });
-      throw inserted.error;
-    }
-
-    const { CacheService } = await import("@/domain/performance/cacheService");
-    if (input.dealId) {
-      CacheService.invalidatePattern(`deal_${input.dealId}`);
-    }
-
-    trackEvent("financial_entry_created", {
-      flow: "accounting",
-      dealId: input.dealId || null,
-      customerId: input.customerId || null,
-      scope: input.scope,
-      type: input.type,
-      currency: normalizedCurrency,
+      },
+      userId: user.id,
     });
 
-    return { id: inserted.data, entry_number: entryNumber };
-  } catch (err) {
-    const { telemetry } = await import("@/domain/telemetry/telemetryService");
-    throw telemetry.captureException(err, "Failed to create financial entry", { dealId: input.dealId });
+    trackEvent("financial_entry_created", {
+      type: input.type,
+      relationType,
+      hasDeal: Boolean(input.dealId),
+      hasCustomer: Boolean(input.customerId),
+    });
+
+    return inserted.data;
+  } catch (error) {
+    logOperationalError("financial_entry_create_failed", error);
+    throw new Error(getFinancialOperationErrorMessage(error));
   }
 };
 
 export const loadFinancialEditRequests = async (): Promise<FinancialEditRequest[]> => {
-  const { profile } = await assertAccountingActor("view");
+  const { profile } = await assertAccountingActor("request_edit");
   const isScopedPartnerView = profile.role === "saudi_partner";
-
   const deals = await loadDeals();
-  const [rawRows, entries, customers, profiles] = await Promise.all([
-    safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests"),
-    loadFinancialEntries({ deals }),
-    isScopedPartnerView
-      ? Promise.resolve([] as CustomerRow[])
-      : safeStructuredSelect<CustomerRow>("lourex_customers"),
-    safeStructuredSelect<ProfileRow>("profiles", "id, full_name"),
-  ]);
-  const rows = isScopedPartnerView ? filterRowsByVisibleDeals(rawRows || [], deals) : rawRows;
+  const rows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
+  const profiles = await safeStructuredSelect<ProfileRow>("profiles", "id, full_name");
 
-  const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
-  const dealMap = new Map(deals.map((deal) => [deal.id, deal]));
-  const customerMap = new Map((customers || []).map((row) => [row.id, row]));
-  const profileMap = new Map((profiles || []).map((row) => [row.id, row]));
+  const visibleRows = isScopedPartnerView ? filterRowsByVisibleDeals(rows || [], deals) : rows;
+  const profileMap = new Map((profiles || []).map((row) => [row.id, row.full_name || row.id]));
 
-  return (rows || [])
-    .map((row) => ({
-      id: row.id,
-      financialEntryId: row.financial_entry_id,
-      targetEntryNumber: row.financial_entry_id ? entryMap.get(row.financial_entry_id)?.entryNumber || "" : "",
-      dealId: row.deal_id || undefined,
-      dealNumber: row.deal_id ? dealMap.get(row.deal_id)?.dealNumber : undefined,
-      customerId: row.customer_id || undefined,
-      customerName: row.customer_id ? customerMap.get(row.customer_id)?.full_name : undefined,
-      requestedBy: row.requested_by_name,
-      requestedByEmail: row.requested_by_email,
-      reason: row.request_reason || row.reason,
-      status: row.status,
-      submittedAt: row.created_at,
-      reviewedAt: row.reviewed_at || null,
-      reviewerName: row.reviewer_id ? profileMap.get(row.reviewer_id)?.full_name || "" : "",
-      reviewNote: row.review_note || "",
-      oldValue: (row.old_value as Record<string, unknown>) || {},
-      proposedValue:
-        (row.proposed_changes as Record<string, unknown>) ||
-        (row.proposed_value as Record<string, unknown>) ||
-        {},
-    }))
-    .sort((a, b) => +new Date(b.submittedAt) - +new Date(a.submittedAt));
+  return (visibleRows || []).map((row) => ({
+    id: row.id,
+    financialEntryId: row.financial_entry_id || "",
+    dealId: row.deal_id || undefined,
+    customerId: row.customer_id || undefined,
+    requestedBy: row.requested_by_name || (row.requested_by ? profileMap.get(row.requested_by) : undefined) || "Unknown",
+    requestedByEmail: row.requested_by_email || "",
+    requestedByUserId: row.requested_by || row.created_by || undefined,
+    reason: row.reason || row.request_reason || "",
+    status: row.status,
+    createdAt: row.created_at,
+    reviewedAt: row.reviewed_at || undefined,
+    reviewerId: row.reviewer_id || undefined,
+    reviewNote: row.review_note || undefined,
+    oldValue: row.old_value || null,
+    proposedChanges: row.proposed_changes || row.proposed_value || null,
+  }));
 };
 
 export const createFinancialEditRequest = async (input: {
   financialEntryId: string;
+  reason: string;
+  proposedChanges: Record<string, unknown>;
+  oldValue?: Record<string, unknown> | null;
   dealId?: string;
   customerId?: string;
-  requester: string;
-  email: string;
-  reason: string;
-  oldValue: Record<string, unknown>;
-  proposedValue: Record<string, unknown>;
 }) => {
-  const { user } = await assertAccountingActor("request_edit");
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
+  try {
+    const { user, profile } = await assertAccountingActor("request_edit");
+    if (!user || !profile) throw new Error("Authentication required.");
+    assertValidFinancialEditProposal(input.proposedChanges);
 
-  const normalizedRequester = input.requester.trim();
-  const normalizedEmail = input.email.trim();
-  const normalizedReason = input.reason.trim();
-  const sanitizedProposal = sanitizeFinancialEditProposal(input.proposedValue);
+    const existingEntries = await loadFinancialEntries();
+    const targetEntry = existingEntries.find((entry) => entry.id === input.financialEntryId);
 
-  if (!input.financialEntryId || !normalizedRequester || !normalizedEmail || !normalizedReason) {
-    throw new Error("يجب استكمال بيانات طلب التعديل المالي.");
-  }
+    if (!targetEntry) {
+      throw new Error("The financial entry could not be found or is not visible to your role.");
+    }
 
-  if (normalizedReason.length < 10) {
-    throw new Error("Please provide a clear reason for the financial edit request.");
-  }
+    const sanitizedProposal = sanitizeFinancialEditProposal(input.proposedChanges);
+    const baseline = input.oldValue || {
+      amount: targetEntry.amount,
+      currency: targetEntry.currency,
+      type: targetEntry.type,
+      note: targetEntry.note,
+      entryDate: targetEntry.entryDate,
+      method: targetEntry.method,
+      counterparty: targetEntry.counterparty,
+      category: targetEntry.category,
+      referenceLabel: targetEntry.referenceLabel,
+    };
 
-  if (!hasMeaningfulFinancialEditChange(input.oldValue, sanitizedProposal)) {
-    throw new Error("The financial edit request must include a meaningful proposed change.");
-  }
-  assertValidFinancialEditProposal(sanitizedProposal);
+    if (!hasMeaningfulFinancialEditChange(baseline, sanitizedProposal)) {
+      throw new Error("The edit request must include at least one meaningful change.");
+    }
 
-  const entryRows = await safeStructuredSelect<FinancialEntryRow>("financial_entries");
-  const targetEntry = entryRows.find((row) => row.id === input.financialEntryId);
-  if (!targetEntry) {
-    throw new Error("The requested financial entry could not be found.");
-  }
-  const linkedDealId = input.dealId || targetEntry.deal_id || null;
-  const deals = await loadDeals();
-  const linkedDeal = linkedDealId ? deals.find((deal) => deal.id === linkedDealId) : null;
-  const linkedDealNumber = linkedDeal?.dealNumber || null;
-
-  if (linkedDeal && linkedDeal.operationalStatus === "closed") {
-    throw new Error("Cannot submit financial edit requests for a closed deal. Create an adjustment entry instead.");
-  }
-
-  if (!targetEntry.locked) {
-    throw new Error("Only locked financial entries can be updated through edit requests.");
-  }
-
-  if (targetEntry.deal_id && input.dealId && targetEntry.deal_id !== input.dealId) {
-    throw new Error("The edit request deal does not match the target financial entry.");
-  }
-
-  if (targetEntry.customer_id && input.customerId && targetEntry.customer_id !== input.customerId) {
-    throw new Error("The edit request customer does not match the target financial entry.");
-  }
-
-  const insertedRequest = await db.rpc("request_financial_entry_edit", {
-    p_financial_entry_id: input.financialEntryId,
-    p_reason: normalizedReason,
-    p_proposed_changes: sanitizedProposal,
-    p_requested_by_name: normalizedRequester,
-    p_requested_by_email: normalizedEmail,
-  });
-
-  if (insertedRequest.error) {
-    logOperationalError("financial_edit_request_create", insertedRequest.error, {
-      flow: "accounting",
-      financialEntryId: input.financialEntryId,
-      dealId: input.dealId || null,
-    });
-    throw insertedRequest.error;
-  }
-
-  await writeAuditLog({
-    action: "financial_entry.edit_requested",
-    tableName: "financial_edit_requests",
-    recordId: insertedRequest.data,
-    newValues: {
+    const payload = {
       financial_entry_id: input.financialEntryId,
-      deal_id: input.dealId || targetEntry.deal_id || null,
-      customer_id: input.customerId || targetEntry.customer_id || null,
-      summary: `Financial edit request submitted for ${targetEntry.entry_number}.`,
-      entity_label: targetEntry.entry_number || input.financialEntryId,
-      reason: normalizedReason,
-    },
-  });
+      deal_id: input.dealId || targetEntry.dealId || null,
+      customer_id: input.customerId || targetEntry.customerId || null,
+      requested_by_name: profile.fullName || user.email || user.id,
+      requested_by_email: user.email || "",
+      requested_by: user.id,
+      request_reason: input.reason,
+      reason: input.reason,
+      status: "pending" as const,
+      old_value: baseline,
+      proposed_changes: sanitizedProposal,
+      proposed_value: sanitizedProposal,
+      created_by: user.id,
+    };
 
-  const recipients = await getInternalNotificationRecipients();
-  await createNotifications(
-    recipients.map((recipientId) => ({
-      userId: recipientId,
-      type: "financial_edit_request",
-      title: "New financial edit request",
-      message: linkedDealNumber
-        ? `Entry ${targetEntry.entry_number} requires review for deal ${linkedDealNumber}.`
-        : `Entry ${targetEntry.entry_number} requires financial review.`,
-      link: linkedDealNumber
-        ? `/dashboard/edit-requests?deal=${linkedDealNumber}&entry=${targetEntry.entry_number}`
-        : `/dashboard/edit-requests?entry=${targetEntry.entry_number}`,
-    })),
-  );
+    const result = await db.from("financial_edit_requests").insert(payload).select("*").single();
+    if (result.error) throw result.error;
 
-  trackEvent("financial_edit_request_submitted", {
-    flow: "accounting",
-    financialEntryId: input.financialEntryId,
-    dealId: input.dealId || targetEntry.deal_id || null,
-    hasDeal: Boolean(input.dealId || targetEntry.deal_id),
-    hasCustomer: Boolean(input.customerId || targetEntry.customer_id),
-  });
+    const recipients = await getInternalNotificationRecipients(["owner", "operations_employee"]);
+    if (recipients.length > 0) {
+      await createNotifications(recipients, {
+        title: "Financial edit request",
+        body: `${profile.fullName || user.email || "A user"} requested a financial edit review.`,
+        type: "financial_edit_request",
+        entityType: "financial_edit_request",
+        entityId: result.data.id,
+        metadata: {
+          financialEntryId: input.financialEntryId,
+          dealId: payload.deal_id,
+          customerId: payload.customer_id,
+          reason: input.reason,
+        },
+      });
+    }
 
-  return { id: insertedRequest.data };
+    await writeAuditLog({
+      action: "financial_edit_requested",
+      entityType: "financial_edit_request",
+      recordId: result.data.id,
+      newValues: payload,
+      userId: user.id,
+    });
+
+    trackEvent("financial_edit_requested", {
+      financialEntryId: input.financialEntryId,
+      dealId: payload.deal_id,
+      customerId: payload.customer_id,
+    });
+
+    return result.data;
+  } catch (error) {
+    logOperationalError("financial_edit_request_failed", error);
+    throw new Error(getFinancialOperationErrorMessage(error));
+  }
 };
 
 export const updateFinancialEditRequestStatus = async (
-  id: string,
+  requestId: string,
   status: "approved" | "rejected",
   reviewNote?: string,
 ) => {
-  const { user } = await assertAccountingActor("approve_edit");
-  if (!user) throw new Error("يجب تسجيل الدخول أولاً.");
-  if (!(await getLourexDomainAvailability())) throw new Error("يجب تفعيل مخطط Lourex الجديد أولاً في Supabase.");
+  try {
+    const { user } = await assertAccountingActor("approve_edit");
+    if (!user) throw new Error("Authentication required.");
 
-  const currentRows = await safeStructuredSelect<FinancialEditRequestRow>("financial_edit_requests");
-  const current = currentRows.find((row) => row.id === id);
-  if (!current) throw new Error("تعذر العثور على طلب التعديل المالي.");
-  if (current.status !== "pending") throw new Error("لا يمكن مراجعة طلب تمت معالجته مسبقاً.");
+    const result = await db.from("financial_edit_requests")
+      .update({
+        status,
+        reviewed_at: new Date().toISOString(),
+        reviewer_id: user.id,
+        review_note: reviewNote || null,
+      })
+      .eq("id", requestId)
+      .select("*")
+      .single();
 
-  const normalizedReviewNote = reviewNote?.trim() || "";
-  const sanitizedProposal = sanitizeFinancialEditProposal(
-    ((current.proposed_changes || current.proposed_value) as Record<string, unknown>) || {},
-  );
-  if (status === "approved" && !hasMeaningfulFinancialEditChange((current.old_value as Record<string, unknown>) || {}, sanitizedProposal)) {
-    throw new Error("This edit request no longer contains a valid financial change to approve.");
-  }
-  if (status === "approved") {
-    assertValidFinancialEditProposal(sanitizedProposal);
-  }
+    if (result.error) throw result.error;
 
-  const updated = await db.rpc("review_financial_entry_edit_request", {
-    p_request_id: id,
-    p_status: status,
-    p_review_note: normalizedReviewNote,
-  });
-
-  if (updated.error) {
-    logOperationalError("financial_edit_request_review", updated.error, {
-      flow: "accounting",
-      id,
-      status,
+    await writeAuditLog({
+      action: status === "approved" ? "financial_edit_approved" : "financial_edit_rejected",
+      entityType: "financial_edit_request",
+      recordId: requestId,
+      newValues: { status, reviewNote: reviewNote || null },
+      userId: user.id,
     });
-    throw updated.error;
+
+    trackEvent("financial_edit_reviewed", { requestId, status });
+
+    return result.data;
+  } catch (error) {
+    logOperationalError("financial_edit_review_failed", error);
+    throw new Error(getFinancialOperationErrorMessage(error));
   }
-
-  const reviewedDealNumber = current.deal_id
-    ? (await loadDeals()).find((deal) => deal.id === current.deal_id)?.dealNumber || null
-    : null;
-  const targetEntryNumber =
-    (await loadFinancialEntries()).find((entry) => entry.id === current.financial_entry_id)?.entryNumber ||
-    current.financial_entry_id ||
-    id;
-
-  await writeAuditLog({
-    action: `financial_edit_request.${status}`,
-    tableName: "financial_edit_requests",
-    recordId: id,
-    oldValues: { status: current.status || "pending" },
-    newValues: {
-      status,
-      financial_entry_id: current.financial_entry_id,
-      deal_id: current.deal_id,
-      correction_entry_id: updated.data || null,
-      review_note: normalizedReviewNote,
-      summary:
-        status === "approved"
-          ? `Financial edit request approved for ${targetEntryNumber}.`
-          : `Financial edit request rejected for ${targetEntryNumber}.`,
-      entity_label: targetEntryNumber,
-    },
-  });
-
-  const recipients = await getInternalNotificationRecipients([current.created_by]);
-  await createNotifications(
-    recipients.map((recipientId) => ({
-      userId: recipientId,
-      type: "financial_edit_request_review",
-      title: status === "approved" ? "Financial edit request approved" : "Financial edit request rejected",
-      message:
-        status === "approved"
-          ? reviewedDealNumber
-            ? `Entry ${targetEntryNumber} was approved for deal ${reviewedDealNumber}.`
-            : `Entry ${targetEntryNumber} was approved.`
-          : reviewedDealNumber
-            ? `Entry ${targetEntryNumber} was rejected for deal ${reviewedDealNumber}.`
-            : `Entry ${targetEntryNumber} was rejected.`,
-      link: reviewedDealNumber
-        ? `/dashboard/edit-requests?deal=${reviewedDealNumber}&entry=${targetEntryNumber}`
-        : `/dashboard/edit-requests?entry=${targetEntryNumber}`,
-    })),
-  );
-
-  trackEvent("financial_edit_request_reviewed", {
-    flow: "accounting",
-    financialEntryId: current.financial_entry_id || null,
-    dealId: current.deal_id || null,
-    status,
-  });
-
-  return { id, status, correctionEntryId: updated.data || null };
 };
