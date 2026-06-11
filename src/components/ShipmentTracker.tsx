@@ -28,9 +28,8 @@ const statusToStage: Record<string, number> = Object.fromEntries(
 
 const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
   const { t, lang } = useI18n();
-  // Silently read profile role, degrades gracefully for public
   const { profile } = useAuthSession();
-  const userRole = profile?.role;
+  const userRole = profile?.role ? String(profile.role) : undefined;
 
   const [trackingId, setTrackingId] = useState("");
   const [result, setResult] = useState<Shipment | null>(null);
