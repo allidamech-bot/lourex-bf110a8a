@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { ImagePlus, Loader2, PackagePlus, RefreshCw, Save, Search, Sparkles } from "lucide-react";
+import { ImagePlus, Loader2, PackagePlus, RefreshCw, Save, Search, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import {
 } from "@/features/products/services/productCatalogService";
 import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 import { supabase } from "@/integrations/supabase/client";
+
+const PRODUCT_MANAGEMENT_DRAFT_KEY = "lourex.productManagement.draft.v1";
 
 const emptyForm: ProductCatalogAdminInput = {
   nameAr: "",
@@ -49,6 +51,18 @@ const emptyForm: ProductCatalogAdminInput = {
   tagsAr: [],
   tagsEn: [],
 };
+
+type ProductManagementDraft = {
+  form: ProductCatalogAdminInput;
+  tagsAr: string;
+  tagsEn: string;
+  selectedProductId: string | null;
+};
+
+const productCatalogStatuses: ProductCatalogAdminInput["status"][] = ["active", "draft", "archived"];
+
+const isProductCatalogStatus = (value: unknown): value is ProductCatalogAdminInput["status"] =>
+  productCatalogStatuses.includes(value as ProductCatalogAdminInput["status"]);
 
 const toCsvTags = (tags?: string[]) => (tags || []).join(", ");
 const fromCsvTags = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
@@ -82,6 +96,69 @@ const productToForm = (product: ProductCatalogItem): ProductCatalogAdminInput =>
   tagsEn: product.tagsEn,
 });
 
+const normalizeDraftForm = (value: unknown): ProductCatalogAdminInput | null => {
+  if (!value || typeof value !== "object") return null;
+
+  const draftForm = { ...emptyForm, ...(value as Partial<ProductCatalogAdminInput>) };
+
+  return {
+    ...draftForm,
+    status: isProductCatalogStatus(draftForm.status) ? draftForm.status : emptyForm.status,
+    tagsAr: Array.isArray(draftForm.tagsAr) ? draftForm.tagsAr : [],
+    tagsEn: Array.isArray(draftForm.tagsEn) ? draftForm.tagsEn : [],
+  };
+};
+
+const readProductManagementDraft = (): ProductManagementDraft | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const rawDraft = window.localStorage.getItem(PRODUCT_MANAGEMENT_DRAFT_KEY);
+    if (!rawDraft) return null;
+
+    const parsed = JSON.parse(rawDraft) as Partial<ProductManagementDraft>;
+    const restoredForm = normalizeDraftForm(parsed.form);
+    if (!restoredForm) return null;
+
+    return {
+      form: restoredForm,
+      tagsAr: typeof parsed.tagsAr === "string" ? parsed.tagsAr : toCsvTags(restoredForm.tagsAr),
+      tagsEn: typeof parsed.tagsEn === "string" ? parsed.tagsEn : toCsvTags(restoredForm.tagsEn),
+      selectedProductId: typeof parsed.selectedProductId === "string" ? parsed.selectedProductId : null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const hasProductManagementDraftContent = (draft: ProductManagementDraft) => {
+  const draftForm = { ...draft.form, tagsAr: [], tagsEn: [] };
+  const baselineForm = { ...emptyForm, tagsAr: [], tagsEn: [] };
+
+  return Boolean(
+    draft.selectedProductId ||
+      draft.tagsAr.trim() ||
+      draft.tagsEn.trim() ||
+      JSON.stringify(draftForm) !== JSON.stringify(baselineForm),
+  );
+};
+
+const writeProductManagementDraft = (draft: ProductManagementDraft) => {
+  if (typeof window === "undefined") return;
+
+  if (!hasProductManagementDraftContent(draft)) {
+    window.localStorage.removeItem(PRODUCT_MANAGEMENT_DRAFT_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(PRODUCT_MANAGEMENT_DRAFT_KEY, JSON.stringify(draft));
+};
+
+const clearProductManagementDraft = () => {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(PRODUCT_MANAGEMENT_DRAFT_KEY);
+};
+
 const uploadProductImage = async (file: File, slug: string) => {
   const extension = file.name.split(".").pop()?.toLowerCase() || "png";
   const path = `catalog/${slug || createProductSlug(file.name)}/${Date.now()}.${extension}`;
@@ -109,9 +186,13 @@ export default function ProductsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
 
-  const selectedProduct = products.find((product) => product.id === selectedProductId) || null;
   const filteredProducts = useMemo(() => filterProductList({ products, query: search, categoryId: "all" }), [products, search]);
+  const draftHasContent = useMemo(
+    () => hasProductManagementDraftContent({ form, tagsAr, tagsEn, selectedProductId }),
+    [form, tagsAr, tagsEn, selectedProductId],
+  );
 
   const refresh = async () => {
     setLoading(true);
@@ -126,14 +207,43 @@ export default function ProductsManagementPage() {
   };
 
   useEffect(() => {
+    const draft = readProductManagementDraft();
+    if (draft) {
+      setSelectedProductId(draft.selectedProductId);
+      setForm(draft.form);
+      setTagsAr(draft.tagsAr);
+      setTagsEn(draft.tagsEn);
+      toast.info("Unsaved product draft restored.");
+    }
+    setHasHydratedDraft(true);
+  }, []);
+
+  useEffect(() => {
     void refresh();
   }, []);
 
+  useEffect(() => {
+    if (!hasHydratedDraft) return;
+
+    writeProductManagementDraft({
+      form,
+      tagsAr,
+      tagsEn,
+      selectedProductId,
+    });
+  }, [form, hasHydratedDraft, selectedProductId, tagsAr, tagsEn]);
+
   const resetForm = () => {
+    clearProductManagementDraft();
     setSelectedProductId(null);
     setForm(emptyForm);
     setTagsAr("");
     setTagsEn("");
+  };
+
+  const clearDraft = () => {
+    resetForm();
+    toast.success("Product draft cleared.");
   };
 
   const selectProduct = (product: ProductCatalogItem) => {
@@ -190,14 +300,15 @@ export default function ProductsManagementPage() {
         tagsEn: fromCsvTags(tagsEn),
       };
 
-      if (selectedProduct) {
-        await updateCatalogProduct(selectedProduct.id, payload);
+      if (selectedProductId) {
+        await updateCatalogProduct(selectedProductId, payload);
         toast.success("Product updated.");
       } else {
         await createCatalogProduct(payload);
         toast.success("Product created.");
       }
 
+      clearProductManagementDraft();
       await refresh();
       resetForm();
     } catch (error) {
@@ -289,13 +400,21 @@ export default function ProductsManagementPage() {
         <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProduct ? "Edit product" : "Create product"}</h2>
+              <h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProductId ? "Edit product" : "Create product"}</h2>
               <p className="mt-1 text-sm text-stone-500">Upload the image, write Arabic/English content, then publish it.</p>
             </div>
-            <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save
-            </Button>
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              {draftHasContent ? (
+                <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                  <Trash2 className="h-4 w-4 text-amber-500" />
+                  Clear draft
+                </Button>
+              ) : null}
+              <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Save
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
