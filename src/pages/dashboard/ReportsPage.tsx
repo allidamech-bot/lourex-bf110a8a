@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
@@ -54,7 +54,6 @@ import { ExecutiveReportPanel } from "@/features/reports/components/ExecutiveRep
 import { buildExecutiveReportAdvisor } from "@/features/reports/lib/executiveReportAdvisor";
 import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type ReportRange = "monthly" | "quarterly" | "semiannual" | "annual" | "custom";
 type DrillDownItem = { id: string; status: string; totalValue?: number; amount?: number };
@@ -250,26 +249,26 @@ export default function ReportsPage() {
 
     const executiveLabels = lang === "ar"
       ? {
-          summary: "ملخص التقرير التنفيذي الذكي",
-          decisionMetrics: "مؤشرات القرار التنفيذي",
-          risks: "المخاطر التي تحتاج قرارا",
-          opportunities: "الفرص الإدارية",
-          actionPlan: "خطة العمل المقترحة",
-          field: "البند",
-          value: "القيمة",
-          title: "العنوان",
-          description: "الوصف",
-          level: "المستوى",
-          generatedAt: "وقت القراءة التنفيذية",
-          followUpLevel: "مستوى المتابعة",
-          followUpScore: "درجة المتابعة",
-          netProfit: "الصافي المالي",
-          profitMargin: "هامش الربح",
-          collectionExposure: "تعرض التحصيل",
-          settlementCoverage: "تغطية التسويات",
-          pendingEditRequests: "طلبات التعديل المالي المعلقة",
-          activeDeals: "الصفقات النشطة",
-          averageProcessingTime: "متوسط زمن المعالجة",
+          summary: "ظ…ظ„ط®طµ ط§ظ„طھظ‚ط±ظٹط± ط§ظ„طھظ†ظپظٹط°ظٹ ط§ظ„ط°ظƒظٹ",
+          decisionMetrics: "ظ…ط¤ط´ط±ط§طھ ط§ظ„ظ‚ط±ط§ط± ط§ظ„طھظ†ظپظٹط°ظٹ",
+          risks: "ط§ظ„ظ…ط®ط§ط·ط± ط§ظ„طھظٹ طھط­طھط§ط¬ ظ‚ط±ط§ط±ط§",
+          opportunities: "ط§ظ„ظپط±طµ ط§ظ„ط¥ط¯ط§ط±ظٹط©",
+          actionPlan: "ط®ط·ط© ط§ظ„ط¹ظ…ظ„ ط§ظ„ظ…ظ‚طھط±ط­ط©",
+          field: "ط§ظ„ط¨ظ†ط¯",
+          value: "ط§ظ„ظ‚ظٹظ…ط©",
+          title: "ط§ظ„ط¹ظ†ظˆط§ظ†",
+          description: "ط§ظ„ظˆطµظپ",
+          level: "ط§ظ„ظ…ط³طھظˆظ‰",
+          generatedAt: "ظˆظ‚طھ ط§ظ„ظ‚ط±ط§ط،ط© ط§ظ„طھظ†ظپظٹط°ظٹط©",
+          followUpLevel: "ظ…ط³طھظˆظ‰ ط§ظ„ظ…طھط§ط¨ط¹ط©",
+          followUpScore: "ط¯ط±ط¬ط© ط§ظ„ظ…طھط§ط¨ط¹ط©",
+          netProfit: "ط§ظ„طµط§ظپظٹ ط§ظ„ظ…ط§ظ„ظٹ",
+          profitMargin: "ظ‡ط§ظ…ط´ ط§ظ„ط±ط¨ط­",
+          collectionExposure: "طھط¹ط±ط¶ ط§ظ„طھط­طµظٹظ„",
+          settlementCoverage: "طھط؛ط·ظٹط© ط§ظ„طھط³ظˆظٹط§طھ",
+          pendingEditRequests: "ط·ظ„ط¨ط§طھ ط§ظ„طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط§ظ„ظٹ ط§ظ„ظ…ط¹ظ„ظ‚ط©",
+          activeDeals: "ط§ظ„طµظپظ‚ط§طھ ط§ظ„ظ†ط´ط·ط©",
+          averageProcessingTime: "ظ…طھظˆط³ط· ط²ظ…ظ† ط§ظ„ظ…ط¹ط§ظ„ط¬ط©",
         }
       : {
           summary: "Executive AI Report Summary",
@@ -310,9 +309,9 @@ export default function ReportsPage() {
             title: executiveLabels.decisionMetrics,
             headers: [executiveLabels.field, executiveLabels.value],
             rows: [
-              [executiveLabels.netProfit, metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(Math.round(executiveReport.metrics.netProfit), undefined, locale)],
+              [executiveLabels.netProfit, metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(Math.round(executiveReport.metrics.netProfit), undefined, locale)],
               [executiveLabels.profitMargin, `${Math.round(executiveReport.metrics.profitMargin * 100)}%`],
-              [executiveLabels.collectionExposure, metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(Math.round(executiveReport.metrics.collectionExposure), undefined, locale)],
+              [executiveLabels.collectionExposure, metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(Math.round(executiveReport.metrics.collectionExposure), undefined, locale)],
               [executiveLabels.settlementCoverage, `${Math.round(executiveReport.metrics.settlementCoverageRatio * 100)}%`],
               [executiveLabels.pendingEditRequests, executiveReport.metrics.pendingEditRequests],
               [executiveLabels.activeDeals, executiveReport.metrics.activeDeals],
@@ -358,9 +357,9 @@ export default function ReportsPage() {
             [t("reports.metrics.deals"), metrics.deals],
             [t("reports.metrics.shipments"), metrics.shipments],
             [t("reports.metrics.customers"), metrics.customers],
-            [t("reports.metrics.income"), metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(metrics.income, undefined, locale)],
-            [t("reports.metrics.expense"), metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.expense, undefined, locale)],
-            [t("reports.metrics.profit"), metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.income - metrics.expense, undefined, locale)],
+            [t("reports.metrics.income"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(metrics.income, undefined, locale)],
+            [t("reports.metrics.expense"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(metrics.expense, undefined, locale)],
+            [t("reports.metrics.profit"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(metrics.income - metrics.expense, undefined, locale)],
             [t("reports.metrics.lockedEntries"), metrics.lockedEntries],
             [t("reports.metrics.pendingEditRequests"), metrics.pendingEditRequests],
           ],
@@ -457,7 +456,7 @@ export default function ReportsPage() {
             { label: t("reports.metrics.deals"), value: metrics.deals, icon: PackageSearch, action: () => handleDrillDown("active_deals") },
             { label: t("reports.metrics.shipments"), value: metrics.shipments, icon: Truck },
             { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
-            { label: t("reports.metrics.income"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.income, undefined, locale), icon: Receipt },
+            { label: t("reports.metrics.income"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(metrics.income, undefined, locale), icon: Receipt },
           ].map((item) => (
             <BentoCard key={item.label} className={cn("p-5 border-amber-200/10 bg-stone-900/50", item.action && "cursor-pointer hover:border-amber-200/30 transition-all")} onClick={item.action}>
                <div className="flex items-center justify-between mb-4">
@@ -552,8 +551,8 @@ export default function ReportsPage() {
                 { label: t("reports.metrics.linkedEntries"), value: metrics.linkedEntries },
                 { label: t("reports.metrics.lockedEntries"), value: metrics.lockedEntries },
                 { label: t("reports.metrics.pendingEditRequests"), value: metrics.pendingEditRequests },
-                { label: t("reports.metrics.profit"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(metrics.income - metrics.expense, undefined, locale) },
-                { label: t("reports.metrics.averageValue"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(Math.round(metrics.averageOperationValue), undefined, locale) },
+                { label: t("reports.metrics.profit"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(metrics.income - metrics.expense, undefined, locale) },
+                { label: t("reports.metrics.averageValue"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(Math.round(metrics.averageOperationValue), undefined, locale) },
               ].map((item) => (
                 <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
                   <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
