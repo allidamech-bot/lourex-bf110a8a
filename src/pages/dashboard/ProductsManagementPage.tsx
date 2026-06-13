@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { ImagePlus, Loader2, PackagePlus, RefreshCw, Save, Search, Sparkles, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, ImagePlus, Loader2, PackagePlus, RefreshCw, Save, Search, Sparkles, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { PRODUCT_MANAGEMENT_ROLES } from "@/features/auth/rbac";
 import {
+  archiveProduct,
   createCatalogProduct,
   createProductSlug,
   fetchCatalogProducts,
   filterProductList,
   listProductCategories,
+  restoreProduct,
+  toggleProductFeatured,
   updateCatalogProduct,
   type ProductCatalogAdminInput,
 } from "@/features/products/services/productCatalogService";
@@ -173,6 +176,15 @@ const uploadProductImage = async (file: File, slug: string) => {
   return data.publicUrl;
 };
 
+const handleDuplicateSlugError = (error: unknown): string | null => {
+  if (!(error instanceof Error)) return null;
+  const message = error.message.toLowerCase();
+  if (message.includes("duplicate") || message.includes("unique") || message.includes("slug")) {
+    return "A product with this slug already exists. Please use a different slug.";
+  }
+  return null;
+};
+
 export default function ProductsManagementPage() {
   const { profile } = useAuthSession();
   const canManage = Boolean(profile?.role && PRODUCT_MANAGEMENT_ROLES.includes(profile.role));
@@ -183,12 +195,17 @@ export default function ProductsManagementPage() {
   const [tagsAr, setTagsAr] = useState("");
   const [tagsEn, setTagsEn] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft" | "archived">("all");
+  const [featuredFilter, setFeaturedFilter] = useState<"all" | "featured" | "non-featured">("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
 
-  const filteredProducts = useMemo(() => filterProductList({ products, query: search, categoryId: "all" }), [products, search]);
+  const filteredProducts = useMemo(
+    () => filterProductList({ products, query: search, statusFilter, featuredFilter, categoryId: "all" }),
+    [products, search, statusFilter, featuredFilter],
+  );
   const draftHasContent = useMemo(
     () => hasProductManagementDraftContent({ form, tagsAr, tagsEn, selectedProductId }),
     [form, tagsAr, tagsEn, selectedProductId],
@@ -312,9 +329,50 @@ export default function ProductsManagementPage() {
       await refresh();
       resetForm();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save product.");
+      const duplicateMessage = handleDuplicateSlugError(error);
+      if (duplicateMessage) {
+        toast.error(duplicateMessage);
+      } else {
+        toast.error(error instanceof Error ? error.message : "Failed to save product.");
+      }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleArchive = async (productId: string) => {
+    if (!canManage) return;
+
+    try {
+      await archiveProduct(productId);
+      toast.success("Product archived.");
+      await refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to archive product.");
+    }
+  };
+
+  const handleRestore = async (productId: string) => {
+    if (!canManage) return;
+
+    try {
+      await restoreProduct(productId);
+      toast.success("Product restored.");
+      await refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to restore product.");
+    }
+  };
+
+  const handleToggleFeatured = async (productId: string, currentFeatured: boolean) => {
+    if (!canManage) return;
+
+    try {
+      await toggleProductFeatured(productId, !currentFeatured);
+      toast.success(currentFeatured ? "Removed from featured." : "Marked as featured.");
+      await refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update featured status.");
     }
   };
 
@@ -340,7 +398,7 @@ export default function ProductsManagementPage() {
               Add products and images for the public catalog. Items are displayed as sourcing service examples, while customer requests remain free-form.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
               Refresh
@@ -349,8 +407,38 @@ export default function ProductsManagementPage() {
               <PackagePlus className="h-4 w-4" />
               New product
             </Button>
+            {draftHasContent ? (
+              <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                <Trash2 className="h-4 w-4 text-amber-500" />
+                Clear draft
+              </Button>
+            ) : null}
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Select value={statusFilter} onValueChange={(value: "all" | "active" | "draft" | "archived") => setStatusFilter(value)}>
+          <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+            <SelectValue placeholder="Status filter" />
+          </SelectTrigger>
+          <SelectContent className="bg-stone-900 border-amber-200/15">
+            <SelectItem value="all" className="cursor-pointer">All statuses</SelectItem>
+            <SelectItem value="active" className="cursor-pointer">Active</SelectItem>
+            <SelectItem value="draft" className="cursor-pointer">Draft</SelectItem>
+            <SelectItem value="archived" className="cursor-pointer">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={featuredFilter} onValueChange={(value: "all" | "featured" | "non-featured") => setFeaturedFilter(value)}>
+          <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+            <SelectValue placeholder="Featured filter" />
+          </SelectTrigger>
+          <SelectContent className="bg-stone-900 border-amber-200/15">
+            <SelectItem value="all" className="cursor-pointer">All products</SelectItem>
+            <SelectItem value="featured" className="cursor-pointer">Featured only</SelectItem>
+            <SelectItem value="non-featured" className="cursor-pointer">Non-featured</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -366,7 +454,7 @@ export default function ProductsManagementPage() {
               Loading products...
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">No products yet.</div>
+            <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">No products match filters.</div>
           ) : (
             <div className="space-y-3">
               {filteredProducts.map((product) => (
@@ -390,6 +478,47 @@ export default function ProductsManagementPage() {
                       <Badge variant="outline" className="border-amber-200/20 text-stone-400">{product.status}</Badge>
                       {product.isFeatured ? <Badge className="bg-amber-500/10 text-amber-200 border-amber-500/20">Featured</Badge> : null}
                     </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {product.status !== "archived" ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleArchive(product.id);
+                        }}
+                        className="h-8 w-8 p-0 text-stone-500 hover:text-amber-300"
+                      >
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleRestore(product.id);
+                        }}
+                        className="h-8 w-8 p-0 text-stone-500 hover:text-emerald-300"
+                      >
+                        <ArchiveRestore className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleToggleFeatured(product.id, product.isFeatured);
+                      }}
+                      className={`h-8 w-8 p-0 ${product.isFeatured ? "text-amber-400" : "text-stone-500"} hover:text-amber-300`}
+                    >
+                      <Star className="h-4 w-4" />
+                    </Button>
                   </div>
                 </button>
               ))}

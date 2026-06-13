@@ -242,11 +242,74 @@ export const createCatalogProduct = async (input: ProductCatalogAdminInput) => {
   return mapProductRow(data as ProductCatalogProductRow);
 };
 
-export const updateCatalogProduct = async (id: string, input: ProductCatalogAdminInput) => {
-  const payload = mapAdminInput(input);
+export const updateCatalogProduct = async (id: string, input: Partial<ProductCatalogAdminInput>) => {
+  const partialPayload: Record<string, unknown> = {};
+  
+  if (input.nameAr !== undefined) partialPayload.name_ar = input.nameAr.trim();
+  if (input.nameEn !== undefined) partialPayload.name_en = input.nameEn.trim();
+  if (input.shortDescriptionAr !== undefined) partialPayload.short_description_ar = input.shortDescriptionAr.trim();
+  if (input.shortDescriptionEn !== undefined) partialPayload.short_description_en = input.shortDescriptionEn.trim();
+  if (input.descriptionAr !== undefined) partialPayload.description_ar = input.descriptionAr.trim();
+  if (input.descriptionEn !== undefined) partialPayload.description_en = input.descriptionEn.trim();
+  if (input.categoryId !== undefined) partialPayload.category_id = input.categoryId;
+  if (input.originCountry !== undefined) partialPayload.origin_country = input.originCountry.trim() || "Turkey";
+  if (input.brand !== undefined) partialPayload.brand = input.brand?.trim() || "";
+  if (input.moq !== undefined) partialPayload.moq = input.moq?.trim() || "";
+  if (input.unit !== undefined) partialPayload.unit = input.unit?.trim() || "";
+  if (input.packaging !== undefined) partialPayload.packaging = input.packaging?.trim() || "";
+  if (input.weight !== undefined) partialPayload.weight = input.weight?.trim() || "";
+  if (input.dimensions !== undefined) partialPayload.dimensions = input.dimensions?.trim() || "";
+  if (input.material !== undefined) partialPayload.material = input.material?.trim() || "";
+  if (input.technicalSpecs !== undefined) partialPayload.technical_specs = input.technicalSpecs?.trim() || "";
+  if (input.priceNoteAr !== undefined) partialPayload.price_note_ar = input.priceNoteAr?.trim() || "";
+  if (input.priceNoteEn !== undefined) partialPayload.price_note_en = input.priceNoteEn?.trim() || "";
+  if (input.status !== undefined) partialPayload.status = input.status;
+  if (input.isFeatured !== undefined) partialPayload.is_featured = input.isFeatured;
+  if (input.imageUrl !== undefined) partialPayload.image_url = input.imageUrl?.trim() || "";
+  if (input.imageAltAr !== undefined) partialPayload.image_alt_ar = input.imageAltAr?.trim() || "";
+  if (input.imageAltEn !== undefined) partialPayload.image_alt_en = input.imageAltEn?.trim() || "";
+  if (input.tagsAr !== undefined) partialPayload.tags_ar = input.tagsAr || [];
+  if (input.tagsEn !== undefined) partialPayload.tags_en = input.tagsEn || [];
+  
   const { data, error } = await productDb
     .from("product_catalog_products")
-    .update(payload)
+    .update(partialPayload)
+    .eq("id", id)
+    .select(PRODUCT_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapProductRow(data as ProductCatalogProductRow);
+};
+
+export const archiveProduct = async (id: string) => {
+  const { data, error } = await productDb
+    .from("product_catalog_products")
+    .update({ status: "archived" })
+    .eq("id", id)
+    .select(PRODUCT_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapProductRow(data as ProductCatalogProductRow);
+};
+
+export const restoreProduct = async (id: string) => {
+  const { data, error } = await productDb
+    .from("product_catalog_products")
+    .update({ status: "active" })
+    .eq("id", id)
+    .select(PRODUCT_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapProductRow(data as ProductCatalogProductRow);
+};
+
+export const toggleProductFeatured = async (id: string, isFeatured: boolean) => {
+  const { data, error } = await productDb
+    .from("product_catalog_products")
+    .update({ is_featured: isFeatured })
     .eq("id", id)
     .select(PRODUCT_SELECT)
     .single();
@@ -268,15 +331,25 @@ export const filterProductList = ({
   products,
   query,
   categoryId,
+  statusFilter,
+  featuredFilter,
 }: {
   products: ProductCatalogItem[];
   query?: string;
   categoryId?: string;
+  statusFilter?: "all" | "active" | "draft" | "archived";
+  featuredFilter?: "all" | "featured" | "non-featured";
 }) => {
   const normalizedQuery = query?.trim().toLowerCase() || "";
 
   return products.filter((product) => {
     const matchesCategory = !categoryId || categoryId === "all" || product.categoryId === categoryId;
+    const matchesStatus = !statusFilter || statusFilter === "all" || product.status === statusFilter;
+    const matchesFeatured =
+      !featuredFilter ||
+      featuredFilter === "all" ||
+      (featuredFilter === "featured" && product.isFeatured) ||
+      (featuredFilter === "non-featured" && !product.isFeatured);
     const searchable = [
       product.nameAr,
       product.nameEn,
@@ -295,7 +368,7 @@ export const filterProductList = ({
       .join(" ")
       .toLowerCase();
 
-    return matchesCategory && (!normalizedQuery || searchable.includes(normalizedQuery));
+    return matchesCategory && matchesStatus && matchesFeatured && (!normalizedQuery || searchable.includes(normalizedQuery));
   });
 };
 
