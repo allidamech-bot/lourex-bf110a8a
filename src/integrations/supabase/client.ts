@@ -48,7 +48,7 @@ export const markTableUnavailable = (tableName: string) => {
 };
 
 export const OPTIONAL_TABLE_CAPABILITIES: Record<string, boolean> = {
-  product_catalog_products: false,
+  product_catalog_products: true,
   notification_templates: false,
   notification_settings: false,
   notification_delivery_queue: false,
