@@ -51,6 +51,11 @@ import { OperationsTimelineIntelligence } from "@/features/operations-intelligen
 import { DashboardPageShell, DashboardSection, DashboardGrid } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { LogisticsMetricsPanel } from "@/components/shared/LogisticsMetricsPanel";
+import { SupplierPackingListSummaryCard } from "@/components/shared/SupplierPackingListSummaryCard";
+import {
+  loadSupplierPackingListForShipment,
+  type SupplierPackingListSummary,
+} from "@/domain/logistics/supplierPackingLists";
 
 type ShipmentAiContext = {
   trackingId: string;
@@ -257,6 +262,24 @@ export default function TrackingPage() {
   useEffect(() => {
     setInternalNote("");
     setCustomerNote(activeShipment?.customerVisibleNote || "");
+  }, [activeShipment]);
+
+  const [packingList, setPackingList] = useState<SupplierPackingListSummary | null>(null);
+  const [packingListLoading, setPackingListLoading] = useState(false);
+
+  useEffect(() => {
+    if (!activeShipment) {
+      setPackingList(null);
+      return;
+    }
+    setPackingListLoading(true);
+    loadSupplierPackingListForShipment(activeShipment.id)
+      .then((result) => {
+        if (result.data) setPackingList(result.data);
+        else setPackingList(null);
+      })
+      .catch(() => setPackingList(null))
+      .finally(() => setPackingListLoading(false));
   }, [activeShipment]);
 
   const currentStage = activeShipment ? getShipmentStageCopy(activeShipment.stage, lang) : null;
@@ -577,6 +600,13 @@ export default function TrackingPage() {
                 isEditable={false}
               />
             </BentoCard>
+
+            <div className="mt-5">
+              <SupplierPackingListSummaryCard
+                packingList={packingList}
+                loading={packingListLoading}
+              />
+            </div>
 
             {isInternal && shipmentAnalysis && (
               <ShipmentIntelligencePanel

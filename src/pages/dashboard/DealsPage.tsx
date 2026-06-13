@@ -39,6 +39,11 @@ import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
 import { DealCommandCenterPanel } from "@/features/deals/components/DealCommandCenterPanel";
 import { analyzeDealHealth, buildDealAiContext } from "@/features/deals/lib/dealCommand";
 import { LogisticsMetricsPanel } from "@/components/shared/LogisticsMetricsPanel";
+import { SupplierPackingListSummaryCard } from "@/components/shared/SupplierPackingListSummaryCard";
+import {
+  loadSupplierPackingListForDeal,
+  type SupplierPackingListSummary,
+} from "@/domain/logistics/supplierPackingLists";
 
 const HEADER_SEPARATOR = " | ";
 type DealAiMode = "deal_briefing" | "deal_risk_review";
@@ -142,6 +147,24 @@ export default function DealsPage() {
     () => users.filter((user) => user.role === "saudi_partner" && user.status === "active"),
     [users],
   );
+
+  const [packingList, setPackingList] = useState<SupplierPackingListSummary | null>(null);
+  const [packingListLoading, setPackingListLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedDeal) {
+      setPackingList(null);
+      return;
+    }
+    setPackingListLoading(true);
+    loadSupplierPackingListForDeal(selectedDeal.id)
+      .then((result) => {
+        if (result.data) setPackingList(result.data);
+        else setPackingList(null);
+      })
+      .catch(() => setPackingList(null))
+      .finally(() => setPackingListLoading(false));
+  }, [selectedDeal]);
 
   const selectedDealHeaderMeta = selectedDeal
     ? [
@@ -652,18 +675,25 @@ export default function DealsPage() {
                   </div>
                 </div>
 
-                <div className="mt-5">
-                  <LogisticsMetricsPanel
-                    metrics={logisticsDraft}
-                    isEditable={canManageDeal}
-                    onChange={setLogisticsDraft}
-                  />
-                </div>
+<div className="mt-5">
+                   <LogisticsMetricsPanel
+                     metrics={logisticsDraft}
+                     isEditable={canManageDeal}
+                     onChange={setLogisticsDraft}
+                   />
+                 </div>
 
-                <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-stone-100">{t("deals.labels.notes")}</p>
-                  </div>
+                 <div className="mt-5">
+                   <SupplierPackingListSummaryCard
+                     packingList={packingList}
+                     loading={packingListLoading}
+                   />
+                 </div>
+
+                 <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-stone-900/50 p-4">
+                   <div className="flex items-center justify-between gap-3">
+                     <p className="font-medium text-stone-100">{t("deals.labels.notes")}</p>
+                   </div>
                   <Textarea
                     rows={8}
                     value={notesDraft}

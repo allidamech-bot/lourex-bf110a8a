@@ -127,3 +127,89 @@ export const loadRecentSupplierPackingLists = async (
     };
   }
 };
+
+export const loadSupplierPackingListForDeal = async (
+  dealId: string,
+): Promise<DomainResult<SupplierPackingListSummary | null>> => {
+  if (!dealId) {
+    return success(null);
+  }
+
+  try {
+    const { data, error } = await (supabase as any)
+      .from("supplier_packing_lists")
+      .select("id, shipment_reference, submitted_by_role, total_cbm, total_weight_kg, status, created_at")
+      .eq("deal_id", dealId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return success(null);
+    }
+
+    return success({
+      id: String(data.id),
+      shipmentReference: normalizeText(data.shipment_reference),
+      submittedByRole: normalizeText(data.submitted_by_role),
+      totalCbm: Number(data.total_cbm || 0),
+      totalWeightKg: Number(data.total_weight_kg || 0),
+      status: normalizeText(data.status) || "submitted",
+      createdAt: normalizeText(data.created_at),
+    });
+  } catch (error) {
+    logOperationalError("supplier_packing_list_for_deal_load", error, { dealId });
+
+    return {
+      data: null,
+      error: createDomainError(error, "Unable to load supplier packing list for deal."),
+    };
+  }
+};
+
+export const loadSupplierPackingListForShipment = async (
+  shipmentId: string,
+): Promise<DomainResult<SupplierPackingListSummary | null>> => {
+  if (!shipmentId) {
+    return success(null);
+  }
+
+  try {
+    const { data, error } = await (supabase as any)
+      .from("supplier_packing_lists")
+      .select("id, shipment_reference, submitted_by_role, total_cbm, total_weight_kg, status, created_at")
+      .eq("shipment_id", shipmentId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return success(null);
+    }
+
+    return success({
+      id: String(data.id),
+      shipmentReference: normalizeText(data.shipment_reference),
+      submittedByRole: normalizeText(data.submitted_by_role),
+      totalCbm: Number(data.total_cbm || 0),
+      totalWeightKg: Number(data.total_weight_kg || 0),
+      status: normalizeText(data.status) || "submitted",
+      createdAt: normalizeText(data.created_at),
+    });
+  } catch (error) {
+    logOperationalError("supplier_packing_list_for_shipment_load", error, { shipmentId });
+
+    return {
+      data: null,
+      error: createDomainError(error, "Unable to load supplier packing list for shipment."),
+    };
+  }
+};
