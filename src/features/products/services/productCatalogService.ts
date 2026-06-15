@@ -200,17 +200,22 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
   }
 };
 
-export const fetchCatalogProductBySlug = async (slug: string) => {
+export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolean = false) => {
   try {
     const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
     if (!isAvailable) {
       return getProductBySlug(slug);
     }
-    const { data, error } = await productDb
+    let query = productDb
       .from("product_catalog_products")
       .select(PRODUCT_SELECT)
-      .eq("slug", slug)
-      .maybeSingle();
+      .eq("slug", slug);
+
+    if (activeOnly) {
+      query = query.eq("status", "active");
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
@@ -220,7 +225,13 @@ export const fetchCatalogProductBySlug = async (slug: string) => {
       throw error;
     }
 
-    return data ? mapProductRow(data as ProductCatalogProductRow) : getProductBySlug(slug);
+    const product = data ? mapProductRow(data as ProductCatalogProductRow) : null;
+
+    if (activeOnly && product && product.status !== "active") {
+      return null;
+    }
+
+    return product;
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       markTableUnavailable("product_catalog_products");
@@ -270,6 +281,9 @@ export const updateCatalogProduct = async (id: string, input: Partial<ProductCat
   if (input.imageAltEn !== undefined) partialPayload.image_alt_en = input.imageAltEn?.trim() || "";
   if (input.tagsAr !== undefined) partialPayload.tags_ar = input.tagsAr || [];
   if (input.tagsEn !== undefined) partialPayload.tags_en = input.tagsEn || [];
+  if (input.slug !== undefined || input.nameEn !== undefined || input.nameAr !== undefined) {
+    partialPayload.slug = createProductSlug(input.slug || input.nameEn || input.nameAr || "");
+  }
   
   const { data, error } = await productDb
     .from("product_catalog_products")

@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
     }
 
     setLoading(true);
-    fetchCatalogProductBySlug(slug)
+    fetchCatalogProductBySlug(slug, true)
       .then((nextProduct) => {
         if (!cancelled) {
           setProduct(nextProduct);
