@@ -948,6 +948,8 @@ export const createPurchaseRequestRecord = async (input: {
   deliveryAddress: string;
   isFullSourcing: boolean;
   trackingCode: string;
+  // Optional source context
+  internalNotes?: string;
 }) => {
   const { user } = await getCurrentUserContext();
 
@@ -1035,6 +1037,7 @@ export const createPurchaseRequestRecord = async (input: {
             delivery_address: input.deliveryAddress,
             is_full_sourcing: input.isFullSourcing,
             tracking_code: input.trackingCode,
+            internal_notes: input.internalNotes || "",
           })
           .select("*")
           .single(),

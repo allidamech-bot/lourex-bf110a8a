@@ -149,6 +149,8 @@ export type CreateRequestInput = {
   deliveryAddress: string;
   isFullSourcing: boolean;
   trackingCode: string;
+  // Optional source context
+  internalNotes?: string;
 };
 
 export type UpdateDealStatusInput = {

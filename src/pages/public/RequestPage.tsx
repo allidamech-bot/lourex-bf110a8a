@@ -153,6 +153,7 @@ export default function RequestPage() {
                   mode={editRequestId ? "edit" : "create"}
                   requestId={editRequestId || undefined}
                   initialRequest={editRequest}
+                  sourceProductId={productId}
                   onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
                 />
               </div>

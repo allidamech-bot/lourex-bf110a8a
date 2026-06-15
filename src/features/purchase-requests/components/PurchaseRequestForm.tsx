@@ -38,6 +38,8 @@ import type { OperationsRequest, PurchaseRequestImageUpload } from "@/domain/ope
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
+import { getProductById } from "@/features/products/services/productCatalogService";
+import type { ProductCatalogItem } from "@/features/products/types";
 
 type PurchaseRequestFormState = {
   fullName: string;
@@ -396,6 +398,8 @@ type PurchaseRequestFormProps = {
   requestId?: string;
   initialRequest?: OperationsRequest | null;
   onEditSuccess?: (request: OperationsRequest) => void;
+  sourceProductId?: string;
+  onSourceProductDisplay?: (product: ProductCatalogItem | null) => void;
 };
 
 export const PurchaseRequestForm = ({
@@ -403,6 +407,8 @@ export const PurchaseRequestForm = ({
   requestId,
   initialRequest,
   onEditSuccess,
+  sourceProductId,
+  onSourceProductDisplay,
 }: PurchaseRequestFormProps) => {
   const { t, lang, locale } = useI18n();
   const { profile, user, loading: authLoading } = useAuthSession();
@@ -467,6 +473,15 @@ export const PurchaseRequestForm = ({
     setAnalysisResult(null);
     setAnalysisError("");
   }, [initialRequest]);
+
+  const sourceProduct = useMemo(
+    () => (sourceProductId ? getProductById(sourceProductId) : null),
+    [sourceProductId],
+  );
+
+  useEffect(() => {
+    onSourceProductDisplay?.(sourceProduct);
+  }, [sourceProduct, onSourceProductDisplay]);
 
   const successSteps = useMemo(
       () => [
@@ -902,6 +917,9 @@ export const PurchaseRequestForm = ({
             destination: trimPayload(form.destination),
             deliveryAddress: trimPayload(form.deliveryAddress),
             isFullSourcing: form.isFullSourcing,
+            internalNotes: sourceProduct
+              ? `${lang === "ar" ? "مرجع المنتج" : "Product reference"}: ${sourceProduct.slug} (${lang === "ar" ? sourceProduct.nameAr : sourceProduct.nameEn})`
+              : undefined,
           },
           uploads,
       );
