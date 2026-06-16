@@ -1679,6 +1679,49 @@ const ensureCustomer = async (request: OperationalPurchaseRequest) => {
   return inserted.data;
 };
 
+const buildConversionNotes = (
+  request: OperationalPurchaseRequest,
+  operationalNotes?: string,
+) => {
+  const sourceRequestId = request.sourceInquiryId || request.id;
+  const providedOperationalNotes = operationalNotes?.trim() || "";
+  const requestInternalNotes = request.internalNotes?.trim() || "";
+  const notes = [
+    `Converted From Purchase Request: ${request.requestNumber || "N/A"}`,
+    `Source Request ID: ${sourceRequestId || "N/A"}`,
+    `Original Request Status: ${request.status || "N/A"}`,
+    `Product: ${request.productName || "N/A"}`,
+    `Quantity: ${request.quantity}`,
+    `Weight: ${request.weight || "N/A"}`,
+    `Brand: ${request.brand || "N/A"}`,
+    `Quality Level: ${request.qualityLevel || "N/A"}`,
+    `Manufacturing Country: ${request.manufacturingCountry || "N/A"}`,
+    `Preferred Shipping: ${request.preferredShippingMethod || "N/A"}`,
+    `Destination: ${request.destination || "N/A"}`,
+    `Sourcing: ${request.isFullSourcing ? "Full Sourcing/Procurement" : "Shipping Only"}`,
+    `Product Type: ${request.isReadyMade ? "Ready-made" : "Requires Manufacturing"}`,
+    `Has Sample: ${request.hasPreviousSample ? "Yes" : "No"}`,
+    `Expected Date: ${request.expectedSupplyDate || "N/A"}`,
+    `Delivery Address: ${request.deliveryAddress || "N/A"}`,
+  ];
+
+  if (providedOperationalNotes && requestInternalNotes && providedOperationalNotes === requestInternalNotes) {
+    notes.push(`Operational Notes / Internal Review Notes: ${providedOperationalNotes}`);
+  } else {
+    if (providedOperationalNotes) {
+      notes.push(`Operational Notes: ${providedOperationalNotes}`);
+    }
+    if (requestInternalNotes) {
+      notes.push(`Internal Review Notes: ${requestInternalNotes}`);
+    }
+    if (!providedOperationalNotes && !requestInternalNotes) {
+      notes.push("Internal Review Notes: None");
+    }
+  }
+
+  return notes.join("\n");
+};
+
 export const convertRequestToDeal = async (
   request: OperationalPurchaseRequest,
   options?: {
@@ -1715,14 +1758,7 @@ export const convertRequestToDeal = async (
       status: "in_progress",
       destination_country: request.customer.country || null,
       origin_country: request.manufacturingCountry || "Turkey",
-      notes: [
-        `Request Number: ${request.requestNumber}`,
-        `Customer Name: ${request.customer.fullName}`,
-        `Customer Email: ${request.customer.email}`,
-        `Product: ${request.productName || "N/A"}`,
-        `Preferred Shipping: ${request.preferredShippingMethod || "N/A"}`,
-        `Source Request Id: ${request.sourceInquiryId || request.id}`,
-      ].join("\n"),
+      notes: buildConversionNotes(request, options?.operationalNotes),
       total_value: 0,
       currency: "SAR",
     });
@@ -1849,24 +1885,7 @@ export const convertRequestToDeal = async (
   const trackingNumber = generateTrackingId();
   const accountingReference = `ACC-${dealNumber}`;
 
-  // Build a comprehensive operational summary for the deal notes
-  const operationalSummary = [
-    `Product: ${request.productName}`,
-    `Quantity: ${request.quantity}`,
-    `Weight: ${request.weight || "N/A"}`,
-    `Brand: ${request.brand || "N/A"}`,
-    `Quality Level: ${request.qualityLevel || "N/A"}`,
-    `Manufacturing Country: ${request.manufacturingCountry || "N/A"}`,
-    `Preferred Shipping: ${request.preferredShippingMethod}`,
-    `Destination: ${request.destination || "N/A"}`,
-    `Sourcing: ${request.isFullSourcing ? "Full Sourcing/Procurement" : "Shipping Only"}`,
-    `Product Type: ${request.isReadyMade ? "Ready-made" : "Requires Manufacturing"}`,
-    `Has Sample: ${request.hasPreviousSample ? "Yes" : "No"}`,
-    `Expected Date: ${request.expectedSupplyDate || "N/A"}`,
-    `Delivery Address: ${request.deliveryAddress || "N/A"}`,
-    "-------------------",
-    `Internal Review Notes: ${options?.operationalNotes || request.internalNotes || "None"}`,
-  ].join("\n");
+  const operationalSummary = buildConversionNotes(request, options?.operationalNotes);
 
   const insertedDeal = await db
     .from<DealRow>("deals")
