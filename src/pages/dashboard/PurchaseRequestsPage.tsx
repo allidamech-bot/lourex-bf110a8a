@@ -100,12 +100,8 @@ const getAiActionLabel = (mode: PurchaseRequestAiMode, lang: string) =>
     purchaseRequestAiActions.find((action) => action.mode === mode)?.[lang === "ar" ? "labelAr" : "label"] ||
     purchaseRequestAiActions[0].label;
 
-const normalizePurchaseRequestAiMode = (mode: PurchaseRequestAiMode): PurchaseRequestAiMode => {
-    if (mode === "missing_information_checklist") return "purchase_request_missing_info";
-    if (mode === "customer_reply_draft") return "purchase_request_customer_reply";
-    if (mode === "supplier_brief") return "purchase_request_supplier_brief";
-    return mode;
-};
+const isProductSourcedRequest = (internalNotes: string) =>
+    internalNotes.includes("Product reference:") || internalNotes.includes("مرجع المنتج:");
 
 const valueOrDash = (value: unknown) => {
     if (typeof value === "string") return value.trim() || "-";
@@ -1131,10 +1127,15 @@ export default function PurchaseRequestsPage() {
                                             <div className="flex min-w-0 justify-between items-start gap-4 mb-4">
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{row.requestNumber}</p>
-                                                    <h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors truncate">
-                                                        {row.productName || t("requests.genericRequest")}
-                                                    </h4>
-                                                    <p className="text-xs text-stone-500 font-medium mt-1 truncate">{row.customer.fullName}</p>
+<h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors truncate">
+                                                            {row.productName || t("requests.genericRequest")}
+                                                        </h4>
+                                                        {isProductSourcedRequest(row.internalNotes || "") && (
+                                                            <span className="inline-block px-2 py-0.5 mt-1 text-[8px] font-black uppercase tracking-widest rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                                                {t("requests.labels.productSourced")}
+                                                            </span>
+                                                        )}
+                                                        <p className="text-xs text-stone-500 font-medium mt-1 truncate">{row.customer.fullName}</p>
                                                 </div>
                                                 <span className={cn(
                                                     "shrink-0 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
@@ -1195,10 +1196,15 @@ export default function PurchaseRequestsPage() {
                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
                                         <div>
                                             <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{selectedRow.requestNumber}</p>
-                                            <h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">
-                                                {selectedRow.productName || t("requests.genericRequest")}
-                                            </h3>
-                                            <p className="text-sm text-stone-500 font-medium mt-2">{selectedRow.customer.fullName} â€¢ {selectedRow.customer.email}</p>
+<h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">
+                                                    {selectedRow.productName || t("requests.genericRequest")}
+                                                </h3>
+                                                {isProductSourcedRequest(selectedRow.internalNotes || "") && (
+                                                    <span className="inline-block px-2 py-0.5 mt-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                                        {t("requests.labels.productSourced")}
+                                                    </span>
+                                                )}
+                                                <p className="text-sm text-stone-500 font-medium mt-2">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3">
                                             {isInternal && selectedRow.convertedDealNumber && (
