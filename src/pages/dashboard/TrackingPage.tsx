@@ -594,6 +594,59 @@ export default function TrackingPage() {
               )}
             </BentoCard>
 
+            {activeDeal ? (
+              <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">
+                      {t("tracking.labels.linkedDeal", { deal: activeDeal.dealNumber })}
+                    </p>
+                    <p className="mt-2 break-words text-sm text-stone-400">
+                      {activeDeal.operationTitle || t("common.notSpecified")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {activeDeal.sourceRequestId ? (
+                      <Button variant="outline" asChild className="h-10 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                        <Link to={`/dashboard/requests?request=${activeDeal.sourceRequestId}`}>
+                          {t("deals.backToRequest")}
+                        </Link>
+                      </Button>
+                    ) : null}
+                    <Button variant="outline" asChild className="h-10 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                      <Link to={`/dashboard/deals?deal=${activeDeal.dealNumber}`}>
+                        {t("tracking.backToDeal")}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                      {t("tracking.labels.deal")}
+                    </p>
+                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.dealNumber}</p>
+                  </div>
+                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                      {t("common.purchaseRequest")}
+                    </p>
+                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.requestNumber || t("common.notSpecified")}</p>
+                  </div>
+                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                      {t("deals.labels.operationTitle")}
+                    </p>
+                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.operationTitle || t("common.notSpecified")}</p>
+                  </div>
+                </div>
+              </BentoCard>
+            ) : (
+              <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+                <p className="text-sm text-stone-400">{t("tracking.unlinked")}</p>
+              </BentoCard>
+            )}
+
             <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
               <LogisticsMetricsPanel
                 metrics={(activeDeal as any)?.logistics || null}
