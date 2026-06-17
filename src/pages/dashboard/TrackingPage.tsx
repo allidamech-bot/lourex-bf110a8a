@@ -74,6 +74,22 @@ type ShipmentAiContext = {
   }>;
 };
 
+const extractProductSourceFromNotes = (notes?: string | null): string | null => {
+  if (!notes) return null;
+
+  const englishMatch = notes.match(/Product reference:\s*([^\r\n]+)/i);
+  if (englishMatch?.[1]?.trim()) {
+    return englishMatch[1].trim();
+  }
+
+  const arabicMatch = notes.match(/مرجع المنتج[:：]\s*([^\r\n]+)/i);
+  if (arabicMatch?.[1]?.trim()) {
+    return arabicMatch[1].trim();
+  }
+
+  return null;
+};
+
 const buildShipmentAiContext = (
   shipment: Awaited<ReturnType<typeof loadShipments>>[number],
   nextStageCode: string | null,
@@ -335,6 +351,7 @@ export default function TrackingPage() {
     if (!activeShipment) return null;
     return deals.find(d => d.id === activeShipment.dealId || d.dealNumber === activeShipment.dealNumber) || null;
   }, [activeShipment, deals]);
+  const productSource = activeDeal ? extractProductSourceFromNotes(activeDeal.notes) : null;
 
   const canAdvance = useMemo(() => {
     if (!profile || !activeShipment) return false;
@@ -621,6 +638,14 @@ export default function TrackingPage() {
                   </div>
                 </div>
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {productSource ? (
+                    <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
+                      <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                        Product source
+                      </p>
+                      <p className="mt-1 break-words font-bold text-stone-300">{productSource}</p>
+                    </div>
+                  ) : null}
                   <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
                     <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
                       {t("tracking.labels.deal")}

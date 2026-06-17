@@ -51,6 +51,22 @@ type DealAiMode = "deal_briefing" | "deal_risk_review";
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
 
+const extractProductSourceFromNotes = (notes?: string | null): string | null => {
+  if (!notes) return null;
+
+  const englishMatch = notes.match(/Product reference:\s*([^\r\n]+)/i);
+  if (englishMatch?.[1]?.trim()) {
+    return englishMatch[1].trim();
+  }
+
+  const arabicMatch = notes.match(/مرجع المنتج[:：]\s*([^\r\n]+)/i);
+  if (arabicMatch?.[1]?.trim()) {
+    return arabicMatch[1].trim();
+  }
+
+  return null;
+};
+
 export default function DealsPage() {
   const { lang, t, locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,6 +120,7 @@ export default function DealsPage() {
 
   const filteredRows = useMemo(() => filterDeals(rows, deferredSearch), [deferredSearch, rows]);
   const selectedDeal = filteredRows.find((row) => row.dealNumber === selectedDealNumber) || filteredRows[0] || null;
+  const productSource = selectedDeal ? extractProductSourceFromNotes(selectedDeal.notes) : null;
   const isAssignedToMe = isTurkishPartner 
     ? profile?.id === selectedDeal?.turkishPartnerId 
     : isSaudiPartner 
@@ -487,6 +504,12 @@ export default function DealsPage() {
           <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
             <div className="min-w-0 border-b border-amber-200/10 p-4 sm:p-6 2xl:border-b-0 2xl:border-e">
               <div className="grid gap-3 md:grid-cols-2">
+                {productSource ? (
+                  <div className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
+                    <p className="break-words text-xs text-stone-500">Product source</p>
+                    <p className="mt-1 break-words font-medium text-stone-200">{productSource}</p>
+                  </div>
+                ) : null}
                 {[
                   {
                     label: t("deals.labels.customer"),
