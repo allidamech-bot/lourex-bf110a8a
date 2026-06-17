@@ -641,7 +641,7 @@ export default function TrackingPage() {
                   {productSource ? (
                     <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
                       <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
-                        Product source
+                        {t("requests.labels.productSource")}
                       </p>
                       <p className="mt-1 break-words font-bold text-stone-300">{productSource}</p>
                     </div>

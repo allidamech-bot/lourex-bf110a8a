@@ -506,7 +506,7 @@ export default function DealsPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 {productSource ? (
                   <div className="min-w-0 rounded-[1.25rem] bg-stone-950/40 border border-amber-200/10 p-4">
-                    <p className="break-words text-xs text-stone-500">Product source</p>
+                    <p className="break-words text-xs text-stone-500">{t("requests.labels.productSource")}</p>
                     <p className="mt-1 break-words font-medium text-stone-200">{productSource}</p>
                   </div>
                 ) : null}

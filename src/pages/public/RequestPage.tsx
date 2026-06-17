@@ -135,7 +135,10 @@ export default function RequestPage() {
               <div className="space-y-4">
                 {isCatalogInspiredRequest ? (
                   <div className="rounded-[1.6rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
-                    <p className="font-semibold text-stone-100">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
+                      {t("requests.labels.catalogOriginRequest")}
+                    </p>
+                    <p className="mt-1 font-semibold text-stone-100">
                       {lang === "ar" ? "إنشاء طلب توريد حر" : "Create a free-form sourcing request"}
                     </p>
                     <p className="mt-1">
