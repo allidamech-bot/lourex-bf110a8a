@@ -1750,38 +1750,9 @@ export const convertRequestToDeal = async (
   const domainAvailable = await getLourexDomainAvailability();
 
   if (!domainAvailable) {
-    const legacyDealNumber = `DL-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-    const legacyInsert = await supabase.from("deals").insert({
-      deal_number: legacyDealNumber,
-      client_id: customer.id,
-      customer_id: customer.id,
-      status: "in_progress",
-      destination_country: request.customer.country || null,
-      origin_country: request.manufacturingCountry || "Turkey",
-      notes: buildConversionNotes(request, options?.operationalNotes),
-      total_value: 0,
-      currency: "SAR",
-    });
-
-    if (legacyInsert.error) throw legacyInsert.error;
-
-    await writeAuditLog({
-      action: "purchase_request.in_progress",
-      tableName: "inquiries",
-      recordId: request.sourceInquiryId || request.id,
-      newValues: {
-        deal_number: legacyDealNumber,
-        request_number: request.requestNumber,
-        summary: `تم تحويل الطلب ${request.requestNumber} إلى الصفقة ${legacyDealNumber}`,
-        entity_label: request.productName || request.requestNumber,
-      },
-    });
-
-    return {
-      dealId: "",
-      dealNumber: legacyDealNumber,
-      trackingId: "",
-    };
+    throw new Error(
+      "Lourex operational domain is unavailable. Purchase request conversion requires the operational schema to preserve request, deal, and tracking links.",
+    );
   }
 
   let requestId = request.id;
