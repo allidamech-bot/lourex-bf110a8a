@@ -15,7 +15,7 @@ import {
 import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 
 export default function ProductsPage() {
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const isArabic = lang === "ar";
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState("all");
@@ -135,6 +135,9 @@ export default function ProductsPage() {
                     </div>
                     <div className="flex flex-1 flex-col p-5">
                       <p className="text-xs font-semibold text-amber-500">{category ? (isArabic ? category.labelAr : category.labelEn) : product.categoryId}</p>
+                      <span className="mt-1 inline-flex w-fit items-center rounded-full border border-amber-200/10 bg-amber-500/5 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                        {t("requests.labels.sourcingExample")}
+                      </span>
                       <h2 className="mt-2 break-words font-serif text-2xl font-semibold text-stone-100">
                         {isArabic ? product.nameAr : product.nameEn}
                       </h2>
@@ -174,14 +177,14 @@ export default function ProductsPage() {
                 );
               })}
             </div>
-          ) : null}
+) : null}
 
           {!loading && products.length === 0 ? (
             <div className="mt-10 rounded-[2rem] border border-dashed border-amber-200/20 bg-stone-50/5 p-10 text-center backdrop-blur-xl">
               <PackageSearch className="mx-auto h-10 w-10 text-stone-600" />
-              <h2 className="mt-4 font-serif text-2xl font-semibold text-stone-100">{isArabic ? "لا توجد منتجات مطابقة" : "No matching products"}</h2>
+              <h2 className="mt-4 font-serif text-2xl font-semibold text-stone-100">{t("requests.labels.emptyCatalogTitle")}</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-stone-400">
-                {isArabic ? "غيّر البحث أو التصنيف، أو أضف منتجات جديدة من لوحة التحكم." : "Adjust the search or category, or add new products from the dashboard."}
+                {t("requests.labels.emptyCatalogDescription")}
               </p>
             </div>
           ) : null}

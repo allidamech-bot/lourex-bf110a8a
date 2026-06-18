@@ -13,7 +13,7 @@ import type { ProductCatalogItem } from "@/features/products/types/productTypes"
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const isArabic = lang === "ar";
   const [product, setProduct] = useState<ProductCatalogItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +113,9 @@ export default function ProductDetailPage() {
               </div>
               <h1 className="mt-5 break-words font-serif text-4xl font-bold text-stone-100 md:text-5xl">
                 {isArabic ? product.nameAr : product.nameEn}
+                <span className="mt-2 ml-2 inline-block rounded-full border border-amber-200/10 bg-amber-500/5 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                  {t("requests.labels.sourcingExample")}
+                </span>
               </h1>
               <p className="mt-5 text-base leading-8 text-stone-300">
                 {isArabic ? product.descriptionAr : product.descriptionEn}
