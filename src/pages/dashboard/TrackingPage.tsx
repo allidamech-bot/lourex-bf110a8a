@@ -583,7 +583,7 @@ export default function TrackingPage() {
                   <h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">{currentStage?.label || t("tracking.noStage")}</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Progress</p>
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.labels.progress")}</p>
                   <p className="text-2xl font-black text-amber-500">{progressPercent}%</p>
                 </div>
               </div>
@@ -605,8 +605,8 @@ export default function TrackingPage() {
 
               <p className="text-sm text-stone-400 leading-relaxed font-medium mb-6">{currentStage?.description}</p>
               {currentStage?.owner && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-200 uppercase tracking-widest">
-                  Owner: {currentStage.owner}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-200 uppercase tracking-widest break-words">
+                  {t("tracking.labels.owner")}: {currentStage.owner}
                 </div>
               )}
             </BentoCard>

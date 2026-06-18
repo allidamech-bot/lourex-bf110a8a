@@ -449,6 +449,8 @@ const translations: Record<Lang, TranslationTree> = {
         officialTimeline: "Official timeline",
         officialTimelineDescription: "The full 11-stage operational path for this shipment.",
         updatesLog: "Update log",
+        progress: "Progress",
+        owner: "Owner",
       },
       intelligence: {
         title: "Shipment intelligence",
@@ -2208,6 +2210,8 @@ quantity: "Quantity",
         officialTimeline: "الخط الزمني الرسمي",
         officialTimelineDescription: "مراحل الشحنة من بداية التشغيل حتى التسليم.",
         updatesLog: "سجل التحديثات",
+        progress: "التقدم",
+        owner: "المسؤول",
       },
       intelligence: {
         title: "ذكاء الشحنة",
