@@ -397,19 +397,19 @@ export default function DealsPage() {
         </div>
 
         {isPartnerWorkspace ? (
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { label: t("deals.assignedDeals"), value: assignedSummary.assigned },
-              { label: t("deals.needFollowUp"), value: assignedSummary.actionable },
-              { label: t("deals.delivered"), value: assignedSummary.delivered },
-            ].map((item) => (
-              <div key={item.label} className="rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4 text-center">
-                <p className="text-2xl font-bold text-stone-100">{item.value}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-stone-600 font-bold">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
+<div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+             {[
+               { label: t("deals.assignedDeals"), value: assignedSummary.assigned },
+               { label: t("deals.needFollowUp"), value: assignedSummary.actionable },
+               { label: t("deals.delivered"), value: assignedSummary.delivered },
+             ].map((item) => (
+               <div key={item.label} className="rounded-[1.2rem] bg-stone-950/40 border border-amber-200/10 p-4 text-center">
+                 <p className="text-2xl font-bold text-stone-100">{item.value}</p>
+                 <p className="mt-1 text-[10px] uppercase tracking-wider text-stone-600 font-bold">{item.label}</p>
+               </div>
+             ))}
+           </div>
+         ) : null}
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
           <Input

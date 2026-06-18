@@ -1204,7 +1204,7 @@ export default function PurchaseRequestsPage() {
                                                         {t("requests.labels.productSourced")}
                                                     </span>
                                                 )}
-                                                <p className="text-sm text-stone-500 font-medium mt-2">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
+                                                <p className="text-sm text-stone-500 font-medium mt-2 min-w-0 break-words">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3">
                                             {isInternal && selectedRow.convertedDealNumber && (
