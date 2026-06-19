@@ -15,6 +15,14 @@ export default function HomePage() {
   const { t, lang } = useI18n();
   const isArabic = lang === "ar";
 
+  const seoDescription = isArabic
+    ? "لوركس LOUREX هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تساعد الشركات والتجار في السعودية والخليج على الوصول إلى منتجات تركية موثوقة وإدارة طلبات الشراء والصفقات والمتابعة حتى التسليم."
+    : "LOUREX is a Turkey-based B2B sourcing and trade operations company helping Saudi Arabia and Gulf buyers source verified Turkish products, manage purchase requests, supplier coordination, deal execution, and delivery follow-up.";
+
+  const charterDescription = isArabic
+    ? "لوركس LOUREX ليست مجرد نموذج طلب أو لوحة تتبع منفصلة. هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تربط طلبات الشراء بالموردين الأتراك والصفقات والتتبع والانضباط المالي حتى التسليم للأسواق السعودية والخليجية."
+    : "LOUREX is not just a form front-end or a separate shipment viewer. It is a Turkey-based B2B sourcing and trade operations company that connects purchase requests, Turkish supplier coordination, deal execution, shipment progress, financial discipline, and delivery follow-up for Saudi Arabia and Gulf buyers.";
+
   const charter = [
     {
       icon: Users2,
@@ -49,8 +57,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
-        title={t("nav.home")}
-        description={t("home.charter.description")}
+        title={isArabic ? "توريد منتجات تركية إلى السعودية والخليج" : "Turkey to Saudi B2B Sourcing"}
+        description={seoDescription}
       />
       <SiteHeader />
       <HeroSection />
@@ -71,7 +79,7 @@ export default function HomePage() {
                 {t("home.charter.title")}
               </h2>
               <p className="mt-5 text-base leading-8 text-stone-300">
-                {t("home.charter.description")}
+                {charterDescription}
               </p>
 
               <div className="mt-8 rounded-[1.75rem] border border-stone-200/10 bg-stone-950/45 p-5">
