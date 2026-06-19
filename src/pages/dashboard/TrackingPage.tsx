@@ -718,7 +718,7 @@ export default function TrackingPage() {
               </div>
               <div className="divide-y divide-amber-200/5 max-h-[40rem] overflow-y-auto">
                 {activeShipment.timeline.length === 0 ? (
-                  <div className="p-12 text-center text-stone-600 italic">No updates logged yet.</div>
+                  <div className="p-12 text-center text-stone-600 italic">{t("tracking.noUpdatesLogged")}</div>
                 ) : (
                   activeShipment.timeline.slice().reverse().map((event) => (
                     <div key={event.id} className="p-6 hover:bg-stone-800/20 transition-colors">
@@ -765,10 +765,10 @@ export default function TrackingPage() {
             )}
 
             {isInternal && nextStage ? (
-              <DashboardSection title="Action Center" icon={<Send className="h-6 w-6" />}>
+              <DashboardSection title={t("tracking.actionCenter")} icon={<Send className="h-6 w-6" />}>
                 <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50 space-y-6">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest mb-1">Next Action</p>
+                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest mb-1">{t("tracking.nextAction")}</p>
                     <p className="text-sm font-bold text-stone-100">{t("tracking.advance", { stage: nextStage.label })}</p>
                   </div>
 

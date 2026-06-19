@@ -1107,7 +1107,7 @@ export default function PurchaseRequestsPage() {
 
                         <div className="space-y-4 max-h-[50rem] overflow-y-auto pr-2 custom-scrollbar">
                             {filteredRows.length === 0 ? (
-                                <div className="py-12 text-center text-stone-600 italic">No matching requests found.</div>
+                                <div className="py-12 text-center text-stone-600 italic">{t("requests.noMatches")}</div>
                             ) : (
                                 filteredRows.map((row) => (
                                     <div
