@@ -19,7 +19,7 @@ export function SEO({
   const { t } = useI18n();
   const siteName = "LOUREX";
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const defaultDesc = t("common.appDescription") || "LOUREX — Professional B2B Sourcing & Operations Platform.";
+  const defaultDesc = t("common.appDescription") || "LOUREX is a Turkey-based B2B sourcing and trade operations company helping Saudi Arabia and Gulf buyers source verified Turkish products, manage purchase requests, supplier coordination, deal execution, and delivery follow-up.";
   const finalDesc = description || defaultDesc;
 
   useEffect(() => {
