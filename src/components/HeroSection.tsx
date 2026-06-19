@@ -17,6 +17,20 @@ const HeroSection = () => {
 
   const isArabic = lang === "ar";
 
+  const heroEyebrow = isArabic
+    ? "توريد من تركيا • عمليات B2B • متابعة حتى التسليم"
+    : "Turkey Sourcing • B2B Trade Operations • Delivery Follow-up";
+
+  const heroTitlePrefix = isArabic ? "لوركس تدير" : "LOUREX manages";
+  const heroTitleGradient = isArabic ? " توريد المنتجات التركية " : " Turkish product sourcing ";
+  const heroTitleSuffix = isArabic
+    ? "للسعودية والخليج من طلب الشراء حتى التسليم."
+    : "for Saudi and Gulf buyers from purchase request to final delivery.";
+
+  const heroDescription = isArabic
+    ? "لوركس LOUREX هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تساعد الشركات والتجار في السعودية والخليج على الوصول إلى منتجات تركية موثوقة، وإدارة طلبات الشراء، والتنسيق مع الموردين، ومتابعة الصفقات حتى التسليم."
+    : "LOUREX is a Turkey-based B2B sourcing and trade operations company helping businesses in Saudi Arabia and the Gulf source verified Turkish products, manage purchase requests, coordinate suppliers, execute deals, and follow delivery through to completion.";
+
   const stats = [
     {
       icon: ClipboardList,
@@ -75,7 +89,7 @@ const HeroSection = () => {
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-stone-300/15 bg-stone-950/45 px-5 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-stone-200 backdrop-blur">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-                {t("home.hero.eyebrow")}
+                {heroEyebrow}
               </div>
             </motion.div>
 
@@ -85,11 +99,11 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.08 }}
               className="font-serif text-4xl font-bold leading-[1.08] text-stone-100 md:text-6xl xl:text-7xl"
             >
-              {t("home.hero.titlePrefix")}
+              {heroTitlePrefix}
               <span className="text-amber-300">
-                {t("home.hero.titleGradient")}
+                {heroTitleGradient}
               </span>
-              {t("home.hero.titleSuffix")}
+              {heroTitleSuffix}
             </motion.h1>
 
             <motion.p
@@ -98,7 +112,7 @@ const HeroSection = () => {
               transition={{ duration: 0.65, delay: 0.16 }}
               className="mt-7 max-w-2xl text-lg leading-8 text-stone-300 md:text-xl"
             >
-              {t("home.hero.description")}
+              {heroDescription}
             </motion.p>
 
             <motion.div
