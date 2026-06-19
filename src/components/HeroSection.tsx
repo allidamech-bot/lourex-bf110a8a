@@ -18,18 +18,18 @@ const HeroSection = () => {
   const isArabic = lang === "ar";
 
   const heroEyebrow = isArabic
-    ? "توريد من تركيا • عمليات B2B • متابعة حتى التسليم"
-    : "Turkey Sourcing • B2B Trade Operations • Delivery Follow-up";
+    ? "تصدير أغذية وحلويات • عمليات B2B • أسواق عالمية"
+    : "Food & Sweets Export • B2B Trade Operations • Global Markets";
 
   const heroTitlePrefix = isArabic ? "لوركس تدير" : "LOUREX manages";
-  const heroTitleGradient = isArabic ? " توريد المنتجات التركية " : " Turkish product sourcing ";
+  const heroTitleGradient = isArabic ? " تصدير وتوريد الأغذية والحلويات " : " food and sweets sourcing ";
   const heroTitleSuffix = isArabic
-    ? "للسعودية والخليج من طلب الشراء حتى التسليم."
-    : "for Saudi and Gulf buyers from purchase request to final delivery.";
+    ? "للأسواق العالمية من طلب الشراء حتى التسليم."
+    : "for global markets from purchase request to delivery.";
 
   const heroDescription = isArabic
-    ? "لوركس LOUREX هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تساعد الشركات والتجار في السعودية والخليج على الوصول إلى منتجات تركية موثوقة، وإدارة طلبات الشراء، والتنسيق مع الموردين، ومتابعة الصفقات حتى التسليم."
-    : "LOUREX is a Turkey-based B2B sourcing and trade operations company helping businesses in Saudi Arabia and the Gulf source verified Turkish products, manage purchase requests, coordinate suppliers, execute deals, and follow delivery through to completion.";
+    ? "لوركس LOUREX هي شركة تصدير وتوريد B2B للمواد الغذائية والحلويات إلى الأسواق العالمية، متخصصة في الشوكولاتة والبسكويت والمنتجات الغذائية، مع إدارة طلبات الشراء وتنسيق الموردين ومتابعة الصفقات حتى التسليم."
+    : "LOUREX is a B2B export and sourcing company for food and sweets products to global markets, specializing in chocolate, biscuits, and food products, with purchase request management, supplier coordination, and delivery follow-up.";
 
   const stats = [
     {
