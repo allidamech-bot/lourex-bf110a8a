@@ -16,12 +16,12 @@ export default function HomePage() {
   const isArabic = lang === "ar";
 
   const seoDescription = isArabic
-    ? "لوركس LOUREX هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تساعد الشركات والتجار في السعودية والخليج على الوصول إلى منتجات تركية موثوقة وإدارة طلبات الشراء والصفقات والمتابعة حتى التسليم."
-    : "LOUREX is a Turkey-based B2B sourcing and trade operations company helping Saudi Arabia and Gulf buyers source verified Turkish products, manage purchase requests, supplier coordination, deal execution, and delivery follow-up.";
+    ? "لوركس LOUREX هي شركة تصدير وتوريد B2B للمنتجات التركية والسورية إلى الأسواق العالمية المؤهلة، متخصصة في الشوكولاتة والبسكويت والمواد الغذائية والمنتجات التركية والسورية، بما يتوافق مع القوانين المعمول بها."
+    : "LOUREX is a B2B export and sourcing company for Turkish and Syrian food products to eligible global markets, specializing in chocolate, biscuits, food products, and trade operations in compliance with applicable laws.";
 
   const charterDescription = isArabic
-    ? "لوركس LOUREX ليست مجرد نموذج طلب أو لوحة تتبع منفصلة. هي شركة توريد وعمليات تجارية B2B مقرها تركيا، تربط طلبات الشراء بالموردين الأتراك والصفقات والتتبع والانضباط المالي حتى التسليم للأسواق السعودية والخليجية."
-    : "LOUREX is not just a form front-end or a separate shipment viewer. It is a Turkey-based B2B sourcing and trade operations company that connects purchase requests, Turkish supplier coordination, deal execution, shipment progress, financial discipline, and delivery follow-up for Saudi Arabia and Gulf buyers.";
+    ? "لوركس LOUREX ليست مجرد نموذج طلب أو لوحة تتبع منفصلة. هي شركة تصدير وتوريد وعمليات تجارية B2B للمنتجات التركية والسورية إلى الأسواق العالمية المؤهلة، مع تركيز واضح على الشوكولاتة والبسكويت والمواد الغذائية، وإدارة مسار الطلب من المراجعة إلى الصفقة والتتبع والتسليم."
+    : "LOUREX is not just a form front-end or a separate shipment viewer. It is a B2B export, sourcing, and trade operations company for Turkish and Syrian food products to eligible global markets, with a clear focus on chocolate, biscuits, and food products.";
 
   const charter = [
     {
@@ -57,7 +57,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
-        title={isArabic ? "توريد منتجات تركية إلى السعودية والخليج" : "Turkey to Saudi B2B Sourcing"}
+        title={isArabic ? "تصدير المنتجات التركية والسورية إلى العالم" : "Turkish and Syrian Food Products for Global Markets"}
         description={seoDescription}
       />
       <SiteHeader />
