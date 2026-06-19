@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
         <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
           <div className="flex items-center gap-3 rounded-2xl border border-amber-200/15 bg-stone-50/5 px-5 py-4 text-sm text-stone-400 backdrop-blur-xl">
             <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-            {isArabic ? "جاري تحميل المنتج..." : "Loading product..."}
+            {t("products.detail.loading")}
           </div>
         </div>
       </div>
@@ -66,15 +66,15 @@ export default function ProductDetailPage() {
   const category = getCategoryById(product.categoryId);
   const image = product.images[0];
   const specs = [
-    { label: isArabic ? "التصنيف" : "Category", value: category ? (isArabic ? category.labelAr : category.labelEn) : product.categoryId },
-    { label: isArabic ? "بلد المنشأ" : "Origin", value: product.originCountry },
-    { label: isArabic ? "العلامة" : "Brand", value: product.brand },
-    { label: isArabic ? "طبيعة الطلب" : "Request type", value: isArabic ? "طلب توريد حر" : "Free-form sourcing" },
-    { label: isArabic ? "الوحدة" : "Unit", value: product.unit },
-    { label: isArabic ? "التعبئة" : "Packaging", value: product.packaging },
-    { label: isArabic ? "الوزن" : "Weight", value: product.weight },
-    { label: isArabic ? "الأبعاد" : "Dimensions", value: product.dimensions },
-    { label: isArabic ? "الخامة" : "Material", value: product.material },
+    { label: t("products.detail.category"), value: category ? (isArabic ? category.labelAr : category.labelEn) : product.categoryId },
+    { label: t("products.detail.origin"), value: product.originCountry },
+    { label: t("products.detail.brand"), value: product.brand },
+    { label: t("products.detail.requestType"), value: t("products.detail.freeFormSourcing") },
+    { label: t("products.detail.unit"), value: product.unit },
+    { label: t("products.detail.packaging"), value: product.packaging },
+    { label: t("products.detail.weight"), value: product.weight },
+    { label: t("products.detail.dimensions"), value: product.dimensions },
+    { label: t("products.detail.material"), value: product.material },
   ].filter((item) => Boolean(item.value));
 
   return (
@@ -91,7 +91,7 @@ export default function ProductDetailPage() {
           <Button asChild variant="ghost" className="mb-6 rounded-xl text-stone-400 hover:bg-stone-800 hover:text-stone-100">
             <Link to="/products">
               {isArabic ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-              {isArabic ? "العودة للمنتجات" : "Back to products"}
+              {t("products.detail.backToProducts")}
             </Link>
           </Button>
 
@@ -143,7 +143,7 @@ export default function ProductDetailPage() {
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-amber-500" />
                     <div>
-                      <h2 className="font-serif text-xl font-semibold text-stone-100">{isArabic ? "مواصفات مبدئية للعرض" : "Initial display specifications"}</h2>
+                      <h2 className="font-serif text-xl font-semibold text-stone-100">{t("products.detail.initialSpecsTitle")}</h2>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-stone-400">{product.technicalSpecs}</p>
                     </div>
                   </div>
@@ -151,20 +151,18 @@ export default function ProductDetailPage() {
               ) : null}
 
               <div className="mt-7 rounded-2xl border border-amber-200/20 bg-amber-500/10 p-5 text-sm leading-7 text-amber-200">
-                {isArabic
-                  ? "هذا المنتج معروض كنموذج لخدمة التوريد. الطلب النهائي يبقى طلباً حراً حسب المواصفات والكمية والوجهة التي تحددها."
-                  : "This product is shown as a sourcing service example. The final request remains free-form based on the specifications, quantity, and destination you define."}
+                {t("products.detail.sourcingNote")}
               </div>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Button asChild className="min-h-11 flex-1 rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110">
                   <Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`}>
-                    {isArabic ? "إنشاء طلب توريد" : "Create sourcing request"}
+                    {t("products.detail.createSourcingRequest")}
                     <PackageSearch className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="min-h-11 flex-1 rounded-xl border-amber-200/20 text-stone-300 hover:bg-stone-800 hover:text-stone-100">
-                  <Link to="/contact">{isArabic ? "تواصل للاستفسار" : "Contact for inquiry"}</Link>
+                  <Link to="/contact">{t("products.detail.contactInquiry")}</Link>
                 </Button>
               </div>
             </div>

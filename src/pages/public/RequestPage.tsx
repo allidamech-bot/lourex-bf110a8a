@@ -49,12 +49,12 @@ export default function RequestPage() {
         setEditRequest(request);
 
         if (!request) {
-          setEditRequestError(t("requests.intake.errors.notFound") || "The request could not be found.");
+          setEditRequestError(t("requests.intake.errors.notFound"));
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setEditRequestError(t("requests.intake.errors.notFound") || "The request could not be found.");
+          setEditRequestError(t("requests.intake.errors.notFound"));
         }
       })
       .finally(() => {
@@ -91,12 +91,8 @@ export default function RequestPage() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
-        title={lang === "ar" ? "إرسال طلب شراء" : "Submit Purchase Request"}
-        description={
-          lang === "ar"
-            ? "أرسل طلب شراء جديد لعمليات التوريد والاستيراد والتصدير عبر منصة Lourex."
-            : "Submit a new purchase request for sourcing, import, and export operations through the Lourex platform."
-        }
+        title={t("requestPage.seoTitle")}
+        description={t("requestPage.seoDescription")}
       />
       <SiteHeader />
       <div className="relative overflow-hidden">
@@ -139,7 +135,7 @@ export default function RequestPage() {
                       {t("requests.labels.catalogOriginRequest")}
                     </p>
                     <p className="mt-1 font-semibold text-stone-100">
-                      {lang === "ar" ? "إنشاء طلب توريد حر" : "Create a free-form sourcing request"}
+                      {t("requestPage.freeFormTitle")}
                     </p>
                     <p className="mt-1">
                       {lang === "ar"
@@ -147,8 +143,8 @@ export default function RequestPage() {
                           ? `شاهدت ${productDisplayName} في كتالوج Lourex. اكتب الآن طلبك الحقيقي بالمواصفات والكمية والوجهة التي تريدها، وفريقنا يراجع أفضل خيار توريد مناسب.`
                           : "شاهدت كتالوج منتجات Lourex. اكتب طلبك الحقيقي بالمواصفات والكمية والوجهة التي تريدها، وفريقنا يراجع أفضل خيار توريد مناسب."
                         : productDisplayName
-                          ? `You viewed ${productDisplayName} in the Lourex catalog. Now describe your actual request with the specifications, quantity, and destination you need, and our team will review the best sourcing option.`
-                          : "You viewed the Lourex product catalog. Now describe your actual request with the specifications, quantity, and destination you need, and our team will review the best sourcing option."}
+                          ? t("requestPage.catalogDescription", { product: productDisplayName })
+                          : t("requestPage.catalogDescriptionGeneric")}
                     </p>
                   </div>
                 ) : null}

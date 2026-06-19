@@ -51,12 +51,8 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
-        title={isArabic ? "منتجات وخدمات لوركس" : "Lourex Products & Sourcing"}
-        description={
-          isArabic
-            ? "استعرض أمثلة المنتجات والخدمات التي يمكن لفريق Lourex توريدها، ثم أنشئ طلب توريد حر بالمواصفات التي تحتاجها."
-            : "Browse examples of products and sourcing services Lourex can handle, then create a free-form sourcing request with your own specifications."
-        }
+        title={t("products.listing.seoTitle")}
+        description={t("products.listing.seoDescription")}
       />
       <SiteHeader />
 
@@ -66,15 +62,13 @@ export default function ProductsPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-500">
               <Sparkles className="h-4 w-4" />
-              {isArabic ? "نماذج منتجات وخدمات Lourex" : "Lourex sourcing examples"}
+              {t("products.listing.examplesEyebrow")}
             </div>
             <h1 className="mt-6 font-serif text-4xl font-bold tracking-tight text-stone-100 md:text-6xl">
-              {isArabic ? "منتجات نعرضها لإظهار خدمات التوريد" : "Products shown as sourcing service examples"}
+              {t("products.listing.title")}
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-stone-400 md:text-lg">
-              {isArabic
-                ? "هذه المنتجات للعرض وإظهار نوع الخدمات التي يمكن لفريق Lourex التعامل معها. عند الضغط على إنشاء طلب توريد، ستفتح صفحة طلب حر لتكتب المواصفات والكمية والوجهة التي تريدها."
-                : "These products are displayed to show the kind of sourcing work Lourex can handle. When you create a sourcing request, you will open a free-form request page where you describe your own specifications, quantity, and destination."}
+              {t("products.listing.description")}
             </p>
           </div>
 
@@ -85,7 +79,7 @@ export default function ProductsPage() {
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={isArabic ? "ابحث باسم المنتج أو التصنيف أو المواصفة..." : "Search by product, category, or specification..."}
+                  placeholder={t("products.listing.searchPlaceholder")}
                   className={`bg-stone-900/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 ${isArabic ? "pr-10" : "pl-10"}`}
                 />
               </label>
@@ -96,7 +90,7 @@ export default function ProductsPage() {
                   onChange={(event) => setCategoryId(event.target.value)}
                   className={`h-10 w-full rounded-md border border-amber-200/10 bg-stone-900/50 px-3 py-2 text-sm text-stone-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 ${isArabic ? "pr-10" : "pl-10"}`}
                 >
-                  <option value="all" className="bg-stone-900">{isArabic ? "كل التصنيفات" : "All categories"}</option>
+                  <option value="all" className="bg-stone-900">{t("products.listing.allCategories")}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id} className="bg-stone-900">
                       {isArabic ? category.labelAr : category.labelEn}
@@ -110,7 +104,7 @@ export default function ProductsPage() {
           {loading ? (
             <div className="mt-10 flex items-center justify-center gap-3 rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-10 text-sm text-stone-400 backdrop-blur-xl">
               <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-              {isArabic ? "جاري تحميل المنتجات..." : "Loading products..."}
+              {t("products.listing.loading")}
             </div>
           ) : null}
 
@@ -129,7 +123,7 @@ export default function ProductsPage() {
                       />
                       {product.isFeatured ? (
                         <span className="absolute top-4 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500 ltr:left-4 rtl:right-4">
-                          {isArabic ? "مثال مميز" : "Featured example"}
+                          {t("products.listing.featuredExample")}
                         </span>
                       ) : null}
                     </div>
@@ -153,21 +147,21 @@ export default function ProductsPage() {
                       </div>
                       <div className="mt-5 grid gap-2 rounded-2xl bg-stone-900/50 p-4 text-sm">
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-stone-500">{isArabic ? "بلد المنشأ" : "Origin"}</span>
+                          <span className="text-stone-500">{t("products.listing.origin")}</span>
                           <span className="font-semibold text-stone-300">{product.originCountry}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-stone-500">{isArabic ? "طبيعة الطلب" : "Request type"}</span>
-                          <span className="font-semibold text-stone-300">{isArabic ? "طلب حر" : "Free-form"}</span>
+                          <span className="text-stone-500">{t("products.listing.requestType")}</span>
+                          <span className="font-semibold text-stone-300">{t("products.listing.freeForm")}</span>
                         </div>
                       </div>
                       <div className="mt-auto flex gap-2 pt-5">
                         <Button asChild variant="outline" className="flex-1 rounded-xl border-amber-200/20 text-stone-300 hover:bg-stone-800 hover:text-stone-100">
-                          <Link to={`/products/${product.slug}`}>{isArabic ? "التفاصيل" : "Details"}</Link>
+                          <Link to={`/products/${product.slug}`}>{t("products.listing.details")}</Link>
                         </Button>
                         <Button asChild className="flex-1 rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110">
                           <Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`}>
-                            {isArabic ? "إنشاء طلب توريد" : "Create request"}
+                            {t("products.listing.createRequest")}
                             <ArrowRight className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`} />
                           </Link>
                         </Button>
