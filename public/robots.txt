@@ -27,6 +27,38 @@ Disallow: /dashboard
 Disallow: /admin
 Disallow: /auth
 
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /products
+Allow: /track
+Allow: /about
+Allow: /why-lourex
+Allow: /privacy
+Allow: /terms
+Disallow: /orders
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /factory-signup
+Disallow: /factory-dashboard
+Disallow: /messages
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /products
+Allow: /track
+Allow: /about
+Allow: /why-lourex
+Allow: /privacy
+Allow: /terms
+Disallow: /orders
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /factory-signup
+Disallow: /factory-dashboard
+Disallow: /messages
+
 User-agent: Twitterbot
 Allow: /
 
@@ -49,4 +81,4 @@ Disallow: /factory-signup
 Disallow: /factory-dashboard
 Disallow: /messages
 
-Sitemap: https://lourex.lovable.app/sitemap.xml
+Sitemap: https://www.lou-rex.com/sitemap.xml
