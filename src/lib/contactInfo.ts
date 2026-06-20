@@ -3,9 +3,14 @@ export const publicContactInfo = {
   email: "alidamish@lou-rex.com",
   phone: "00905392411642",
   phoneTel: "+905392411642",
-  whatsappNumber: "905392411642",
+  whatsappNumber: "966571660357",
+  whatsappDisplay: "+966 57 166 0357",
   website: "www.lou-rex.com",
   websiteUrl: "https://www.lou-rex.com",
+  social: {
+    instagram: "https://www.instagram.com/lourex___/",
+    tiktok: "https://www.tiktok.com/@lourex49",
+  },
   location: {
     en: "Istanbul, Turkey",
     ar: "إسطنبول، تركيا",
