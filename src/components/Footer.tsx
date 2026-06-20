@@ -26,7 +26,19 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const contactLinks = [
     { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}` },
     { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}` },
-    { label: "WhatsApp", href: getWhatsAppUrl("Hello LOUREX, I need support.") },
+    {
+      label: `WhatsApp TR ${publicContactInfo.whatsappNumbers.turkey.display}`,
+      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.turkey.number),
+    },
+    {
+      label: `WhatsApp KSA ${publicContactInfo.whatsappNumbers.saudi.display}`,
+      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.saudi.number),
+    },
+  ];
+
+  const socialLinks = [
+    { label: "Instagram", href: publicContactInfo.social.instagram },
+    { label: "TikTok", href: publicContactInfo.social.tiktok },
   ];
 
   return (
@@ -34,11 +46,11 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <img src="/logo.png" alt="LOUREX" className="h-8 w-auto brightness-110" />
+            <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-auto brightness-110" />
             <p className="text-sm leading-relaxed text-stone-400">
               {lang === "ar"
-                ? "منصة عمليات ذكية تربط العملاء بطلبات الشراء والتتبع والمحاسبة المنضبطة."
-                : "Smart operations platform connecting customers with purchase deals, tracking, and disciplined accounting."}
+                ? "شركة توريد وتصدير B2B متخصصة في الشوكولاتة والبسكويت والمواد الغذائية للمشترين التجاريين حول العالم."
+                : "B2B food sourcing and trade operations for chocolate, biscuits, and food products for global business buyers."}
             </p>
             <div className="flex items-center gap-2 text-xs text-stone-500">
               <Globe className="h-3.5 w-3.5 text-amber-500" />
@@ -47,7 +59,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
           </div>
 
           <FooterColumn title={lang === "ar" ? "المنصة" : "Platform"} links={platformLinks} />
-          <FooterColumn title={lang === "ar" ? "المؤسسة" : "MIM Import"} links={navLinks} />
+          <FooterColumn title={lang === "ar" ? "المؤسسة" : "LOUREX"} links={navLinks} />
 
           <div>
             <h4 className="mb-4 text-sm font-semibold text-stone-100">{lang === "ar" ? "تواصل" : "Contact"}</h4>
@@ -57,8 +69,23 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
                   <a
                     href={link.href}
                     className="text-sm text-stone-400 transition-colors hover:text-amber-500"
-                    target={link.label === "WhatsApp" ? "_blank" : undefined}
-                    rel={link.label === "WhatsApp" ? "noreferrer" : undefined}
+                    target={link.href.startsWith("https://wa.me") ? "_blank" : undefined}
+                    rel={link.href.startsWith("https://wa.me") ? "noreferrer" : undefined}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <h4 className="mb-3 mt-5 text-sm font-semibold text-stone-100">{lang === "ar" ? "القنوات الرسمية" : "Official Channels"}</h4>
+            <ul className="space-y-2.5">
+              {socialLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-stone-400 transition-colors hover:text-amber-500"
+                    target="_blank"
+                    rel="me noreferrer"
                   >
                     {link.label}
                   </a>
@@ -81,11 +108,11 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
         <div className="flex flex-col items-center justify-between gap-3 border-t border-amber-200/10 py-6 sm:flex-row">
           <p className="text-xs text-stone-500">
             {"\u00A9"} {new Date().getFullYear()}{" "}
-            {lang === "ar" ? "مؤسسة ميم للاستيراد" : "MIM Import Establishment"}.
+            {lang === "ar" ? "لوركس LOUREX" : "LOUREX"}.
             {" "}{t("footer.tagline")}
           </p>
           <p className="text-xs uppercase tracking-wider text-stone-600">
-            Private Smart Operations Platform
+            B2B Food Sourcing & Trade Operations
           </p>
         </div>
       </div>
