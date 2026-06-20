@@ -831,24 +831,24 @@ export default function TrackingPage() {
               )}
             </div>
 
-             <DashboardSection title="Recent Shipments">
-              <div className="space-y-3">
-                {filteredRows.slice(0, 10).map((row) => (
-                  <button
-                    key={row.id}
-                    onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
-                    className={cn(
-                      "w-full p-4 rounded-2xl border text-start transition-all",
-                      activeShipment.id === row.id
-                        ? "border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-950/20"
-                        : "border-amber-200/5 bg-stone-900/30 hover:border-amber-200/20"
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-stone-100 text-sm">{row.trackingId}</p>
-                        <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{row.dealNumber || "Unlinked"}</p>
-                      </div>
+<DashboardSection title={t("tracking.labels.recentShipments")}>
+               <div className="space-y-3">
+                 {filteredRows.slice(0, 10).map((row) => (
+                   <button
+                     key={row.id}
+                     onClick={() => setSelectedTracking(row.trackingId, row.dealNumber)}
+                     className={cn(
+                       "w-full p-4 rounded-2xl border text-start transition-all",
+                       activeShipment.id === row.id
+                         ? "border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-950/20"
+                         : "border-amber-200/5 bg-stone-900/30 hover:border-amber-200/20"
+                     )}
+                   >
+                     <div className="flex justify-between items-start">
+                       <div>
+                         <p className="font-bold text-stone-100 text-sm">{row.trackingId}</p>
+                         <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{row.dealNumber || t("tracking.unlinked")}</p>
+                       </div>
                       <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 border border-stone-700">
                         {row.stage}
                       </span>
