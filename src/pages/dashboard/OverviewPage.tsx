@@ -394,31 +394,31 @@ export default function OverviewPage() {
     <DashboardPageShell dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHelpBox pageKey="dashboard_overview" role={profile?.role} />
 
-      {/* 1. Executive Health Bar */}
-      <DashboardSection
-        eyebrow="Momentum Tracker"
-        title="Executive Command"
-        description="Real-time systemic health and strategic oversight nodes."
-        icon={<LayoutDashboard className="h-8 w-8" />}
-        headerAction={
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
-              <p className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em]">System Trend</p>
+{/* 1. Executive Health Bar */}
+       <DashboardSection
+         eyebrow={t("overview.momentumTracker")}
+         title={t("commandCenter.executiveCommand")}
+         description="Real-time systemic health and strategic oversight nodes."
+         icon={<LayoutDashboard className="h-8 w-8" />}
+         headerAction={
+           <div className="flex items-center gap-6">
+             <div className="text-right hidden sm:block">
+               <p className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em]">{t("commandCenter.systemTrend")}</p>
               <div className="flex items-center gap-2 justify-end text-emerald-400 font-black">
                 <ArrowUpRight className="h-3 w-3" />
                 {executiveWorkspaceState.momentum.trend}
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => window.location.reload()}
-              disabled={loading}
-              className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 hover:bg-stone-800 transition-all shadow-xl backdrop-blur-md h-14"
-            >
-              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
-              <span className="font-bold">Sync System</span>
-            </Button>
+<Button
+               variant="outline"
+               size="lg"
+               onClick={() => window.location.reload()}
+               disabled={loading}
+               className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 hover:bg-stone-800 transition-all shadow-xl backdrop-blur-md h-14"
+             >
+               <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+               <span className="font-bold">{t("commandCenter.syncSystem")}</span>
+             </Button>
           </div>
         }
       >
@@ -459,18 +459,18 @@ export default function OverviewPage() {
         })}
       </DashboardGrid>
 
-      {profile?.role === "saudi_partner" && !loading && (
-        <div className="space-y-16">
-          <DashboardSection
-            eyebrow="Financial Intelligence"
-            title="Executive Ledger Overview"
-            description="Aggregated financial metrics derived directly from the immutable ledger."
-            icon={<Receipt className="h-5 w-5" />}
-          >
-            <DashboardGrid variant="kpi">
-              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Total Income</p>
+{profile?.role === "saudi_partner" && !loading && (
+         <div className="space-y-16">
+           <DashboardSection
+             eyebrow="Financial Intelligence"
+             title={t("overview.executiveLedgerOverview")}
+             description="Aggregated financial metrics derived directly from the immutable ledger."
+             icon={<Receipt className="h-5 w-5" />}
+           >
+             <DashboardGrid variant="kpi">
+               <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+                 <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.totalIncome")}</p>
                   <ArrowUpRight className="h-4 w-4 text-emerald-400" />
                 </div>
                 <p className="mt-4 text-2xl font-black text-emerald-400">
@@ -480,7 +480,7 @@ export default function OverviewPage() {
 
               <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Operational Costs</p>
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.operationalCosts")}</p>
                   <Truck className="h-4 w-4 text-rose-400" />
                 </div>
                 <p className="mt-4 text-2xl font-black text-rose-400">
@@ -490,7 +490,7 @@ export default function OverviewPage() {
 
               <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">Net Revenue</p>
+                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.netRevenue")}</p>
                   <WalletCards className="h-4 w-4 text-amber-200" />
                 </div>
                 <p className="mt-4 text-2xl font-black text-stone-100">
@@ -562,10 +562,10 @@ export default function OverviewPage() {
                 <ProductionLazySection>
                   <AIOperationsCenter result={aiOpsResult} language={lang === "ar" ? "ar" : "en"} locale={locale} />
                 </ProductionLazySection>
-                <div className="grid grid-cols-2 gap-4">
-                  <ReadableMetricCard label="Locked Entries" value={metrics.financialEntries} icon={ShieldCheck} className="h-32" />
-                  <ReadableMetricCard label="Pending Audits" value={pendingEditRequests} icon={Clock3} className="h-32" />
-                </div>
+<div className="grid grid-cols-2 gap-4">
+                   <ReadableMetricCard label={t("overview.lockedEntries")} value={metrics.financialEntries} icon={ShieldCheck} className="h-32" />
+                   <ReadableMetricCard label={t("overview.pendingAudits")} value={pendingEditRequests} icon={Clock3} className="h-32" />
+                 </div>
               </div>
             </ExecutiveCommandSection>
           </DashboardGrid>
@@ -580,10 +580,10 @@ export default function OverviewPage() {
               secondaryWidgets={
                 <div className="space-y-6">
                    <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
-                   <BentoCard className="rounded-[2rem] p-0 border-amber-200/10 bg-stone-900/50">
-                    <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-amber-200/10">
-                      <h3 className="font-serif text-lg font-bold text-stone-100">Live Activity</h3>
-                      <Clock3 className="h-4 w-4 text-stone-600" />
+<BentoCard className="rounded-[2rem] p-0 border-amber-200/10 bg-stone-900/50">
+                     <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-amber-200/10">
+                       <h3 className="font-serif text-lg font-bold text-stone-100">{t("overview.liveActivity")}</h3>
+                       <Clock3 className="h-4 w-4 text-stone-600" />
                     </div>
                     <div className="px-6 pb-6 pt-4">
                       {recentActivity.length > 0 ? (
@@ -669,8 +669,8 @@ export default function OverviewPage() {
                 </div>
               </div>
 
-              <div className="space-y-6 pt-8 border-t border-amber-200/5">
-                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-stone-600 text-center">Experimental Autonomous Fabric</h3>
+<div className="space-y-6 pt-8 border-t border-amber-200/5">
+                 <h3 className="text-xs font-black uppercase tracking-[0.4em] text-stone-600 text-center">{t("overview.experimentalAutonomousFabric")}</h3>
                 <div className="grid gap-6 lg:grid-cols-2">
                   <ProductionLazySection>
                     <RuntimeInfrastructureCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
