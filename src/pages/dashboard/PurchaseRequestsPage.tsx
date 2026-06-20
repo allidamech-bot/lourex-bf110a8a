@@ -1022,7 +1022,7 @@ export default function PurchaseRequestsPage() {
             {isInternal && (
                 <div className="space-y-12">
                      <DashboardGrid variant="balanced">
-                        <DashboardSection title="Health Monitor">
+                        <DashboardSection title={t("requests.dashboardSections.healthMonitor")}>
                             <OperationsHealthCenter
                                 activeRequests={requestMetrics.total - requestMetrics.converted}
                                 pendingOperations={requestMetrics.review}
@@ -1032,16 +1032,16 @@ export default function PurchaseRequestsPage() {
                                 completionScore={75}
                             />
                         </DashboardSection>
-                        <DashboardSection title="Action Pipeline">
+                        <DashboardSection title={t("requests.dashboardSections.actionPipeline")}>
                             <PriorityQueueEngine recommendations={recommendations} />
                         </DashboardSection>
                     </DashboardGrid>
 
                     <DashboardGrid variant="balanced">
-                        <DashboardSection title="Branch Risk">
+                        <DashboardSection title={t("requests.dashboardSections.branchRisk")}>
                             <BranchRiskScorePanel risks={branchRiskScores} />
                         </DashboardSection>
-                        <DashboardSection title="Execution Flow">
+                        <DashboardSection title={t("requests.dashboardSections.executionFlow")}>
                             <ExecutionSequencePanel steps={executionSequence} />
                         </DashboardSection>
                     </DashboardGrid>
@@ -1246,18 +1246,18 @@ export default function PurchaseRequestsPage() {
                                         <div className="space-y-6">
                                             <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
                                                 <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.intake.productTitle")}</p>
-                                                <p className="text-sm text-stone-400 leading-relaxed">{selectedRow.productDescription || "No description provided."}</p>
+                                                <p className="text-sm text-stone-400 leading-relaxed">{selectedRow.productDescription || t("requests.noDescription")}</p>
                                             </div>
                                             <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
                                                 <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.labels.technicalSpecs")}</p>
-                                                <p className="text-sm text-stone-400 leading-relaxed font-mono">{selectedRow.technicalSpecs || "None."}</p>
+                                                <p className="text-sm text-stone-400 leading-relaxed font-mono">{selectedRow.technicalSpecs || t("requests.noReference")}</p>
                                             </div>
                                         </div>
                                     </DashboardSection>
 
                                     {isInternal && (
                                         <div className="mt-12 space-y-12">
-                                            <DashboardSection title="Action Center" icon={<Sparkles className="h-6 w-6" />}>
+                                            <DashboardSection title={t("requests.details.actionCenter")} icon={<Sparkles className="h-6 w-6" />}>
                                                 <div className="space-y-6">
                                                     <SmartPurchaseRequestPanel
                                                         request={selectedRow}
@@ -1331,7 +1331,7 @@ export default function PurchaseRequestsPage() {
                                                 </div>
                                             </DashboardSection>
 
-                                            <DashboardSection title="Communication Node">
+                                            <DashboardSection title={t("requests.details.communicationNode")}>
                                                 <div className="space-y-6">
                                                     <OfficialOrderConversationBox
                                                         requestId={selectedRow.id}
@@ -1356,7 +1356,7 @@ export default function PurchaseRequestsPage() {
                             </div>
                         ) : (
                             <div className="h-full flex items-center justify-center p-12 rounded-[2rem] bg-stone-900/20 border border-dashed border-stone-800">
-                                <p className="text-stone-600 font-medium italic">Select a request to view its architectural details.</p>
+                                <p className="text-stone-600 font-medium italic">{t("requests.details.selectToView")}</p>
                             </div>
                         )}
                     </aside>
