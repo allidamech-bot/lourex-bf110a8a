@@ -53,17 +53,17 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
         .maybeSingle();
 
       if (dbError) {
-        setError(t("track.error"));
+        setError(t("tracking.tracker.error"));
       } else if (!data) {
-        setError(t("track.notFound"));
+        setError(t("tracking.tracker.notFound"));
       } else {
         setResult(data as Shipment);
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
-        setError("Request timed out. Please try again.");
+        setError(t("tracking.tracker.timeoutError"));
       } else {
-        setError(t("track.error"));
+        setError(t("tracking.tracker.error"));
       }
     } finally {
       clearTimeout(timeout);
@@ -83,9 +83,9 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
           className="text-center mb-12"
         >
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
-            {t("track.title")} <span className="text-gradient-gold">{t("track.titleHighlight")}</span>
+            {t("tracking.tracker.title")} <span className="text-gradient-gold">{t("tracking.tracker.titleHighlight")}</span>
           </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">{t("track.subtitle")}</p>
+          <p className="text-muted-foreground max-w-lg mx-auto">{t("tracking.tracker.subtitle")}</p>
         </motion.div>
 
         <motion.div
@@ -99,7 +99,7 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
               <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder={t("track.placeholder")}
+                placeholder={t("tracking.tracker.placeholder")}
                 value={trackingId}
                 onChange={(e) => setTrackingId(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -107,7 +107,7 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
               />
             </div>
             <Button variant="gold" className="h-12 px-6" onClick={handleSearch} disabled={loading}>
-              {loading ? t("track.searching") : t("track.button")}
+              {loading ? t("tracking.tracker.searching") : t("tracking.tracker.button")}
             </Button>
           </div>
           {error && (
@@ -155,10 +155,10 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
               <div className="glass-card rounded-xl p-6 mb-6">
                 <div className="flex flex-wrap gap-6 justify-between">
                   {[
-                    { label: t("track.trackingId"), value: result.tracking_id, cls: "font-serif text-lg font-semibold text-gold" },
-                    { label: t("track.destination"), value: result.destination },
-                    { label: t("track.pallets"), value: result.pallets },
-                    { label: t("track.weight"), value: `${result.weight} kg` },
+                    { label: t("tracking.tracker.trackingId"), value: result.tracking_id, cls: "font-serif text-lg font-semibold text-gold" },
+                    { label: t("tracking.tracker.destination"), value: result.destination },
+                    { label: t("tracking.tracker.pallets"), value: result.pallets },
+                    { label: t("tracking.tracker.weight"), value: `${result.weight} kg` },
                     ...(result.cbm ? [{ label: "CBM", value: `${result.cbm} m³` }] : []),
                     ...(result.container_20ft ? [{ label: "20ft Container", value: result.container_20ft }] : []),
                     ...(result.container_40ft ? [{ label: "40ft Container", value: result.container_40ft }] : []),
@@ -207,12 +207,10 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                 {/* Progress summary */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="text-xs text-muted-foreground uppercase tracking-wider">
-                    {lang === "ar" ? "مسار الشحنة الرسمي — 11 مرحلة" : "Official 11-Stage Shipment Path"}
+                    {t("tracking.tracker.pathLabel")}
                   </span>
                   <span className="text-sm font-semibold text-gold">
-                    {lang === "ar"
-                      ? `المرحلة ${currentStage + 1} / ${shipmentStages.length}`
-                      : `Stage ${currentStage + 1} / ${shipmentStages.length}`}
+                    {lang === "ar" ? `المرحلة ${currentStage + 1} / ${shipmentStages.length}` : `Stage ${currentStage + 1} / ${shipmentStages.length}`}
                   </span>
                 </div>
 
@@ -285,7 +283,7 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                 {currentStage >= 0 && (
                   <div className="hidden md:block mt-5 p-4 rounded-lg bg-card border border-border">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                      {lang === "ar" ? "المرحلة الحالية" : "Current Stage"}
+                      {t("tracking.tracker.currentStageLabel")}
                     </p>
                     <p className="text-sm font-medium text-gold">
                       {lang === "ar" ? shipmentStages[currentStage]?.label : shipmentStages[currentStage]?.labelEn}
@@ -299,28 +297,28 @@ const ShipmentTracker = forwardRef<HTMLElement>((_props, _ref) => {
                       <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-2">
-                            {lang === "ar" ? "جاهزية الوثائق" : "Document Readiness"}
+                            {t("tracking.tracker.documentReadiness")}
                           </p>
                           <div className="flex items-center gap-2 text-sm text-stone-300">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span>{lang === "ar" ? "الفاتورة التجارية" : "Commercial Invoice"}</span>
+                            <span>{t("tracking.tracker.commercialInvoice")}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-stone-300">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span>{lang === "ar" ? "بوليصة الشحن" : "Bill of Lading"}</span>
+                            <span>{t("tracking.tracker.billOfLading")}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-stone-400">
                             <div className="w-4 h-4 rounded-full border border-stone-600 flex items-center justify-center">
                               <div className="w-1.5 h-1.5 rounded-full bg-stone-600 animate-pulse" />
                             </div>
-                            <span>{lang === "ar" ? "دفع الرسوم الجمركية" : "Tariff Paid Status"}</span>
+                            <span>{t("tracking.tracker.tariffPaidStatus")}</span>
                           </div>
                         </div>
 
                         <div className="flex flex-col justify-end gap-2">
                           <Button variant="outline" size="sm" className="w-full border-amber-200/10 bg-black/40 hover:bg-gold/10 hover:text-gold text-stone-300 transition-colors">
                             <FileCheck className="w-4 h-4 me-2" />
-                            {lang === "ar" ? "تحميل البيان الجمركي (PDF)" : "Download Customs Manifest (PDF)"}
+                            {t("tracking.tracker.downloadCustomsManifest")}
                           </Button>
 
                           {/* Customs Broker Conditional Role Overlay */}
