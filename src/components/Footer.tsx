@@ -26,7 +26,14 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   const contactLinks = [
     { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}` },
     { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}` },
-    { label: `WhatsApp ${publicContactInfo.whatsappDisplay}`, href: getWhatsAppUrl("Hello LOUREX, I need support.") },
+    {
+      label: `WhatsApp TR ${publicContactInfo.whatsappNumbers.turkey.display}`,
+      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.turkey.number),
+    },
+    {
+      label: `WhatsApp KSA ${publicContactInfo.whatsappNumbers.saudi.display}`,
+      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.saudi.number),
+    },
   ];
 
   const socialLinks = [
