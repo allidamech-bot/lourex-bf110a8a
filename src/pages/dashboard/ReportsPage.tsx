@@ -309,7 +309,7 @@ export default function ReportsPage() {
             title: executiveLabels.decisionMetrics,
             headers: [executiveLabels.field, executiveLabels.value],
             rows: [
-              [executiveLabels.netProfit, metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(Math.round(executiveReport.metrics.netProfit), undefined, locale)],
+              [executiveLabels.netProfit, metrics.currencyGroups > 1 ? t("reports.metrics.multipleCurrencies") : formatMoney(Math.round(executiveReport.metrics.netProfit), undefined, locale)],
               [executiveLabels.profitMargin, `${Math.round(executiveReport.metrics.profitMargin * 100)}%`],
               [executiveLabels.collectionExposure, metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(Math.round(executiveReport.metrics.collectionExposure), undefined, locale)],
               [executiveLabels.settlementCoverage, `${Math.round(executiveReport.metrics.settlementCoverageRatio * 100)}%`],
@@ -357,9 +357,9 @@ export default function ReportsPage() {
             [t("reports.metrics.deals"), metrics.deals],
             [t("reports.metrics.shipments"), metrics.shipments],
             [t("reports.metrics.customers"), metrics.customers],
-            [t("reports.metrics.income"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ط¹ظ…ظ„ط§طھ ظ…طھط¹ط¯ط¯ط©" : "Multiple currencies") : formatMoney(metrics.income, undefined, locale)],
-            [t("reports.metrics.expense"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(metrics.expense, undefined, locale)],
-            [t("reports.metrics.profit"), metrics.currencyGroups > 1 ? (locale === "ar" ? "ظ…طھط¹ط¯ط¯" : "Mixed") : formatMoney(metrics.income - metrics.expense, undefined, locale)],
+[t("reports.metrics.income"), metrics.currencyGroups > 1 ? t("reports.metrics.multipleCurrencies") : formatMoney(metrics.income, undefined, locale)],
+             [t("reports.metrics.expense"), metrics.currencyGroups > 1 ? "Mixed" : formatMoney(metrics.expense, undefined, locale)],
+             [t("reports.metrics.profit"), metrics.currencyGroups > 1 ? "Mixed" : formatMoney(metrics.income - metrics.expense, undefined, locale)],
             [t("reports.metrics.lockedEntries"), metrics.lockedEntries],
             [t("reports.metrics.pendingEditRequests"), metrics.pendingEditRequests],
           ],
@@ -477,7 +477,7 @@ export default function ReportsPage() {
           <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 overflow-hidden">
             <div className="p-6 border-b border-amber-200/10 flex justify-between items-center">
               <h3 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{drillDownData.type} Details</h3>
-              <Button variant="ghost" size="sm" onClick={() => setDrillDownData(null)} className="text-stone-500 hover:text-stone-300">Close</Button>
+              <Button variant="ghost" size="sm" onClick={() => setDrillDownData(null)} className="text-stone-500 hover:text-stone-300">{t("common.close")}</Button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-stone-300">
@@ -538,7 +538,7 @@ export default function ReportsPage() {
         </DashboardSection>
       </DashboardGrid>
 
-      <DashboardSection title="Customer Intelligence" description="Lifetime value and retention analytics.">
+      <DashboardSection title={t("reports.customerIntelligence")} description={t("reports.customerIntelligenceDescription")}>
         <CustomerLifetimeValuePanel profiles={customerProfiles.slice(0, 2)} />
       </DashboardSection>
 
@@ -601,7 +601,7 @@ export default function ReportsPage() {
                     <p className="font-bold text-stone-200 text-sm">{formatMoney(customer.outstandingBalance, undefined, locale)}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
-                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">Edit Requests</p>
+                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">{t("reports.editRequests")}</p>
                     <p className="font-bold text-stone-200 text-sm">{customer.pendingEditRequests}</p>
                   </div>
                 </div>
