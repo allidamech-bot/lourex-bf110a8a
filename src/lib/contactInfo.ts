@@ -3,8 +3,16 @@ export const publicContactInfo = {
   email: "alidamish@lou-rex.com",
   phone: "00905392411642",
   phoneTel: "+905392411642",
-  whatsappNumber: "966571660357",
-  whatsappDisplay: "+966 57 166 0357",
+  whatsappNumbers: {
+    turkey: {
+      number: "905392411642",
+      display: "+90 539 241 1642",
+    },
+    saudi: {
+      number: "966571660357",
+      display: "+966 57 166 0357",
+    },
+  },
   website: "www.lou-rex.com",
   websiteUrl: "https://www.lou-rex.com",
   social: {
@@ -25,5 +33,5 @@ export const publicContactInfo = {
   },
 } as const;
 
-export const getWhatsAppUrl = (message: string) =>
-  `https://wa.me/${publicContactInfo.whatsappNumber}?text=${encodeURIComponent(message)}`;
+export const getWhatsAppUrl = (message: string, number = publicContactInfo.whatsappNumbers.turkey.number) =>
+  `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
