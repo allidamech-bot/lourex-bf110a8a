@@ -2836,7 +2836,7 @@ updateError: "Could not update the edit request.",
       lockedEntries: "القيود المقفلة",
       pendingAudits: "التدقيق المعلق",
       liveActivity: "النشاط الحي",
-      experimentalAutonomousFabric: "الأقمشة التلقائية التجريبية",
+      experimentalAutonomousFabric: "النسيج التشغيلي الذاتي التجريبي",
     },
     customers: {
       directory: "دليل العملاء",
