@@ -45,6 +45,8 @@ const ProductDetailPage = lazy(
 const RequestPage = lazy(() => import("@/pages/public/RequestPage"));
 const TrackPage = lazy(() => import("@/pages/public/TrackPage"));
 const AboutPage = lazy(() => import("@/pages/public/AboutPage"));
+const AeoPage = lazy(() => import("@/pages/public/AeoPage"));
+const FaqPage = lazy(() => import("@/pages/public/FaqPage"));
 const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage"));
 const TermsPage = lazy(() => import("@/pages/public/TermsPage"));
 const WhyLourexPage = lazy(() => import("@/pages/public/WhyLourexPage"));
@@ -199,6 +201,34 @@ const App = () => (
                     <Route
                       path="/about"
                       element={<PageWithAI component={<AboutPage />} />}
+                    />
+                    <Route
+                      path="/about-lourex"
+                      element={<PageWithAI component={<AeoPage kind="about" />} />}
+                    />
+                    <Route
+                      path="/chocolate-sourcing"
+                      element={<PageWithAI component={<AeoPage kind="chocolate" />} />}
+                    />
+                    <Route
+                      path="/biscuits-sourcing"
+                      element={<PageWithAI component={<AeoPage kind="biscuits" />} />}
+                    />
+                    <Route
+                      path="/food-products-sourcing"
+                      element={<PageWithAI component={<AeoPage kind="food" />} />}
+                    />
+                    <Route
+                      path="/turkish-products"
+                      element={<PageWithAI component={<AeoPage kind="turkish" />} />}
+                    />
+                    <Route
+                      path="/syrian-products"
+                      element={<PageWithAI component={<AeoPage kind="syrian" />} />}
+                    />
+                    <Route
+                      path="/faq"
+                      element={<PageWithAI component={<FaqPage />} />}
                     />
                     <Route
                       path="/privacy"
@@ -494,7 +524,16 @@ const App = () => (
                     path="/products/:slug"
                     element={<ProductDetailPage />}
                   />
+                  <Route path="/request" element={<RequestPage />} />
+                  <Route path="/track" element={<TrackPage />} />
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/about-lourex" element={<AeoPage kind="about" />} />
+                  <Route path="/chocolate-sourcing" element={<AeoPage kind="chocolate" />} />
+                  <Route path="/biscuits-sourcing" element={<AeoPage kind="biscuits" />} />
+                  <Route path="/food-products-sourcing" element={<AeoPage kind="food" />} />
+                  <Route path="/turkish-products" element={<AeoPage kind="turkish" />} />
+                  <Route path="/syrian-products" element={<AeoPage kind="syrian" />} />
+                  <Route path="/faq" element={<FaqPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/guidelines" element={<TermsPage />} />

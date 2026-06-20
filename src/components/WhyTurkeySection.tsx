@@ -13,7 +13,7 @@ const WhyTurkeySection = () => {
     },
     {
       icon: DollarSign,
-      en: { title: "Competitive Pricing", desc: "Turkish manufacturing offers European-level quality at significantly lower costs compared to EU producers, with flexible MOQs." },
+      en: { title: "Competitive Pricing", desc: "Turkish suppliers can offer strong product options, practical packaging choices, and flexible commercial quantities." },
       ar: { title: "أسعار تنافسية", desc: "التصنيع التركي يوفر جودة أوروبية بتكاليف أقل بكثير مع مرونة في الحد الأدنى للطلب." },
     },
     {
@@ -23,12 +23,12 @@ const WhyTurkeySection = () => {
     },
     {
       icon: Truck,
-      en: { title: "Logistics Infrastructure", desc: "Turkey has world-class ports, modern freight infrastructure, and established shipping routes to Saudi Arabia and the entire Gulf region." },
+      en: { title: "Logistics Infrastructure", desc: "Turkey has modern ports, freight infrastructure, and established shipping routes for many international trade destinations." },
       ar: { title: "بنية لوجستية متقدمة", desc: "تمتلك تركيا موانئ عالمية وبنية شحن حديثة وخطوط ملاحة راسخة إلى السعودية والخليج." },
     },
     {
       icon: Globe,
-      en: { title: "Diverse Manufacturing", desc: "From textiles and food products to industrial equipment and construction materials — Turkey covers virtually every B2B category." },
+      en: { title: "Diverse Product Base", desc: "From food products to packaging and commercial goods, Turkish products can support many business sourcing requests." },
       ar: { title: "تصنيع متنوع", desc: "من المنسوجات والمنتجات الغذائية إلى المعدات الصناعية ومواد البناء — تغطي تركيا كل فئات B2B." },
     },
     {
@@ -54,7 +54,7 @@ const WhyTurkeySection = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {lang === "ar"
               ? "تركيا هي واحدة من أسرع مراكز التصنيع نمواً في العالم — وهذا هو السبب"
-              : "Turkey is one of the world's fastest-growing manufacturing hubs — here's why it matters for your business"}
+              : "Turkey is a strong source market for many product categories, especially food and sweets sourcing."}
           </p>
         </motion.div>
 

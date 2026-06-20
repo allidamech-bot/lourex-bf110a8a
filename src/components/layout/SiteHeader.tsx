@@ -100,7 +100,7 @@ export const SiteHeader = () => {
                 aria-label="Lourex home"
             >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
-              <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+              <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
             </span>
               <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
             </Link>
@@ -129,7 +129,7 @@ export const SiteHeader = () => {
               aria-label="Lourex home"
           >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
-            <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+            <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
           </span>
             <span className="font-serif text-xl font-bold text-stone-100">LOUREX</span>
           </Link>
@@ -229,7 +229,7 @@ export const SiteHeader = () => {
                       onClick={() => setIsOpen(false)}
                   >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900">
-                  <img src="/logo.png" alt="Lourex" className="h-8 w-8 object-contain" />
+                  <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
                 </span>
                     <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
                   </Link>

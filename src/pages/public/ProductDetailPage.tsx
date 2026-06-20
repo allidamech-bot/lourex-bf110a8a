@@ -100,7 +100,13 @@ export default function ProductDetailPage() {
               <div className="aspect-[4/3] bg-stone-900/50 p-10">
                 <img
                   src={image?.url || "/logo.png"}
-                  alt={isArabic ? image?.altAr || product.nameAr : image?.altEn || product.nameEn}
+                  alt={
+                    image
+                      ? isArabic
+                        ? image.altAr || product.nameAr
+                        : image.altEn || product.nameEn
+                      : "LOUREX chocolate and biscuits sourcing"
+                  }
                   className="h-full w-full object-contain"
                 />
               </div>

@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import CoreFeatures from "@/components/CoreFeatures";
 import DashboardPreview from "@/components/DashboardPreview";
 import FinalCTA from "@/components/FinalCTA";
+import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import LogisticsProcess from "@/components/LogisticsProcess";
 import TrustSection from "@/components/TrustSection";
@@ -11,54 +12,71 @@ import { motion } from "framer-motion";
 import { BadgeDollarSign, ClipboardCheck, Route, Users2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
+const EN_DESCRIPTION =
+  "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
+
+const AR_DESCRIPTION =
+  "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.";
+
 export default function HomePage() {
   const { t, lang } = useI18n();
   const isArabic = lang === "ar";
 
-  const seoDescription = isArabic
-    ? "لوركس LOUREX هي شركة تصدير وتوريد B2B للمنتجات التركية والسورية إلى الأسواق العالمية المؤهلة، متخصصة في الشوكولاتة والبسكويت والمواد الغذائية والمنتجات التركية والسورية، بما يتوافق مع القوانين المعمول بها."
-    : "LOUREX is a B2B export and sourcing company for Turkish and Syrian food products to eligible global markets, specializing in chocolate, biscuits, food products, and trade operations in compliance with applicable laws.";
+  const seoDescription = isArabic ? AR_DESCRIPTION : EN_DESCRIPTION;
 
   const charterDescription = isArabic
-    ? "لوركس LOUREX ليست مجرد نموذج طلب أو لوحة تتبع منفصلة. هي شركة تصدير وتوريد وعمليات تجارية B2B للمنتجات التركية والسورية إلى الأسواق العالمية المؤهلة، مع تركيز واضح على الشوكولاتة والبسكويت والمواد الغذائية، وإدارة مسار الطلب من المراجعة إلى الصفقة والتتبع والتسليم."
-    : "LOUREX is not just a form front-end or a separate shipment viewer. It is a B2B export, sourcing, and trade operations company for Turkish and Syrian food products to eligible global markets, with a clear focus on chocolate, biscuits, and food products.";
+    ? "لوريكس شركة وساطة تجارية وتنسيق توريد وتصدير للمواد الغذائية والحلويات. نعمل مع المشترين التجاريين، المستوردين، الموزعين، تجار الجملة، والموردين لتنسيق الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية بصياغة تجارية منظمة وآمنة."
+    : "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products. We help business buyers, importers, distributors, wholesalers, and suppliers coordinate chocolate, biscuits, food products, Turkish products, and Syrian products through structured purchase request management, supplier coordination, deal follow-up, and delivery tracking.";
 
   const charter = [
     {
       icon: Users2,
-      title: t("home.charter.items.model.title"),
-      description: t("home.charter.items.model.description"),
+      title: isArabic ? "وساطة بين المشترين والموردين" : "Buyer and supplier coordination",
+      description: isArabic
+        ? "لوريكس تربط المشترين التجاريين بالموردين عبر دور وسيط توريد واضح، وليس كتصنيع أو سوق مفتوح."
+        : "LOUREX connects business buyers with suppliers through a clear trade intermediary role, not as a manufacturer or open marketplace.",
     },
     {
       icon: ClipboardCheck,
-      title: t("home.charter.items.request.title"),
-      description: t("home.charter.items.request.description"),
+      title: isArabic ? "إدارة طلبات الشراء" : "Purchase request management",
+      description: isArabic
+        ? "تبدأ العملية بطلب شراء منظم ثم مراجعة المنتج والمواصفات والكمية قبل تنسيق الموردين."
+        : "The process starts with structured intake, then product, specification, and quantity review before supplier coordination.",
     },
     {
       icon: Route,
-      title: t("home.charter.items.logistics.title"),
-      description: t("home.charter.items.logistics.description"),
+      title: isArabic ? "متابعة الصفقات والتسليم" : "Deal follow-up and delivery tracking",
+      description: isArabic
+        ? "تتابع لوريكس الصفقة والشحن حتى التسليم مع وضوح المرحلة والمسؤولية."
+        : "LOUREX follows deals and shipments through delivery with clear stage and responsibility visibility.",
     },
     {
       icon: BadgeDollarSign,
-      title: t("home.charter.items.finance.title"),
-      description: t("home.charter.items.finance.description"),
+      title: isArabic ? "تنسيق تجاري منظم" : "Structured trade coordination",
+      description: isArabic
+        ? "التركيز على تنسيق التوريد والتصدير والمتابعة التجارية للمواد الغذائية والحلويات."
+        : "The focus is export coordination, supplier coordination, and trade follow-up for food and sweets products.",
     },
   ];
 
   const operatingPath = [
-    isArabic ? "استقبال الطلب" : "Request intake",
-    isArabic ? "مراجعة داخلية" : "Internal review",
-    isArabic ? "تحويل إلى صفقة" : "Deal conversion",
-    isArabic ? "تتبع رسمي" : "Official tracking",
-    isArabic ? "محاسبة وتدقيق" : "Accounting & audit",
+    isArabic ? "استقبال طلب الشراء" : "Purchase request intake",
+    isArabic ? "مراجعة المنتج والمواصفات" : "Product and specification review",
+    isArabic ? "تنسيق الموردين" : "Supplier coordination",
+    isArabic ? "متابعة الصفقة" : "Deal follow-up",
+    isArabic ? "متابعة الشحن والتسليم" : "Delivery tracking",
   ];
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO
-        title={isArabic ? "تصدير المنتجات التركية والسورية إلى العالم" : "Turkish and Syrian Food Products for Global Markets"}
+        title={
+          isArabic
+            ? "لوريكس | وسيط توريد وتصدير للمواد الغذائية والحلويات"
+            : "LOUREX | Trade Intermediary & Sourcing Coordination"
+        }
         description={seoDescription}
+        url="https://www.lou-rex.com/"
       />
       <SiteHeader />
       <HeroSection />
@@ -73,10 +91,12 @@ export default function HomePage() {
               className="lg:sticky lg:top-28"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/90">
-                {t("home.charter.eyebrow")}
+                {isArabic ? "تعريف لوريكس" : "LOUREX positioning"}
               </p>
               <h2 className="mt-5 font-serif text-3xl font-bold text-stone-100 md:text-5xl">
-                {t("home.charter.title")}
+                {isArabic
+                  ? "شركة وساطة وتنسيق توريد للمواد الغذائية والحلويات"
+                  : "A trade intermediary for food and sweets sourcing"}
               </h2>
               <p className="mt-5 text-base leading-8 text-stone-300">
                 {charterDescription}
@@ -84,7 +104,7 @@ export default function HomePage() {
 
               <div className="mt-8 rounded-[1.75rem] border border-stone-200/10 bg-stone-950/45 p-5">
                 <p className="text-sm font-semibold text-stone-100">
-                  {isArabic ? "المسار التشغيلي المختصر" : "Condensed operating path"}
+                  {isArabic ? "المسار المختصر" : "Condensed coordination path"}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {operatingPath.map((step, index) => (
@@ -126,6 +146,7 @@ export default function HomePage() {
       <WhyLourexSafe />
       <DashboardPreview />
       <FinalCTA />
+      <Footer />
     </div>
   );
 }

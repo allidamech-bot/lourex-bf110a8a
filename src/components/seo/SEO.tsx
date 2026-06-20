@@ -18,8 +18,14 @@ export function SEO({
 }: SEOProps) {
   const { t } = useI18n();
   const siteName = "LOUREX";
-  const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const defaultDesc = t("common.appDescription") || "LOUREX is a B2B export and sourcing company for Turkish and Syrian food products to eligible global markets, specializing in chocolate, biscuits, food products, and trade operations in compliance with applicable laws.";
+  const fullTitle = title
+    ? title.toLowerCase().includes(siteName.toLowerCase())
+      ? title
+      : `${title} | ${siteName}`
+    : siteName;
+  const defaultDesc =
+    t("common.appDescription") ||
+    "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
   const finalDesc = description || defaultDesc;
 
   useEffect(() => {
@@ -36,6 +42,14 @@ export function SEO({
       }
       element.setAttribute("content", content);
     };
+
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", url);
 
     updateMeta("description", finalDesc);
     updateMeta("og:title", fullTitle, "property");

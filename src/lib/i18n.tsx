@@ -116,12 +116,12 @@ const translations: Record<Lang, TranslationTree> = {
     home: {
       charter: {
         eyebrow: "Lourex Charter",
-        title: "An intermediary platform that controls the full trade journey",
-        description: "Lourex is not just a form front-end or a separate shipment viewer. It is a connected operating system that ties together request intake, deal execution, shipment progress, financial discipline, and audit history in one coherent story.",
+        title: "A trade intermediary coordinating the food and sweets sourcing journey",
+        description: "Lourex is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers through purchase request management, supplier coordination, deal follow-up, and delivery tracking.",
         items: {
           model: {
-            title: "Three-party operating model",
-            description: "Lourex operates between the customer, Turkish partner, and Saudi partner through clearly defined responsibilities, not an open marketplace.",
+            title: "Buyer and supplier coordination",
+            description: "Lourex coordinates between business buyers and suppliers through clearly defined responsibilities, not an open supplier listing.",
           },
           request: {
             title: "From request to operation",
@@ -139,10 +139,10 @@ const translations: Record<Lang, TranslationTree> = {
       },
       hero: {
         eyebrow: "Smart Intermediary • Managed Operations • Precise Review",
-        titlePrefix: "Lourex manages your",
-        titleGradient: " sourcing operations ",
-        titleSuffix: "from purchase request to final delivery with full discipline.",
-        description: "Lourex is not a marketplace or supplier listing. It is a broker operations platform connecting the customer, Turkish partner, and Saudi partner through reviewed requests, managed deals, official tracking, disciplined finance, and trusted audit history.",
+        titlePrefix: "Lourex coordinates",
+        titleGradient: " food and sweets sourcing ",
+        titleSuffix: "from purchase request to delivery tracking.",
+        description: "Lourex is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers through reviewed requests, supplier coordination, deal follow-up, and delivery tracking.",
         ctaRequest: "Start a purchase request",
         ctaTrack: "Track shipment",
         controlTitle: "Operational control",

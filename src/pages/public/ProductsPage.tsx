@@ -118,7 +118,13 @@ export default function ProductsPage() {
                     <div className="relative aspect-[4/3] overflow-hidden bg-stone-900/50">
                       <img
                         src={image?.url || "/logo.png"}
-                        alt={isArabic ? image?.altAr || product.nameAr : image?.altEn || product.nameEn}
+                        alt={
+                          image
+                            ? isArabic
+                              ? image.altAr || product.nameAr
+                              : image.altEn || product.nameEn
+                            : "LOUREX food and sweets sourcing"
+                        }
                         className="h-full w-full object-contain p-10 transition duration-500 group-hover:scale-105"
                       />
                       {product.isFeatured ? (

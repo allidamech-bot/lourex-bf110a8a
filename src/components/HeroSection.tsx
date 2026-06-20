@@ -18,18 +18,18 @@ const HeroSection = () => {
   const isArabic = lang === "ar";
 
   const heroEyebrow = isArabic
-    ? "تصدير أغذية وحلويات • عمليات B2B • أسواق عالمية"
-    : "Food & Sweets Export • B2B Trade Operations • Global Markets";
+    ? "وساطة تجارية • تنسيق توريد وتصدير • مواد غذائية وحلويات"
+    : "Trade Intermediary • Sourcing Coordination • Food & Sweets";
 
-  const heroTitlePrefix = isArabic ? "لوركس تدير" : "LOUREX manages";
-  const heroTitleGradient = isArabic ? " تصدير وتوريد الأغذية والحلويات " : " food and sweets sourcing ";
+  const heroTitlePrefix = isArabic ? "لوريكس تنسق" : "LOUREX coordinates";
+  const heroTitleGradient = isArabic ? " توريد المواد الغذائية والحلويات " : " food and sweets sourcing ";
   const heroTitleSuffix = isArabic
-    ? "للأسواق العالمية من طلب الشراء حتى التسليم."
-    : "for global markets from purchase request to delivery.";
+    ? "للمشترين التجاريين من طلب الشراء حتى التتبع والتسليم."
+    : "for business buyers from purchase request to delivery tracking.";
 
   const heroDescription = isArabic
-    ? "لوركس LOUREX هي شركة تصدير وتوريد B2B للمواد الغذائية والحلويات إلى الأسواق العالمية، متخصصة في الشوكولاتة والبسكويت والمنتجات الغذائية، مع إدارة طلبات الشراء وتنسيق الموردين ومتابعة الصفقات حتى التسليم."
-    : "LOUREX is a B2B export and sourcing company for food and sweets products to global markets, specializing in chocolate, biscuits, and food products, with purchase request management, supplier coordination, and delivery follow-up.";
+    ? "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم."
+    : "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
 
   const stats = [
     {
@@ -57,19 +57,25 @@ const HeroSection = () => {
   const entryPoints = [
     {
       label: isArabic ? "عميل يريد طلب شراء" : "Customer purchase request",
-      description: isArabic ? "ابدأ بطلب واضح مع صور ومواصفات قابلة للمراجعة." : "Start with a clear request, images, and review-ready specifications.",
+      description: isArabic
+        ? "ابدأ بطلب واضح مع صور ومواصفات قابلة للمراجعة."
+        : "Start with a clear request, images, and review-ready specifications.",
       to: "/request",
       icon: ClipboardList,
     },
     {
       label: isArabic ? "تتبع شحنة قائمة" : "Track an active shipment",
-      description: isArabic ? "اعرف المرحلة الحالية من المسار الرسمي دون رسائل متفرقة." : "See the current official stage without fragmented status messages.",
+      description: isArabic
+        ? "اعرف المرحلة الحالية من المسار الرسمي دون رسائل متفرقة."
+        : "See the current official stage without fragmented status messages.",
       to: "/track",
       icon: Route,
     },
     {
-      label: isArabic ? "دخول غرفة العمليات" : "Enter operations room",
-      description: isArabic ? "إدارة الطلبات والصفقات والتتبع والمحاسبة من لوحة واحدة." : "Manage requests, deals, tracking, and accounting from one workspace.",
+      label: isArabic ? "دخول غرفة العمل" : "Enter operations room",
+      description: isArabic
+        ? "إدارة الطلبات والصفقات والتتبع والمحاسبة من لوحة واحدة."
+        : "Manage requests, deals, tracking, and accounting from one workspace.",
       to: "/auth",
       icon: ShieldCheck,
     },
@@ -78,7 +84,13 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen overflow-hidden pt-20">
       <div className="absolute inset-0">
-        <img src={heroImg} alt="Lourex operations" className="h-full w-full object-cover grayscale-[0.55] contrast-110" width={1920} height={1080} />
+        <img
+          src={heroImg}
+          alt="LOUREX sourcing coordination operations"
+          className="h-full w-full object-cover grayscale-[0.55] contrast-110"
+          width={1920}
+          height={1080}
+        />
         <div className="absolute inset-0 bg-stone-950/86" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(214,160,74,0.12),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(245,245,244,0.05),transparent_24%),linear-gradient(135deg,rgba(12,10,9,0.2),rgba(41,37,36,0.6))]" />
       </div>
@@ -100,9 +112,7 @@ const HeroSection = () => {
               className="font-serif text-4xl font-bold leading-[1.08] text-stone-100 md:text-6xl xl:text-7xl"
             >
               {heroTitlePrefix}
-              <span className="text-amber-300">
-                {heroTitleGradient}
-              </span>
+              <span className="text-amber-300">{heroTitleGradient}</span>
               {heroTitleSuffix}
             </motion.h1>
 

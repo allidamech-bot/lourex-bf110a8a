@@ -18,9 +18,9 @@ const testimonials: Testimonial[] = [
   {
     en: {
       quote:
-        "LOUREX helped us identify reliable manufacturers quickly and with real operational confidence.",
+        "LOUREX helped us coordinate with reliable suppliers quickly and with real operational confidence.",
       name: "Ahmad K.",
-      role: "Import Manager, Saudi Arabia",
+      role: "Import Manager",
     },
     ar: {
       quote:

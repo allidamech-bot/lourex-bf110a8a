@@ -13,82 +13,52 @@ const FAQSection = () => {
   const faqs = [
     {
       en: {
-        q: "What is the minimum order quantity (MOQ)?",
-        a: "MOQ varies by product and factory. Most suppliers accept orders starting from 1 pallet (approximately 500–1,000 units depending on the product). We also offer LCL (Less than Container Load) consolidation for smaller orders.",
+        q: "What is LOUREX?",
+        a: "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
       },
       ar: {
-        q: "ما هو الحد الأدنى لكمية الطلب (MOQ)؟",
-        a: "يختلف الحد الأدنى حسب المنتج والمصنع. معظم الموردين يقبلون طلبات تبدأ من باليت واحد (حوالي 500-1000 وحدة). نوفر أيضاً خدمة تجميع الشحنات للطلبات الأصغر.",
+        q: "ما هي لوريكس؟",
+        a: "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.",
       },
     },
     {
       en: {
-        q: "How does the payment process work?",
-        a: "We use a milestone-based escrow structure: 30% deposit upon order confirmation, and 70% balance released only after pre-shipment inspection approval. Your funds are held securely until you confirm the goods meet specifications.",
+        q: "Is LOUREX a marketplace?",
+        a: "No. LOUREX is not primarily a marketplace or supplier listing website. LOUREX works as a trade intermediary and sourcing coordination company.",
       },
       ar: {
-        q: "كيف تعمل عملية الدفع؟",
-        a: "نستخدم نظام ضمان قائم على المراحل: 30% مقدم عند تأكيد الطلب، و70% رصيد يُحرر فقط بعد موافقة فحص ما قبل الشحن. أموالك محفوظة بأمان حتى تأكيد استلام البضائع.",
+        q: "هل لوريكس منصة بيع أو سوق إلكتروني؟",
+        a: "لا. لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين. لوريكس تعمل كوسيط تجاري وشركة تنسيق توريد وتصدير.",
       },
     },
     {
       en: {
-        q: "How are suppliers verified?",
-        a: "Every supplier undergoes strict KYC verification including Commercial Register, Tax Certificate, and Industrial License review. We also conduct factory audits and maintain reliability scores based on order history and buyer feedback.",
+        q: "What products does LOUREX focus on?",
+        a: "LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products.",
       },
       ar: {
-        q: "كيف يتم التحقق من الموردين؟",
-        a: "يخضع كل مورد لتحقق صارم يشمل السجل التجاري والشهادة الضريبية والرخصة الصناعية. نجري أيضاً تدقيقات مصنعية ونحتفظ بنقاط موثوقية بناءً على تاريخ الطلبات.",
-      },
-    },
-    {
-      en: {
-        q: "What countries do you ship to?",
-        a: "We ship to Saudi Arabia, UAE, Qatar, Kuwait, Bahrain, Oman, Egypt, Jordan, Iraq, and 35+ countries worldwide. Our primary trade corridors are Turkey → Saudi Arabia and Turkey → Gulf region.",
-      },
-      ar: {
-        q: "ما هي الدول التي تشحنون إليها؟",
-        a: "نشحن إلى السعودية والإمارات وقطر والكويت والبحرين وعمان ومصر والأردن والعراق وأكثر من 35 دولة. ممراتنا التجارية الرئيسية من تركيا إلى السعودية والخليج.",
-      },
-    },
-    {
-      en: {
-        q: "How long does shipping take?",
-        a: "Standard sea freight from Turkey to Saudi Arabia takes 7–12 days. Production lead times vary by product (typically 2–4 weeks). We provide real-time tracking at every stage from factory to delivery.",
-      },
-      ar: {
-        q: "كم تستغرق مدة الشحن؟",
-        a: "الشحن البحري من تركيا إلى السعودية يستغرق 7-12 يوم. مدة الإنتاج تختلف حسب المنتج (عادة 2-4 أسابيع). نوفر تتبع مباشر في كل مرحلة.",
-      },
-    },
-    {
-      en: {
-        q: "What if there's a problem with my order?",
-        a: "We have a dedicated dispute resolution team. All orders include pre-shipment inspections with photo/video evidence. If goods don't match specifications, the balance payment is held until the issue is resolved.",
-      },
-      ar: {
-        q: "ماذا لو كانت هناك مشكلة في طلبي؟",
-        a: "لدينا فريق مختص لحل النزاعات. جميع الطلبات تشمل فحص ما قبل الشحن بالصور والفيديو. إذا لم تطابق البضائع المواصفات، يتم تعليق الدفعة حتى حل المشكلة.",
+        q: "ما المنتجات التي تركز عليها لوريكس؟",
+        a: "تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية.",
       },
     },
   ];
 
   return (
-    <section className="py-24 bg-background">
+    <section className="bg-background py-24">
       <div className="container mx-auto px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-16 text-center"
         >
-          <h2 className="font-serif text-3xl md:text-5xl font-bold mb-4">
-            {lang === "ar" ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
+          <h2 className="mb-4 font-serif text-3xl font-bold md:text-5xl">
+            {lang === "ar" ? "الأسئلة الشائعة عن لوريكس" : "LOUREX FAQ"}
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-muted-foreground">
             {lang === "ar"
-              ? "إجابات على الأسئلة الأكثر شيوعاً حول التوريد والشحن عبر LOUREX"
-              : "Answers to the most common questions about sourcing and shipping through LOUREX"}
+              ? "إجابات مختصرة حول دور لوريكس كوسيط توريد وتنسيق تجاري."
+              : "Short answers about LOUREX as a trade intermediary and sourcing coordination company."}
           </p>
         </motion.div>
 
@@ -96,7 +66,7 @@ const FAQSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto"
+          className="mx-auto max-w-3xl"
         >
           <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((faq, i) => {
@@ -105,12 +75,12 @@ const FAQSection = () => {
                 <AccordionItem
                   key={i}
                   value={`faq-${i}`}
-                  className="border border-border/50 rounded-xl px-6 bg-card/50 data-[state=open]:border-primary/30"
+                  className="rounded-xl border border-border/50 bg-card/50 px-6 data-[state=open]:border-primary/30"
                 >
-                  <AccordionTrigger className="text-start font-serif font-semibold text-base hover:text-primary transition-colors py-5 [&[data-state=open]]:text-primary">
+                  <AccordionTrigger className="py-5 text-start font-serif text-base font-semibold transition-colors hover:text-primary [&[data-state=open]]:text-primary">
                     {loc.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm leading-relaxed pb-5">
+                  <AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground">
                     {loc.a}
                   </AccordionContent>
                 </AccordionItem>
