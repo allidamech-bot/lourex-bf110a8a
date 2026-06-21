@@ -24,6 +24,7 @@ import {
 } from "@/features/products/services/productCatalogService";
 import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 
 const PRODUCT_MANAGEMENT_DRAFT_KEY = "lourex.productManagement.draft.v1";
 
@@ -186,6 +187,7 @@ const handleDuplicateSlugError = (error: unknown): string | null => {
 };
 
 export default function ProductsManagementPage() {
+   const { t } = useI18n();
   const { profile } = useAuthSession();
   const canManage = Boolean(profile?.role && PRODUCT_MANAGEMENT_ROLES.includes(profile.role));
   const categories = listProductCategories();
@@ -376,13 +378,13 @@ export default function ProductsManagementPage() {
     }
   };
 
-  if (!canManage) {
-    return (
-      <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive">
-        You do not have permission to manage product catalog items.
-      </div>
-    );
-  }
+if (!canManage) {
+     return (
+       <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive">
+         {t("productManagement.noPermissionAlert")}
+       </div>
+     );
+   }
 
   return (
     <div className="space-y-6">
@@ -390,72 +392,72 @@ export default function ProductsManagementPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-              <Sparkles className="h-4 w-4" />
-              Product catalog management
-            </div>
-            <h1 className="mt-4 font-serif text-3xl font-bold text-stone-100">Products / المنتجات</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-400">
-              Add products and images for the public catalog. Items are displayed as sourcing service examples, while customer requests remain free-form.
-            </p>
+<Sparkles className="h-4 w-4" />
+               {t("productManagement.eyebrow")}
+             </div>
+             <h1 className="mt-4 font-serif text-3xl font-bold text-stone-100">{t("productManagement.title")}</h1>
+             <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-400">
+               {t("productManagement.description")}
+             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
-              Refresh
-            </Button>
-            <Button variant="gold" onClick={resetForm} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
-              <PackagePlus className="h-4 w-4" />
-              New product
-            </Button>
-            {draftHasContent ? (
-              <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                <Trash2 className="h-4 w-4 text-amber-500" />
-                Clear draft
-              </Button>
-            ) : null}
+<Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
+               {t("common.refresh")}
+             </Button>
+             <Button variant="gold" onClick={resetForm} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+               <PackagePlus className="h-4 w-4" />
+               {t("productManagement.newProduct")}
+             </Button>
+             {draftHasContent ? (
+               <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                 <Trash2 className="h-4 w-4 text-amber-500" />
+                 {t("productManagement.clearDraft")}
+               </Button>
+             ) : null}
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Select value={statusFilter} onValueChange={(value: "all" | "active" | "draft" | "archived") => setStatusFilter(value)}>
-          <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
-            <SelectValue placeholder="Status filter" />
-          </SelectTrigger>
-          <SelectContent className="bg-stone-900 border-amber-200/15">
-            <SelectItem value="all" className="cursor-pointer">All statuses</SelectItem>
-            <SelectItem value="active" className="cursor-pointer">Active</SelectItem>
-            <SelectItem value="draft" className="cursor-pointer">Draft</SelectItem>
-            <SelectItem value="archived" className="cursor-pointer">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={featuredFilter} onValueChange={(value: "all" | "featured" | "non-featured") => setFeaturedFilter(value)}>
-          <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
-            <SelectValue placeholder="Featured filter" />
-          </SelectTrigger>
-          <SelectContent className="bg-stone-900 border-amber-200/15">
-            <SelectItem value="all" className="cursor-pointer">All products</SelectItem>
-            <SelectItem value="featured" className="cursor-pointer">Featured only</SelectItem>
-            <SelectItem value="non-featured" className="cursor-pointer">Non-featured</SelectItem>
-          </SelectContent>
-        </Select>
+<Select value={statusFilter} onValueChange={(value: "all" | "active" | "draft" | "archived") => setStatusFilter(value)}>
+           <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+             <SelectValue placeholder={t("productManagement.statusFilter")} />
+           </SelectTrigger>
+           <SelectContent className="bg-stone-900 border-amber-200/15">
+             <SelectItem value="all" className="cursor-pointer">{t("productManagement.allStatuses")}</SelectItem>
+             <SelectItem value="active" className="cursor-pointer">{t("common.active")}</SelectItem>
+             <SelectItem value="draft" className="cursor-pointer">{t("statuses.draft")}</SelectItem>
+             <SelectItem value="archived" className="cursor-pointer">{t("statuses.archived")}</SelectItem>
+           </SelectContent>
+         </Select>
+         <Select value={featuredFilter} onValueChange={(value: "all" | "featured" | "non-featured") => setFeaturedFilter(value)}>
+           <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+             <SelectValue placeholder={t("productManagement.featuredFilter")} />
+           </SelectTrigger>
+           <SelectContent className="bg-stone-900 border-amber-200/15">
+             <SelectItem value="all" className="cursor-pointer">{t("productManagement.allProducts")}</SelectItem>
+             <SelectItem value="featured" className="cursor-pointer">{t("productManagement.featuredOnly")}</SelectItem>
+             <SelectItem value="non-featured" className="cursor-pointer">{t("productManagement.nonFeatured")}</SelectItem>
+           </SelectContent>
+         </Select>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
           <div className="relative mb-4">
             <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-stone-500" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products..." className="pl-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("productManagement.searchPlaceholder")} className="pl-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
           </div>
 
-          {loading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 text-sm text-stone-500">
-              <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-              Loading products...
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">No products match filters.</div>
-          ) : (
+{loading ? (
+             <div className="flex items-center gap-2 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 text-sm text-stone-500">
+               <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+               {t("productManagement.loading")}
+             </div>
+           ) : filteredProducts.length === 0 ? (
+             <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">{t("productManagement.emptyFiltered")}</div>
+           ) : (
             <div className="space-y-3">
               {filteredProducts.map((product) => (
                 <button
@@ -476,7 +478,7 @@ export default function ProductsManagementPage() {
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-400">{product.shortDescriptionEn || product.shortDescriptionAr}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge variant="outline" className="border-amber-200/20 text-stone-400">{product.status}</Badge>
-                      {product.isFeatured ? <Badge className="bg-amber-500/10 text-amber-200 border-amber-500/20">Featured</Badge> : null}
+                      {product.isFeatured ? <Badge className="bg-amber-500/10 text-amber-200 border-amber-500/20">{t("productManagement.featuredBadge")}</Badge> : null}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -529,20 +531,20 @@ export default function ProductsManagementPage() {
         <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProductId ? "Edit product" : "Create product"}</h2>
-              <p className="mt-1 text-sm text-stone-500">Upload the image, write Arabic/English content, then publish it.</p>
+<h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProductId ? t("seller.editProduct") : t("productManagement.createProduct")}</h2>
+               <p className="mt-1 text-sm text-stone-500">{t("productManagement.formDescription")}</p>
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
-              {draftHasContent ? (
-                <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                  <Trash2 className="h-4 w-4 text-amber-500" />
-                  Clear draft
-                </Button>
-              ) : null}
-              <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save
-              </Button>
+{draftHasContent ? (
+                 <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                   <Trash2 className="h-4 w-4 text-amber-500" />
+                   {t("productManagement.clearDraft")}
+                 </Button>
+               ) : null}
+               <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                 {t("common.save")}
+               </Button>
             </div>
           </div>
 
@@ -590,17 +592,17 @@ export default function ProductsManagementPage() {
               <Label className="text-stone-300">Status</Label>
               <Select value={form.status} onValueChange={(value: ProductCatalogAdminInput["status"]) => updateField("status", value)}>
                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
-                  <SelectItem value="active" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Active</SelectItem>
-                  <SelectItem value="draft" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Draft</SelectItem>
-                  <SelectItem value="archived" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">Archived</SelectItem>
-                </SelectContent>
+<SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
+                   <SelectItem value="active" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("common.active")}</SelectItem>
+                   <SelectItem value="draft" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("statuses.draft")}</SelectItem>
+                   <SelectItem value="archived" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("statuses.archived")}</SelectItem>
+                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
-              <div><Label className="text-stone-100">Featured product</Label><p className="mt-1 text-xs text-stone-500">Show first in the catalog.</p></div>
-              <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
-            </div>
+<div className="flex items-center justify-between rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
+               <div><Label className="text-stone-100">{t("productManagement.featuredBadge")}</Label><p className="mt-1 text-xs text-stone-500">{t("productManagement.showFirstInCatalog")}</p></div>
+               <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
+             </div>
           </div>
         </div>
       </div>
