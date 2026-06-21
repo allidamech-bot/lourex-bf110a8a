@@ -550,46 +550,46 @@ if (!canManage) {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label className="text-stone-300">Product image</Label>
+              <Label className="text-stone-300">{t("productManagement.labels.productImage")}</Label>
               <div className="grid gap-4 rounded-2xl border border-dashed border-amber-200/15 bg-stone-950/30 p-4 md:grid-cols-[12rem_minmax(0,1fr)]">
                 <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-stone-950/80">
                   {form.imageUrl ? <img src={form.imageUrl} alt={form.imageAltEn || form.nameEn} className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-10 w-10 text-stone-600" />}
                 </div>
                 <div className="space-y-3">
                   <Input type="file" accept="image/*" onChange={(event) => void handleImageChange(event)} disabled={uploading} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
-                  {uploading ? <p className="flex items-center gap-2 text-sm text-stone-500"><Loader2 className="h-4 w-4 animate-spin text-amber-500" /> Uploading image...</p> : null}
-                  <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder="Image URL" className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
+{uploading ? <p className="flex items-center gap-2 text-sm text-stone-500"><Loader2 className="h-4 w-4 animate-spin text-amber-500" /> {t("productManagement.uploadingImage")}</p> : null}
+                   <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder={t("productManagement.placeholders.imageUrl")} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2"><Label className="text-stone-300">Arabic name</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">English name</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Slug</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder="auto-generated if empty" className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2">
-              <Label className="text-stone-300">Category</Label>
-              <Select value={form.categoryId} onValueChange={(value) => updateField("categoryId", value)}>
-                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">{categories.map((category) => <SelectItem key={category.id} value={category.id} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{category.labelEn}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label className="text-stone-300">Arabic short description</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">English short description</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">Arabic description</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">English description</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Origin country</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Brand</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Unit</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Packaging</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Weight</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Dimensions</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Material</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">MOQ / note</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">Technical specs</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">Arabic tags, comma separated</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2"><Label className="text-stone-300">English tags, comma separated</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-            <div className="space-y-2">
-              <Label className="text-stone-300">Status</Label>
+<Label className="text-stone-300">{t("productManagement.labels.arabicName")}</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishName")}</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.slug")}</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder={t("productManagement.placeholders.slugAuto")} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2">
+               <Label className="text-stone-300">{t("productManagement.labels.category")}</Label>
+               <Select value={form.categoryId} onValueChange={(value) => updateField("categoryId", value)}>
+                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
+                 <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">{categories.map((category) => <SelectItem key={category.id} value={category.id} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{category.labelEn}</SelectItem>)}</SelectContent>
+               </Select>
+             </div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicShortDesc")}</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishShortDesc")}</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.arabicDesc")}</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.englishDesc")}</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.originCountry")}</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.brand")}</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.unit")}</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.packaging")}</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.weight")}</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.dimensions")}</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.material")}</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.moqNote")}</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.technicalSpecs")}</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicTags")}</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishTags")}</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2">
+               <Label className="text-stone-300">{t("productManagement.labels.status")}</Label>
               <Select value={form.status} onValueChange={(value: ProductCatalogAdminInput["status"]) => updateField("status", value)}>
                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
 <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
@@ -600,9 +600,9 @@ if (!canManage) {
               </Select>
             </div>
 <div className="flex items-center justify-between rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
-               <div><Label className="text-stone-100">{t("productManagement.featuredBadge")}</Label><p className="mt-1 text-xs text-stone-500">{t("productManagement.showFirstInCatalog")}</p></div>
-               <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
-             </div>
+                <div><Label className="text-stone-100">{t("productManagement.labels.featuredProduct")}</Label><p className="mt-1 text-xs text-stone-500">{t("productManagement.showFirstInCatalog")}</p></div>
+                <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
+              </div>
           </div>
         </div>
       </div>
