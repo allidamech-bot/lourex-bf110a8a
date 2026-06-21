@@ -219,7 +219,7 @@ export default function ProductsManagementPage() {
       const nextProducts = await fetchCatalogProducts({ includeInactive: true });
       setProducts(nextProducts);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load products.");
+      toast.error(error instanceof Error ? error.message : t("productManagement.toasts.failedToLoadProducts"));
     } finally {
       setLoading(false);
     }
@@ -232,7 +232,7 @@ export default function ProductsManagementPage() {
       setForm(draft.form);
       setTagsAr(draft.tagsAr);
       setTagsEn(draft.tagsEn);
-      toast.info("Unsaved product draft restored.");
+      toast.info(t("productManagement.toasts.draftRestored"));
     }
     setHasHydratedDraft(true);
   }, []);
@@ -262,7 +262,7 @@ export default function ProductsManagementPage() {
 
   const clearDraft = () => {
     resetForm();
-    toast.success("Product draft cleared.");
+    toast.success(t("productManagement.toasts.draftCleared"));
   };
 
   const selectProduct = (product: ProductCatalogItem) => {
@@ -283,7 +283,7 @@ export default function ProductsManagementPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file.");
+      toast.error(t("productManagement.toasts.uploadImageFile"));
       return;
     }
 
@@ -292,9 +292,9 @@ export default function ProductsManagementPage() {
       const slug = createProductSlug(form.slug || form.nameEn || form.nameAr || file.name);
       const publicUrl = await uploadProductImage(file, slug);
       updateField("imageUrl", publicUrl);
-      toast.success("Product image uploaded.");
+      toast.success(t("productManagement.toasts.imageUploaded"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Image upload failed.");
+      toast.error(error instanceof Error ? error.message : t("productManagement.toasts.imageUploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -302,12 +302,12 @@ export default function ProductsManagementPage() {
 
   const saveProduct = async () => {
     if (!canManage) {
-      toast.error("You do not have permission to manage products.");
+      toast.error(t("productManagement.toasts.noPermission"));
       return;
     }
 
     if (!form.nameAr.trim() || !form.nameEn.trim()) {
-      toast.error("Arabic and English product names are required.");
+      toast.error(t("productManagement.toasts.namesRequired"));
       return;
     }
 
@@ -321,10 +321,10 @@ export default function ProductsManagementPage() {
 
       if (selectedProductId) {
         await updateCatalogProduct(selectedProductId, payload);
-        toast.success("Product updated.");
+        toast.success(t("productManagement.toasts.productUpdated"));
       } else {
         await createCatalogProduct(payload);
-        toast.success("Product created.");
+        toast.success(t("productManagement.toasts.productCreated"));
       }
 
       clearProductManagementDraft();
@@ -335,7 +335,7 @@ export default function ProductsManagementPage() {
       if (duplicateMessage) {
         toast.error(duplicateMessage);
       } else {
-        toast.error(error instanceof Error ? error.message : "Failed to save product.");
+        toast.error(error instanceof Error ? error.message : t("productManagement.toasts.failedToSaveProduct"));
       }
     } finally {
       setSaving(false);
@@ -347,10 +347,10 @@ export default function ProductsManagementPage() {
 
     try {
       await archiveProduct(productId);
-      toast.success("Product archived.");
+      toast.success(t("productManagement.toasts.productArchived"));
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to archive product.");
+      toast.error(error instanceof Error ? error.message : t("productManagement.toasts.failedToArchiveProduct"));
     }
   };
 
@@ -359,10 +359,10 @@ export default function ProductsManagementPage() {
 
     try {
       await restoreProduct(productId);
-      toast.success("Product restored.");
+      toast.success(t("productManagement.toasts.productRestored"));
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to restore product.");
+      toast.error(error instanceof Error ? error.message : t("productManagement.toasts.failedToRestoreProduct"));
     }
   };
 
@@ -371,10 +371,10 @@ export default function ProductsManagementPage() {
 
     try {
       await toggleProductFeatured(productId, !currentFeatured);
-      toast.success(currentFeatured ? "Removed from featured." : "Marked as featured.");
+      toast.success(currentFeatured ? t("productManagement.toasts.removedFromFeatured") : t("productManagement.toasts.markedAsFeatured"));
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update featured status.");
+      toast.error(error instanceof Error ? error.message : t("productManagement.toasts.failedToUpdateFeatured"));
     }
   };
 
