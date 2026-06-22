@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
+import { useI18n } from "@/lib/i18n";
 import { SYSTEM_DASHBOARD_UI_ROLES, type LourexRole } from "@/features/auth/rbac";
 import { isOptionalBackendUnavailable, isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendUnavailableMessage, supabase, isTableUnavailable, markTableUnavailable, checkOptionalTableAvailable } from "@/integrations/supabase/client";
 import type { LooseDomainClient } from "@/lib/operationsDomain";
@@ -166,6 +167,7 @@ const FilterInput = ({
 );
 
 export default function SystemControlsPage() {
+  const { t } = useI18n();
   const { profile } = useAuthSession();
   const role = profile?.role;
   const canViewSystem = Boolean(role && SYSTEM_DASHBOARD_UI_ROLES.includes(role));
@@ -233,7 +235,7 @@ export default function SystemControlsPage() {
         }, {}),
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load system controls.");
+      toast.error(error instanceof Error ? error.message : t("systemControls.toasts.failedToLoadSystemControls"));
     } finally {
       setLoading(false);
     }
@@ -254,10 +256,10 @@ export default function SystemControlsPage() {
     try {
       const { error } = await adminDb.from("business_rules").update(patch).eq("id", rule.id);
       if (error) throw error;
-      toast.success("Business rule updated.");
+      toast.success(t("systemControls.toasts.businessRuleUpdated"));
       await refresh();
     } catch (error) {
-      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : "Failed to update business rule.");
+      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : t("systemControls.toasts.failedToUpdateBusinessRule"));
     } finally {
       setSavingRuleId(null);
     }
@@ -271,7 +273,7 @@ export default function SystemControlsPage() {
     try {
       parsedConfig = JSON.parse(draft.config || "{}") as JsonRecord;
     } catch {
-      toast.error("Rule config must be valid JSON.");
+      toast.error(t("systemControls.toasts.ruleConfigInvalidJson"));
       return;
     }
 
@@ -287,10 +289,10 @@ export default function SystemControlsPage() {
     try {
       const { error } = await adminDb.rpc("capture_system_health_snapshot");
       if (error) throw error;
-      toast.success("System health snapshot captured.");
+      toast.success(t("systemControls.toasts.systemHealthSnapshotCaptured"));
       await refresh();
     } catch (error) {
-      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : "Failed to capture health snapshot.");
+      toast.error(isOptionalBackendUnavailable(error) ? optionalBackendUnavailableMessage : error instanceof Error ? error.message : t("systemControls.toasts.failedToCaptureHealthSnapshot"));
     } finally {
       setCapturingHealth(false);
     }
@@ -352,15 +354,15 @@ export default function SystemControlsPage() {
       <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Admin systems</p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold text-stone-100">Security, Rules, Audit, and Health</h2>
+            <p className="whitespace-normal text-[10px] font-bold uppercase tracking-widest text-amber-500/80">{t("systemControls.hero.eyebrow")}</p>
+            <h2 className="mt-2 font-serif text-3xl font-semibold text-stone-100">{t("systemControls.hero.title")}</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-400">
-              Monitor protected backend systems, review operational events, and manage configurable business rules.
+              {t("systemControls.hero.description")}
             </p>
           </div>
           <Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
             <RefreshCw className={`me-2 h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
-            Refresh
+            {t("common.refresh")}
           </Button>
         </div>
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
@@ -373,25 +375,25 @@ export default function SystemControlsPage() {
 
       <Tabs defaultValue="rules" className="space-y-4">
         <TabsList className="h-auto flex-wrap justify-start bg-stone-900/50 border border-amber-200/10 p-1">
-          <TabsTrigger value="rules" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Business Rules</TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Security Audit</TabsTrigger>
-          <TabsTrigger value="events" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">System Events</TabsTrigger>
-          <TabsTrigger value="health" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Health</TabsTrigger>
-          <TabsTrigger value="finance" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">Financial Corrections</TabsTrigger>
+          <TabsTrigger value="rules" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">{t("systemControls.tabs.businessRules")}</TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">{t("systemControls.tabs.securityAudit")}</TabsTrigger>
+          <TabsTrigger value="events" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">{t("systemControls.tabs.systemEvents")}</TabsTrigger>
+          <TabsTrigger value="health" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">{t("systemControls.tabs.health")}</TabsTrigger>
+          <TabsTrigger value="finance" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-200">{t("systemControls.tabs.financialCorrections")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rules">
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={SlidersHorizontal}
-              title="Business Rules Management"
+              title={t("systemControls.rules.title")}
               description={canManageRules ? "Owner controls are enabled." : "Operations accounts can view rules only."}
             />
-            <FilterInput value={ruleSearch} onChange={setRuleSearch} placeholder="Search rule key, group, or severity" />
+            <FilterInput value={ruleSearch} onChange={setRuleSearch} placeholder={t("systemControls.rules.searchPlaceholder")} />
             {loading ? (
               <LoadingRows />
             ) : filteredRules.length === 0 ? (
-              <EmptyState icon={SlidersHorizontal} title="No business rules found" description="No matching rules are available." className="bg-transparent border-0" />
+              <EmptyState icon={SlidersHorizontal} title={t("systemControls.rules.emptyTitle")} description={t("systemControls.rules.emptyDescription")} className="bg-transparent border-0" />
             ) : (
               <div className="space-y-3">
                 {filteredRules.map((rule) => (
@@ -479,7 +481,7 @@ export default function SystemControlsPage() {
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={ShieldCheck}
-              title="Security Audit Events"
+              title={t("systemControls.security.title")}
               description="Review security-sensitive RPC actions and protected customer operations."
             />
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
@@ -537,7 +539,7 @@ export default function SystemControlsPage() {
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={Activity}
-              title="System Events"
+              title={t("systemControls.events.title")}
               description="Inspect application and database events recorded by the observability system."
             />
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
@@ -609,12 +611,12 @@ export default function SystemControlsPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <SectionHeader
                 icon={Database}
-                title="System Health Snapshots"
+                title={t("systemControls.health.title")}
                 description="Capture and review lightweight database health counts."
               />
               <Button variant="gold" disabled={capturingHealth} onClick={() => void captureHealthSnapshot()} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
                 <ClipboardCheck className="me-2 h-4 w-4" />
-                {capturingHealth ? "Capturing" : "Capture Snapshot"}
+                {capturingHealth ? "Capturing" : t("systemControls.health.captureSnapshot")}
               </Button>
             </div>
             {loading ? (
@@ -646,7 +648,7 @@ export default function SystemControlsPage() {
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
             <SectionHeader
               icon={FilePenLine}
-              title="Financial Edit Requests / Correction History"
+              title={t("systemControls.finance.title")}
               description="Review requested financial corrections and immutable correction entries."
             />
             <div className="max-w-xs">
@@ -667,14 +669,14 @@ export default function SystemControlsPage() {
             ) : filteredFinancialRequests.length === 0 && financialCorrections.length === 0 ? (
               <EmptyState
                 icon={FilePenLine}
-                title="No financial correction history found"
+                title={t("systemControls.finance.emptyTitle")}
                 description="Financial edit requests and correction entries will appear here after the correction workflow is used."
                 className="bg-transparent border-0"
               />
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
                 <div className="space-y-3">
-                  <h3 className="font-serif text-xl font-semibold text-stone-100">Edit Requests</h3>
+                  <h3 className="font-serif text-xl font-semibold text-stone-100">{t("systemControls.finance.editRequestsTitle")}</h3>
                   {filteredFinancialRequests.map((request) => (
                     <div key={request.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -697,7 +699,7 @@ export default function SystemControlsPage() {
                   ))}
                 </div>
                 <div className="space-y-3">
-                  <h3 className="font-serif text-xl font-semibold text-stone-100">Correction Entries</h3>
+                  <h3 className="font-serif text-xl font-semibold text-stone-100">{t("systemControls.finance.correctionEntriesTitle")}</h3>
                   {financialCorrections.map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">

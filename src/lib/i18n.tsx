@@ -1993,12 +1993,56 @@ updateError: "Could not update the edit request.",
        status: "Status",
        submittedBy: "Submitted by",
      },
-     notFound: {
-      title: "Page not found",
-      backHome: "Back to home",
-    },
-  },
-  ar: {
+      notFound: {
+       title: "Page not found",
+       backHome: "Back to home",
+     },
+      systemControls: {
+        toasts: {
+          failedToLoadSystemControls: "Failed to load system controls.",
+          businessRuleUpdated: "Business rule updated.",
+          failedToUpdateBusinessRule: "Failed to update business rule.",
+          ruleConfigInvalidJson: "Rule config must be valid JSON.",
+          systemHealthSnapshotCaptured: "System health snapshot captured.",
+          failedToCaptureHealthSnapshot: "Failed to capture health snapshot.",
+        },
+        hero: {
+          eyebrow: "Admin systems",
+          title: "Security, Rules, Audit, and Health",
+          description: "Monitor protected backend systems, review operational events, and manage configurable business rules.",
+        },
+        tabs: {
+          businessRules: "Business Rules",
+          securityAudit: "Security Audit",
+          systemEvents: "System Events",
+          health: "Health",
+          financialCorrections: "Financial Corrections",
+        },
+        rules: {
+          title: "Business Rules Management",
+          searchPlaceholder: "Search rule key, group, or severity",
+          emptyTitle: "No business rules found",
+          emptyDescription: "No matching rules are available.",
+        },
+        security: {
+          title: "Security Audit Events",
+        },
+        events: {
+          title: "System Events",
+        },
+        health: {
+          title: "System Health Snapshots",
+          captureSnapshot: "Capture Snapshot",
+        },
+        finance: {
+          title: "Financial Edit Requests / Correction History",
+          emptyTitle: "No financial correction history found",
+          editRequestsTitle: "Edit Requests",
+          correctionEntriesTitle: "Correction Entries",
+        },
+      },
+   },
+   ar: {
     errorBoundary: {
       title: "حدث خطأ غير متوقع داخل المنصة",
       description: "أوقفنا هذه الواجهة حتى لا تستمر العملية بشكل غير واضح. يمكنك إعادة المحاولة الآن، وإذا تكرر الخطأ فراجع آخر إجراء تم تنفيذه.",
@@ -3916,12 +3960,56 @@ updateError: "تعذر تحديث طلب التعديل.",
        status: "الحالة",
        submittedBy: "تم التقديم بواسطة",
      },
-     notFound: {
-      title: "الصفحة غير موجودة",
-      backHome: "العودة إلى الرئيسية",
-    },
-  },
-};
+      notFound: {
+       title: "الصفحة غير موجودة",
+       backHome: "العودة إلى الرئيسية",
+     },
+      systemControls: {
+        toasts: {
+          failedToLoadSystemControls: "فشل تحميل عناصر التحكم في النظام.",
+          businessRuleUpdated: "تم تحديث قاعدة العمل.",
+          failedToUpdateBusinessRule: "فشل تحديث قاعدة العمل.",
+          ruleConfigInvalidJson: "يجب أن يكون تكوين القاعدة JSON صالحًا.",
+          systemHealthSnapshotCaptured: "تم التقاط لقطة صحة النظام.",
+          failedToCaptureHealthSnapshot: "فشل التقاط لقطة صحة النظام.",
+        },
+        hero: {
+          eyebrow: "أنظمة المشرفين",
+          title: "الأمان والقواعد والتدقيق والصحة",
+          description: "راقب أنظمة الواجهة الخلفية المحمية، وراجع الأحداث التشغيلية، وأدر قواعد العمل القابلة للتكوين.",
+        },
+        tabs: {
+          businessRules: "قواعد العمل",
+          securityAudit: "تدقيق الأمان",
+          systemEvents: "أحداث النظام",
+          health: "الصحة",
+          financialCorrections: "التصحيحات المالية",
+        },
+        rules: {
+          title: "إدارة قواعد العمل",
+          searchPlaceholder: "ابحث عن مفتاح القاعدة أو المجموعة أو الخطورة",
+          emptyTitle: "لم يتم العثور على قواعد عمل",
+          emptyDescription: "لا توجد قواعد متاحة مطابقة.",
+        },
+        security: {
+          title: "أحداث تدقيق الأمان",
+        },
+        events: {
+          title: "أحداث النظام",
+        },
+        health: {
+          title: "لقطات صحة النظام",
+          captureSnapshot: "التقاط لقطة",
+        },
+        finance: {
+          title: "طلبات التعديل المالي / سجل التصحيحات",
+          emptyTitle: "لم يتم العثور على سجل تصحيحات مالية",
+          editRequestsTitle: "طلبات التعديل",
+          correctionEntriesTitle: "قيود التصحيح",
+        },
+      },
+   },
+ };
 
 const getNode = (lang: Lang, key: string): TranslationNode | undefined =>
   key.split(".").reduce<TranslationNode | undefined>((current, part) => {
