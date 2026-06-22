@@ -300,10 +300,10 @@ export default function PartnerSettlementsPage() {
       </DashboardSection>
 
       <DashboardGrid variant="balanced">
-        <DashboardSection title="Risk Audit" description="Settlement bottlenecks and disputed claims.">
+        <DashboardSection title={t("partnerSettlements.sections.riskAudit")} description={t("partnerSettlements.sections.riskAuditDescription")}>
           <OperationalRiskCenter risks={operationalRisks} />
         </DashboardSection>
-        <DashboardSection title="Action Pipeline" description="Priority recommendations for financial balance.">
+        <DashboardSection title={t("partnerSettlements.sections.actionPipeline")} description={t("partnerSettlements.sections.actionPipelineDescription")}>
           <PriorityQueueEngine recommendations={recommendations} />
         </DashboardSection>
       </DashboardGrid>
@@ -311,7 +311,7 @@ export default function PartnerSettlementsPage() {
       {!loading && (
         <div className="space-y-12">
            <DashboardGrid variant="balanced">
-            <DashboardSection title="Partner Tasks" description="Active workload and pending coordination.">
+            <DashboardSection title={t("partnerSettlements.sections.partnerTasks")} description={t("partnerSettlements.sections.partnerTasksDescription")}>
               <PartnerTaskQueue tasks={partnerTasks} />
             </DashboardSection>
             <DashboardSection title={t("commandCenter.settlementVisibility")} description={t("commandCenter.settlementVisibilityDescription")}>
@@ -319,7 +319,7 @@ export default function PartnerSettlementsPage() {
             </DashboardSection>
           </DashboardGrid>
 
-          <DashboardSection title="System Pressure" description="Operational load and branch stability mapping.">
+          <DashboardSection title={t("partnerSettlements.sections.systemPressure")} description={t("partnerSettlements.sections.systemPressureDescription")}>
             <OperationalPressureMap pressures={executiveWorkspaceState.pressureMap} />
           </DashboardSection>
 
@@ -327,19 +327,19 @@ export default function PartnerSettlementsPage() {
              <DashboardSection title={t("commandCenter.systemicCoordination")}>
               <CoordinationWarningsPanel warnings={coordinationWarnings} />
             </DashboardSection>
-            <DashboardSection title="Accountability Mapping">
+             <DashboardSection title={t("partnerSettlements.sections.accountabilityMapping")}>
               <OwnershipAccountabilityPanel accountability={accountabilityInsights} />
             </DashboardSection>
           </DashboardGrid>
         </div>
       )}
 
-      <DashboardSection title="Global Overview" description="Aggregate settlement health across all partners.">
+      <DashboardSection title={t("partnerSettlements.sections.globalOverview")} description={t("partnerSettlements.sections.globalOverviewDescription")}>
         <SettlementVisibilityPanel summary={settlementVisibility} t={t} formatMoney={formatMoney} />
       </DashboardSection>
 
       {canManage && (
-        <DashboardSection title={t("partnerSettlements.createTitle")} description="Generate new settlement drafts for partner review.">
+        <DashboardSection title={t("partnerSettlements.createTitle")} description={t("partnerSettlements.createDescription")}>
           <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
             <SectionHelpBox title={t("partnerSettlements.pro.helpTitle")} body={t("partnerSettlements.pro.helpBody")} example={t("partnerSettlements.pro.helpExample")} />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
@@ -379,7 +379,7 @@ export default function PartnerSettlementsPage() {
         <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 overflow-hidden">
           <div className="divide-y divide-amber-200/5">
             {settlements.length === 0 ? (
-              <div className="p-12 text-center text-stone-600 italic">No settlements found.</div>
+              <div className="p-12 text-center text-stone-600 italic">{t("partnerSettlements.emptyTitle")}</div>
             ) : (
               settlements.map((settlement) => (
                 <div key={settlement.id} className="p-6 hover:bg-stone-800/20 transition-colors group">
