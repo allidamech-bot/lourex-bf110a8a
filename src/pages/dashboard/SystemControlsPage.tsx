@@ -108,8 +108,6 @@ const formatJson = (value: unknown) => JSON.stringify(value ?? {}, null, 2);
 
 const getDayKey = (value: string | null | undefined) => (value ? value.slice(0, 10) : "");
 
-const dateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString() : "Not recorded");
-
 const optionalTableMessage = "Optional Lovable Cloud table is not configured yet.";
 
 const optionalQuery = async <T,>(
@@ -172,6 +170,8 @@ export default function SystemControlsPage() {
   const role = profile?.role;
   const canViewSystem = Boolean(role && SYSTEM_DASHBOARD_UI_ROLES.includes(role));
   const canManageRules = role === "owner";
+
+  const dateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString() : t("systemControls.common.notRecorded"));
 
   const [loading, setLoading] = useState(true);
   const [savingRuleId, setSavingRuleId] = useState<string | null>(null);
@@ -342,7 +342,7 @@ export default function SystemControlsPage() {
     return (
       <EmptyState
         icon={ShieldCheck}
-        title="System controls are restricted"
+        title={t("systemControls.restricted.title")}
         description="Only owner and operations employee accounts can view security, rule, audit, and health dashboards."
       />
     );
@@ -408,9 +408,9 @@ export default function SystemControlsPage() {
                           </Badge>
                         </div>
                         <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">
-                          {rule.description || "No description provided."}
+                          {rule.description || t("systemControls.rules.noDescription")}
                         </p>
-                        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Updated {dateTime(rule.updated_at)}</p>
+                        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("systemControls.common.updated")} {dateTime(rule.updated_at)}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <Switch
@@ -418,7 +418,7 @@ export default function SystemControlsPage() {
                           disabled={!canManageRules || savingRuleId === rule.id}
                           onCheckedChange={(checked) => void updateRule(rule, { enabled: checked })}
                         />
-                        <span className="text-xs font-bold uppercase tracking-wider text-stone-500">{rule.enabled ? "Enabled" : "Disabled"}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-stone-500">{rule.enabled ? t("systemControls.rules.enabled") : t("systemControls.rules.disabled")}</span>
                       </div>
                       <div className="space-y-3">
                         <Select
@@ -435,7 +435,7 @@ export default function SystemControlsPage() {
                           }
                         >
                           <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
-                            <SelectValue placeholder="Severity" />
+                          <SelectValue placeholder={t("systemControls.common.severity")} />
                           </SelectTrigger>
                           <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
                             {severityOptions.map((severity) => (
@@ -467,7 +467,7 @@ export default function SystemControlsPage() {
                         onClick={() => void saveRuleDraft(rule)}
                         className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110"
                       >
-                        {savingRuleId === rule.id ? "Saving" : "Save"}
+                        {savingRuleId === rule.id ? t("systemControls.rules.saving") : t("common.save")}
                       </Button>
                     </div>
                   </div>
@@ -482,35 +482,35 @@ export default function SystemControlsPage() {
             <SectionHeader
               icon={ShieldCheck}
               title={t("systemControls.security.title")}
-              description="Review security-sensitive RPC actions and protected customer operations."
+              description={t("systemControls.security.description")}
             />
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-              <FilterInput
-                value={securityFilters.action}
-                onChange={(value) => setSecurityFilters((current) => ({ ...current, action: value }))}
-                placeholder="Action"
-              />
-              <FilterInput
-                value={securityFilters.entity}
-                onChange={(value) => setSecurityFilters((current) => ({ ...current, entity: value }))}
-                placeholder="Entity type"
-              />
-              <FilterInput
-                value={securityFilters.role}
-                onChange={(value) => setSecurityFilters((current) => ({ ...current, role: value }))}
-                placeholder="Actor role"
-              />
-              <FilterInput
-                type="date"
-                value={securityFilters.date}
-                onChange={(value) => setSecurityFilters((current) => ({ ...current, date: value }))}
-                placeholder="Date"
-              />
+               <FilterInput
+                 value={securityFilters.action}
+                 onChange={(value) => setSecurityFilters((current) => ({ ...current, action: value }))}
+                 placeholder={t("systemControls.security.filterAction")}
+               />
+               <FilterInput
+                 value={securityFilters.entity}
+                 onChange={(value) => setSecurityFilters((current) => ({ ...current, entity: value }))}
+                 placeholder={t("systemControls.security.filterEntity")}
+               />
+               <FilterInput
+                 value={securityFilters.role}
+                 onChange={(value) => setSecurityFilters((current) => ({ ...current, role: value }))}
+                 placeholder={t("systemControls.security.filterRole")}
+               />
+               <FilterInput
+                 type="date"
+                 value={securityFilters.date}
+                 onChange={(value) => setSecurityFilters((current) => ({ ...current, date: value }))}
+                 placeholder={t("common.date")}
+               />
             </div>
             <EventList
               loading={loading}
               rows={filteredSecurityEvents}
-              emptyTitle="No security audit events found"
+              emptyTitle={t("systemControls.security.emptyTitle")}
               render={(event) => (
                 <div key={event.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -540,7 +540,7 @@ export default function SystemControlsPage() {
             <SectionHeader
               icon={Activity}
               title={t("systemControls.events.title")}
-              description="Inspect application and database events recorded by the observability system."
+              description={t("systemControls.events.description")}
             />
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <Select
@@ -548,10 +548,10 @@ export default function SystemControlsPage() {
                 onValueChange={(value) => setSystemFilters((current) => ({ ...current, severity: value }))}
               >
                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
-                  <SelectValue placeholder="Severity" />
+                  <SelectValue placeholder={t("systemControls.common.severity")} />
                 </SelectTrigger>
                 <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
-                  <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">All severities</SelectItem>
+                   <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">{t("systemControls.events.allSeverities")}</SelectItem>
                   {severityOptions.map((severity) => (
                     <SelectItem key={severity} value={severity} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">
                       {severity}
@@ -562,24 +562,24 @@ export default function SystemControlsPage() {
               <FilterInput
                 value={systemFilters.source}
                 onChange={(value) => setSystemFilters((current) => ({ ...current, source: value }))}
-                placeholder="Source"
+                placeholder={t("systemControls.events.filterSource")}
               />
               <FilterInput
                 value={systemFilters.eventType}
                 onChange={(value) => setSystemFilters((current) => ({ ...current, eventType: value }))}
-                placeholder="Event type"
+                placeholder={t("systemControls.events.filterEventType")}
               />
               <FilterInput
                 type="date"
                 value={systemFilters.date}
                 onChange={(value) => setSystemFilters((current) => ({ ...current, date: value }))}
-                placeholder="Date"
+                placeholder={t("common.date")}
               />
             </div>
             <EventList
               loading={loading}
               rows={filteredSystemEvents}
-              emptyTitle="No system events found"
+              emptyTitle={t("systemControls.events.emptyTitle")}
               render={(event) => (
                 <div key={event.id} className="rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -612,17 +612,17 @@ export default function SystemControlsPage() {
               <SectionHeader
                 icon={Database}
                 title={t("systemControls.health.title")}
-                description="Capture and review lightweight database health counts."
+                description={t("systemControls.health.description")}
               />
               <Button variant="gold" disabled={capturingHealth} onClick={() => void captureHealthSnapshot()} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
                 <ClipboardCheck className="me-2 h-4 w-4" />
-                {capturingHealth ? "Capturing" : t("systemControls.health.captureSnapshot")}
+                {capturingHealth ? t("systemControls.health.capturing") : t("systemControls.health.captureSnapshot")}
               </Button>
             </div>
             {loading ? (
               <LoadingRows />
             ) : healthSnapshots.length === 0 ? (
-              <EmptyState icon={Database} title="No health snapshots found" description="Capture a snapshot to start tracking counts." className="bg-transparent border-0" />
+              <EmptyState icon={Database} title={t("systemControls.health.emptyTitle")} description={t("systemControls.health.emptyDescription")} className="bg-transparent border-0" />
             ) : (
               <div className="grid gap-3 xl:grid-cols-2">
                 {healthSnapshots.map((snapshot) => (
@@ -654,10 +654,10 @@ export default function SystemControlsPage() {
             <div className="max-w-xs">
               <Select value={financeStatusFilter} onValueChange={setFinanceStatusFilter}>
                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t("common.status")} />
                 </SelectTrigger>
                 <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
-                  <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">All statuses</SelectItem>
+                  <SelectItem value="all" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">{t("systemControls.finance.allStatuses")}</SelectItem>
                   <SelectItem value="pending" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Pending</SelectItem>
                   <SelectItem value="approved" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Approved</SelectItem>
                   <SelectItem value="rejected" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer uppercase text-xs font-bold">Rejected</SelectItem>
@@ -670,7 +670,7 @@ export default function SystemControlsPage() {
               <EmptyState
                 icon={FilePenLine}
                 title={t("systemControls.finance.emptyTitle")}
-                description="Financial edit requests and correction entries will appear here after the correction workflow is used."
+                description={t("systemControls.finance.emptyDescription")}
                 className="bg-transparent border-0"
               />
             ) : (
@@ -686,12 +686,12 @@ export default function SystemControlsPage() {
                         </Badge>
                       </div>
                       <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">
-                        {request.request_reason || request.reason || "No reason recorded."}
+                        {request.request_reason || request.reason || t("systemControls.finance.noReason")}
                       </p>
-                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Created {dateTime(request.created_at)}</p>
-                      {request.reviewed_at ? (
-                        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-600">Reviewed {dateTime(request.reviewed_at)}</p>
-                      ) : null}
+                        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("systemControls.common.created")} {dateTime(request.created_at)}</p>
+                        {request.reviewed_at ? (
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-600">{t("systemControls.common.reviewed")} {dateTime(request.reviewed_at)}</p>
+                        ) : null}
                       <div className="mt-3">
                         <JsonBlock value={request.proposed_changes || request.proposed_value} />
                       </div>
@@ -708,8 +708,8 @@ export default function SystemControlsPage() {
                           {entry.amount ?? 0} {entry.currency || ""}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">{entry.type || "No category"}</p>
-                      <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{entry.note || "No note recorded."}</p>
+                          <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">{entry.type || t("systemControls.finance.noCategory")}</p>
+                          <p className="mt-2 text-sm leading-7 text-stone-400 font-medium">{entry.note || t("systemControls.finance.noNote")}</p>
                       <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-stone-600">Created {dateTime(entry.created_at)}</p>
                     </div>
                   ))}
@@ -786,7 +786,7 @@ const EventList = <T,>({
 }) => {
   if (loading) return <LoadingRows />;
   if (rows.length === 0) {
-    return <EmptyState icon={AlertTriangle} title={emptyTitle} description="Adjust filters or refresh to check for new records." />;
+    return <EmptyState icon={AlertTriangle} title={emptyTitle} description={t("systemControls.common.adjustFilters")} />;
   }
 
   return <div className="space-y-3">{rows.map(render)}</div>;
