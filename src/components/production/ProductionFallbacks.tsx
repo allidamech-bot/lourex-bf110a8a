@@ -14,7 +14,7 @@ export function ProductionFallbackCard({
   body?: string;
   children?: ReactNode;
 }) {
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const language = lang === "ar" ? "ar" : "en";
   const copy = resolveProductionFallback(kind, language);
   const Icon = kind === "loading" ? Loader2 : kind === "backend" ? CloudOff : AlertTriangle;
@@ -26,8 +26,8 @@ export function ProductionFallbackCard({
           <Icon className={`h-5 w-5 ${kind === "loading" ? "animate-spin" : ""}`} />
         </div>
         <div className="min-w-0">
-          <h3 className="whitespace-normal break-words font-serif text-xl font-semibold text-white">{title || copy.title}</h3>
-          <p className="mt-1 whitespace-normal break-words text-sm leading-6 text-slate-400">{body || copy.body}</p>
+          <h3 className="whitespace-normal break-words font-serif text-xl font-semibold text-white">{title || t(copy.titleKey)}</h3>
+          <p className="mt-1 whitespace-normal break-words text-sm leading-6 text-slate-400">{body || t(copy.bodyKey)}</p>
           {children ? <div className="mt-3">{children}</div> : null}
         </div>
       </div>

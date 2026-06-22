@@ -2072,7 +2072,34 @@ updateError: "Could not update the edit request.",
           noNote: "No note recorded.",
           editRequestsTitle: "Edit Requests",
           correctionEntriesTitle: "Correction Entries",
+         },
+       },
+      productionFallbacks: {
+        backend: {
+          title: "Backend unavailable",
+          body: "Lovable Cloud runtime data is not available right now. The page will stay open and update when the service returns.",
         },
+        optionalFeature: {
+          title: "Optional feature not configured",
+          body: "This section depends on an optional backend table or function. It is safe to continue using the rest of Lourex.",
+        },
+        aiService: {
+          title: "AI service unavailable",
+          body: "AI recommendations are temporarily unavailable. Operational data and manual workflows remain available.",
+        },
+        runtimeEmpty: {
+          title: "No runtime data yet",
+          body: "There are no runtime events to show for this section yet.",
+        },
+        lazyError: {
+          title: "Section could not load",
+          body: "This heavy operational section failed to load. Refresh the section or continue with the rest of the dashboard.",
+        },
+        loading: {
+          title: "Loading section",
+          body: "Preparing this operational section...",
+        },
+        loadingData: "Loading data...",
       },
    },
    ar: {
@@ -4074,8 +4101,35 @@ updateError: "تعذر تحديث طلب التعديل.",
           correctionEntriesTitle: "قيود التصحيح",
         },
       },
+      productionFallbacks: {
+        backend: {
+          title: "الخلفية غير متاحة",
+          body: "بيانات تشغيل Lovable Cloud غير متاحة حالياً. ستبقى الصفحة مفتوحة وسيتم تحديثها عند عودة الخدمة.",
+        },
+        optionalFeature: {
+          title: "الميزة الاختيارية غير مهيأة",
+          body: "يعتمد هذا القسم على جدول أو دالة اختيارية في الخلفية. يمكنك متابعة استخدام باقي Lourex بأمان.",
+        },
+        aiService: {
+          title: "خدمة الذكاء الاصطناعي غير متاحة",
+          body: "توصيات الذكاء الاصطناعي غير متاحة مؤقتاً. تبقى البيانات التشغيلية وسير العمل اليدوي متاحة.",
+        },
+        runtimeEmpty: {
+          title: "لا توجد بيانات تشغيل بعد",
+          body: "لا توجد أحداث تشغيل لعرضها في هذا القسم بعد.",
+        },
+        lazyError: {
+          title: "تعذر تحميل القسم",
+          body: "فشل تحميل هذا القسم التشغيلي الثقيل. حدّث القسم أو تابع استخدام بقية لوحة التحكم.",
+        },
+        loading: {
+          title: "جارٍ تحميل القسم",
+          body: "جارٍ تجهيز هذا القسم التشغيلي...",
+        },
+        loadingData: "جارٍ تحميل البيانات...",
+      },
    },
- };
+  };
 
 const getNode = (lang: Lang, key: string): TranslationNode | undefined =>
   key.split(".").reduce<TranslationNode | undefined>((current, part) => {

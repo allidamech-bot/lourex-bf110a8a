@@ -4,54 +4,54 @@ export const resolveProductionFallback = (kind: ProductionFallbackKind, language
   const copy = {
     en: {
       backend: {
-        title: "Backend unavailable",
-        body: "Lovable Cloud runtime data is not available right now. The page will stay open and update when the service returns.",
+        titleKey: "productionFallbacks.backend.title",
+        bodyKey: "productionFallbacks.backend.body",
       },
       optionalFeature: {
-        title: "Optional feature not configured",
-        body: "This section depends on an optional backend table or function. It is safe to continue using the rest of Lourex.",
+        titleKey: "productionFallbacks.optionalFeature.title",
+        bodyKey: "productionFallbacks.optionalFeature.body",
       },
       aiService: {
-        title: "AI service unavailable",
-        body: "AI recommendations are temporarily unavailable. Operational data and manual workflows remain available.",
+        titleKey: "productionFallbacks.aiService.title",
+        bodyKey: "productionFallbacks.aiService.body",
       },
       runtimeEmpty: {
-        title: "No runtime data yet",
-        body: "There are no runtime events to show for this section yet.",
+        titleKey: "productionFallbacks.runtimeEmpty.title",
+        bodyKey: "productionFallbacks.runtimeEmpty.body",
       },
       lazyError: {
-        title: "Section could not load",
-        body: "This heavy operational section failed to load. Refresh the section or continue with the rest of the dashboard.",
+        titleKey: "productionFallbacks.lazyError.title",
+        bodyKey: "productionFallbacks.lazyError.body",
       },
       loading: {
-        title: "Loading section",
-        body: "Preparing this operational section...",
+        titleKey: "productionFallbacks.loading.title",
+        bodyKey: "productionFallbacks.loading.body",
       },
     },
     ar: {
       backend: {
-        title: "الخلفية غير متاحة",
-        body: "بيانات تشغيل Lovable Cloud غير متاحة حاليا. ستبقى الصفحة مفتوحة ويتم التحديث عند عودة الخدمة.",
+        titleKey: "productionFallbacks.backend.title",
+        bodyKey: "productionFallbacks.backend.body",
       },
       optionalFeature: {
-        title: "ميزة اختيارية غير مفعلة",
-        body: "هذا القسم يعتمد على جدول أو وظيفة اختيارية في الخلفية. يمكنك متابعة استخدام باقي Lourex بأمان.",
+        titleKey: "productionFallbacks.optionalFeature.title",
+        bodyKey: "productionFallbacks.optionalFeature.body",
       },
       aiService: {
-        title: "خدمة الذكاء غير متاحة",
-        body: "توصيات الذكاء غير متاحة مؤقتا. تبقى البيانات التشغيلية والعمل اليدوي متاحين.",
+        titleKey: "productionFallbacks.aiService.title",
+        bodyKey: "productionFallbacks.aiService.body",
       },
       runtimeEmpty: {
-        title: "لا توجد بيانات تشغيل بعد",
-        body: "لا توجد أحداث تشغيلية لعرضها في هذا القسم حتى الآن.",
+        titleKey: "productionFallbacks.runtimeEmpty.title",
+        bodyKey: "productionFallbacks.runtimeEmpty.body",
       },
       lazyError: {
-        title: "تعذر تحميل القسم",
-        body: "فشل تحميل هذا القسم التشغيلي الثقيل. يمكنك تحديث القسم أو متابعة استخدام بقية اللوحة.",
+        titleKey: "productionFallbacks.lazyError.title",
+        bodyKey: "productionFallbacks.lazyError.body",
       },
       loading: {
-        title: "جاري تحميل القسم",
-        body: "يتم تجهيز هذا القسم التشغيلي...",
+        titleKey: "productionFallbacks.loading.title",
+        bodyKey: "productionFallbacks.loading.body",
       },
     },
   } as const;
