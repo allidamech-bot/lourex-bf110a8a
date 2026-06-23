@@ -93,6 +93,7 @@ export default function RequestPage() {
       <SEO
         title={t("requestPage.seoTitle")}
         description={t("requestPage.seoDescription")}
+        url="https://www.lou-rex.com/request"
       />
       <SiteHeader />
       <div className="relative overflow-hidden">

@@ -7,14 +7,18 @@ import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 
 export default function PrivacyPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
 
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("consent.privacyTitle")}
-        description="LOUREX Privacy Policy: how we collect, store, and protect your personal and trade data with AES-256 encryption."
+        description={
+          dir === "rtl"
+            ? "سياسة خصوصية Lourex: كيف نجمع ونخزن ونحمي بيانات الحساب والتشغيل."
+            : "Lourex Privacy Policy: how we collect, store, and protect account and operational data."
+        }
       />
       <SiteHeader />
       <main className="pt-24 pb-16">

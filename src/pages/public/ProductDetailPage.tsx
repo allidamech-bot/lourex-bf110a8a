@@ -82,6 +82,7 @@ export default function ProductDetailPage() {
       <SEO
         title={isArabic ? product.nameAr : product.nameEn}
         description={isArabic ? product.shortDescriptionAr : product.shortDescriptionEn}
+        url={`https://www.lou-rex.com/products/${product.slug}`}
       />
       <SiteHeader />
 
