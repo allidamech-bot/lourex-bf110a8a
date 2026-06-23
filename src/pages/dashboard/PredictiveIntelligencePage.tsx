@@ -42,7 +42,7 @@ export default function PredictiveIntelligencePage() {
       setFinancialEditRequests(editRows);
     } catch (loadError) {
       logOperationalError("predictive_intelligence_load", loadError, { role: profile?.role });
-      setError(lang === "ar" ? "تعذر تحميل بيانات الذكاء التنبؤي." : "Unable to load predictive intelligence data.");
+       setError(t("predictiveIntelligence.loadErrorTitle"));
       setRequests([]);
       setDeals([]);
       setShipments([]);
@@ -74,16 +74,14 @@ export default function PredictiveIntelligencePage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-500/80">
-                {lang === "ar" ? "LOUREX INTELLIGENCE" : "LOUREX INTELLIGENCE"}
+                {t("predictiveIntelligence.brand")}
               </p>
               <h1 className="mt-1 break-words font-serif text-2xl font-bold text-stone-100 sm:text-3xl">
-                {lang === "ar" ? "الذكاء التنبؤي التشغيلي" : "Predictive Intelligence"}
+                 {t("predictiveIntelligence.title")}
               </h1>
-              <p className="mt-2 max-w-3xl break-words text-sm leading-7 text-stone-400 font-medium">
-                {lang === "ar"
-                  ? "تحليل محلي آمن للطلبات والشحنات والتعديلات المالية لاكتشاف المخاطر، فرص التحويل، ونقاط الاختناق قبل أن تتضخم."
-                  : "A safe local intelligence layer that analyzes requests, shipments, and finance edits to detect risk, conversion opportunities, and bottlenecks before they escalate."}
-              </p>
+               <p className="mt-2 max-w-3xl break-words text-sm leading-7 text-stone-400 font-medium">
+                 {t("predictiveIntelligence.description")}
+               </p>
             </div>
           </div>
 
@@ -94,7 +92,7 @@ export default function PredictiveIntelligencePage() {
             className="w-full rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110 sm:w-auto"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            {lang === "ar" ? "تحديث التحليل" : "Refresh analysis"}
+             {t("predictiveIntelligence.refreshAnalysis")}
           </Button>
         </div>
       </BentoCard>
@@ -102,16 +100,12 @@ export default function PredictiveIntelligencePage() {
       {error ? (
         <ProductionFallbackCard
           kind="backend"
-          title={lang === "ar" ? "تعذر تحميل بيانات الذكاء التنبؤي" : "Predictive intelligence data could not load"}
-          body={
-            lang === "ar"
-              ? "بقيت لوحة التحكم مستقرة، ويمكنك إعادة المحاولة أو متابعة استخدام باقي أقسام Lourex."
-              : "The dashboard remains stable. You can retry the analysis or continue using the rest of Lourex."
-          }
+          title={t("predictiveIntelligence.loadErrorTitle")}
+          body={t("predictiveIntelligence.loadErrorBody")}
         >
           <Button type="button" variant="outline" onClick={() => void load()} disabled={loading} className="rounded-xl">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+            {t("errorBoundary.retry")}
           </Button>
         </ProductionFallbackCard>
       ) : null}

@@ -423,11 +423,11 @@ export default function OverviewPage() {
         }
       >
         <DashboardGrid variant="kpi">
-          <HealthCard label="Business Health" value={executiveWorkspaceState.stability.score} status={executiveWorkspaceState.stability.state} icon={<ShieldCheck className="h-4 w-4" />} />
-          <HealthCard label="Operations" value={executiveWorkspaceState.stability.operationalResilience} icon={<Truck className="h-4 w-4" />} />
-          <HealthCard label="Financial" value={executiveWorkspaceState.stability.financeResilience} icon={<Receipt className="h-4 w-4" />} />
-          <HealthCard label="Customer" value={customerProfiles[0]?.healthScore || 85} icon={<Users className="h-4 w-4" />} />
-          <HealthCard label="Partner" value={partnerProfiles[0]?.performanceScore || 90} icon={<ArrowUpRight className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.businessHealth")} value={executiveWorkspaceState.stability.score} status={executiveWorkspaceState.stability.state} icon={<ShieldCheck className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.operations")} value={executiveWorkspaceState.stability.operationalResilience} icon={<Truck className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.financial")} value={executiveWorkspaceState.stability.financeResilience} icon={<Receipt className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.customer")} value={customerProfiles[0]?.healthScore || 85} icon={<Users className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.partner")} value={partnerProfiles[0]?.performanceScore || 90} icon={<ArrowUpRight className="h-4 w-4" />} />
         </DashboardGrid>
       </DashboardSection>
 
@@ -461,12 +461,12 @@ export default function OverviewPage() {
 
 {profile?.role === "saudi_partner" && !loading && (
          <div className="space-y-16">
-           <DashboardSection
-             eyebrow="Financial Intelligence"
-             title={t("overview.executiveLedgerOverview")}
-             description="Aggregated financial metrics derived directly from the immutable ledger."
-             icon={<Receipt className="h-5 w-5" />}
-           >
+            <DashboardSection
+              eyebrow={t("overview.financialIntelligence")}
+              title={t("overview.executiveLedgerOverview")}
+              description="Aggregated financial metrics derived directly from the immutable ledger."
+              icon={<Receipt className="h-5 w-5" />}
+            >
              <DashboardGrid variant="kpi">
                <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
                  <div className="flex items-center justify-between">
@@ -509,7 +509,7 @@ export default function OverviewPage() {
         <div className="space-y-16">
           {/* 2. Critical Actions Center */}
           <DashboardSection
-            eyebrow="Critical Path Analysis"
+            eyebrow={t("overview.criticalPathAnalysis")}
             title={t("commandCenter.strategicInterventions")}
             description="Unresolved bottlenecks requiring immediate executive intervention."
           >

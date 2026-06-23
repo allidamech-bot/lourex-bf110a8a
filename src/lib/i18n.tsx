@@ -281,6 +281,16 @@ const translations: Record<Lang, TranslationTree> = {
         disputed: "Settlement disputed.",
       },
     },
+    predictiveIntelligence: {
+      brand: "LOUREX INTELLIGENCE",
+      title: "Predictive Intelligence",
+      description:
+        "A safe local intelligence layer that analyzes requests, shipments, and finance edits to detect risk, conversion opportunities, and bottlenecks before they escalate.",
+      refreshAnalysis: "Refresh analysis",
+      loadErrorTitle: "Predictive intelligence data could not load.",
+      loadErrorBody:
+        "The dashboard remains stable. You can retry the analysis or continue using the rest of Lourex.",
+    },
     publicTracking: {
       eyebrow: "Customer Tracking",
       title: "Clear and trusted shipment tracking",
@@ -1006,6 +1016,15 @@ overview: {
       pendingAudits: "Pending Audits",
       liveActivity: "Live Activity",
       experimentalAutonomousFabric: "Experimental Autonomous Fabric",
+      healthCards: {
+        businessHealth: "Business Health",
+        operations: "Operations",
+        financial: "Financial",
+        customer: "Customer",
+        partner: "Partner",
+      },
+      financialIntelligence: "Financial Intelligence",
+      criticalPathAnalysis: "Critical Path Analysis",
     },
     customers: {
       directory: "Customer directory",
@@ -2335,6 +2354,16 @@ updateError: "Could not update the edit request.",
         disputed: "تم تسجيل الاعتراض على التسوية.",
       },
     },
+    predictiveIntelligence: {
+      brand: "LOUREX INTELLIGENCE",
+      title: "الذكاء التنبؤي",
+      description:
+        "تحليل محلي آمن للطلبات والشحنات والتعديلات المالية لاكتشاف المخاطر، فرص التحويل، ونقاط الاختناق قبل أن تتضخم.",
+      refreshAnalysis: "تحديث التحليل",
+      loadErrorTitle: "تعذر تحميل بيانات الذكاء التنبؤي.",
+      loadErrorBody:
+        "بقيت لوحة التحكم مستقرة، ويمكنك إعادة المحاولة أو متابعة استخدام باقي أقسام Lourex.",
+    },
     publicTracking: {
       eyebrow: "تتبع العميل",
       title: "تتبع تشغيلي واضح وموثوق",
@@ -3050,6 +3079,15 @@ updateError: "Could not update the edit request.",
       pendingAudits: "التدقيق المعلق",
       liveActivity: "النشاط الحي",
       experimentalAutonomousFabric: "النسيج التشغيلي الذاتي التجريبي",
+      healthCards: {
+        businessHealth: "صحة الأعمال",
+        operations: "العمليات",
+        financial: "المالية",
+        customer: "العميل",
+        partner: "الشريك",
+      },
+      financialIntelligence: "الذكاء المالي",
+      criticalPathAnalysis: "تحليل المسار الحرج",
     },
     customers: {
       directory: "دليل العملاء",
