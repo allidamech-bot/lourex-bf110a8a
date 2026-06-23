@@ -543,7 +543,7 @@ export default function ReportsPage() {
       </DashboardSection>
 
       <DashboardGrid variant="balanced">
-        <DashboardSection title={t("reports.operationsRead")} description="Audit trail and financial integrity metrics.">
+        <DashboardSection title={t("reports.operationsRead")} description={t("reports.operationsReadDescription")}>
           <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
@@ -563,7 +563,7 @@ export default function ReportsPage() {
           </BentoCard>
         </DashboardSection>
 
-        <DashboardSection title={t("reports.shipmentSummary")} description="Global logistics throughput status.">
+        <DashboardSection title={t("reports.shipmentSummary")} description={t("reports.shipmentSummaryDescription")}>
           <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
             <div className="space-y-4">
               {[

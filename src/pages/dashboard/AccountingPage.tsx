@@ -576,7 +576,7 @@ export default function AccountingPage() {
         <div className="space-y-12">
           {!loading && !focusDeal && (
             <div className="space-y-8">
-              <DashboardSection title="Coordination Insights" description="Automated systemic warnings and branch health.">
+              <DashboardSection title={t("accounting.coordinationInsightsTitle")} description={t("accounting.coordinationInsightsDescription")}>
                 <div className="space-y-6">
                   <CoordinationWarningsPanel warnings={coordinationWarnings} />
                   <CrossSystemInsightsPanel insights={executiveWorkspaceState.insights.filter(i => i.type === 'financial')} />
@@ -589,7 +589,7 @@ export default function AccountingPage() {
 
           <DashboardSection
             title={t("accounting.financialSignals")}
-            description="Deep audit analysis and statement readiness signals."
+            description={t("accounting.financialSignalsDescription")}
           >
             <div className="space-y-6">
               {focusedDeal && (
