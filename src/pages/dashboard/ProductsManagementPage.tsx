@@ -563,7 +563,7 @@ if (!canManage) {
               </div>
             </div>
 
-<Label className="text-stone-300">{t("productManagement.labels.arabicName")}</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+              <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicName")}</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
              <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishName")}</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
              <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.slug")}</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder={t("productManagement.placeholders.slugAuto")} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
              <div className="space-y-2">
