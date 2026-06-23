@@ -53,6 +53,7 @@ export default function ProductsPage() {
       <SEO
         title={t("products.listing.seoTitle")}
         description={t("products.listing.seoDescription")}
+        url="https://www.lou-rex.com/products"
       />
       <SiteHeader />
 

@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle2, Clock3, MapPin, Search, ShieldCheck, Truck } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ShipmentIntelligencePanel } from "@/features/shipments/components/ShipmentIntelligencePanel";
 import { analyzeShipmentIntelligence } from "@/features/shipments/lib/shipmentIntelligence";
@@ -124,6 +125,11 @@ export default function TrackPage() {
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
+      <SEO
+        title={t("publicTracking.title")}
+        description={t("publicTracking.description")}
+        url="https://www.lou-rex.com/track"
+      />
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-16">
         <section className="mx-auto max-w-4xl text-center">

@@ -7,14 +7,18 @@ import { motion } from "framer-motion";
 import { ScrollText } from "lucide-react";
 
 export default function TermsPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
 
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("consent.tosTitle")}
-        description="LOUREX Terms of Service: escrow payments, factory verification, order fulfillment, and liability terms."
+        description={
+          dir === "rtl"
+            ? "شروط استخدام Lourex: الاستخدام المنظّم للمنصة، ودقة البيانات التشغيلية، والالتزام بقواعد الحوكمة المعتمدة."
+            : "LOUREX Terms of Service: platform-governed usage, accurate operational information, and current governance standards."
+        }
       />
       <SiteHeader />
       <main className="pt-24 pb-16">

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 
 export default function WhyLourexPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
 
 
   const reasons = [
@@ -23,7 +23,11 @@ export default function WhyLourexPage() {
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <SEO 
         title={t("nav.whyLourex")}
-        description="Six reasons teams choose LOUREX for structured sourcing operations, live tracking, disciplined accounting, and audit-ready visibility."
+        description={
+          dir === "rtl"
+            ? "ستة أسباب لاختيار LOUREX: تنسيق التوريد، التتبع الحي، المحاسبة المنضبطة، والرؤية الجاهزة للتدقيق."
+            : "Six reasons teams choose LOUREX for structured sourcing operations, live tracking, disciplined accounting, and audit-ready visibility."
+        }
       />
       <SiteHeader />
       <main className="pt-24 pb-16">

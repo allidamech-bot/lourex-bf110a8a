@@ -208,6 +208,7 @@ export default function ContactPage() {
             ? "تواصل مع Lourex للاستفسارات المتعلقة بالتوريد الدولي والخدمات اللوجستية والعمليات التجارية."
             : "Contact Lourex for inquiries about international sourcing, logistics, and trade operations."
         }
+        url="https://www.lou-rex.com/contact"
       />
       <SiteHeader />
 
