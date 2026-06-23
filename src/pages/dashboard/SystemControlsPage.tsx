@@ -366,10 +366,10 @@ export default function SystemControlsPage() {
           </Button>
         </div>
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
-          <MetricTile icon={SlidersHorizontal} label="Rules" value={rules.length} />
-          <MetricTile icon={ShieldCheck} label="Security events" value={securityEvents.length} />
-          <MetricTile icon={Activity} label="System events" value={systemEvents.length} />
-          <MetricTile icon={Database} label="Health snapshots" value={healthSnapshots.length} />
+          <MetricTile icon={SlidersHorizontal} label={t("systemControls.metricTiles.rules")} value={rules.length} />
+          <MetricTile icon={ShieldCheck} label={t("systemControls.metricTiles.securityEvents")} value={securityEvents.length} />
+          <MetricTile icon={Activity} label={t("systemControls.metricTiles.systemEvents")} value={systemEvents.length} />
+          <MetricTile icon={Database} label={t("systemControls.metricTiles.healthSnapshots")} value={healthSnapshots.length} />
         </div>
       </BentoCard>
 
@@ -646,11 +646,11 @@ export default function SystemControlsPage() {
 
         <TabsContent value="finance">
           <BentoCard className="space-y-4 border-amber-200/10 bg-stone-900/50 backdrop-blur-xl shadow-2xl">
-            <SectionHeader
-              icon={FilePenLine}
-              title={t("systemControls.finance.title")}
-              description="Review requested financial corrections and immutable correction entries."
-            />
+              <SectionHeader
+                icon={FilePenLine}
+                title={t("systemControls.finance.title")}
+                description={t("systemControls.finance.description")}
+              />
             <div className="max-w-xs">
               <Select value={financeStatusFilter} onValueChange={setFinanceStatusFilter}>
                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 outline-none">
