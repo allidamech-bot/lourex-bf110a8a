@@ -5,7 +5,7 @@ import { customerHelpAr } from "@/features/help-center/content/customerHelp.ar";
 import { partnerHelpAr } from "@/features/help-center/content/partnerHelp.ar";
 import type { LourexRole } from "@/features/auth/rbac";
 
-const partnerRoles: LourexRole[] = ["turkey_partner", "saudi_partner"];
+const partnerRoles: LourexRole[] = ["turkish_partner", "saudi_partner"];
 const customerRoles: LourexRole[] = ["customer"];
 
 export const audienceFromRole = (role?: LourexRole | null): HelpAudience => {

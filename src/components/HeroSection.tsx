@@ -31,6 +31,10 @@ const HeroSection = () => {
     ? "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم."
     : "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
 
+  const trustHint = isArabic
+    ? "عملية منظمة: استقبال → مراجعة → تنسيق → تتبع → تسليم"
+    : "Structured process: intake → review → coordination → tracking → delivery";
+
   const stats = [
     {
       icon: ClipboardList,
