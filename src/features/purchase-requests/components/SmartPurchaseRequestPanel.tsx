@@ -1,4 +1,15 @@
-import { AlertTriangle, CheckCircle2, ClipboardList, PackageSearch, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardList,
+  Mail,
+  MapPin,
+  MessageCircle,
+  PackageSearch,
+  Phone,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +48,11 @@ const signalClasses: Record<SmartRequestSignal, string> = {
   high: "border-rose-400/25 bg-rose-500/10 text-rose-100",
 };
 
+const normalizePhoneForLink = (value: string) => {
+  const normalized = value.trim().replace(/[^\d+]/g, "").replace(/^00/, "+");
+  return normalized.startsWith("+") ? normalized : normalized;
+};
+
 export const SmartPurchaseRequestPanel = ({
   request,
   lang,
@@ -60,9 +76,135 @@ export const SmartPurchaseRequestPanel = ({
   const supplierBrief = buildSupplierBriefDraft(request, lang);
   const signalLabel = (signal: SmartRequestSignal) => t(`requests.smart.signals.${signal}`);
   const missingLabel = (key: MissingInformationKey) => t(`requests.smart.missing.${key}`);
+  const isArabic = lang === "ar";
+  const phone = request.customer.phone?.trim() || "";
+  const email = request.customer.email?.trim() || "";
+  const customerName = request.customer.fullName?.trim() || (isArabic ? "عميل غير معروف" : "Unknown customer");
+  const location = [request.customer.country?.trim(), request.customer.city?.trim()].filter(Boolean).join(" / ");
+  const phoneForLink = normalizePhoneForLink(phone);
+  const whatsappPhone = phoneForLink.replace(/^\+/, "");
+  const contactLabels = isArabic
+    ? {
+        title: "بيانات العميل",
+        description: "معلومات التواصل المرتبطة بهذا الطلب",
+        phone: "رقم الهاتف",
+        email: "البريد الإلكتروني",
+        location: "الدولة والمدينة",
+        requestNumber: "رقم الطلب",
+        call: "اتصال",
+        whatsapp: "واتساب",
+        sendEmail: "إرسال بريد",
+        missingPhone: "رقم الهاتف غير متوفر في هذا الطلب",
+        missingEmail: "البريد الإلكتروني غير متوفر",
+        missingLocation: "الموقع غير محدد",
+      }
+    : {
+        title: "Customer details",
+        description: "Contact information linked to this request",
+        phone: "Phone number",
+        email: "Email address",
+        location: "Country and city",
+        requestNumber: "Request number",
+        call: "Call",
+        whatsapp: "WhatsApp",
+        sendEmail: "Send email",
+        missingPhone: "No phone number was provided for this request",
+        missingEmail: "No email address was provided",
+        missingLocation: "Location was not provided",
+      };
 
   return (
     <div className="space-y-4 rounded-[1.35rem] border border-primary/20 bg-[#080808] p-4">
+      {showInternalSections ? (
+        <section className="rounded-[1rem] border border-primary/25 bg-primary/[0.06] p-4" aria-label={contactLabels.title}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+                <UserRound className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{contactLabels.title}</p>
+                <h3 className="mt-1 break-words text-lg font-bold text-foreground">{customerName}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{contactLabels.description}</p>
+              </div>
+            </div>
+
+            <span className="max-w-full self-start rounded-full border border-primary/20 bg-background/40 px-3 py-1 text-xs font-medium text-foreground">
+              {request.requestNumber}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className={`rounded-[0.9rem] border p-3 ${phone ? "border-border/60 bg-background/30" : "border-amber-400/25 bg-amber-500/10"}`}>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Phone className="h-4 w-4 text-primary" />
+                <span>{contactLabels.phone}</span>
+              </div>
+              <p className={`mt-2 break-all text-sm font-semibold ${phone ? "text-foreground" : "text-amber-200"}`} dir="ltr">
+                {phone || contactLabels.missingPhone}
+              </p>
+            </div>
+
+            <div className="rounded-[0.9rem] border border-border/60 bg-background/30 p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Mail className="h-4 w-4 text-primary" />
+                <span>{contactLabels.email}</span>
+              </div>
+              <p className="mt-2 break-all text-sm font-semibold text-foreground" dir="ltr">
+                {email || contactLabels.missingEmail}
+              </p>
+            </div>
+
+            <div className="rounded-[0.9rem] border border-border/60 bg-background/30 p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span>{contactLabels.location}</span>
+              </div>
+              <p className="mt-2 break-words text-sm font-semibold text-foreground">{location || contactLabels.missingLocation}</p>
+            </div>
+
+            <div className="rounded-[0.9rem] border border-border/60 bg-background/30 p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <ClipboardList className="h-4 w-4 text-primary" />
+                <span>{contactLabels.requestNumber}</span>
+              </div>
+              <p className="mt-2 break-all text-sm font-semibold text-foreground" dir="ltr">
+                {request.requestNumber}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {phoneForLink ? (
+              <Button type="button" variant="outline" size="sm" asChild>
+                <a href={`tel:${phoneForLink}`}>
+                  <Phone className="me-2 h-4 w-4" />
+                  {contactLabels.call}
+                </a>
+              </Button>
+            ) : null}
+
+            {whatsappPhone ? (
+              <Button type="button" variant="outline" size="sm" asChild>
+                <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer">
+                  <MessageCircle className="me-2 h-4 w-4" />
+                  {contactLabels.whatsapp}
+                </a>
+              </Button>
+            ) : null}
+
+            {email ? (
+              <Button type="button" variant="outline" size="sm" asChild>
+                <a href={`mailto:${email}`}>
+                  <Mail className="me-2 h-4 w-4" />
+                  {contactLabels.sendEmail}
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
