@@ -1,8 +1,9 @@
-﻿import { SEO } from "@/components/seo/SEO";
+import { SEO } from "@/components/seo/SEO";
 import { ClipboardList, PackageSearch, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { PurchaseRequestForm } from "@/features/purchase-requests/components/PurchaseRequestForm";
+import { RequestContactGate } from "@/features/purchase-requests/components/RequestContactGate";
 import { fetchRequests } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
@@ -149,13 +150,16 @@ export default function RequestPage() {
                     </p>
                   </div>
                 ) : null}
-                <PurchaseRequestForm
-                  mode={editRequestId ? "edit" : "create"}
-                  requestId={editRequestId || undefined}
-                  initialRequest={editRequest}
-                  sourceProductId={productId}
-                  onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
-                />
+
+                <RequestContactGate lang={lang}>
+                  <PurchaseRequestForm
+                    mode={editRequestId ? "edit" : "create"}
+                    requestId={editRequestId || undefined}
+                    initialRequest={editRequest}
+                    sourceProductId={productId}
+                    onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
+                  />
+                </RequestContactGate>
               </div>
             )}
           </div>
