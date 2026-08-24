@@ -1,0 +1,1 @@
+{"name":"lourex-invoice-preview","private":true,"version":"1.0.0","scripts":{"build":"mkdir -p dist && cp index.html loader.js *.b64 pack-*.json dist/"}}
