@@ -1,4 +1,0 @@
-project_id = "qezrzwoiyhbjrrxnrqra"
-
-[functions.lourex-ai-chat]
-verify_jwt = true
