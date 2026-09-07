@@ -36,7 +36,7 @@ export const dispatchEmailPayload = async (payload: NotificationPayload): Promis
     });
 
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 4. Trap external failures so they do not crash the internal operations pipeline
     telemetry.captureException(error, "External Email Gateway failed to dispatch", {
       recipient: payload.recipientId,
