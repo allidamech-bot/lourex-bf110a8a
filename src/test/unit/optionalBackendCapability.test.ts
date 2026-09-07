@@ -28,9 +28,7 @@ describe("Optional Backend Capability Gating", () => {
   });
 
   it("disabled optional table does not call Supabase even once", async () => {
-    const isAvail = await checkOptionalTableAvailable(
-      "product_catalog_products",
-    );
+    const isAvail = await checkOptionalTableAvailable("notification_templates");
     expect(isAvail).toBe(false);
   });
 
@@ -51,9 +49,8 @@ describe("System Health and Readiness Static Gating", () => {
       await import("@/features/system/backendReadiness");
     const report = await loadBackendReadinessReport();
 
-    // Check that none of the disabled tables were queried
+    // Only capabilities explicitly set to false are statically disabled.
     const disabledTables = [
-      "product_catalog_products",
       "notification_templates",
       "notification_settings",
       "notification_delivery_queue",
@@ -82,7 +79,6 @@ describe("System Health and Readiness Static Gating", () => {
     const report = await buildSystemHealthReport();
 
     const disabledTables = [
-      "product_catalog_products",
       "notification_templates",
       "notification_settings",
       "notification_delivery_queue",
