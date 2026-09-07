@@ -52,10 +52,10 @@ describe("production hardening safeguards", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("resolves production fallback copy for runtime and backend failures", () => {
-    expect(resolveProductionFallback("backend", "en").title).toBe("Backend unavailable");
-    expect(resolveProductionFallback("aiService", "ar").body).toContain("توصيات الذكاء");
-    expect(resolveProductionFallback("runtimeEmpty", "en").body).toContain("runtime events");
+  it("resolves stable translation keys for runtime and backend fallbacks", () => {
+    expect(resolveProductionFallback("backend", "en").titleKey).toBe("productionFallbacks.backend.title");
+    expect(resolveProductionFallback("aiService", "ar").bodyKey).toBe("productionFallbacks.aiService.body");
+    expect(resolveProductionFallback("runtimeEmpty", "en").bodyKey).toBe("productionFallbacks.runtimeEmpty.body");
   });
 
   it("renders error boundary fallback instead of crashing a heavy section", () => {
