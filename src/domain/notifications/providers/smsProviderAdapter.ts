@@ -27,7 +27,7 @@ export const dispatchSmsPayload = async (payload: NotificationPayload): Promise<
     });
 
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 4. Trap external failures so they do not crash the internal operations pipeline
     telemetry.captureException(error, "External SMS Gateway failed to dispatch", {
       recipient: payload.recipientId,
