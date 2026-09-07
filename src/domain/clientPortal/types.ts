@@ -24,8 +24,8 @@ export interface ClientPortalShipmentView {
   container_40ft?: number;
   updatedAt: string;
   customerVisibleNote?: string;
-  shipmentEvents: any[];
-  timeline: any[];
+  shipmentEvents: unknown[];
+  timeline: unknown[];
   stage: ShipmentStageCode;
   customerEmail?: string | null;
 }
