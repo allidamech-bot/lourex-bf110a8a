@@ -116,7 +116,7 @@ export const fetchLiveExchangeRates = async (): Promise<Record<string, number>> 
 
     return liveRates;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 4. Safe Fallback Cascade
     telemetry.captureException(error, "External Forex Gateway unreachable. Falling back to internal default rates.");
     return DEFAULT_RATES;
