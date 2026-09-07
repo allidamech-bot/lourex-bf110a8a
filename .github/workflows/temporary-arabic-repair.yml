@@ -2,15 +2,13 @@ name: Temporary Arabic Mojibake Repair
 
 on:
   push:
-    branches:
-      - chore/restore-ci-lint-baseline
+    branches: ["chore/restore-ci-lint-baseline"]
 
 permissions:
   contents: write
 
 jobs:
   repair:
-    if: github.event.head_commit.message != 'fix: repair Arabic mojibake in dashboard copy'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,16 +26,11 @@ jobs:
           ]
           markers = [
               chr(0x00d8), chr(0x00d9), chr(0x00db), chr(0x00c3), chr(0x00c2), chr(0xfffd),
-              chr(0x0637) + chr(0x00a7),
-              chr(0x0638) + chr(0x201e),
-              chr(0x0638) + chr(0x2026),
-              chr(0x0638) + chr(0x0679),
-              chr(0x0638) + chr(0x2020),
-              chr(0x0637) + chr(0x00b1),
+              chr(0x0637) + chr(0x00a7), chr(0x0638) + chr(0x201e), chr(0x0638) + chr(0x2026),
+              chr(0x0638) + chr(0x0679), chr(0x0638) + chr(0x2020), chr(0x0637) + chr(0x00b1),
               chr(0x0637) + chr(0x00a9),
           ]
 
-          total = 0
           for path in files:
               text = path.read_text(encoding='utf-8-sig')
               repaired = []
@@ -54,12 +47,8 @@ jobs:
                   repaired.append(line)
               path.write_text(''.join(repaired), encoding='utf-8')
               print(f'{path}: repaired {changed} lines')
-              total += changed
-
-          if total == 0:
-              raise SystemExit('No mojibake lines were repaired; refusing an empty repair commit.')
           PY
-      - name: Verify mojibake markers are gone from repaired files
+      - name: Verify repaired files
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -76,8 +65,12 @@ jobs:
           if offenders:
               raise SystemExit(f'Mojibake still present: {offenders}')
           PY
-      - name: Commit repaired copy to the feature branch
+      - name: Commit repaired copy when needed
         run: |
+          if git diff --quiet -- src/pages/dashboard/PartnerSettlementsPage.tsx src/pages/dashboard/PurchaseRequestsPage.tsx src/pages/dashboard/ReportsPage.tsx; then
+            echo "No repair changes remain."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/pages/dashboard/PartnerSettlementsPage.tsx src/pages/dashboard/PurchaseRequestsPage.tsx src/pages/dashboard/ReportsPage.tsx
