@@ -1,4 +1,4 @@
-import type { ShipmentStageCode } from "@/types/lourex";
+import type { ShipmentEventRecord, ShipmentStageCode, TrackingUpdateRecord } from "@/types/lourex";
 
 export interface ClientPortalTrackingUpdate {
   stageCode: ShipmentStageCode;
@@ -24,8 +24,8 @@ export interface ClientPortalShipmentView {
   container_40ft?: number;
   updatedAt: string;
   customerVisibleNote?: string;
-  shipmentEvents: any[];
-  timeline: any[];
+  shipmentEvents: ShipmentEventRecord[];
+  timeline: TrackingUpdateRecord[];
   stage: ShipmentStageCode;
   customerEmail?: string | null;
 }

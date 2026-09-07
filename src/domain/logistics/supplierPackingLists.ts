@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- supplier_packing_lists is not yet represented in the generated Supabase types; this boundary normalizes all returned fields before exposing them. */
 import { supabase } from "@/integrations/supabase/client";
 import { createDomainError, normalizeText, success } from "@/domain/shared/utils";
 import type { DomainResult } from "@/domain/operations/types";

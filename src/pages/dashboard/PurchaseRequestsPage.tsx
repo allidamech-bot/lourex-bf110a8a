@@ -1,4 +1,4 @@
-﻿import { type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
     ArrowRightLeft,
@@ -87,13 +87,13 @@ const purchaseRequestAiActions: Array<{
     label: string;
     labelAr: string;
 }> = [
-    { mode: "purchase_request_analysis", label: "Readiness Analysis", labelAr: "طھط­ظ„ظٹظ„ ط§ظ„ط¬ط§ظ‡ط²ظٹط©" },
-    { mode: "purchase_request_summary", label: "AI Summary", labelAr: "ظ…ظ„ط®طµ ط°ظƒظٹ" },
-    { mode: "missing_information_checklist", label: "Missing Info", labelAr: "ط§ظ„ظ…ط¹ظ„ظˆظ…ط§طھ ط§ظ„ظ†ط§ظ‚طµط©" },
-    { mode: "customer_reply_draft", label: "Customer Reply Draft", labelAr: "ظ…ط³ظˆط¯ط© ط±ط¯ ظ„ظ„ط¹ظ…ظٹظ„" },
-    { mode: "supplier_brief", label: "Supplier Brief", labelAr: "ظ…ط³ظˆط¯ط© ظ„ظ„ظ…ظˆط±ط¯" },
-    { mode: "purchase_request_compliance_notes", label: "Compliance Notes", labelAr: "ظ…ظ„ط§ط­ط¸ط§طھ ط§ظ„ط§ظ…طھط«ط§ظ„" },
-    { mode: "purchase_request_risk_review", label: "RFQ Risk Review", labelAr: "ظ…ط±ط§ط¬ط¹ط© ظ…ط®ط§ط·ط± RFQ" },
+    { mode: "purchase_request_analysis", label: "Readiness Analysis", labelAr: "تحليل الجاهزية" },
+    { mode: "purchase_request_summary", label: "AI Summary", labelAr: "ملخص ذكي" },
+    { mode: "missing_information_checklist", label: "Missing Info", labelAr: "المعلومات الناقصة" },
+    { mode: "customer_reply_draft", label: "Customer Reply Draft", labelAr: "مسودة رد للعميل" },
+    { mode: "supplier_brief", label: "Supplier Brief", labelAr: "مسودة للمورد" },
+    { mode: "purchase_request_compliance_notes", label: "Compliance Notes", labelAr: "ملاحظات الامتثال" },
+    { mode: "purchase_request_risk_review", label: "RFQ Risk Review", labelAr: "مراجعة مخاطر RFQ" },
 ];
 
 const getAiActionLabel = (mode: PurchaseRequestAiMode, lang: string) =>
@@ -165,14 +165,14 @@ const buildSafeAiRequestContext = (row: PurchaseRequestRow) => ({
 
 const findMissingRequestInfo = (row: PurchaseRequestRow, lang: string) => {
     const checks: Array<[boolean, string, string]> = [
-        [Boolean(row.productName?.trim()), "Product name/title", "ط§ط³ظ… ط§ظ„ظ…ظ†طھط¬"],
-        [Boolean(row.productDescription?.trim() && row.productDescription.trim().length >= 30), "Detailed product description", "ظˆطµظپ طھظپطµظٹظ„ظٹ ظ„ظ„ظ…ظ†طھط¬"],
-        [Boolean(row.quantity && row.quantity > 0), "Quantity", "ط§ظ„ظƒظ…ظٹط©"],
-        [Boolean(row.destination?.trim()), "Destination country/city", "ط¨ظ„ط¯ ط£ظˆ ظ…ط¯ظٹظ†ط© ط§ظ„ظˆط¬ظ‡ط©"],
-        [Boolean(row.technicalSpecs?.trim()), "Technical specifications", "ط§ظ„ظ…ظˆط§طµظپط§طھ ط§ظ„ظپظ†ظٹط©"],
-        [Boolean(row.referenceLink?.trim()), "Reference/product link", "ط±ط§ط¨ط· ظ…ط±ط¬ط¹ظٹ ظ„ظ„ظ…ظ†طھط¬"],
-        [row.attachments.length > 0, "Images or attachments", "طµظˆط± ط£ظˆ ظ…ط±ظپظ‚ط§طھ"],
-        [Boolean(row.material?.trim() || row.sizeDimensions?.trim() || row.color?.trim() || row.brand?.trim()), "Material, size, color, brand, or model details", "طھظپط§طµظٹظ„ ط§ظ„ظ…ط§ط¯ط© ط£ظˆ ط§ظ„ظ…ظ‚ط§ط³ ط£ظˆ ط§ظ„ظ„ظˆظ† ط£ظˆ ط§ظ„ط¹ظ„ط§ظ…ط©"],
+        [Boolean(row.productName?.trim()), "Product name/title", "اسم المنتج"],
+        [Boolean(row.productDescription?.trim() && row.productDescription.trim().length >= 30), "Detailed product description", "وصف تفصيلي للمنتج"],
+        [Boolean(row.quantity && row.quantity > 0), "Quantity", "الكمية"],
+        [Boolean(row.destination?.trim()), "Destination country/city", "بلد أو مدينة الوجهة"],
+        [Boolean(row.technicalSpecs?.trim()), "Technical specifications", "المواصفات الفنية"],
+        [Boolean(row.referenceLink?.trim()), "Reference/product link", "رابط مرجعي للمنتج"],
+        [row.attachments.length > 0, "Images or attachments", "صور أو مرفقات"],
+        [Boolean(row.material?.trim() || row.sizeDimensions?.trim() || row.color?.trim() || row.brand?.trim()), "Material, size, color, brand, or model details", "تفاصيل المادة أو المقاس أو اللون أو العلامة"],
     ];
 
     return checks.filter(([isPresent]) => !isPresent).map(([, en, ar]) => (lang === "ar" ? ar : en));
@@ -184,26 +184,26 @@ const inferComplianceNotes = (row: PurchaseRequestRow, lang: string) => {
 
     const add = (en: string, ar: string) => notes.push(lang === "ar" ? ar : en);
 
-    if (/(food|snack|drink|beverage|halal|meat|coffee|chocolate|ط؛ط°ط§ط،|ط؛ط°ط§ط¦ظٹ|ظ…ط´ط±ظˆط¨|ط­ظ„ط§ظ„|ظ‚ظ‡ظˆط©)/i.test(text)) {
-        add("Food items may require SFDA, Halal, ingredient, and import documentation review.", "ط§ظ„ظ…ظ†طھط¬ط§طھ ط§ظ„ط؛ط°ط§ط¦ظٹط© ظ‚ط¯ طھط­طھط§ط¬ ط¥ظ„ظ‰ ظ…ط±ط§ط¬ط¹ط© ظˆط«ط§ط¦ظ‚ SFDA ظˆط§ظ„ط­ظ„ط§ظ„ ظˆط§ظ„ظ…ظƒظˆظ†ط§طھ ظˆط§ظ„ط§ط³طھظٹط±ط§ط¯.");
+    if (/(food|snack|drink|beverage|halal|meat|coffee|chocolate|غذاء|غذائي|مشروب|حلال|قهوة)/i.test(text)) {
+        add("Food items may require SFDA, Halal, ingredient, and import documentation review.", "المنتجات الغذائية قد تحتاج إلى مراجعة وثائق SFDA والحلال والمكونات والاستيراد.");
     }
-    if (/(cosmetic|cream|makeup|perfume|shampoo|skin|beauty|طھط¬ظ…ظٹظ„|ظƒط±ظٹظ…|ط¹ط·ط±|ط´ط§ظ…ط¨ظˆ)/i.test(text)) {
-        add("Cosmetics may require ingredient lists, label artwork, and SFDA-related review.", "ظ…ط³طھط­ط¶ط±ط§طھ ط§ظ„طھط¬ظ…ظٹظ„ ظ‚ط¯ طھط­طھط§ط¬ ط¥ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ظ…ظƒظˆظ†ط§طھ ظˆطھطµظ…ظٹظ… ط§ظ„ظ…ظ„طµظ‚ ظˆظ…ط±ط§ط¬ط¹ط© ظ…ط±طھط¨ط·ط© ط¨ظ€ SFDA.");
+    if (/(cosmetic|cream|makeup|perfume|shampoo|skin|beauty|تجميل|كريم|عطر|شامبو)/i.test(text)) {
+        add("Cosmetics may require ingredient lists, label artwork, and SFDA-related review.", "مستحضرات التجميل قد تحتاج إلى قائمة مكونات وتصميم الملصق ومراجعة مرتبطة بـ SFDA.");
     }
-    if (/(chemical|paint|solvent|resin|adhesive|msds|tds|ظƒظٹظ…ط§|ط¯ظ‡ط§ظ†|ظ„ط§طµظ‚)/i.test(text)) {
-        add("Chemicals may require MSDS/TDS documents and safety classification review.", "ط§ظ„ظ…ظˆط§ط¯ ط§ظ„ظƒظٹظ…ظٹط§ط¦ظٹط© ظ‚ط¯ طھط­طھط§ط¬ ط¥ظ„ظ‰ MSDS/TDS ظˆظ…ط±ط§ط¬ط¹ط© طھطµظ†ظٹظپ ط§ظ„ط³ظ„ط§ظ…ط©.");
+    if (/(chemical|paint|solvent|resin|adhesive|msds|tds|كيما|دهان|لاصق)/i.test(text)) {
+        add("Chemicals may require MSDS/TDS documents and safety classification review.", "المواد الكيميائية قد تحتاج إلى MSDS/TDS ومراجعة تصنيف السلامة.");
     }
-    if (/(electronic|battery|charger|led|appliance|voltage|power|ط¥ظ„ظƒطھط±ظˆظ†|ط¨ط·ط§ط±ظٹط©|ط´ط§ط­ظ†|ظƒظ‡ط±ط¨)/i.test(text)) {
-        add("Electronics may require conformity documents, electrical specifications, and safety checks.", "ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹط§طھ ظ‚ط¯ طھط­طھط§ط¬ ط¥ظ„ظ‰ ظˆط«ط§ط¦ظ‚ ظ…ط·ط§ط¨ظ‚ط© ظˆظ…ظˆط§طµظپط§طھ ظƒظ‡ط±ط¨ط§ط¦ظٹط© ظˆظپط­ظˆطµط§طھ ط³ظ„ط§ظ…ط©.");
+    if (/(electronic|battery|charger|led|appliance|voltage|power|إلكترون|بطارية|شاحن|كهرب)/i.test(text)) {
+        add("Electronics may require conformity documents, electrical specifications, and safety checks.", "الإلكترونيات قد تحتاج إلى وثائق مطابقة ومواصفات كهربائية وفحوصات سلامة.");
     }
-    if (/(textile|fabric|clothing|garment|cotton|polyester|ظ†ط³ظٹط¬|ظ‚ظ…ط§ط´|ظ…ظ„ط§ط¨ط³|ظ‚ط·ظ†)/i.test(text)) {
-        add("Textiles may require material composition, size, color, label, and care details.", "ط§ظ„ظ…ظ†ط³ظˆط¬ط§طھ ظ‚ط¯ طھط­طھط§ط¬ ط¥ظ„ظ‰ طھط±ظƒظٹط¨ ط§ظ„ظ…ط§ط¯ط© ظˆط§ظ„ظ…ظ‚ط§ط³ط§طھ ظˆط§ظ„ط£ظ„ظˆط§ظ† ظˆط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ظ„طµظ‚ ظˆط§ظ„ط¹ظ†ط§ظٹط©.");
+    if (/(textile|fabric|clothing|garment|cotton|polyester|نسيج|قماش|ملابس|قطن)/i.test(text)) {
+        add("Textiles may require material composition, size, color, label, and care details.", "المنسوجات قد تحتاج إلى تركيب المادة والمقاسات والألوان وبيانات الملصق والعناية.");
     }
 
     if (notes.length === 0) {
         add(
             "No category-specific flag was inferred. Final documentation and import requirements should still be reviewed by the Lourex team.",
-            "ظ„ظ… ظٹطھظ… ط§ط³طھظ†طھط§ط¬ ظ…ظ„ط§ط­ط¸ط© ط§ظ…طھط«ط§ظ„ ظ…ط­ط¯ط¯ط© ط­ط³ط¨ ط§ظ„ظپط¦ط©. ظٹط¬ط¨ ط£ظ† ظٹط±ط§ط¬ط¹ ظپط±ظٹظ‚ ظ„ظˆط±ظƒط³ ط§ظ„ظ…طھط·ظ„ط¨ط§طھ ط§ظ„ظ†ظ‡ط§ط¦ظٹط© ظ„ظ„ظˆط«ط§ط¦ظ‚ ظˆط§ظ„ط§ط³طھظٹط±ط§ط¯.",
+            "لم يتم استنتاج ملاحظة امتثال محددة حسب الفئة. يجب أن يراجع فريق لوركس المتطلبات النهائية للوثائق والاستيراد.",
         );
     }
 
@@ -220,13 +220,13 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
         const readinessScore = Math.max(0, Math.min(100, 100 - missing.length * 10));
         return isArabic
             ? [
-                  `طھط­ظ„ظٹظ„ ط¬ط§ظ‡ط²ظٹط© ط§ظ„ط·ظ„ط¨ ${row.requestNumber}`,
-                  `- ط¯ط±ط¬ط© ط§ظ„ط¬ط§ظ‡ط²ظٹط©: ${readinessScore}/100`,
-                  `- ط§ظ„ط­ظ‚ظˆظ„ ط§ظ„ظ†ط§ظ‚طµط©: ${missing.length ? missing.join("طŒ ") : "ظ„ط§ طھظˆط¬ط¯ ظپط¬ظˆط§طھ ظˆط§ط¶ط­ط©"}`,
-                  `- ط£ط³ط¦ظ„ط© ظ…ظ‚طھط±ط­ط© ظ„ظ„ط¹ظ…ظٹظ„: طھط£ظƒظٹط¯ ط§ظ„ظ…ظˆط§طµظپط§طھ ط§ظ„ظپظ†ظٹط©طŒ ط§ظ„طھط؛ظ„ظٹظپطŒ ط§ظ„ط´ظ‡ط§ط¯ط§طھ ط§ظ„ظ…ط·ظ„ظˆط¨ط©طŒ ظˆط§ظ„ط³ط¹ط± ط§ظ„ظ…ط³طھظ‡ط¯ظپ ط¥ظ† ظˆط¬ط¯.`,
-                  `- ظ…ظˆط¬ط² ظ„ظ„ظ…ظˆط±ط¯: ط§ظ„ظ…ظ†طھط¬ ${valueOrDash(row.productName)}طŒ ط§ظ„ظƒظ…ظٹط© ${valueOrDash(row.quantity)}طŒ ط§ظ„ظˆط¬ظ‡ط© ${valueOrDash(row.destination)}طŒ ظˆط§ظ„ظ…ط±ظپظ‚ط§طھ ${row.attachments.length}.`,
-                  `- ظ…ظ„ط§ط­ط¸ط§طھ ظ…ط®ط§ط·ط±: ${compliance[0]}`,
-                  `- ظ‡ط°ط§ ط§ظ„طھط­ظ„ظٹظ„ ط¥ط±ط´ط§ط¯ظٹ ظپظ‚ط· ظˆظ„ط§ ظٹط¹طھظ…ط¯ ط£ظˆ ظٹط؛ظٹط± ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨.`,
+                  `تحليل جاهزية الطلب ${row.requestNumber}`,
+                  `- درجة الجاهزية: ${readinessScore}/100`,
+                  `- الحقول الناقصة: ${missing.length ? missing.join("، ") : "لا توجد فجوات واضحة"}`,
+                  `- أسئلة مقترحة للعميل: تأكيد المواصفات الفنية، التغليف، الشهادات المطلوبة، والسعر المستهدف إن وجد.`,
+                  `- موجز للمورد: المنتج ${valueOrDash(row.productName)}، الكمية ${valueOrDash(row.quantity)}، الوجهة ${valueOrDash(row.destination)}، والمرفقات ${row.attachments.length}.`,
+                  `- ملاحظات مخاطر: ${compliance[0]}`,
+                  `- هذا التحليل إرشادي فقط ولا يعتمد أو يغير حالة الطلب.`,
               ].join("\n")
             : [
                   `Readiness analysis for ${row.requestNumber}`,
@@ -242,14 +242,14 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
     if (normalizedMode === "purchase_request_summary") {
         return isArabic
             ? [
-                  `ظ…ظ„ط®طµ طھط´ط؛ظٹظ„ظٹ ظ„ظ„ط·ظ„ط¨ ${row.requestNumber}`,
-                  `- ط§ظ„ظ…ظ†طھط¬: ${valueOrDash(row.productName)}`,
-                  `- ط§ظ„ط¹ظ…ظٹظ„: ${valueOrDash(row.customer.fullName)} (${valueOrDash(row.customer.country)} / ${valueOrDash(row.customer.city)})`,
-                  `- ط§ظ„ط­ط§ط¬ط©: ${valueOrDash(row.productDescription)}`,
-                  `- ط§ظ„ظƒظ…ظٹط©: ${valueOrDash(row.quantity)}`,
-                  `- ط§ظ„ظˆط¬ظ‡ط©: ${valueOrDash(row.destination)}`,
-                  `- ط§ظ„ط­ط§ظ„ط© ط§ظ„ط­ط§ظ„ظٹط©: ${valueOrDash(row.status)}`,
-                  `- ط§ظ„ط¥ط¬ط±ط§ط، ط§ظ„ظ…ظ‚طھط±ط­: ظ…ط±ط§ط¬ط¹ط© ط§ظ„طھظپط§طµظٹظ„ ط§ظ„ظ†ط§ظ‚طµط© ط«ظ… ط¥ط¹ط¯ط§ط¯ ط£ط³ط¦ظ„ط© طھظˆط¶ظٹط­ظٹط© ط£ظˆ brief ظ„ظ„ظ…ظˆط±ط¯ ط­ط³ط¨ ط¬ط§ظ‡ط²ظٹط© ط§ظ„ط¨ظٹط§ظ†ط§طھ.`,
+                  `ملخص تشغيلي للطلب ${row.requestNumber}`,
+                  `- المنتج: ${valueOrDash(row.productName)}`,
+                  `- العميل: ${valueOrDash(row.customer.fullName)} (${valueOrDash(row.customer.country)} / ${valueOrDash(row.customer.city)})`,
+                  `- الحاجة: ${valueOrDash(row.productDescription)}`,
+                  `- الكمية: ${valueOrDash(row.quantity)}`,
+                  `- الوجهة: ${valueOrDash(row.destination)}`,
+                  `- الحالة الحالية: ${valueOrDash(row.status)}`,
+                  `- الإجراء المقترح: مراجعة التفاصيل الناقصة ثم إعداد أسئلة توضيحية أو brief للمورد حسب جاهزية البيانات.`,
               ].join("\n")
             : [
                   `Operational summary for ${row.requestNumber}`,
@@ -264,20 +264,20 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
     }
 
     if (normalizedMode === "purchase_request_missing_info") {
-        const list = missing.length ? missing : [isArabic ? "ظ„ط§ طھظˆط¬ط¯ ظپط¬ظˆط§طھ ظˆط§ط¶ط­ط©طŒ ظ„ظƒظ† ظٹظپط¶ظ„ طھط£ظƒظٹط¯ ط§ظ„ظ…ظˆط§طµظپط§طھ ط§ظ„ظ†ظ‡ط§ط¦ظٹط© ظ…ط¹ ط§ظ„ط¹ظ…ظٹظ„." : "No obvious gaps, but final specifications should still be confirmed with the customer."];
+        const list = missing.length ? missing : [isArabic ? "لا توجد فجوات واضحة، لكن يفضل تأكيد المواصفات النهائية مع العميل." : "No obvious gaps, but final specifications should still be confirmed with the customer."];
         return isArabic
-            ? [`ط§ظ„ظ…ط¹ظ„ظˆظ…ط§طھ ط§ظ„ظ†ط§ظ‚طµط© ط£ظˆ ط§ظ„ط¶ط¹ظٹظپط©:`, ...list.map((item) => `- ${item}`), `\nط£ط³ط¦ظ„ط© ظ…ظ‚طھط±ط­ط©:`, `- ظ‡ظ„ طھظˆط¬ط¯ ظ…ظˆط§طµظپط§طھ ظپظ†ظٹط© ط£ظˆ ظ…ط¹ظٹط§ط± ط¬ظˆط¯ط© ظ…ط­ط¯ط¯طں`, `- ظ‡ظ„ طھظˆط¬ط¯ ظ…طھط·ظ„ط¨ط§طھ طھط؛ظ„ظٹظپ ط£ظˆ ط´ظ‡ط§ط¯ط§طھ ظ…ط·ظ„ظˆط¨ط©طں`, `- ظ‡ظ„ ظ„ط¯ظ‰ ط§ظ„ط¹ظ…ظٹظ„ ط³ط¹ط± ظ…ط³طھظ‡ط¯ظپ ط£ظˆ ظ…ظˆط¹ط¯ طھظˆط±ظٹط¯ ظ…ظپط¶ظ„طں`].join("\n")
+            ? [`المعلومات الناقصة أو الضعيفة:`, ...list.map((item) => `- ${item}`), `\nأسئلة مقترحة:`, `- هل توجد مواصفات فنية أو معيار جودة محدد؟`, `- هل توجد متطلبات تغليف أو شهادات مطلوبة؟`, `- هل لدى العميل سعر مستهدف أو موعد توريد مفضل؟`].join("\n")
             : [`Missing or weak information:`, ...list.map((item) => `- ${item}`), `\nSuggested questions:`, `- Are there technical specifications or a target quality standard?`, `- Are packaging requirements or certificates required?`, `- Does the customer have a target price or preferred supply date?`].join("\n");
     }
 
     if (normalizedMode === "purchase_request_customer_reply") {
-        const missingText = missing.length ? missing.join(", ") : isArabic ? "طھط£ظƒظٹط¯ ط§ظ„ظ…ظˆط§طµظپط§طھ ط§ظ„ظ†ظ‡ط§ط¦ظٹط©" : "final specification confirmation";
+        const missingText = missing.length ? missing.join(", ") : isArabic ? "تأكيد المواصفات النهائية" : "final specification confirmation";
         return isArabic
             ? [
-                  `ط¹ظ…ظٹظ„ظ†ط§ ط§ظ„ط¹ط²ظٹط²طŒ`,
-                  `ط´ظƒط±ط§ظ‹ ظ„ط¥ط±ط³ط§ظ„ ط·ظ„ط¨ ط§ظ„ط´ط±ط§ط، ط±ظ‚ظ… ${row.requestNumber}. ط¨ط¯ط£ ظپط±ظٹظ‚ ظ„ظˆط±ظƒط³ ظ…ط±ط§ط¬ط¹ط© ط§ظ„ط·ظ„ط¨ ط¨ط´ظƒظ„ ظ…ط¨ط¯ط¦ظٹ.`,
-                  `ط­طھظ‰ ظ†طھظ…ظƒظ† ظ…ظ† طھظˆط¬ظٹظ‡ ط§ظ„ط·ظ„ط¨ ظ„ظ„ظ…ظˆط±ط¯ظٹظ† ط§ظ„ظ…ظ†ط§ط³ط¨ظٹظ† ط¨ط¯ظ‚ط©طŒ ظ†ط­طھط§ط¬ ط¥ظ„ظ‰ طھظˆط¶ظٹط­: ${missingText}.`,
-                  `ظٹط±ط¬ظ‰ ظ…ط´ط§ط±ظƒط© ط£ظٹ طµظˆط± ط£ظˆ ط±ظˆط§ط¨ط· ط£ظˆ ظ…ظˆط§طµظپط§طھ ط¥ط¶ط§ظپظٹط© ظ…طھط§ط­ط©. ظ‡ط°ط§ ط§ظ„ط±ط¯ ظ„ط§ ظٹطھط¶ظ…ظ† ظˆط¹ط¯ط§ظ‹ ط¨ط³ط¹ط± ظ†ظ‡ط§ط¦ظٹ ط£ظˆ ظ…ظˆط¹ط¯ طھظˆط±ظٹط¯ ظ†ظ‡ط§ط¦ظٹطŒ ظˆط³ظٹظ‚ظˆظ… ظپط±ظٹظ‚ ظ„ظˆط±ظƒط³ ط¨ط§ظ„ظ…ط±ط§ط¬ط¹ط© ط§ظ„ظ†ظ‡ط§ط¦ظٹط© ظ‚ط¨ظ„ ط£ظٹ ط§ظ„طھط²ط§ظ… طھط´ط؛ظٹظ„ظٹ.`,
+                  `عميلنا العزيز،`,
+                  `شكراً لإرسال طلب الشراء رقم ${row.requestNumber}. بدأ فريق لوركس مراجعة الطلب بشكل مبدئي.`,
+                  `حتى نتمكن من توجيه الطلب للموردين المناسبين بدقة، نحتاج إلى توضيح: ${missingText}.`,
+                  `يرجى مشاركة أي صور أو روابط أو مواصفات إضافية متاحة. هذا الرد لا يتضمن وعداً بسعر نهائي أو موعد توريد نهائي، وسيقوم فريق لوركس بالمراجعة النهائية قبل أي التزام تشغيلي.`,
               ].join("\n\n")
             : [
                   `Dear ${row.customer.fullName || "Customer"},`,
@@ -290,17 +290,17 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
     if (normalizedMode === "purchase_request_supplier_brief") {
         return isArabic
             ? [
-                  `ظ…ط³ظˆط¯ط© brief ظ„ظ„ظ…ظˆط±ط¯`,
-                  `- ط§ظ„ظ…ظ†طھط¬: ${valueOrDash(row.productName)}`,
-                  `- ط§ظ„ظˆطµظپ: ${valueOrDash(row.productDescription)}`,
-                  `- ط§ظ„ظ…ظˆط§طµظپط§طھ: ${valueOrDash(row.technicalSpecs)}`,
-                  `- ط§ظ„ظƒظ…ظٹط©: ${valueOrDash(row.quantity)}`,
-                  `- ط§ظ„ظˆط¬ظ‡ط©: ${valueOrDash(row.destination)}`,
-                  `- ط§ظ„ط´ط­ظ† ط§ظ„ظ…ظپط¶ظ„: ${valueOrDash(row.preferredShippingMethod)}`,
-                  `- ط§ظ„ظ…ط§ط¯ط©/ط§ظ„ظ…ظ‚ط§ط³/ط§ظ„ظ„ظˆظ†: ${valueOrDash(row.material)} / ${valueOrDash(row.sizeDimensions)} / ${valueOrDash(row.color)}`,
-                  `- ط§ظ„ط¹ظ„ط§ظ…ط© ط£ظˆ ظ…ط³طھظˆظ‰ ط§ظ„ط¬ظˆط¯ط©: ${valueOrDash(row.brand)} / ${valueOrDash(row.qualityLevel)}`,
-                  `- ظ…ط±ظپظ‚ط§طھ ط§ظ„ط¹ظ…ظٹظ„: ${row.attachments.length}`,
-                  `- ط£ط³ط¦ظ„ط© ظ„ظ„ظ…ظˆط±ط¯: طھط£ظƒظٹط¯ MOQطŒ ظ…ط¯ط© ط§ظ„ط¥ظ†طھط§ط¬ ط§ظ„طھظ‚ط¯ظٹط±ظٹط©طŒ ط§ظ„طھط؛ظ„ظٹظپطŒ ط§ظ„ط´ظ‡ط§ط¯ط§طھ ط§ظ„ظ…ط·ظ„ظˆط¨ط©طŒ ظˆط¥ظ…ظƒط§ظ†ظٹط© طھظˆظپظٹط± ط¹ظٹظ†ط© ط¥ظ† ظ„ط²ظ….`,
+                  `مسودة brief للمورد`,
+                  `- المنتج: ${valueOrDash(row.productName)}`,
+                  `- الوصف: ${valueOrDash(row.productDescription)}`,
+                  `- المواصفات: ${valueOrDash(row.technicalSpecs)}`,
+                  `- الكمية: ${valueOrDash(row.quantity)}`,
+                  `- الوجهة: ${valueOrDash(row.destination)}`,
+                  `- الشحن المفضل: ${valueOrDash(row.preferredShippingMethod)}`,
+                  `- المادة/المقاس/اللون: ${valueOrDash(row.material)} / ${valueOrDash(row.sizeDimensions)} / ${valueOrDash(row.color)}`,
+                  `- العلامة أو مستوى الجودة: ${valueOrDash(row.brand)} / ${valueOrDash(row.qualityLevel)}`,
+                  `- مرفقات العميل: ${row.attachments.length}`,
+                  `- أسئلة للمورد: تأكيد MOQ، مدة الإنتاج التقديرية، التغليف، الشهادات المطلوبة، وإمكانية توفير عينة إن لزم.`,
               ].join("\n")
             : [
                   `Supplier sourcing brief`,
@@ -318,7 +318,7 @@ const buildLocalAiOutput = (mode: PurchaseRequestAiMode, row: PurchaseRequestRow
     }
 
     return isArabic
-        ? [`ظ…ظ„ط§ط­ط¸ط§طھ ط§ظ…طھط«ط§ظ„ ط¥ط±ط´ط§ط¯ظٹط©:`, ...compliance.map((item) => `- ${item}`), `\nظ‡ط°ظ‡ ط§ظ„ظ…ظ„ط§ط­ط¸ط§طھ ط¥ط±ط´ط§ط¯ظٹط© ظپظ‚ط·. ط§ظ„ظ…ط±ط§ط¬ط¹ط© ط§ظ„ظ†ظ‡ط§ط¦ظٹط© ظ„ظ„ظˆط«ط§ط¦ظ‚ ظˆط§ظ„ظ…طھط·ظ„ط¨ط§طھ ط§ظ„طھظ†ط¸ظٹظ…ظٹط© طھطھظ… ط¨ظˆط§ط³ط·ط© ظپط±ظٹظ‚ ظ„ظˆط±ظƒط³.`].join("\n")
+        ? [`ملاحظات امتثال إرشادية:`, ...compliance.map((item) => `- ${item}`), `\nهذه الملاحظات إرشادية فقط. المراجعة النهائية للوثائق والمتطلبات التنظيمية تتم بواسطة فريق لوركس.`].join("\n")
         : [`Advisory compliance notes:`, ...compliance.map((item) => `- ${item}`), `\nThese notes are advisory only. Final documentation and regulatory review must be performed by the Lourex team.`].join("\n");
 };
 
@@ -602,7 +602,7 @@ export default function PurchaseRequestsPage() {
                 body: {
                     message:
                         lang === "ar"
-                            ? `${outputTitle} ظ„ط·ظ„ط¨ ط§ظ„ط´ط±ط§ط، ط§ظ„ط¯ط§ط®ظ„ظٹ ${selectedRow.requestNumber}. ط£ط¬ط¨ ط¨ط§ظ„ظ„ط؛ط© ط§ظ„ط¹ط±ط¨ظٹط© ظپظ‚ط·.`
+                            ? `${outputTitle} لطلب الشراء الداخلي ${selectedRow.requestNumber}. أجب باللغة العربية فقط.`
                             : `${outputTitle} for internal purchase request ${selectedRow.requestNumber}. Respond in English only.`,
                     messages: [],
                     pageContext: "dashboard_purchase_requests",
@@ -639,7 +639,7 @@ export default function PurchaseRequestsPage() {
             setAiOutput(buildLocalAiOutput(mode, selectedRow, lang));
             
             if (isQuotaError) {
-                toast.error(lang === "ar" ? "ط§ظ†طھظ‡طھ ط­طµط© ط§ظ„ط°ظƒط§ط، ط§ظ„ط§طµط·ظ†ط§ط¹ظٹ ط­ط§ظ„ظٹط§ظ‹. طھظ… ط§ط³طھط®ط¯ط§ظ… ط§ظ„ظ…ط­ظ„ظ„ ط§ظ„ظ…ط­ظ„ظٹ." : "AI quota exceeded. Local analyzer used instead.");
+                toast.error(lang === "ar" ? "انتهت حصة الذكاء الاصطناعي حالياً. تم استخدام المحلل المحلي." : "AI quota exceeded. Local analyzer used instead.");
             }
         } finally {
             setAiActionLoading(null);

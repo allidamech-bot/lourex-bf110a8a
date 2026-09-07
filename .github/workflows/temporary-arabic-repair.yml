@@ -1,0 +1,78 @@
+name: Temporary Arabic Mojibake Repair
+
+on:
+  push:
+    branches: ["chore/restore-ci-lint-baseline"]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chore/restore-ci-lint-baseline
+      - name: Repair known mojibake-affected dashboard files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          files = [
+              Path('src/pages/dashboard/PartnerSettlementsPage.tsx'),
+              Path('src/pages/dashboard/PurchaseRequestsPage.tsx'),
+              Path('src/pages/dashboard/ReportsPage.tsx'),
+          ]
+          markers = [
+              chr(0x00d8), chr(0x00d9), chr(0x00db), chr(0x00c3), chr(0x00c2), chr(0xfffd),
+              chr(0x0637) + chr(0x00a7), chr(0x0638) + chr(0x201e), chr(0x0638) + chr(0x2026),
+              chr(0x0638) + chr(0x0679), chr(0x0638) + chr(0x2020), chr(0x0637) + chr(0x00b1),
+              chr(0x0637) + chr(0x00a9),
+          ]
+
+          for path in files:
+              text = path.read_text(encoding='utf-8-sig')
+              repaired = []
+              changed = 0
+              for line in text.splitlines(keepends=True):
+                  if any(marker in line for marker in markers):
+                      try:
+                          candidate = line.encode('cp1256').decode('utf-8')
+                      except (UnicodeEncodeError, UnicodeDecodeError):
+                          candidate = line
+                      if candidate != line:
+                          line = candidate
+                          changed += 1
+                  repaired.append(line)
+              path.write_text(''.join(repaired), encoding='utf-8')
+              print(f'{path}: repaired {changed} lines')
+          PY
+      - name: Verify repaired files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files = [
+              Path('src/pages/dashboard/PartnerSettlementsPage.tsx'),
+              Path('src/pages/dashboard/PurchaseRequestsPage.tsx'),
+              Path('src/pages/dashboard/ReportsPage.tsx'),
+          ]
+          markers = [chr(x) for x in [0x00d8,0x00d9,0x00db,0x00c3,0x00c2,0xfffd]] + [
+              chr(0x0637)+chr(0x00a7), chr(0x0638)+chr(0x201e), chr(0x0638)+chr(0x2026),
+              chr(0x0638)+chr(0x0679), chr(0x0638)+chr(0x2020), chr(0x0637)+chr(0x00b1), chr(0x0637)+chr(0x00a9),
+          ]
+          offenders = [str(path) for path in files if any(marker in path.read_text('utf-8') for marker in markers)]
+          if offenders:
+              raise SystemExit(f'Mojibake still present: {offenders}')
+          PY
+      - name: Commit repaired copy when needed
+        run: |
+          if git diff --quiet -- src/pages/dashboard/PartnerSettlementsPage.tsx src/pages/dashboard/PurchaseRequestsPage.tsx src/pages/dashboard/ReportsPage.tsx; then
+            echo "No repair changes remain."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/dashboard/PartnerSettlementsPage.tsx src/pages/dashboard/PurchaseRequestsPage.tsx src/pages/dashboard/ReportsPage.tsx
+          git commit -m "fix: repair Arabic mojibake in dashboard copy"
+          git push origin HEAD:chore/restore-ci-lint-baseline

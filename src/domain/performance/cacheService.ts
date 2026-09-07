@@ -5,7 +5,7 @@ import type { CacheEntry, CacheMetadata } from "./types";
  * Used exclusively for non-persistent, read-heavy operations.
  */
 class MemoryCacheRegistry {
-  private cache: Map<string, CacheEntry<any>> = new Map();
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
 
   /**
    * Generates cache metadata.

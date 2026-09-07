@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, CircleDollarSign, RefreshCw, Scale, ShieldAlert, Wallet, TrendingUp, TrendingDown, History } from "lucide-react";
 import { toast } from "sonner";
@@ -140,9 +140,9 @@ export default function PartnerSettlementsPage() {
         type: "settlement",
         level: pendingSettlements.length > 2 ? "HIGH" : "MEDIUM",
         title: `${pendingSettlements.length} settlements awaiting review`,
-        titleAr: `${pendingSettlements.length} طھط³ظˆظٹط§طھ ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ…ط±ط§ط¬ط¹ط©`,
+        titleAr: `${pendingSettlements.length} تسويات بانتظار المراجعة`,
         recommendation: "Prioritize audit of these settlements to maintain partner trust.",
-        recommendationAr: "ط£ط¹ط· ط§ظ„ط£ظˆظ„ظˆظٹط© ظ„طھط¯ظ‚ظٹظ‚ ظ‡ط°ظ‡ ط§ظ„طھط³ظˆظٹط§طھ ظ„ظ„ط­ظپط§ط¸ ط¹ظ„ظ‰ ط«ظ‚ط© ط§ظ„ط´ط±ظƒط§ط،.",
+        recommendationAr: "أعط الأولوية لتدقيق هذه التسويات للحفاظ على ثقة الشركاء.",
       });
     }
 
@@ -152,9 +152,9 @@ export default function PartnerSettlementsPage() {
         type: "bottleneck",
         level: "HIGH",
         title: `${totals.disputed} disputed settlements detected`,
-        titleAr: `${totals.disputed} طھط³ظˆظٹط§طھ ظ…طھظ†ط§ط²ط¹ ط¹ظ„ظٹظ‡ط§ طھظ… ط§ظƒطھط´ط§ظپظ‡ط§`,
+        titleAr: `${totals.disputed} تسويات متنازع عليها تم اكتشافها`,
         recommendation: "Engage with affected partners to resolve disputes immediately.",
-        recommendationAr: "طھظˆط§طµظ„ ظ…ط¹ ط§ظ„ط´ط±ظƒط§ط، ط§ظ„ظ…طھط£ط«ط±ظٹظ† ظ„ط­ظ„ ط§ظ„ظ†ط²ط§ط¹ط§طھ ظپظˆط±ط§ظ‹.",
+        recommendationAr: "تواصل مع الشركاء المتأثرين لحل النزاعات فوراً.",
       });
     }
 
