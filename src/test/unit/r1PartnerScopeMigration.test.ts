@@ -20,6 +20,9 @@ const tracking = readFileSync(
 const eventWriter = readFileSync(
   "supabase/migrations/20261013132000_r1_system_event_writer_lockdown.sql", "utf8",
 );
+const storage = readFileSync(
+  "supabase/migrations/20261013134000_r1_storage_boundary.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -114,6 +117,20 @@ describe("R1 partner-scope migration source checks", () => {
     expect(tracking).toContain('DROP POLICY IF EXISTS "Assigned partners can insert tracking updates"');
     expect(eventWriter).toContain("R1: system event writer requires owner or operations");
     expect(eventWriter).toContain("auth.uid() IS NULL");
+  });
+
+  it("removes broad partner storage policies for proofs and deal attachments", () => {
+    for (const name of [
+      "Internal users can read transfer proofs",
+      "Internal users can manage transfer proofs",
+      "Internal deal attachments can be uploaded",
+      "Internal deal attachments can be updated",
+      "Internal deal attachments can be deleted",
+    ]) {
+      expect(storage).toContain('DROP POLICY IF EXISTS "' + name + '" ON storage.objects;');
+    }
+    expect(storage).toContain("Lourex R1 owner ops read legacy transfer proofs");
+    expect(stagingGate).toContain("deal attachment objects found in public product-images bucket");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
