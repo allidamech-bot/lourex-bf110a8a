@@ -434,7 +434,7 @@ const safeStructuredMutation = async <T>(
 ) => {
   const available = await getLourexDomainAvailability();
   if (!available) {
-    const error = { message: "الخدمة غير متوفرة حاليا في إعدادات Lovable Cloud." };
+    const error = { message: "الخدمة غير متوفرة حالياً في إعدادات Supabase." };
     logOperationalError("domain_mutation_unavailable", new Error(error.message));
     return { data: null as T | null, error };
   }
