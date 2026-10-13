@@ -7,6 +7,8 @@ on:
       - 'supabase/tests/r1_customer_upsert_pg17_integration.sql'
       - 'supabase/migrations/20261013162000_r1_existing_schema_partner_containment.sql'
       - 'supabase/tests/r1_partner_scope_pg17_integration.sql'
+      - 'supabase/migrations/20261013163000_r1_global_reporting_owner_ops_only.sql'
+      - 'supabase/tests/r1_report_rpcs_pg17_integration.sql'
       - '.github/workflows/r1-customer-upsert-pg17.yml'
   workflow_dispatch:
 
@@ -49,3 +51,12 @@ jobs:
             postgres:17 \
             psql -X -h 127.0.0.1 -U postgres -d postgres \
               -v ON_ERROR_STOP=1 -f /workspace/supabase/tests/r1_partner_scope_pg17_integration.sql
+
+      - name: Test owner-only global reports using real PostgreSQL 17 RPCs
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD=ephemeral-ci-only \
+            -v "$PWD:/workspace:ro" \
+            postgres:17 \
+            psql -X -h 127.0.0.1 -U postgres -d postgres \
+              -v ON_ERROR_STOP=1 -f /workspace/supabase/tests/r1_report_rpcs_pg17_integration.sql
