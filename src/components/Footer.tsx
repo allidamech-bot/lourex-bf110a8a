@@ -132,7 +132,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-footer-foreground/10 py-6 text-xs text-footer-muted sm:flex-row">
           <p>
-            {"\u00A9"} {new Date().getFullYear()} {isArabic ? "لوريكس LOUREX" : "LOUREX"}. {t("footer.tagline")}
+            {"\u00A9"} {new Date().getFullYear()} {isArabic ? "لوريكس LOUREX. جميع الحقوق محفوظة." : "LOUREX. All rights reserved."}
           </p>
           <a href={publicContactInfo.websiteUrl} className="transition-colors hover:text-footer-accent">
             {publicContactInfo.website}
