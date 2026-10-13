@@ -559,16 +559,16 @@ export default function TrackingPage() {
         headerAction={
           <div className="flex items-center gap-3">
             <div className="relative w-64">
-              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={searchPlaceholder}
-                className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 h-10"
+                className="ps-9 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25 h-10"
               />
             </div>
-            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
-              <RefreshCcw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-primary/20 bg-card text-heading hover:text-primary h-12 px-6">
+              <RefreshCcw className={cn("me-2 h-4 w-4", loading && "animate-spin text-primary")} />
               <span className="font-bold">{t("common.refresh")}</span>
             </Button>
           </div>
@@ -576,61 +576,61 @@ export default function TrackingPage() {
       >
         <DashboardGrid variant="main">
           <div className="space-y-12">
-            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <BentoCard className="p-6 border-primary/20 bg-card">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                  <div>
-                  <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{t("tracking.currentStage")}</p>
-                  <h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">{currentStage?.label || t("tracking.noStage")}</h3>
+                  <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{t("tracking.currentStage")}</p>
+                  <h3 className="mt-1 font-serif text-3xl font-bold text-foreground">{currentStage?.label || t("tracking.noStage")}</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.labels.progress")}</p>
-                  <p className="text-2xl font-black text-amber-500">{progressPercent}%</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("tracking.labels.progress")}</p>
+                  <p className="text-2xl font-black text-primary">{progressPercent}%</p>
                 </div>
               </div>
 
-              <div className="h-2 w-full rounded-full bg-stone-950/40 mb-6">
-                <div className="h-full rounded-full bg-amber-500 shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
+              <div className="h-2 w-full rounded-full bg-background/75 mb-6">
+                <div className="h-full rounded-full bg-primary shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
-                  <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("tracking.labels.stageCode")}</p>
-                  <p className="font-bold text-stone-300">{activeShipment.stage}</p>
+                <div className="p-4 rounded-2xl bg-background/75 border border-stone-800">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("tracking.labels.stageCode")}</p>
+                  <p className="font-bold text-foreground">{activeShipment.stage}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
-                  <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("tracking.labels.nextStage")}</p>
-                  <p className="font-bold text-stone-300 truncate">{nextStage?.label || t("tracking.completedMessage")}</p>
+                <div className="p-4 rounded-2xl bg-background/75 border border-stone-800">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("tracking.labels.nextStage")}</p>
+                  <p className="font-bold text-foreground truncate">{nextStage?.label || t("tracking.completedMessage")}</p>
                 </div>
               </div>
 
-              <p className="text-sm text-stone-400 leading-relaxed font-medium mb-6">{currentStage?.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-6">{currentStage?.description}</p>
               {currentStage?.owner && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-200 uppercase tracking-widest break-words">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-soft border border-primary/20 text-[10px] font-black text-primary uppercase tracking-widest break-words">
                   {t("tracking.labels.owner")}: {currentStage.owner}
                 </div>
               )}
             </BentoCard>
 
             {activeDeal ? (
-              <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+              <BentoCard className="p-6 border-primary/20 bg-card">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">
+                    <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">
                       {t("tracking.labels.linkedDeal", { deal: activeDeal.dealNumber })}
                     </p>
-                    <p className="mt-2 break-words text-sm text-stone-400">
+                    <p className="mt-2 break-words text-sm text-muted-foreground">
                       {activeDeal.operationTitle || t("common.notSpecified")}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {activeDeal.sourceRequestId ? (
-                      <Button variant="outline" asChild className="h-10 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                      <Button variant="outline" asChild className="h-10 border-primary/20 bg-card text-foreground hover:bg-stone-50/10">
                         <Link to={`/dashboard/requests?request=${activeDeal.sourceRequestId}`}>
                           {t("deals.backToRequest")}
                         </Link>
                       </Button>
                     ) : null}
-                    <Button variant="outline" asChild className="h-10 border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
+                    <Button variant="outline" asChild className="h-10 border-primary/20 bg-card text-foreground hover:bg-stone-50/10">
                       <Link to={`/dashboard/deals?deal=${activeDeal.dealNumber}`}>
                         {t("tracking.backToDeal")}
                       </Link>
@@ -639,40 +639,40 @@ export default function TrackingPage() {
                 </div>
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {productSource ? (
-                    <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
-                      <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                    <div className="rounded-2xl bg-background/75 border border-stone-800 p-4">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                         {t("requests.labels.productSource")}
                       </p>
-                      <p className="mt-1 break-words font-bold text-stone-300">{productSource}</p>
+                      <p className="mt-1 break-words font-bold text-foreground">{productSource}</p>
                     </div>
                   ) : null}
-                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
-                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                  <div className="rounded-2xl bg-background/75 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       {t("tracking.labels.deal")}
                     </p>
-                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.dealNumber}</p>
+                    <p className="mt-1 break-words font-bold text-foreground">{activeDeal.dealNumber}</p>
                   </div>
-                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
-                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                  <div className="rounded-2xl bg-background/75 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       {t("common.purchaseRequest")}
                     </p>
-                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.requestNumber || t("common.notSpecified")}</p>
+                    <p className="mt-1 break-words font-bold text-foreground">{activeDeal.requestNumber || t("common.notSpecified")}</p>
                   </div>
-                  <div className="rounded-2xl bg-stone-950/40 border border-stone-800 p-4">
-                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">
+                  <div className="rounded-2xl bg-background/75 border border-stone-800 p-4">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       {t("deals.labels.operationTitle")}
                     </p>
-                    <p className="mt-1 break-words font-bold text-stone-300">{activeDeal.operationTitle || t("common.notSpecified")}</p>
+                    <p className="mt-1 break-words font-bold text-foreground">{activeDeal.operationTitle || t("common.notSpecified")}</p>
                   </div>
                 </div>
               </BentoCard>
             ) : (
-              <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
-                <p className="text-sm text-stone-400">{t("tracking.unlinked")}</p>
+              <BentoCard className="p-6 border-primary/20 bg-card">
+                <p className="text-sm text-muted-foreground">{t("tracking.unlinked")}</p>
               </BentoCard>
             )}
 
-            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <BentoCard className="p-6 border-primary/20 bg-card">
               <LogisticsMetricsPanel
                 metrics={(activeDeal as any)?.logistics || null}
                 isEditable={false}
@@ -712,28 +712,28 @@ export default function TrackingPage() {
               </div>
             </DashboardSection>
 
-            <BentoCard className="p-0 border-amber-200/10 bg-stone-900/50 overflow-hidden">
-               <div className="p-6 border-b border-amber-200/10">
-                <h3 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{t("tracking.labels.updatesLog")}</h3>
+            <BentoCard className="p-0 border-primary/20 bg-card overflow-hidden">
+               <div className="p-6 border-b border-primary/20">
+                <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{t("tracking.labels.updatesLog")}</h3>
               </div>
               <div className="divide-y divide-amber-200/5 max-h-[40rem] overflow-y-auto">
                 {activeShipment.timeline.length === 0 ? (
-                  <div className="p-12 text-center text-stone-600 italic">{t("tracking.noUpdatesLogged")}</div>
+                  <div className="p-12 text-center text-muted-foreground italic">{t("tracking.noUpdatesLogged")}</div>
                 ) : (
                   activeShipment.timeline.slice().reverse().map((event) => (
-                    <div key={event.id} className="p-6 hover:bg-stone-800/20 transition-colors">
+                    <div key={event.id} className="p-6 hover:bg-secondary transition-colors">
                        <div className="flex items-start justify-between gap-4 mb-4">
                         <div>
-                          <p className="font-bold text-stone-100">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
-                          <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{new Date(event.occurredAt).toLocaleString(locale)}</p>
+                          <p className="font-bold text-foreground">{getShipmentStageCopy(event.stageCode, lang)?.label || event.stageCode}</p>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase mt-1">{new Date(event.occurredAt).toLocaleString(locale)}</p>
                         </div>
                         {isInternal && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-200 uppercase tracking-widest">
+                          <span className="px-2 py-0.5 rounded-full bg-primary-soft border border-primary/20 text-[9px] font-black text-primary uppercase tracking-widest">
                             {visibilityLabel(event.visibility)}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-stone-400 leading-relaxed font-medium italic">"{event.note || t("tracking.noInternalNote")}"</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed font-medium italic">"{event.note || t("tracking.noInternalNote")}"</p>
                     </div>
                   ))
                 )}
@@ -742,12 +742,12 @@ export default function TrackingPage() {
           </div>
 
           <aside className="space-y-12">
-            <BentoCard className="p-6 border-amber-200/15 bg-stone-900/55">
+            <BentoCard className="p-6 border-primary/20 bg-card">
                <div className="flex items-center gap-3 mb-8">
-                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-primary-soft text-primary">
                   <PackageSearch className="h-5 w-5" />
                 </div>
-                <h3 className="font-serif text-xl font-bold text-stone-100">{t("tracking.labels.officialTimeline")}</h3>
+                <h3 className="font-serif text-xl font-bold text-foreground">{t("tracking.labels.officialTimeline")}</h3>
               </div>
               <ShipmentTimeline currentStage={activeShipment.stage} />
             </BentoCard>
@@ -766,38 +766,38 @@ export default function TrackingPage() {
 
             {isInternal && nextStage ? (
               <DashboardSection title={t("tracking.actionCenter")} icon={<Send className="h-6 w-6" />}>
-                <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50 space-y-6">
+                <BentoCard className="p-6 border-primary/20 bg-card space-y-6">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest mb-1">{t("tracking.nextAction")}</p>
-                    <p className="text-sm font-bold text-stone-100">{t("tracking.advance", { stage: nextStage.label })}</p>
+                    <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest mb-1">{t("tracking.nextAction")}</p>
+                    <p className="text-sm font-bold text-foreground">{t("tracking.advance", { stage: nextStage.label })}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.internalPlaceholder")}</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("tracking.internalPlaceholder")}</Label>
                       <Textarea
                         rows={4}
                         value={internalNote}
                         onChange={(event) => setInternalNote(event.target.value)}
-                        className="bg-stone-950/40 border-amber-200/10 text-stone-100"
+                        className="bg-background/75 border-primary/20 text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("tracking.customerPlaceholder")}</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("tracking.customerPlaceholder")}</Label>
                       <Textarea
                         rows={3}
                         value={customerNote}
                         onChange={(event) => setCustomerNote(event.target.value)}
-                        className="bg-stone-950/40 border-amber-200/10 text-stone-100"
+                        className="bg-background/75 border-primary/20 text-foreground"
                       />
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-amber-200/5">
-                     <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-black text-stone-950 shadow-xl hover:brightness-110 uppercase tracking-widest" disabled={!canAdvance || submitting} onClick={handleAdvance}>
+                  <div className="pt-4 border-t border-primary/20">
+                     <Button className="w-full h-14 rounded-2xl bg-primary font-black text-primary-foreground shadow-xl hover:brightness-110 uppercase tracking-widest" disabled={!canAdvance || submitting} onClick={handleAdvance}>
                       {submitting ? t("tracking.advancing") : t("tracking.advance", { stage: nextStage.label })}
                     </Button>
-                    <p className="mt-4 text-center text-[10px] font-bold text-stone-600 uppercase tracking-widest leading-relaxed">{trackingRuleText}</p>
+                    <p className="mt-4 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">{trackingRuleText}</p>
                   </div>
                 </BentoCard>
               </DashboardSection>
@@ -813,19 +813,19 @@ export default function TrackingPage() {
             <div className="space-y-4">
                {isInternal && activeShipment.dealNumber && (
                 <>
-                  <Link to={`/dashboard/deals?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-amber-200/10 bg-stone-900/50 hover:bg-stone-800 transition-colors group">
-                    <div className="flex items-center gap-3 text-stone-100 font-bold text-sm">
-                      <ArrowRightLeft className="h-4 w-4 text-amber-500" />
+                  <Link to={`/dashboard/deals?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-primary/20 bg-card hover:bg-secondary transition-colors group">
+                    <div className="flex items-center gap-3 text-foreground font-bold text-sm">
+                      <ArrowRightLeft className="h-4 w-4 text-primary" />
                       {t("tracking.backToDeal")}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-stone-600 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                   </Link>
-                   <Link to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-amber-200/10 bg-stone-900/50 hover:bg-stone-800 transition-colors group">
-                    <div className="flex items-center gap-3 text-stone-100 font-bold text-sm">
-                      <PackageSearch className="h-4 w-4 text-amber-500" />
+                   <Link to={`/dashboard/accounting?deal=${activeShipment.dealNumber}`} className="flex items-center justify-between p-4 rounded-2xl border border-primary/20 bg-card hover:bg-secondary transition-colors group">
+                    <div className="flex items-center gap-3 text-foreground font-bold text-sm">
+                      <PackageSearch className="h-4 w-4 text-primary" />
                       {t("tracking.openAccounting")}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-stone-600 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </>
               )}
@@ -840,16 +840,16 @@ export default function TrackingPage() {
                      className={cn(
                        "w-full p-4 rounded-2xl border text-start transition-all",
                        activeShipment.id === row.id
-                         ? "border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-950/20"
-                         : "border-amber-200/5 bg-stone-900/30 hover:border-amber-200/20"
+                         ? "border-primary/20 bg-primary-soft shadow-lg shadow-amber-950/20"
+                         : "border-primary/20 bg-card hover:border-primary/20"
                      )}
                    >
                      <div className="flex justify-between items-start">
                        <div>
-                         <p className="font-bold text-stone-100 text-sm">{row.trackingId}</p>
-                         <p className="text-[10px] font-black text-stone-600 uppercase mt-1">{row.dealNumber || t("tracking.unlinked")}</p>
+                         <p className="font-bold text-foreground text-sm">{row.trackingId}</p>
+                         <p className="text-[10px] font-black text-muted-foreground uppercase mt-1">{row.dealNumber || t("tracking.unlinked")}</p>
                        </div>
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 border border-stone-700">
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-stone-700">
                         {row.stage}
                       </span>
                     </div>
