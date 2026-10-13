@@ -99,6 +99,20 @@ BEGIN
     RAISE EXCEPTION 'R1: anon can execute assignment helper';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname IN (
+        'lourex_report_summary',
+        'lourex_report_top_customers',
+        'lourex_report_top_expense_categories'
+      )
+      AND p.prosecdef
+  ) THEN
+    RAISE EXCEPTION 'R1: global report RPC still bypasses caller RLS';
+  END IF;
+
   RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
 END;
 $$;
