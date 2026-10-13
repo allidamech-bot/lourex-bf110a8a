@@ -175,14 +175,18 @@ export const uploadFileToStorage = async (
     throw error;
   }
 
-  const { data } = supabase.storage.from(bucketName).getPublicUrl(safePath);
+  // Supabase private buckets do not have a usable public URL. Keep only
+  // the Storage object path; authorized reads must create a signed URL.
+  const publicUrl = bucket === "PRODUCT_IMAGES"
+    ? supabase.storage.from(bucketName).getPublicUrl(safePath).data.publicUrl
+    : "";
 
-  if (!data.publicUrl) {
-    throw new Error("The file was uploaded but no public URL was returned.");
+  if (bucket === "PRODUCT_IMAGES" && !publicUrl) {
+    throw new Error("The public image was uploaded but no URL was returned.");
   }
 
   return {
-    publicUrl: data.publicUrl,
+    publicUrl,
     path: safePath,
     bucket: bucketName,
   };
@@ -196,6 +200,9 @@ export const uploadFile = async (
     path: string,
     file: File,
 ) => {
+  if (bucket !== "PRODUCT_IMAGES") {
+    throw new Error("Private documents cannot be shared by a public URL; use uploadFileToStorage and signed reads.");
+  }
   const uploaded = await uploadFileToStorage(bucket, path, file);
   return uploaded.publicUrl;
 };
