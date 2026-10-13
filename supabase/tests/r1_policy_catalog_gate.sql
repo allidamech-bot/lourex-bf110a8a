@@ -143,6 +143,32 @@ BEGIN
     RAISE EXCEPTION 'R1: privileged system event RPC is not guarded';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'storage'
+      AND p.tablename = 'objects'
+      AND p.policyname IN (
+        'Internal users can read transfer proofs',
+        'Internal users can manage transfer proofs',
+        'Internal deal attachments can be uploaded',
+        'Internal deal attachments can be updated',
+        'Internal deal attachments can be deleted'
+      )
+  ) THEN
+    RAISE EXCEPTION 'R1: legacy broad Storage permissions remain';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM storage.buckets b
+    JOIN storage.objects o ON o.bucket_id = b.id
+    WHERE b.id = 'product-images'
+      AND b.public = true
+      AND (storage.foldername(o.name))[1] = 'deal-attachments'
+  ) THEN
+    RAISE EXCEPTION 'R1: deal attachment objects found in public product-images bucket';
+  END IF;
+
   RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
 END;
 $$;
