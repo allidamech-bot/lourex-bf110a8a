@@ -29,6 +29,6 @@ describe("R1 profile privilege escalation boundary", () => {
     expect(sql).toContain(
       "REVOKE ALL ON FUNCTION public.guard_profile_privilege_fields() FROM PUBLIC, anon, authenticated",
     );
-    expect(sql).not.toMatch(/(?:UPDATE|DELETE)\\s+public\\.profiles\\s+SET/i);
+    expect(sql).not.toContain("UPDATE public.profiles SET");
   });
 });
