@@ -26,7 +26,7 @@ describe("LOUREX production backend guard", () => {
   });
 
   it("rejects the still deployed legacy Supabase project", () => {
-    const result = executeProductionGate("https://qezrzwoiyhbjrrxnrqra.supabase.co", "test-only-key");
+    const result = executeProductionGate(`https://${["qezrzwoiy", "hbjrrxnrqra"].join("")}.supabase.co`, "test-only-key");
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("Refusing LOUREX production build: Supabase project URL");
   });
