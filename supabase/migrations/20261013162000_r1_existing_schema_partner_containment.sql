@@ -66,6 +66,22 @@ BEGIN
 END;
 $preflight$;
 
+-- A role-only predicate, deliberately independent of status. Without this,
+-- an INACTIVE partner would pass NOT is_lourex_role(...) and could regain
+-- access through older permissive owner/broker identity policies.
+CREATE OR REPLACE FUNCTION public.lourex_r1_is_partner_actor()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT COALESCE(auth.uid() IS NOT NULL AND EXISTS (
+    SELECT 1 FROM public.profiles p
+    WHERE p.id = auth.uid()
+      AND p.role IN ('turkish_partner', 'saudi_partner')
+  ), false);
+$function$;
+REVOKE ALL ON FUNCTION public.lourex_r1_is_partner_actor() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.lourex_r1_is_partner_actor() TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.lourex_r1_is_assigned_deal(p_deal_id uuid)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = ''
@@ -121,79 +137,79 @@ GRANT EXECUTE ON FUNCTION public.lourex_r1_is_assigned_shipment(uuid) TO authent
 CREATE POLICY "R1 existing-schema partner deal select guard"
 ON public.deals AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(id)
 );
 
 CREATE POLICY "R1 existing-schema partner deal update guard"
 ON public.deals AS RESTRICTIVE FOR UPDATE TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(id)
 )
 WITH CHECK (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(id)
 );
 
 CREATE POLICY "R1 existing-schema partner deal insert guard"
 ON public.deals AS RESTRICTIVE FOR INSERT TO authenticated
-WITH CHECK (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+WITH CHECK (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner deal delete guard"
 ON public.deals AS RESTRICTIVE FOR DELETE TO authenticated
-USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+USING (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner shipment select guard"
 ON public.shipments AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(deal_id)
 );
 
 CREATE POLICY "R1 existing-schema partner shipment update guard"
 ON public.shipments AS RESTRICTIVE FOR UPDATE TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(deal_id)
 )
 WITH CHECK (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_deal(deal_id)
 );
 
 CREATE POLICY "R1 existing-schema partner shipment insert guard"
 ON public.shipments AS RESTRICTIVE FOR INSERT TO authenticated
-WITH CHECK (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+WITH CHECK (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner shipment delete guard"
 ON public.shipments AS RESTRICTIVE FOR DELETE TO authenticated
-USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+USING (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner requests read guard"
 ON public.purchase_requests AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_request(id)
 );
 
 CREATE POLICY "R1 existing-schema partner requests insert guard"
 ON public.purchase_requests AS RESTRICTIVE FOR INSERT TO authenticated
-WITH CHECK (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+WITH CHECK (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner requests update guard"
 ON public.purchase_requests AS RESTRICTIVE FOR UPDATE TO authenticated
-USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']))
-WITH CHECK (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+USING (NOT public.lourex_r1_is_partner_actor())
+WITH CHECK (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner requests delete guard"
 ON public.purchase_requests AS RESTRICTIVE FOR DELETE TO authenticated
-USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+USING (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner customer directory read guard"
 ON public.lourex_customers AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR EXISTS (
     SELECT 1 FROM public.deals d
     WHERE d.customer_id = lourex_customers.id
@@ -204,13 +220,13 @@ USING (
 CREATE POLICY "R1 existing-schema partner attachment scope guard"
 ON public.attachments AS RESTRICTIVE FOR ALL TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR (entity_type = 'deal' AND public.lourex_r1_is_assigned_deal(entity_id))
   OR (entity_type = 'purchase_request' AND public.lourex_r1_is_assigned_request(entity_id))
   OR (entity_type = 'shipment' AND public.lourex_r1_is_assigned_shipment(entity_id))
 )
 WITH CHECK (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR (
     uploaded_by = auth.uid()
     AND (
@@ -225,19 +241,19 @@ WITH CHECK (
 -- evidence, even if the record is assigned to them.
 CREATE POLICY "R1 existing-schema partner attachment delete guard"
 ON public.attachments AS RESTRICTIVE FOR DELETE TO authenticated
-USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+USING (NOT public.lourex_r1_is_partner_actor());
 
 CREATE POLICY "R1 existing-schema partner tracking select guard"
 ON public.tracking_updates AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR public.lourex_r1_is_assigned_shipment(shipment_id)
 );
 
 CREATE POLICY "R1 existing-schema partner tracking insert guard"
 ON public.tracking_updates AS RESTRICTIVE FOR INSERT TO authenticated
 WITH CHECK (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR (
     updated_by = auth.uid()
     AND updated_by_role = public.current_lourex_role()
@@ -263,7 +279,7 @@ WITH CHECK (
 CREATE POLICY "R1 existing-schema partner notifications insert guard"
 ON public.notifications AS RESTRICTIVE FOR INSERT TO authenticated
 WITH CHECK (
-  NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
+  NOT public.lourex_r1_is_partner_actor()
   OR user_id = auth.uid()
   OR EXISTS (
     SELECT 1 FROM public.profiles recipient
@@ -285,7 +301,7 @@ CREATE OR REPLACE FUNCTION public.lourex_r1_guard_partner_deal_update()
 RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = ''
 AS $function$
 BEGIN
-  IF NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']) THEN
+  IF NOT public.lourex_r1_is_partner_actor() THEN
     RETURN NEW;
   END IF;
   IF NOT public.lourex_r1_is_assigned_deal(OLD.id)
@@ -310,7 +326,7 @@ DECLARE
   v_old_order integer;
   v_new_order integer;
 BEGIN
-  IF NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']) THEN
+  IF NOT public.lourex_r1_is_partner_actor() THEN
     RETURN NEW;
   END IF;
   IF NOT public.lourex_r1_is_assigned_deal(OLD.deal_id)
