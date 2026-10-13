@@ -26,6 +26,13 @@ describe("R1 profile privilege escalation boundary", () => {
     expect(sql).toContain("NEW.verification_status IS DISTINCT FROM 'pending'");
   });
 
+  it("expands partner type compatibility without rewriting existing users", () => {
+    expect(sql).toContain("DROP CONSTRAINT IF EXISTS profiles_partner_type_check");
+    expect(sql).toContain("partner_type IN ('turkey', 'turkish', 'saudi')");
+    expect(sql).toContain("VALIDATE CONSTRAINT profiles_partner_type_check");
+    expect(sql).not.toContain("SET partner_type =");
+  });
+
   it("preserves a live owner under concurrent role/status changes", () => {
     expect(sql).toContain("OLD.role = 'owner'");
     expect(sql).toContain("OLD.status = 'active'");
