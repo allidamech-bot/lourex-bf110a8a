@@ -127,11 +127,14 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    const beforeRefresh = profileRequestSequence.current;
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession();
 
-    await loadSessionState(currentSession);
+    if (beforeRefresh === profileRequestSequence.current) {
+      await loadSessionState(currentSession);
+    }
   }, [loadSessionState]);
 
   const signOut = useCallback(async () => {
