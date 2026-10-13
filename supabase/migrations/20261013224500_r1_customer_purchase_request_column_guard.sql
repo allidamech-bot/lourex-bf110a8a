@@ -220,3 +220,38 @@ END;
 $function$;
 REVOKE ALL ON FUNCTION public.cancel_purchase_request(uuid,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.cancel_purchase_request(uuid,text) TO authenticated;
+
+
+-- Audit RLS correctly rejects customer-written log rows. The trigger used to
+-- execute as the customer, causing otherwise valid request INSERTs to fail.
+-- The narrowly scoped trigger now runs as its owner, records the real actor,
+-- and does not grant customer access to audit_logs.
+CREATE OR REPLACE FUNCTION public.log_purchase_request_submission()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=''
+SET row_security='off'
+AS $function$
+BEGIN
+  INSERT INTO public.audit_logs (
+    action,table_name,record_id,changed_by,old_values,new_values
+  ) VALUES (
+    'purchase_request.submitted',
+    'purchase_requests',
+    NEW.id::text,
+    auth.uid(),
+    NULL,
+    jsonb_build_object(
+      'request_id',NEW.id,
+      'request_number',NEW.request_number,
+      'customer_name',NEW.full_name,
+      'customer_email',NEW.email,
+      'summary',format('تم استلام طلب الشراء %s',NEW.request_number),
+      'actor_label','Public Request',
+      'entity_label',COALESCE(NULLIF(NEW.product_name,''),NEW.request_number)
+    )
+  );
+  RETURN NEW;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.log_purchase_request_submission() FROM PUBLIC,anon,authenticated;
