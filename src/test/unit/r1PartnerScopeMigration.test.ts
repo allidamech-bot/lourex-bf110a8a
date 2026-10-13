@@ -23,6 +23,9 @@ const eventWriter = readFileSync(
 const storage = readFileSync(
   "supabase/migrations/20261013134000_r1_storage_boundary.sql", "utf8",
 );
+const notifications = readFileSync(
+  "supabase/migrations/20261013135000_r1_notification_recipient_scope.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -131,6 +134,14 @@ describe("R1 partner-scope migration source checks", () => {
     }
     expect(storage).toContain("Lourex R1 owner ops read legacy transfer proofs");
     expect(stagingGate).toContain("deal attachment objects found in public product-images bucket");
+  });
+
+  it("limits partner notification recipients to explicitly authorized profiles", () => {
+    expect(notifications).toContain('DROP POLICY IF EXISTS "Internal Lourex users can insert notifications"');
+    expect(notifications).toContain("public.lourex_r1_is_assigned_deal(d.id)");
+    expect(notifications).toContain("recipient.status = 'active'");
+    expect(notifications).toContain("REVOKE ALL ON FUNCTION public.lourex_r1_can_notify(uuid) FROM PUBLIC, anon");
+    expect(notifications).toContain("WITH CHECK (public.lourex_r1_can_notify(user_id))");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
