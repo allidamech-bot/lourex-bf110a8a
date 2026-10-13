@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageAccounting, isValidRole } from "@/features/auth/rbac";
 import { STORAGE_BUCKETS, getSignedUrl } from "@/lib/storage";
 import { logOperationalError } from "@/lib/monitoring";
+import { isCustomerLinkedToUser } from "@/domain/customers/identity";
 
 type TransferProofAccessContext = {
   requestId: string;
@@ -21,8 +22,6 @@ type ProfileRow = {
   role: string | null;
   email?: string | null;
 };
-
-const normalizeEmail = (value: string | null | undefined) => value?.trim().toLowerCase() || "";
 
 const normalizeStoragePath = (value: string) => {
   const trimmed = value.trim();
@@ -96,10 +95,26 @@ export const createTransferProofSignedUrl = async ({
     throw requestError || new Error("Transfer proof request was not found.");
   }
 
-  const userEmail = normalizeEmail(user.email);
-  const requestEmail = normalizeEmail(request.email);
   const canReviewProof = canManageAccounting(profile.role);
-  const isRequestCustomer = request.customer_id === user.id || (Boolean(userEmail) && userEmail === requestEmail);
+  let isRequestCustomer = false;
+
+  if (!canReviewProof && profile.role === "customer" && request.customer_id) {
+    // Contact email and customer row IDs are not Supabase Auth identifiers.
+    // Verify ownership through the persisted customer-to-auth relationship.
+    const { data: linkedCustomer, error: customerError } = await supabase
+      .from("lourex_customers")
+      .select("id, auth_user_id")
+      .eq("id", request.customer_id)
+      .eq("auth_user_id", user.id)
+      .maybeSingle<{ id: string; auth_user_id: string | null }>();
+
+    if (customerError) {
+      logOperationalError("transfer_proof_customer_link", customerError, { requestId: safeRequestId });
+      throw customerError;
+    }
+
+    isRequestCustomer = isCustomerLinkedToUser(linkedCustomer, user.id);
+  }
 
   if (!canReviewProof && !isRequestCustomer) {
     throw new Error("You do not have permission to open this transfer proof file.");
