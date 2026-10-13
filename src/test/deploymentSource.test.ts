@@ -10,6 +10,8 @@ const run = (overrides: Record<string, string>) =>
       VERCEL_GIT_REPO_OWNER: "allidamech-bot",
       VERCEL_GIT_REPO_SLUG: "lourex-bf110a8a",
       VERCEL_PROJECT_ID: "prj_KgRgeJKQKIu2F2ElkrbfEEXDUtA3",
+      VITE_SUPABASE_URL: "https://gxmqchznfolerliorpkz.supabase.co",
+      VITE_SUPABASE_PUBLISHABLE_KEY: "test-only-not-a-real-credential",
       ...overrides,
     },
   });
