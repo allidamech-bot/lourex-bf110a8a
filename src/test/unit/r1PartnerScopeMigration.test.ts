@@ -14,6 +14,12 @@ const reporting = readFileSync(
 const packing = readFileSync(
   "supabase/migrations/20261013130000_r1_supplier_packing_scope.sql", "utf8",
 );
+const tracking = readFileSync(
+  "supabase/migrations/20261013131000_r1_tracking_visibility_lockdown.sql", "utf8",
+);
+const eventWriter = readFileSync(
+  "supabase/migrations/20261013132000_r1_system_event_writer_lockdown.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -101,6 +107,13 @@ describe("R1 partner-scope migration source checks", () => {
     expect(packing).toContain("v_shipment_id IS NULL");
     expect(packing).toContain("NOT public.lourex_r1_is_assigned_deal(v_deal_id)");
     expect(packing).toContain("R1: supplier packing list shipment is not assigned to partner");
+  });
+
+  it("removes global anonymous timeline reads and unrestricted partner inserts", () => {
+    expect(tracking).toContain('DROP POLICY IF EXISTS "Public can view customer visible tracking updates"');
+    expect(tracking).toContain('DROP POLICY IF EXISTS "Assigned partners can insert tracking updates"');
+    expect(eventWriter).toContain("R1: system event writer requires owner or operations");
+    expect(eventWriter).toContain("auth.uid() IS NULL");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
