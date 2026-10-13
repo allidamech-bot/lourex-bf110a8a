@@ -218,9 +218,22 @@ serve(async (req) => {
       financeContext,
     } = requestBody;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    // AI execution uses a separately configured OpenAI-compatible provider.
+    // It is not coupled to any third-party application hosting/cloud account.
+    const aiApiKey = Deno.env.get("AI_API_KEY")?.trim();
+    const aiCompletionsUrl = Deno.env.get("AI_CHAT_COMPLETIONS_URL")?.trim();
+    const aiModel = Deno.env.get("AI_MODEL")?.trim();
+    if (!aiApiKey || !aiCompletionsUrl || !aiModel) {
       return jsonResponse(req, { error: "AI provider is not configured" }, 503);
+    }
+    let providerUrl: URL;
+    try {
+      providerUrl = new URL(aiCompletionsUrl);
+      if (providerUrl.protocol !== "https:" || providerUrl.username || providerUrl.password) {
+        throw new Error("AI provider URL must use HTTPS without embedded credentials");
+      }
+    } catch {
+      return jsonResponse(req, { error: "AI provider URL is invalid" }, 503);
     }
 
     let userEmail: string | null = null;
@@ -432,14 +445,14 @@ Rules:
 - Use the user's locale/language when clear: ${normalizedLocale}. If Arabic is appropriate, use clear Modern Standard Arabic.
 - Keep the output compact and focused on today's operational priorities.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(providerUrl.href, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${aiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: aiModel,
         messages: isPurchaseRequestAnalyzer
           ? [
               { role: "system", content: systemPrompt },
