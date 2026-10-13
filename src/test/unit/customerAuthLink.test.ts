@@ -33,6 +33,20 @@ describe("R1-F customer authentication link", () => {
     expect(source).not.toContain('.eq("customer_id", user.id)');
   });
 
+  it("uses private document paths and signed URLs instead of public links", () => {
+    const domain = readFileSync("src/lib/operationsDomain.ts", "utf8");
+    const storage = readFileSync("src/lib/storage.ts", "utf8");
+    expect(domain).toContain('uploadFileToStorage("DOCUMENTS", filePath, input.file)');
+    expect(domain).toContain("const storedFileReference =");
+    expect(domain).toContain("bucket_name: uploaded.bucket");
+    expect(domain).toContain("storage_path: uploaded.path");
+    expect(domain).toContain("const signPrivateAttachmentRows =");
+    expect(domain).toContain("createSignedUrl(row.storage_path, 600)");
+    expect(domain).not.toContain('uploadFile("DOCUMENTS", filePath, input.file)');
+    expect(storage).toContain('bucket === "PRODUCT_IMAGES"');
+    expect(storage).toContain('if (bucket !== "PRODUCT_IMAGES")');
+  });
+
   it("does not assume customer primary keys are Supabase authentication IDs", () => {
     const source = readFileSync("src/lib/operationsDomain.ts", "utf8");
     expect(source).toContain('.eq("auth_user_id", user.id)');
