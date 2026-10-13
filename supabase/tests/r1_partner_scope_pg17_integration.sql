@@ -149,6 +149,10 @@ BEGIN
 END;
 $permissive$;
 
+-- Simulate an older permissive identity policy that ignores account status.
+CREATE POLICY "Legacy assigned Turkish deal" ON public.deals
+ FOR SELECT TO authenticated USING (assigned_turkish_partner_id=auth.uid());
+
 CREATE POLICY "Customers own requests" ON public.purchase_requests
   FOR SELECT TO authenticated USING (
     customer_id IN (
@@ -413,6 +417,26 @@ BEGIN
   END IF;
 END;
 $turkish_b$;
+
+-- An inactive partner must not regain deal visibility through historical
+-- permissive identity policies, even if the deal is still assigned to them.
+RESET ROLE;
+UPDATE public.profiles SET status='inactive'
+ WHERE id='00000000-0000-0000-0000-000000000004';
+SET LOCAL ROLE authenticated;
+SELECT pg_catalog.set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
+DO $inactive_turkish$
+BEGIN
+ IF NOT public.lourex_r1_is_partner_actor() THEN
+   RAISE EXCEPTION 'Inactive partner role predicate unexpectedly false';
+ END IF;
+ IF (SELECT count(*) FROM public.deals)<>0 OR
+    (SELECT count(*) FROM public.shipments)<>0 OR
+    (SELECT count(*) FROM public.attachments)<>0 THEN
+   RAISE EXCEPTION 'Inactive partner regained access through a legacy SELECT policy';
+ END IF;
+END;
+$inactive_turkish$;
 
 SELECT pg_catalog.set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
 DO $saudi$
