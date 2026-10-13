@@ -124,7 +124,7 @@ export default function TrackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO
         title={t("publicTracking.title")}
         description={t("publicTracking.description")}
@@ -133,33 +133,33 @@ export default function TrackPage() {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-16">
         <section className="mx-auto max-w-4xl text-center">
-          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-500">
+          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             <ShieldCheck className="h-4 w-4" />
             {t("publicTracking.eyebrow")}
           </div>
-          <h1 className="font-serif text-4xl font-bold text-stone-100 sm:text-5xl md:text-6xl">
+          <h1 className="font-serif text-4xl font-bold text-foreground sm:text-5xl md:text-6xl">
             {t("publicTracking.title")}
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-stone-400 md:text-base">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
             {t("publicTracking.description")}
           </p>
 
-          <div className="mt-8 rounded-[1.8rem] border border-amber-200/15 bg-stone-50/5 p-3 shadow-2xl backdrop-blur-xl">
+          <div className="mt-8 rounded-[1.8rem] border border-primary/20 bg-card p-3 shadow-soft backdrop-blur-xl">
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute start-5 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-500" />
+                <Search className="absolute start-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={trackingId}
                   onChange={(event) => setTrackingId(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && submitLookup()}
                   placeholder={t("publicTracking.placeholder")}
-                  className="h-14 w-full rounded-2xl border border-amber-200/10 bg-stone-900/50 ps-12 pe-4 text-base text-stone-100 outline-none transition-colors placeholder:text-stone-600 focus:border-amber-500/50"
+                  className="h-14 w-full rounded-2xl border border-primary/20 bg-secondary/65 ps-12 pe-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/20"
                 />
               </div>
               <button
                 onClick={submitLookup}
                 disabled={loading}
-                className="h-14 rounded-2xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 px-8 text-sm font-bold text-stone-950 shadow-lg shadow-amber-950/20 transition-colors hover:brightness-110 disabled:opacity-60"
+                className="h-14 rounded-2xl bg-primary px-8 text-sm font-bold text-primary-foreground shadow-lg shadow-amber-950/20 transition-colors hover:brightness-110 disabled:opacity-60"
               >
                 {loading ? t("publicTracking.loading") : t("publicTracking.cta")}
               </button>
@@ -176,48 +176,48 @@ export default function TrackPage() {
 
         {result ? (
           <section className="mt-10 space-y-5">
-            <div className="rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-5 shadow-2xl backdrop-blur-xl md:p-8">
+            <div className="rounded-[2rem] border border-primary/20 bg-card p-5 shadow-soft backdrop-blur-xl md:p-8">
               <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.22em] text-amber-500">{result.trackingId}</p>
-                  <div className="mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-200">
+                  <p className="text-xs uppercase tracking-[0.22em] text-primary">{result.trackingId}</p>
+                  <div className="mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3 text-primary">
                     <Truck className="h-5 w-5 shrink-0" />
                     <span className="truncate text-2xl font-bold md:text-4xl">
                       {currentStage?.label || result.currentStageLabel}
                     </span>
                   </div>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-400">
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
                     {currentStage?.description || result.currentStageDescription}
                   </p>
                 </div>
 
                 <div className="grid min-w-0 grid-cols-2 gap-3 sm:min-w-[20rem]">
-                  <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 p-4">
-                    <p className="text-xs text-stone-500">{t("publicTracking.progressLabels.ratio")}</p>
-                    <p className="mt-2 text-3xl font-bold text-stone-100">{Math.round(progressRatio)}%</p>
+                  <div className="rounded-2xl border border-primary/20 bg-secondary/65 p-4">
+                    <p className="text-xs text-muted-foreground">{t("publicTracking.progressLabels.ratio")}</p>
+                    <p className="mt-2 text-3xl font-bold text-foreground">{Math.round(progressRatio)}%</p>
                   </div>
-                  <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 p-4">
-                    <p className="text-xs text-stone-500">{t("publicTracking.progressLabels.remaining")}</p>
-                    <p className="mt-2 text-3xl font-bold text-stone-100">{remainingStages}</p>
+                  <div className="rounded-2xl border border-primary/20 bg-secondary/65 p-4">
+                    <p className="text-xs text-muted-foreground">{t("publicTracking.progressLabels.remaining")}</p>
+                    <p className="mt-2 text-3xl font-bold text-foreground">{remainingStages}</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-8 grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 p-4">
-                  <MapPin className="h-4 w-4 text-amber-500" />
-                  <p className="mt-3 text-xs text-stone-500">{t("publicTracking.summaryLabels.destination")}</p>
-                  <p className="mt-1 font-semibold text-stone-200">{result.destination}</p>
+                <div className="rounded-2xl border border-primary/20 bg-secondary/65 p-4">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-xs text-muted-foreground">{t("publicTracking.summaryLabels.destination")}</p>
+                  <p className="mt-1 font-semibold text-heading">{result.destination}</p>
                 </div>
-                <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 p-4">
-                  <Clock3 className="h-4 w-4 text-amber-500" />
-                  <p className="mt-3 text-xs text-stone-500">{t("publicTracking.lastUpdate")}</p>
-                  <p className="mt-1 font-semibold text-stone-200">{new Date(result.lastUpdated).toLocaleString(locale)}</p>
+                <div className="rounded-2xl border border-primary/20 bg-secondary/65 p-4">
+                  <Clock3 className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-xs text-muted-foreground">{t("publicTracking.lastUpdate")}</p>
+                  <p className="mt-1 font-semibold text-heading">{new Date(result.lastUpdated).toLocaleString(locale)}</p>
                 </div>
-                <div className="rounded-2xl border border-amber-200/10 bg-stone-900/50 p-4">
-                  <CheckCircle2 className="h-4 w-4 text-amber-500" />
-                  <p className="mt-3 text-xs text-stone-500">{t("publicTracking.statusLabels.next")}</p>
-                  <p className="mt-1 font-semibold text-stone-200">
+                <div className="rounded-2xl border border-primary/20 bg-secondary/65 p-4">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-xs text-muted-foreground">{t("publicTracking.statusLabels.next")}</p>
+                  <p className="mt-1 font-semibold text-heading">
                     {nextStage?.label || t("publicTracking.statusLabels.notShown")}
                   </p>
                 </div>
@@ -225,8 +225,8 @@ export default function TrackPage() {
 
               <div className="mt-8">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-stone-100">{t("publicTracking.confidenceSubtitle")}</p>
-                  <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                  <p className="text-sm font-semibold text-foreground">{t("publicTracking.confidenceSubtitle")}</p>
+                  <span className="rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                     {completedStages.toLocaleString(locale)} / {shipmentStages.length.toLocaleString(locale)}
                   </span>
                 </div>
@@ -234,24 +234,24 @@ export default function TrackPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.8rem] border border-amber-200/15 bg-stone-50/5 p-5 backdrop-blur-xl">
-              <p className="font-semibold text-stone-100">{t("publicTracking.historyTitle")}</p>
+            <div className="rounded-[1.8rem] border border-primary/20 bg-card p-5 backdrop-blur-xl">
+              <p className="font-semibold text-foreground">{t("publicTracking.historyTitle")}</p>
               {result.customerNote ? (
-                <p className="mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-7 text-stone-200">
+                <p className="mt-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm leading-7 text-heading">
                   {result.customerNote}
                 </p>
               ) : null}
               {publicTimeline.length === 0 ? (
-                <p className="mt-3 text-sm leading-7 text-stone-400">{t("publicTracking.historyEmpty")}</p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("publicTracking.historyEmpty")}</p>
               ) : (
                 <div className="mt-4 space-y-3">
                   {publicTimeline.slice().reverse().map((event) => {
                     const stage = getShipmentStageCopy(event.stageCode, lang);
                     return (
-                      <div key={event.id} className="rounded-2xl border border-amber-200/10 bg-stone-900/50 px-4 py-4">
-                        <p className="font-medium text-stone-100">{stage?.label || event.stageCode}</p>
-                        <p className="mt-1 text-xs text-stone-500">{new Date(event.occurredAt).toLocaleString(locale)}</p>
-                        <p className="mt-3 text-sm leading-7 text-stone-400">
+                      <div key={event.id} className="rounded-2xl border border-primary/20 bg-secondary/65 px-4 py-4">
+                        <p className="font-medium text-foreground">{stage?.label || event.stageCode}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{new Date(event.occurredAt).toLocaleString(locale)}</p>
+                        <p className="mt-3 text-sm leading-7 text-muted-foreground">
                           {event.customerNote || t("publicTracking.defaultUpdateNote")}
                         </p>
                       </div>
@@ -262,7 +262,7 @@ export default function TrackPage() {
             </div>
 
             {publicShipment && publicShipmentAnalysis ? (
-              <div className="rounded-[1.8rem] border border-amber-200/15 bg-stone-50/5 p-5 backdrop-blur-xl">
+              <div className="rounded-[1.8rem] border border-primary/20 bg-card p-5 backdrop-blur-xl">
                 <ShipmentIntelligencePanel
                   shipment={publicShipment}
                   analysis={publicShipmentAnalysis}
@@ -274,9 +274,9 @@ export default function TrackPage() {
             ) : null}
           </section>
         ) : !error && !loading ? (
-          <div className="mx-auto mt-10 max-w-2xl rounded-[2rem] border border-dashed border-amber-200/20 bg-stone-50/5 px-6 py-10 text-center backdrop-blur-xl">
-            <p className="font-serif text-2xl font-semibold text-stone-100">{t("publicTracking.startPrompt")}</p>
-            <p className="mt-3 text-sm leading-7 text-stone-400">{t("publicTracking.startDescription")}</p>
+          <div className="mx-auto mt-10 max-w-2xl rounded-[2rem] border border-dashed border-primary/20 bg-card px-6 py-10 text-center backdrop-blur-xl">
+            <p className="font-serif text-2xl font-semibold text-foreground">{t("publicTracking.startPrompt")}</p>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{t("publicTracking.startDescription")}</p>
           </div>
         ) : null}
       </main>
