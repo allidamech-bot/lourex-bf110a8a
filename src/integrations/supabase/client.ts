@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "./types";
+import { brokeredPreviewStorage } from "./previewAuthStorage";
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 export const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
@@ -179,7 +180,7 @@ export const supabase = createClient<Database>(
     SUPABASE_PUBLISHABLE_KEY || "supabase-runtime-not-configured",
     {
       auth: {
-        storage: localStorage,
+        storage: brokeredPreviewStorage(),
         persistSession: true,
         autoRefreshToken: true,
       },
