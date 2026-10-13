@@ -83,7 +83,7 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 
 ## Production Deployment
 
-Vercel is the primary production deployment target for the Lourex SPA. The included `vercel.json` routes all non-file requests to `index.html`, so browser refreshes and deep links under `/dashboard`, `/customer-portal`, and public pages resolve through React Router.
+Before promoting a build, verify that `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` point to the **standalone** LOUREX Supabase project `gxmqchznfolerliorpkz`. The production build gate rejects other project refs. Supabase database migrations, private Storage buckets, and required Edge Function RPCs must be checked separately; passing a frontend build is not proof that those backend resources exist. Keep server credentials in Supabase or server-side deployment secrets, never in the browser.\n\nVercel is the primary production deployment target for the Lourex SPA. The included `vercel.json` routes all non-file requests to `index.html`, so browser refreshes and deep links under `/dashboard`, `/customer-portal`, and public pages resolve through React Router.
 
 Set these Vercel project environment variables:
 
