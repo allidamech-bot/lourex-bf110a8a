@@ -23,5 +23,9 @@ describe("R1-F customer authentication link", () => {
     expect(source).not.toContain("customerId !== user.id");
     expect(source).not.toContain("inserted.data.customer_id !== user.id");
     expect(source).not.toContain("customerRecord?.id || user?.id");
+    expect(source).toContain("const ownsRequest = Boolean(customer?.id && request.customer_id === customer.id)");
+    expect(source).not.toContain("request.customer_id === user.id ||");
+    expect(source).not.toContain("requestEmail === userEmail");
+    expect(source).not.toContain("request.customer_id || user.id");
   });
 });
