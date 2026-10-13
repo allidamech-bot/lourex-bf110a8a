@@ -90,7 +90,7 @@ export default function RequestPage() {
   const productDisplayName = productSource ? (lang === "ar" ? productSource.nameAr : productSource.nameEn) : "";
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO
         title={t("requestPage.seoTitle")}
         description={t("requestPage.seoDescription")}
@@ -110,19 +110,19 @@ export default function RequestPage() {
               />
               <div className="grid gap-4">
                 {cards.map((item) => (
-                  <div key={item.title} className="rounded-[1.7rem] border border-amber-200/15 bg-stone-50/5 p-5 shadow-2xl backdrop-blur-xl">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                  <div key={item.title} className="rounded-[1.7rem] border border-primary/20 bg-card p-5 shadow-soft backdrop-blur-xl">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
                       <item.icon className="h-5 w-5" />
                     </div>
-                    <h3 className="mt-5 font-serif text-2xl font-semibold text-stone-100">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-stone-400">{item.desc}</p>
+                    <h3 className="mt-5 font-serif text-2xl font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {loadingEditRequest ? (
-              <div className="rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-8 text-sm text-stone-400 backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-border/70 bg-card p-8 shadow-soft text-sm text-muted-foreground backdrop-blur-xl">
                 {t("common.loading") || "Loading..."}
               </div>
             ) : editRequestId && editRequestError ? (
@@ -132,11 +132,11 @@ export default function RequestPage() {
             ) : (
               <div className="space-y-4">
                 {isCatalogInspiredRequest ? (
-                  <div className="rounded-[1.6rem] border border-amber-500/20 bg-amber-500/5 p-4 text-sm leading-7 text-stone-400">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
+                  <div className="rounded-[1.6rem] border border-primary/20 bg-primary-soft p-4 text-sm leading-7 text-muted-foreground">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">
                       {t("requests.labels.catalogOriginRequest")}
                     </p>
-                    <p className="mt-1 font-semibold text-stone-100">
+                    <p className="mt-1 font-semibold text-foreground">
                       {t("requestPage.freeFormTitle")}
                     </p>
                     <p className="mt-1">
