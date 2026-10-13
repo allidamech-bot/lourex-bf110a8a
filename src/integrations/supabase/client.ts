@@ -4,7 +4,7 @@ import type { Database } from "./types";
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 export const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
-export const EXPECTED_SUPABASE_PROJECT_REF = "qezrzwoiyhbjrrxnrqra";
+export const EXPECTED_SUPABASE_PROJECT_REF = "gxmqchznfolerliorpkz";
 export const ENABLE_OPTIONAL_BACKEND_PROBES =
   (import.meta.env.VITE_ENABLE_OPTIONAL_BACKEND_PROBES as string | undefined)?.trim() === "true";
 
@@ -35,7 +35,7 @@ export const optionalBackendTables = new Set([
 ]);
 
 export const optionalBackendUnavailableMessage =
-  "This optional backend feature is not available in the current Lovable Cloud configuration.";
+  "This optional feature is unavailable because the connected Supabase backend does not have the required resource.";
 
 const warnedOptionalBackendKeys = new Set<string>();
 const unavailableTables = new Set<string>();
@@ -176,7 +176,7 @@ if (
 
 export const supabase = createClient<Database>(
     runtimeSupabaseUrl,
-    SUPABASE_PUBLISHABLE_KEY || "lovable-cloud-runtime-not-configured",
+    SUPABASE_PUBLISHABLE_KEY || "supabase-runtime-not-configured",
     {
       auth: {
         storage: localStorage,

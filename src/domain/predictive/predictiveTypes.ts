@@ -51,7 +51,7 @@ export type PredictiveFinanceSnapshot = {
 };
 
 export type PredictiveDataSnapshot = {
-  generatedFrom?: "lovable-cloud" | "static" | "manual";
+  generatedFrom?: "supabase" | "static" | "manual";
   generatedAt?: string;
   requests?: PredictiveRequestSnapshot[];
   deals?: PredictiveDealSnapshot[];

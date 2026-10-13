@@ -183,7 +183,7 @@ export const NotificationEnginePanel = () => {
               <div>
                 <p className="font-semibold text-amber-100">Running without notification database migrations</p>
                 <p className="mt-1 text-sm leading-6 text-amber-100/70">
-                  Lourex is using the existing notification_events table, built-in templates, and a virtual delivery queue. This keeps operations visible while Lovable/Supabase SQL access is unavailable.
+                  Lourex is using the existing notification_events table, built-in templates, and a virtual delivery queue. This keeps operations visible while optional Supabase notification resources are unavailable.
                 </p>
               </div>
             </div>

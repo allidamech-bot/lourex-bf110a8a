@@ -105,7 +105,7 @@ export function BackendReadinessPanel() {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Production readiness</p>
-              <h3 className="mt-2 font-serif text-2xl font-semibold text-stone-100">Lovable Cloud Backend Readiness</h3>
+              <h3 className="mt-2 font-serif text-2xl font-semibold text-stone-100">Supabase Backend Readiness</h3>
               <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-400">
                 Checks the backend foundation behind public, customer, admin, accounting, tracking, AI, and notification workflows.
               </p>

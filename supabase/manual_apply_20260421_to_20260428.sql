@@ -1,6 +1,6 @@
 ﻿-- Manual combined migration bundle: 20260421 through 20260428
 -- Generated from local supabase/migrations files in strict filename order.
--- Review carefully before manual execution in Lovable Cloud / Supabase SQL editor.
+-- Review carefully before manual execution in standalone Supabase SQL editor.
 
 
 -- ============================================================================

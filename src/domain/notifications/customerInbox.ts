@@ -270,21 +270,38 @@ export const loadCustomerNotificationInbox = async (
     };
   }
 
+  // Notification events and purchase requests refer to lourex_customers.id,
+  // not the signed-in Supabase auth UUID.
+  const { data: linkedCustomer, error: customerLinkError } = await db
+    .from<{ id: string; auth_user_id: string | null }>("lourex_customers")
+    .select("id, auth_user_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (customerLinkError) {
+    logOptionalBackendUnavailableOnce("customer_notification_identity", customerLinkError);
+  }
+  const customerId = linkedCustomer?.auth_user_id === user.id ? linkedCustomer.id : null;
+
   const [inAppRows, eventRows, requestRows, auditRows] = await Promise.all([
     safeList<NotificationRow>("notifications", () =>
       db.from<NotificationRow>("notifications").select("id, user_id, type, title, message, link, read, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
     ),
-    safeList<NotificationEventRow>("notification_events", () =>
-      db.from<NotificationEventRow>("notification_events").select("id, event_type, customer_id, order_id, tracking_id, channel_hint, metadata, status, delivery_status, created_at").eq("customer_id", user.id).order("created_at", { ascending: false }).limit(50),
-    ),
-    safeList<PurchaseRequestLite>("purchase_requests", () =>
-      db
-        .from<PurchaseRequestLite>("purchase_requests")
-        .select("id, request_number, customer_id, email, converted_deal_id, tracking_code, status")
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(100),
-    ),
+    customerId
+      ? safeList<NotificationEventRow>("notification_events", () =>
+          db.from<NotificationEventRow>("notification_events").select("id, event_type, customer_id, order_id, tracking_id, channel_hint, metadata, status, delivery_status, created_at").eq("customer_id", customerId).order("created_at", { ascending: false }).limit(50),
+        )
+      : Promise.resolve([] as NotificationEventRow[]),
+    customerId
+      ? safeList<PurchaseRequestLite>("purchase_requests", () =>
+          db
+            .from<PurchaseRequestLite>("purchase_requests")
+            .select("id, request_number, customer_id, email, converted_deal_id, tracking_code, status")
+            .eq("customer_id", customerId)
+            .order("created_at", { ascending: false })
+            .limit(100),
+        )
+      : Promise.resolve([] as PurchaseRequestLite[]),
     safeList<AuditLogRow>("audit_logs", () =>
       db
         .from<AuditLogRow>("audit_logs")

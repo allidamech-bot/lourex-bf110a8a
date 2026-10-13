@@ -2122,7 +2122,7 @@ updateError: "Could not update the edit request.",
       productionFallbacks: {
         backend: {
           title: "Backend unavailable",
-          body: "Lovable Cloud runtime data is not available right now. The page will stay open and update when the service returns.",
+          body: "Supabase backend data is not available right now. The page will stay open and update when the service returns.",
         },
         optionalFeature: {
           title: "Optional feature not configured",
@@ -4194,7 +4194,7 @@ updateError: "تعذر تحديث طلب التعديل.",
       productionFallbacks: {
         backend: {
           title: "الخلفية غير متاحة",
-          body: "بيانات تشغيل Lovable Cloud غير متاحة حالياً. ستبقى الصفحة مفتوحة وسيتم تحديثها عند عودة الخدمة.",
+          body: "بيانات Supabase غير متاحة حالياً. ستبقى الصفحة مفتوحة وسيتم تحديثها عند عودة الخدمة.",
         },
         optionalFeature: {
           title: "الميزة الاختيارية غير مهيأة",

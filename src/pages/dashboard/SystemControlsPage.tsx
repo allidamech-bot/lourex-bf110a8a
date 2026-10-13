@@ -108,7 +108,7 @@ const formatJson = (value: unknown) => JSON.stringify(value ?? {}, null, 2);
 
 const getDayKey = (value: string | null | undefined) => (value ? value.slice(0, 10) : "");
 
-const optionalTableMessage = "Optional Lovable Cloud table is not configured yet.";
+const optionalTableMessage = "Optional Supabase table is not configured yet.";
 
 const optionalQuery = async <T,>(
   runner: () => PromiseLike<{ data: T[] | null; error: unknown | null }>,

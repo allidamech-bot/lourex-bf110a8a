@@ -64,7 +64,7 @@ const checkSupabaseConfiguration = (): SystemHealthCheck => {
   if (!isSupabaseConfigured) {
     return {
       id: "supabase-env",
-      label: "Lovable Cloud / Supabase environment",
+      label: "Supabase environment",
       status: "error",
       details: "Required Supabase environment variables are missing.",
       metadata: { missingSupabaseEnvVars },
@@ -87,7 +87,7 @@ const checkSupabaseConfiguration = (): SystemHealthCheck => {
 
   return {
     id: "supabase-env",
-    label: "Lovable Cloud / Supabase environment",
+    label: "Supabase environment",
     status: "ok",
     details: "Supabase environment variables are present and the project ref matches the expected LOUREX project when detectable.",
     metadata: {
@@ -149,7 +149,7 @@ const checkTableReadable = async (tableName: string, critical: boolean): Promise
       label: `${critical ? "Critical" : "Optional"} table: ${tableName}`,
       status: critical || !missing ? "error" : "warning",
       details: missing
-        ? "Backend resource appears to be unavailable in the current Lovable Cloud configuration."
+        ? "Backend resource is not available in the connected Supabase database."
         : normalizeErrorMessage(error),
       metadata: {
         code: (error as { code?: string }).code || "unknown",
@@ -200,7 +200,7 @@ const checkStorageBucket = async (bucketKey: keyof typeof STORAGE_BUCKETS): Prom
         bucket: bucketName,
         note:
           bucketKey === "TRANSFER_PROOFS"
-            ? "This bucket may be intentionally private. Verify signed URL access and storage policies when Lovable SQL access is available."
+            ? "This bucket must be private. Verify signed URL access and Supabase Storage policies."
             : undefined,
       },
     };

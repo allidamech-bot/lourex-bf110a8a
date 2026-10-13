@@ -196,7 +196,7 @@ const manualProductionProbes: BackendReadinessProbe[] = [
     type: "function",
     requirement: "manual",
     status: "unknown",
-    message: "Verify Edge Function deployment, LOVABLE_API_KEY, SUPABASE_SERVICE_ROLE_KEY, and ALLOWED_ORIGIN configuration.",
+    message: "Verify the Supabase Edge Function, AI_API_KEY, AI_CHAT_COMPLETIONS_URL, AI_MODEL, SUPABASE_SERVICE_ROLE_KEY, and ALLOWED_ORIGIN configuration.",
   },
 ];
 
@@ -251,7 +251,7 @@ function buildEnvironmentProbes(): BackendReadinessProbe[] {
   return [
     {
       id: "supabase-env",
-      label: "Lovable Cloud client configuration",
+      label: "Supabase client configuration",
       area: "Environment",
       type: "environment",
       requirement: "critical",
@@ -263,7 +263,7 @@ function buildEnvironmentProbes(): BackendReadinessProbe[] {
     },
     {
       id: "supabase-project-ref",
-      label: "Expected Lovable Cloud project",
+      label: "Expected LOUREX Supabase project",
       area: "Environment",
       type: "environment",
       requirement: "critical",
@@ -329,7 +329,7 @@ async function probeTable(definition: TableProbeDefinition): Promise<BackendRead
       type: "table",
       requirement: definition.requirement,
       status: definition.requirement === "critical" ? "missing" : "warning",
-      message: "Lovable Cloud client configuration is missing, so this table could not be checked.",
+      message: "Supabase client configuration is missing, so this table could not be checked.",
       details: { description: definition.description },
     };
   }

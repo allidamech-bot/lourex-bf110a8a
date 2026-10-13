@@ -59,7 +59,7 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 3. **Configure Environment Variables**:
    Create a `.env` file in the root directory:
    ```env
-   VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
+   VITE_SUPABASE_URL=https://gxmqchznfolerliorpkz.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 4. **Run development server**:
@@ -83,24 +83,26 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 
 ## Production Deployment
 
-Vercel is the primary production deployment target for the Lourex SPA. The included `vercel.json` routes all non-file requests to `index.html`, so browser refreshes and deep links under `/dashboard`, `/customer-portal`, and public pages resolve through React Router.
+Before promoting a build, verify that `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` point to the **standalone** LOUREX Supabase project `gxmqchznfolerliorpkz`. The production build gate rejects other project refs. Supabase database migrations, private Storage buckets, and required Edge Function RPCs must be checked separately; passing a frontend build is not proof that those backend resources exist. Keep server credentials in Supabase or server-side deployment secrets, never in the browser.\n\nVercel is the primary production deployment target for the Lourex SPA. The included `vercel.json` routes all non-file requests to `index.html`, so browser refreshes and deep links under `/dashboard`, `/customer-portal`, and public pages resolve through React Router.
 
 Set these Vercel project environment variables:
 
 ```env
-VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
+VITE_SUPABASE_URL=https://gxmqchznfolerliorpkz.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
-Supabase Edge Functions also need server-side secrets configured in Supabase:
+Supabase Edge Functions use server-side secrets configured in your standalone LOUREX Supabase project. AI provider variables are optional and require an explicitly configured compatible provider:
 
 ```env
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-LOVABLE_API_KEY=your_ai_gateway_key
+AI_API_KEY=your_optional_provider_key
+AI_CHAT_COMPLETIONS_URL=https://your-provider.example/v1/chat/completions
+AI_MODEL=your_model_id
 ALLOWED_ORIGIN=https://www.lou-rex.com,https://lou-rex.com
 ```
 
-`VITE_SUPABASE_ANON_KEY` is intentionally not used by the frontend. Use `VITE_SUPABASE_PUBLISHABLE_KEY` consistently for Vercel and local development.
+Use `VITE_SUPABASE_PUBLISHABLE_KEY` from the standalone LOUREX Supabase project. Do not use the legacy `VITE_SUPABASE_ANON_KEY`. AI API credentials are optional and must remain **server-side Supabase Edge Function secrets**, never `VITE_*` variables. No AI provider is enabled automatically; configuring one may incur provider charges.
 
 ---
 
@@ -117,3 +119,10 @@ src/
 supabase/
   migrations/        SQL migrations (RBAC, RLS, Functions)
 ```
+
+
+## Standalone Supabase authority
+
+The sole supported LOUREX backend is the standalone Supabase project `gxmqchznfolerliorpkz`. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are public frontend build settings; they must be set in Vercel to this project's URL and its matching **publishable** key. Do not put service-role keys or AI provider keys into any `VITE_` setting or commit a real `.env` file.
+
+Production builds reject a different Supabase project ID. Staged database migrations are applied selectively; do not run the entire historical migration folder on the connected database. The public website remains independent from any website builder's backend.

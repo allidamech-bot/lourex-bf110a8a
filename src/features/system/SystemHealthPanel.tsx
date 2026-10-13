@@ -86,7 +86,7 @@ export function SystemHealthPanel() {
       <EmptyState
         icon={AlertTriangle}
         title="System health is unavailable"
-        description="Refresh the report or verify the current Lovable Cloud runtime configuration."
+        description="Refresh the report or verify the current Supabase backend configuration."
       />
     );
   }
@@ -111,7 +111,7 @@ export function SystemHealthPanel() {
               </div>
             </div>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-              Runtime checks for Lovable Cloud configuration, critical tables, optional backend features, and storage buckets. This panel is read-only and does not require direct SQL access.
+              Runtime checks for Supabase configuration, critical tables, optional backend features, and storage buckets. This panel is read-only and does not require direct SQL access.
             </p>
           </div>
           <Button variant="outline" onClick={() => void loadReport()} disabled={loading}>
