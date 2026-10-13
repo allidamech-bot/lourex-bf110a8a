@@ -1,7 +1,10 @@
+import { createClient } from "@supabase/supabase-js";
+
 type VercelLikeRequest = {
   method?: string;
   headers: {
     origin?: string;
+    authorization?: string;
   };
   body?: unknown;
 };
@@ -136,47 +139,114 @@ const buildPlainText = (payload: PurchaseRequestEmailPayload) => [
   payload.dashboardUrl ? `رابط الطلب: ${payload.dashboardUrl}` : "",
 ].filter(Boolean).join("\n");
 
+const EXPECTED_PROJECT_HOST = "gxmqchznfolerliorpkz.supabase.co";
+const REQUEST_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const NOTIFICATION_WINDOW_MS = 60 * 60 * 1000;
+
 export default async function handler(req: VercelLikeRequest, res: VercelLikeResponse) {
   setCorsHeaders(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  // Do not trust client-supplied request details or any unsigned email payload.
+  const match = /^Bearer ([A-Za-z0-9_.-]+)$/i.exec((req.headers.authorization || "").trim());
+  if (!match) return res.status(401).json({ error: "Authentication required" });
+
+  let requestId: unknown;
+  try {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    requestId = body && typeof body === "object" ? (body as { requestId?: unknown }).requestId : undefined;
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON body" });
+  }
+  if (typeof requestId !== "string" || !REQUEST_ID_PATTERN.test(requestId)) {
+    return res.status(400).json({ error: "A valid requestId is required" });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  const supabaseUrl = process.env.VITE_SUPABASE_URL?.trim();
+  const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+  if (!supabaseUrl || !publishableKey) {
+    return res.status(503).json({ error: "Supabase is not configured" });
+  }
+  try {
+    const url = new URL(supabaseUrl);
+    if (url.protocol !== "https:" || url.hostname !== EXPECTED_PROJECT_HOST) {
+      return res.status(503).json({ error: "Unexpected Supabase project" });
+    }
+  } catch {
+    return res.status(503).json({ error: "Invalid Supabase configuration" });
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY?.trim();
-  if (!resendApiKey) {
-    return res.status(500).json({ error: "RESEND_API_KEY is not configured" });
-  }
-
-  const payload = (typeof req.body === "string" ? JSON.parse(req.body) : req.body || {}) as PurchaseRequestEmailPayload;
-  const notifyTo = process.env.LOUREX_REQUEST_NOTIFY_TO?.trim() || "alidamish@lou-rex.com";
-  const from = process.env.LOUREX_EMAIL_FROM?.trim() || "Lourex <onboarding@resend.dev>";
-  const requestNumber = text(payload.requestNumber, "New request");
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [notifyTo],
-      subject: `طلب شراء جديد في Lourex - ${requestNumber}`,
-      html: buildEmailHtml(payload),
-      text: buildPlainText(payload),
-    }),
+  const accessToken = match[1];
+  const db = createClient(supabaseUrl, publishableKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
   });
 
-  const result = await response.json().catch(() => ({}));
+  try {
+    // Server-validated user identity and caller-scoped RLS; never use service_role here.
+    const { data: authData, error: authError } = await db.auth.getUser(accessToken);
+    if (authError || !authData.user) {
+      return res.status(401).json({ error: "Invalid session" });
+    }
 
-  if (!response.ok) {
-    return res.status(response.status).json({ error: "Resend request failed", details: result });
+    const { data: saved, error: lookupError } = await db
+      .from("purchase_requests")
+      .select("id, request_number, created_at, status, full_name, email, phone, country, city, product_name, product_description, quantity, destination, preferred_shipping_method, technical_specs, delivery_notes, image_urls")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (lookupError) return res.status(503).json({ error: "Cannot verify request" });
+    if (!saved) return res.status(404).json({ error: "Request not found or inaccessible" });
+
+    // Only send the initial notification near creation, never for historical records.
+    const createdAt = Date.parse(saved.created_at);
+    const age = Date.now() - createdAt;
+    if (saved.status !== "intake_submitted" || !Number.isFinite(age) || age < -60_000 || age > NOTIFICATION_WINDOW_MS) {
+      return res.status(409).json({ error: "Request is outside the notification window" });
+    }
+
+    const resendApiKey = process.env.RESEND_API_KEY?.trim();
+    if (!resendApiKey) return res.status(503).json({ error: "Email provider is not configured" });
+
+    const payload: PurchaseRequestEmailPayload = {
+      requestId: saved.id,
+      requestNumber: saved.request_number,
+      customerName: saved.full_name,
+      customerEmail: saved.email,
+      customerPhone: saved.phone,
+      customerCountry: saved.country,
+      customerCity: saved.city,
+      productName: saved.product_name,
+      productDescription: saved.product_description,
+      quantity: saved.quantity,
+      destination: saved.destination,
+      preferredShippingMethod: saved.preferred_shipping_method,
+      technicalSpecs: saved.technical_specs,
+      deliveryNotes: saved.delivery_notes,
+      attachmentCount: Array.isArray(saved.image_urls) ? saved.image_urls.length : 0,
+      dashboardUrl: `https://www.lou-rex.com/dashboard/requests?request=${encodeURIComponent(saved.id)}`,
+    };
+    const notifyTo = process.env.LOUREX_REQUEST_NOTIFY_TO?.trim() || "alidamish@lou-rex.com";
+    const from = process.env.LOUREX_EMAIL_FROM?.trim() || "Lourex <onboarding@resend.dev>";
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": `lourex-request-created/${saved.id}`,
+      },
+      body: JSON.stringify({
+        from,
+        to: [notifyTo],
+        subject: `طلب شراء جديد في Lourex - ${text(saved.request_number, "New request")}`,
+        html: buildEmailHtml(payload),
+        text: buildPlainText(payload),
+      }),
+    });
+
+    if (!response.ok) return res.status(502).json({ error: "Email delivery failed" });
+    return res.status(200).json({ ok: true });
+  } catch {
+    return res.status(503).json({ error: "Request notification unavailable" });
   }
-
-  return res.status(200).json({ ok: true, result });
 }
