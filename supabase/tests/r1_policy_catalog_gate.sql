@@ -177,6 +177,27 @@ BEGIN
     RAISE EXCEPTION 'R1: anonymous users can execute notification recipient check';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM public.profiles p
+    WHERE (p.role = 'turkish_partner' AND p.partner_type IS DISTINCT FROM 'turkish')
+       OR (p.role = 'saudi_partner' AND p.partner_type IS DISTINCT FROM 'saudi')
+       OR (p.role NOT IN ('turkish_partner', 'saudi_partner') AND p.partner_type IS NOT NULL)
+  ) THEN
+    RAISE EXCEPTION 'R1: inconsistent stored partner_type for one or more profiles';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'profiles'
+      AND c.conname = 'profiles_partner_type_check'
+      AND pg_get_constraintdef(c.oid) LIKE '%turkish%'
+  ) THEN
+    RAISE EXCEPTION 'R1: partner_type constraint not aligned to canonical turkish';
+  END IF;
+
   RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
 END;
 $$;
