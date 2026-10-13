@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { resolvePercentage } from "@/lib/metricsDisplay";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import { buildOperationsAdvisor } from "@/features/ai-ops/advisors/operationsAdvisor";
 import { loadAvailableSettlements } from "@/features/ai-ops/services/aiOpsService";
@@ -426,8 +427,8 @@ export default function OverviewPage() {
           <HealthCard label={t("overview.healthCards.businessHealth")} value={executiveWorkspaceState.stability.score} status={executiveWorkspaceState.stability.state} icon={<ShieldCheck className="h-4 w-4" />} />
           <HealthCard label={t("overview.healthCards.operations")} value={executiveWorkspaceState.stability.operationalResilience} icon={<Truck className="h-4 w-4" />} />
           <HealthCard label={t("overview.healthCards.financial")} value={executiveWorkspaceState.stability.financeResilience} icon={<Receipt className="h-4 w-4" />} />
-          <HealthCard label={t("overview.healthCards.customer")} value={customerProfiles[0]?.healthScore || 85} icon={<Users className="h-4 w-4" />} />
-          <HealthCard label={t("overview.healthCards.partner")} value={partnerProfiles[0]?.performanceScore || 90} icon={<ArrowUpRight className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.customer")} value={customerProfiles[0]?.healthScore ?? null} icon={<Users className="h-4 w-4" />} />
+          <HealthCard label={t("overview.healthCards.partner")} value={partnerProfiles[0]?.performanceScore ?? null} icon={<ArrowUpRight className="h-4 w-4" />} />
         </DashboardGrid>
       </DashboardSection>
 
@@ -538,7 +539,7 @@ export default function OverviewPage() {
                   inTransitCount={shipments.filter(s => s.stage === "in_transit").length}
                   delayedCount={deliverySummary.active}
                   blockedWorkflows={pendingEditRequests}
-                  completionScore={85}
+                  completionScore={null}
                 />
               </div>
             </ExecutiveCommandSection>
@@ -699,22 +700,34 @@ export default function OverviewPage() {
   );
 }
 
-const HealthCard = ({ label, value, status, icon }: { label: string; value: number; status?: string; icon: React.ReactNode }) => (
-  <GlassPanel className="p-6 border-white/5 shadow-2xl relative overflow-hidden group">
-    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-      {icon}
-    </div>
-    <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{label}</p>
-    <div className="mt-4 flex items-end justify-between">
-      <h3 className="text-3xl font-black text-white">{value}%</h3>
-      {status && (
-        <span className="text-[9px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-          {status}
-        </span>
+const HealthCard = ({ label, value, status, icon }: {
+  label: string;
+  value: number | null | undefined;
+  status?: string;
+  icon: React.ReactNode;
+}) => {
+  const score = resolvePercentage(value);
+  return (
+    <GlassPanel className="p-6 border-white/5 shadow-2xl relative overflow-hidden group">
+      <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+        {icon}
+      </div>
+      <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{label}</p>
+      <div className="mt-4 flex items-end justify-between">
+        <h3 className="text-3xl font-black text-white">{score === null ? "—" : `${score}%`}</h3>
+        {status && score !== null && (
+          <span className="text-[9px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            {status}
+          </span>
+        )}
+      </div>
+      {score === null ? (
+        <div className="h-1 mt-4 rounded-full bg-white/5" aria-label="Score unavailable" />
+      ) : (
+        <Progress value={score} className="h-1 mt-4 bg-white/5" indicatorClassName={cn(
+          score > 80 ? "bg-emerald-500" : score > 50 ? "bg-amber-500" : "bg-rose-500"
+        )} />
       )}
-    </div>
-    <Progress value={value} className="h-1 mt-4 bg-white/5" indicatorClassName={cn(
-      value > 80 ? "bg-emerald-500" : value > 50 ? "bg-amber-500" : "bg-rose-500"
-    )} />
-  </GlassPanel>
-);
+    </GlassPanel>
+  );
+};
