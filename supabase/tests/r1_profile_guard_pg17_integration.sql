@@ -167,6 +167,20 @@ END;
 $owner_tests$;
 
 RESET ROLE;
+-- Simulate trusted backend maintenance without auth-user context. The final
+-- owner may neither be demoted/disabled nor deleted, even with elevated SQL.
+SELECT pg_catalog.set_config('request.jwt.claim.sub','',true);
+DO $trusted_update_guard_tests$
+DECLARE denied boolean := false;
+BEGIN
+  BEGIN
+    UPDATE public.profiles SET status='inactive'
+    WHERE id='00000000-0000-0000-0000-000000000001';
+  EXCEPTION WHEN check_violation THEN denied := true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Service-role final owner UPDATE succeeded'; END IF;
+END;
+$trusted_update_guard_tests$;
 -- Exercise service-side deletes (including auth.users cascade semantics).
 DO $delete_guard_tests$
 DECLARE
