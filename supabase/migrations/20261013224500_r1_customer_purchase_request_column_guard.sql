@@ -48,6 +48,8 @@ END;
 $function$;
 
 
+-- Customer-created requests may retain an intake tracking reference for the
+-- existing customer form, but cannot set payment/review/approval fields.
 -- Customer-created requests must start unapproved. RLS checked their customer
 -- ID but previously allowed any status and forged payment approval on INSERT.
 CREATE OR REPLACE FUNCTION public.lourex_r1_guard_customer_request_inserts()
@@ -70,7 +72,6 @@ BEGIN
        OR NEW.transfer_accepted_at IS NOT NULL
        OR NEW.transfer_accepted_by IS NOT NULL
        OR NEW.transfer_rejection_reason IS NOT NULL
-       OR NEW.tracking_code IS NOT NULL
        OR btrim(COALESCE(NEW.internal_notes,'')) <> ''
     THEN
       RAISE EXCEPTION
