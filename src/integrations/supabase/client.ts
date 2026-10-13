@@ -4,7 +4,7 @@ import type { Database } from "./types";
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 export const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
-export const EXPECTED_SUPABASE_PROJECT_REF = "qezrzwoiyhbjrrxnrqra";
+export const EXPECTED_SUPABASE_PROJECT_REF = "gxmqchznfolerliorpkz";
 export const ENABLE_OPTIONAL_BACKEND_PROBES =
   (import.meta.env.VITE_ENABLE_OPTIONAL_BACKEND_PROBES as string | undefined)?.trim() === "true";
 
