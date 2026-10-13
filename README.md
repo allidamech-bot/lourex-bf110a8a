@@ -59,7 +59,7 @@ Lourex uses a strict Role-Based Access Control (RBAC) model combined with Supaba
 3. **Configure Environment Variables**:
    Create a `.env` file in the root directory:
    ```env
-   VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
+   VITE_SUPABASE_URL=https://gxmqchznfolerliorpkz.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 4. **Run development server**:
@@ -88,15 +88,17 @@ Vercel is the primary production deployment target for the Lourex SPA. The inclu
 Set these Vercel project environment variables:
 
 ```env
-VITE_SUPABASE_URL=https://qezrzwoiyhbjrrxnrqra.supabase.co
+VITE_SUPABASE_URL=https://gxmqchznfolerliorpkz.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
-Supabase Edge Functions also need server-side secrets configured in Supabase:
+Supabase Edge Functions use server-side secrets configured in your standalone LOUREX Supabase project. AI provider variables are optional and require an explicitly configured compatible provider:
 
 ```env
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-LOVABLE_API_KEY=your_ai_gateway_key
+AI_API_KEY=your_optional_provider_key
+AI_CHAT_COMPLETIONS_URL=https://your-provider.example/v1/chat/completions
+AI_MODEL=your_model_id
 ALLOWED_ORIGIN=https://www.lou-rex.com,https://lou-rex.com
 ```
 
@@ -117,3 +119,10 @@ src/
 supabase/
   migrations/        SQL migrations (RBAC, RLS, Functions)
 ```
+
+
+## Standalone Supabase authority
+
+The sole supported LOUREX backend is the standalone Supabase project `gxmqchznfolerliorpkz`. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are public frontend build settings; they must be set in Vercel to this project's URL and its matching **publishable** key. Do not put service-role keys or AI provider keys into any `VITE_` setting or commit a real `.env` file.
+
+Production builds reject a different Supabase project ID. Staged database migrations are applied selectively; do not run the entire historical migration folder on the connected database. The public website remains independent from any website builder's backend.
