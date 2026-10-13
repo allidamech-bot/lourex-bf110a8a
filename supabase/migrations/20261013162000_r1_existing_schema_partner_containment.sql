@@ -178,6 +178,12 @@ WITH CHECK (
   )
 );
 
+-- Partners may add evidence they own to assigned operations, but never delete
+-- evidence, even if the record is assigned to them.
+CREATE POLICY "R1 existing-schema partner attachment delete guard"
+ON public.attachments AS RESTRICTIVE FOR DELETE TO authenticated
+USING (NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner']));
+
 CREATE POLICY "R1 existing-schema partner tracking select guard"
 ON public.tracking_updates AS RESTRICTIVE FOR SELECT TO authenticated
 USING (
@@ -191,6 +197,7 @@ WITH CHECK (
   NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])
   OR (
     updated_by = auth.uid()
+    AND updated_by_role = public.current_lourex_role()
     AND EXISTS (
       SELECT 1
       FROM public.shipments s
