@@ -25,7 +25,7 @@ export default function HomePage() {
       description: isArabic ? "حلول توريد للمستوردين والموزعين." : "For importers and distributors.",
       to: "/chocolate-sourcing",
       icon: PackageSearch,
-      className: "lg:col-span-2 bg-[#E9F5F1] dark:bg-[#122B2A]",
+      className: "bg-[#E9F5F1] dark:bg-[#122B2A]",
     },
     {
       label: isArabic ? "02 / البسكويت" : "02 / BISCUITS",
@@ -120,7 +120,7 @@ export default function HomePage() {
 
             <div className="grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3">
               {services.map((service, index) => (
-                <motion.div key={service.to} {...entrance} transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : index * 0.08 }}>
+                <motion.div key={service.to} {...entrance} className={index === 0 ? "lg:col-span-2" : ""} transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : index * 0.08 }}>
                   <Link
                     to={service.to}
                     className={`group relative flex h-full min-h-[285px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-border/60 p-7 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_24px_56px_-35px_rgba(8,127,120,0.28)] sm:p-9 ${service.className}`}
@@ -141,7 +141,7 @@ export default function HomePage() {
                   </Link>
                 </motion.div>
               ))}
-              <motion.div {...entrance} className="flex min-h-[285px] flex-col justify-between rounded-[1.75rem] border border-[#1A7770] bg-[#087F78] p-7 text-white dark:border-[#225954] dark:bg-[#143F3B] sm:p-9">
+              <motion.div {...entrance} className="flex min-h-[285px] flex-col justify-between rounded-[1.75rem] border border-[#1A7770] bg-[#087F78] p-7 text-white dark:border-[#225954] dark:bg-[#143F3B] sm:p-9 lg:col-span-2">
                 <Globe2 className="h-7 w-7 text-[#D6F5F0]" strokeWidth={1.5} aria-hidden="true" />
                 <div>
                   <h3 className="text-2xl font-bold leading-snug">
