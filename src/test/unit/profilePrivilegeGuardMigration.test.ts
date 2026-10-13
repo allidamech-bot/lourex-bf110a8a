@@ -8,7 +8,9 @@ const sql = readFileSync(
 
 describe("R1 profile privilege escalation boundary", () => {
   it("guards both self INSERT and UPDATE paths without blocking owner administration", () => {
-    expect(sql).toContain("BEFORE INSERT OR UPDATE ON public.profiles");
+    expect(sql).toContain("BEFORE INSERT OR UPDATE OR DELETE ON public.profiles");
+    expect(sql).toContain("IF TG_OP = 'DELETE' THEN");
+    expect(sql).toContain("Cannot delete the final active owner.");
     expect(sql).toContain("IF TG_OP = 'INSERT'");
     expect(sql).toContain("ELSIF TG_OP = 'UPDATE'");
     expect(sql).toContain("v_owner := public.is_lourex_role(v_actor, ARRAY['owner'])");
