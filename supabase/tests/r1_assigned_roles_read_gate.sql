@@ -7,7 +7,7 @@
 -- psql -v ON_ERROR_STOP=1 -v turkish_uid=<uuid> -v saudi_uid=<uuid> \
 --   -v owner_uid=<uuid> -v customer_uid=<uuid> -v customer_email=<email> \
 --   -v turkish_deal=<uuid> -v saudi_deal=<uuid> \
---   -v customer_deal=<uuid> -v foreign_deal=<uuid> \
+--   -v customer_deal=<uuid> -v foreign_deal=<uuid> -v foreign_shipment=<uuid> \
 --   -f supabase/tests/r1_assigned_roles_read_gate.sql
 --
 -- Do not use production users. RLS catalog + unit tests alone are NOT enough.
@@ -42,6 +42,33 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- Turkish partner may not submit an unrelated supplier packing list via
+-- the SECURITY DEFINER RPC, even if they know the foreign shipment UUID.
+-- This must throw our explicit R1 assignment error (not just a missing table).
+SELECT set_config('lourex.test.foreign_shipment', :'foreign_shipment', true);
+DO $
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.submit_supplier_packing_list(
+      current_setting('lourex.test.foreign_shipment'),
+      '[{"itemName":"R1 test carton","lengthCm":10,"widthCm":10,"heightCm":10,"weightKg":1,"quantity":1}]'::jsonb,
+      0.001, 1
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM LIKE '%R1: supplier packing list shipment is not assigned to partner%' THEN
+      v_rejected := true;
+    ELSE
+      RAISE;
+    END IF;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'R1: Turkish partner could submit packing list for foreign shipment';
+  END IF;
+END;
+$;
 
 -- Saudi partner cannot see the Turkish deal or the foreign deal.
 SELECT set_config('request.jwt.claim.sub', :'saudi_uid', true);
