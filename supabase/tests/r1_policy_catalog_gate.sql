@@ -25,7 +25,9 @@ BEGIN
     ('ledger_entries', 'Lourex R1 Saudi assigned ledger entries'),
     ('ledger_lines', 'Lourex R1 Saudi assigned ledger lines'),
     ('ledger_accounts', 'Lourex R1 Saudi assigned ledger accounts'),
-    ('profiles', 'Lourex users can read allowed profiles')
+    ('profiles', 'Lourex users can read allowed profiles'),
+    ('supplier_packing_lists', 'supplier_packing_lists_select'),
+    ('supplier_packing_list_items', 'supplier_packing_items_select')
   ) AS t(tbl, name)
   WHERE NOT EXISTS (
     SELECT 1 FROM pg_policies p
@@ -91,6 +93,22 @@ BEGIN
       AND NOT c.relrowsecurity
   ) THEN
     RAISE EXCEPTION 'R1: a protected relation has RLS disabled';
+  END IF;
+
+  -- Packing-list SELECT policies must not grant every active partner global
+  -- access; check pg_policies expressions, not only policy presence.
+  IF EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public'
+      AND (
+        (p.tablename = 'supplier_packing_lists'
+         AND p.policyname = 'supplier_packing_lists_select')
+        OR (p.tablename = 'supplier_packing_list_items'
+         AND p.policyname = 'supplier_packing_items_select')
+      )
+      AND COALESCE(p.qual, '') NOT LIKE '%lourex_r1_is_assigned%'
+  ) THEN
+    RAISE EXCEPTION 'R1: packing-list policy lacks deal assignment';
   END IF;
 
   IF has_function_privilege(
