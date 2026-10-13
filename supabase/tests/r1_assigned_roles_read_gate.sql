@@ -5,7 +5,7 @@
 -- deal has a shipment to test unauthorized tracking/shipment visibility.
 --
 -- psql -v ON_ERROR_STOP=1 -v turkish_uid=<uuid> -v saudi_uid=<uuid> \
---   -v owner_uid=<uuid> -v customer_uid=<uuid> \
+--   -v owner_uid=<uuid> -v customer_uid=<uuid> -v customer_email=<email> \
 --   -v turkish_deal=<uuid> -v saudi_deal=<uuid> \
 --   -v customer_deal=<uuid> -v foreign_deal=<uuid> \
 --   -f supabase/tests/r1_assigned_roles_read_gate.sql
@@ -17,6 +17,7 @@ SET LOCAL ROLE authenticated;
 
 -- Active Turkish partner can see the Turkish deal but never the foreign deal.
 SELECT set_config('request.jwt.claim.sub', :'turkish_uid', true);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', :'turkish_uid')::text, true);
 SELECT set_config('lourex.test.own_deal', :'turkish_deal', true);
 SELECT set_config('lourex.test.foreign_deal', :'foreign_deal', true);
 DO $$
@@ -44,6 +45,7 @@ $$;
 
 -- Saudi partner cannot see the Turkish deal or the foreign deal.
 SELECT set_config('request.jwt.claim.sub', :'saudi_uid', true);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', :'saudi_uid')::text, true);
 SELECT set_config('lourex.test.own_deal', :'saudi_deal', true);
 SELECT set_config('lourex.test.foreign_deal', :'foreign_deal', true);
 DO $$
@@ -71,6 +73,7 @@ $$;
 
 -- Customer must see their own linked deal, not foreign business data.
 SELECT set_config('request.jwt.claim.sub', :'customer_uid', true);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', :'customer_uid', 'email', :'customer_email')::text, true);
 SELECT set_config('lourex.test.own_deal', :'customer_deal', true);
 DO $$
 BEGIN
@@ -94,6 +97,7 @@ $$;
 
 -- Company owner retains administrative visibility.
 SELECT set_config('request.jwt.claim.sub', :'owner_uid', true);
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', :'owner_uid')::text, true);
 DO $$
 BEGIN
   IF public.current_lourex_role() IS DISTINCT FROM 'owner' THEN
