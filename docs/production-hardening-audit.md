@@ -23,7 +23,7 @@
 - Heavy lazy sections now show a production fallback card if a chunk or component fails.
 - Lazy loading placeholders now use the same production fallback style instead of ad hoc skeleton cards.
 - Runtime infrastructure panels guard all list rendering with safe arrays for empty or missing runtime data.
-- System controls displays a backend-unavailable fallback when Lovable Cloud runtime config is absent.
+- System controls displays a backend-unavailable fallback when Supabase runtime config is absent.
 
 ## Performance Changes
 
