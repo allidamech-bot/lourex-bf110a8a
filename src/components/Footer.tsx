@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
-import { Globe } from "lucide-react";
+import { FileBadge, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { publicContactInfo, getWhatsAppUrl } from "@/lib/contactInfo";
 
@@ -36,16 +36,14 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   ];
 
   const contactLinks = [
-    { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}` },
-    { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}` },
+    { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}`, icon: Mail },
+    { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}`, icon: Phone, ltr: true },
     {
-      label: `WhatsApp TR ${publicContactInfo.whatsappNumbers.turkey.display}`,
-      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.turkey.number),
+      label: isArabic ? "واتساب" : "WhatsApp",
+      href: getWhatsAppUrl(isArabic ? "مرحباً لوريكس، أحتاج إلى المساعدة." : "Hello LOUREX, I need support."),
+      icon: MessageCircle,
     },
-    {
-      label: `WhatsApp KSA ${publicContactInfo.whatsappNumbers.saudi.display}`,
-      href: getWhatsAppUrl("Hello LOUREX, I need support.", publicContactInfo.whatsappNumbers.saudi.number),
-    },
+    { label: publicContactInfo.website, href: publicContactInfo.websiteUrl, icon: Globe },
   ];
 
   const socialLinks = [
@@ -53,80 +51,92 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
     { label: "TikTok", href: publicContactInfo.social.tiktok },
   ];
 
+  const isExternal = (href: string) => href.startsWith("http");
+
   return (
-    <footer ref={ref} className="border-t border-amber-200/10 bg-stone-950 text-stone-300">
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="space-y-4">
-            <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-auto brightness-110" />
-            <p className="text-sm leading-relaxed text-stone-400">
-              {isArabic
-                ? "شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين."
-                : "Trade intermediary and sourcing coordination for food and sweets products, connecting business buyers with suppliers."}
-            </p>
-            <div className="flex items-center gap-2 text-xs text-stone-500">
-              <Globe className="h-3.5 w-3.5 text-amber-500" />
-              <span>{isArabic ? "للمشترين التجاريين حول العالم" : "For global business buyers"}</span>
+    <footer ref={ref} className="relative overflow-hidden bg-footer text-footer-foreground">
+      <div className="meridian-line absolute inset-x-0 top-0" aria-hidden="true" />
+      <svg
+        className="pointer-events-none absolute -top-24 end-[-10%] h-[420px] w-[720px] text-footer-accent/10"
+        viewBox="0 0 720 420"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M0 360 C 180 120, 420 80, 720 140" stroke="currentColor" strokeWidth="1" />
+        <path d="M40 420 C 240 200, 460 160, 720 230" stroke="currentColor" strokeWidth="1" />
+        <path d="M120 420 C 300 270, 500 250, 720 320" stroke="currentColor" strokeWidth="1" />
+      </svg>
+
+      <div className="container relative mx-auto px-4 md:px-8">
+        <div className="grid gap-10 py-14 lg:grid-cols-[1.3fr_2fr] lg:gap-16">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-footer-foreground/[0.06] p-2 pe-4 ring-1 ring-footer-foreground/10">
+              <img src="/logo.png" alt="LOUREX official logo" className="h-10 w-10 object-contain" />
+              <span className="font-heading text-lg font-extrabold tracking-[0.08em]">LOUREX</span>
             </div>
-          </div>
-
-          <FooterColumn title={isArabic ? "المنصة" : "Platform"} links={platformLinks} />
-          <FooterColumn title={isArabic ? "الوساطة والتوريد" : "Products & Sourcing"} links={sourcingLinks} />
-          <FooterColumn title={isArabic ? "المؤسسة" : "LOUREX"} links={navLinks} />
-
-          <div>
-            <h4 className="mb-4 text-sm font-semibold text-stone-100">{isArabic ? "تواصل" : "Contact"}</h4>
+            <p className="max-w-sm text-sm leading-7 text-footer-muted">
+              {isArabic
+                ? "وساطة وتنسيق توريد للمواد الغذائية والحلويات بين المشترين التجاريين والموردين."
+                : "Trade intermediary and sourcing coordination for food and sweets products."}
+            </p>
             <ul className="space-y-2.5">
               {contactLinks.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="text-sm text-stone-400 transition-colors hover:text-amber-500"
-                    target={link.href.startsWith("https://wa.me") ? "_blank" : undefined}
-                    rel={link.href.startsWith("https://wa.me") ? "noreferrer" : undefined}
+                    target={isExternal(link.href) ? "_blank" : undefined}
+                    rel={isExternal(link.href) ? "noreferrer" : undefined}
+                    className="group inline-flex items-center gap-2.5 text-sm text-footer-foreground/90 transition-colors hover:text-footer-accent"
                   >
-                    {link.label}
+                    <link.icon className="h-4 w-4 text-footer-accent" />
+                    <span dir={link.ltr ? "ltr" : undefined}>{link.label}</span>
                   </a>
                 </li>
               ))}
+              <li className="inline-flex items-center gap-2.5 text-sm text-footer-foreground/90">
+                <MapPin className="h-4 w-4 text-footer-accent" />
+                {isArabic ? publicContactInfo.location.ar : publicContactInfo.location.en}
+              </li>
+              <li className="flex items-center gap-2.5 text-sm text-footer-muted">
+                <FileBadge className="h-4 w-4 text-footer-accent" />
+                {isArabic ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en}
+              </li>
             </ul>
-            <h4 className="mb-3 mt-5 text-sm font-semibold text-stone-100">{isArabic ? "القنوات الرسمية" : "Official Channels"}</h4>
-            <ul className="space-y-2.5">
-              {socialLinks.map((link) => (
-                <li key={link.href}>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+            <FooterColumn title={isArabic ? "المنصة" : "Platform"} links={platformLinks} />
+            <FooterColumn title={isArabic ? "التوريد" : "Sourcing"} links={sourcingLinks} />
+            <FooterColumn title={isArabic ? "لوريكس" : "LOUREX"} links={navLinks} />
+            <div>
+              <FooterColumn title={isArabic ? "قانوني" : "Legal"} links={legalLinks} />
+              <h4 className="mb-3 mt-6 text-xs font-semibold text-footer-muted">
+                {isArabic ? "القنوات الرسمية" : "Official channels"}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map((link) => (
                   <a
+                    key={link.href}
                     href={link.href}
-                    className="text-sm text-stone-400 transition-colors hover:text-amber-500"
                     target="_blank"
                     rel="me noreferrer"
+                    className="rounded-full px-3 py-1 text-xs ring-1 ring-footer-foreground/15 transition hover:text-footer-accent hover:ring-footer-accent/50"
                   >
                     {link.label}
                   </a>
-                </li>
-              ))}
-            </ul>
-            <h4 className="mb-3 mt-5 text-sm font-semibold text-stone-100">{isArabic ? "قانوني" : "Legal"}</h4>
-            <ul className="space-y-2.5">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="text-sm text-stone-400 transition-colors hover:text-amber-500">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-amber-200/10 py-6 sm:flex-row">
-          <p className="text-xs text-stone-500">
-            {"\u00A9"} {new Date().getFullYear()}{" "}
-            {isArabic ? "لوريكس LOUREX" : "LOUREX"}.
-            {" "}{t("footer.tagline")}
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-footer-foreground/10 py-6 text-xs text-footer-muted sm:flex-row">
+          <p>
+            {"\u00A9"} {new Date().getFullYear()} {isArabic ? "لوريكس LOUREX" : "LOUREX"}. {t("footer.tagline")}
           </p>
-          <p className="text-xs uppercase tracking-wider text-stone-600">
-            Trade Intermediary & Sourcing Coordination
-          </p>
+          <a href={publicContactInfo.websiteUrl} className="transition-colors hover:text-footer-accent">
+            {publicContactInfo.website}
+          </a>
         </div>
       </div>
     </footer>
@@ -135,11 +145,11 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
 
 const FooterColumn = ({ title, links }: { title: string; links: Array<{ label: string; href: string }> }) => (
   <div>
-    <h4 className="mb-4 text-sm font-semibold text-stone-100">{title}</h4>
+    <h4 className="mb-4 text-xs font-semibold text-footer-muted">{title}</h4>
     <ul className="space-y-2.5">
       {links.map((link) => (
         <li key={link.href}>
-          <Link to={link.href} className="text-sm text-stone-400 transition-colors hover:text-amber-500">
+          <Link to={link.href} className="text-sm text-footer-foreground/85 transition-colors hover:text-footer-accent">
             {link.label}
           </Link>
         </li>
