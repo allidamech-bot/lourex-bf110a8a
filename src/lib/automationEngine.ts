@@ -222,36 +222,24 @@ export const executeAction = async (action: AutomationAction, payload: Automatio
 };
 
 const sendPurchaseRequestEmail = async (payload: AutomationPayload): Promise<AutomationActionResult> => {
-  if (!payload.requestId && !payload.requestNumber) {
-    return { action: "send_purchase_request_email", status: "skipped", reason: "requestId or requestNumber is required." };
+  if (!payload.requestId) {
+    return { action: "send_purchase_request_email", status: "skipped", reason: "A saved purchase request ID is required." };
   }
 
-  const dashboardUrl = typeof window !== "undefined" && payload.requestId
-    ? `${window.location.origin}/dashboard/requests?request=${encodeURIComponent(payload.requestId)}`
-    : undefined;
-
   try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.access_token) {
+      return { action: "send_purchase_request_email", status: "skipped", reason: "An authenticated session is required." };
+    }
+
     const response = await fetch("/api/lourex-request-email", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        requestId: payload.requestId,
-        requestNumber: payload.requestNumber,
-        customerName: payload.customerName,
-        customerEmail: payload.customerEmail,
-        customerPhone: payload.customerPhone,
-        customerCountry: payload.customerCountry,
-        customerCity: payload.customerCity,
-        productName: payload.productName,
-        productDescription: payload.productDescription,
-        quantity: payload.quantity,
-        destination: payload.destination,
-        preferredShippingMethod: payload.preferredShippingMethod,
-        technicalSpecs: payload.technicalSpecs,
-        deliveryNotes: payload.deliveryNotes,
-        attachmentCount: payload.attachmentCount,
-        dashboardUrl,
-      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      // Server loads the canonical request through the user's RLS context.
+      body: JSON.stringify({ requestId: payload.requestId }),
     });
 
     if (!response.ok) {
