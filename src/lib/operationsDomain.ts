@@ -1,4 +1,5 @@
 import { writeAuditLog } from "@/domain/audit/service";
+import { isCustomerLinkedToUser } from "@/domain/customers/identity";
 import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
 import { isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendTables, supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -719,7 +720,7 @@ const getCurrentCustomerRecord = async () => {
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
     logOptionalBackendUnavailableOnce("upsert_current_customer_record", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"));
 
-    if (byEmail.data?.auth_user_id === user.id) {
+    if (isCustomerLinkedToUser(byEmail.data, user.id)) {
       trackEvent("customer_profile_resolution", {
         flow: "customer_request",
         authenticated: true,
@@ -995,7 +996,7 @@ export const createPurchaseRequestRecord = async (input: {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (linkedCustomer.error || !linkedCustomer.data) {
+  if (linkedCustomer.error || !isCustomerLinkedToUser(linkedCustomer.data, user.id)) {
     const error = {
       message: "The purchase request could not be linked to the signed-in customer account.",
     };
