@@ -1,6 +1,7 @@
 import { Activity, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import BentoCard from "@/components/BentoCard";
+import { resolvePercentage } from "@/lib/metricsDisplay";
 
 interface OperationsHealthCenterProps {
   activeRequests: number;
@@ -8,7 +9,7 @@ interface OperationsHealthCenterProps {
   inTransitCount: number;
   delayedCount: number;
   blockedWorkflows: number;
-  completionScore: number;
+  completionScore?: number | null;
 }
 
 export const OperationsHealthCenter = ({
@@ -20,6 +21,7 @@ export const OperationsHealthCenter = ({
   completionScore,
 }: OperationsHealthCenterProps) => {
   const { lang } = useI18n();
+  const verifiedCompletionScore = resolvePercentage(completionScore);
 
   const getStatus = () => {
     if (delayedCount > 2 || blockedWorkflows > 0) return "CRITICAL";
@@ -75,7 +77,7 @@ export const OperationsHealthCenter = ({
         </div>
         <div className="rounded-2xl bg-stone-950/40 p-4 border border-stone-800/50">
           <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-1">{lang === "ar" ? "نقاط الانجاز" : "Score"}</p>
-          <p className="text-2xl font-bold text-emerald-400">{completionScore}%</p>
+          <p className="text-2xl font-bold text-emerald-400">{verifiedCompletionScore === null ? "—" : `${verifiedCompletionScore}%`}</p>
         </div>
       </div>
     </BentoCard>
