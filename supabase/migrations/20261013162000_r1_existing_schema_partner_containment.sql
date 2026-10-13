@@ -5,6 +5,8 @@
 -- RESTRICTIVE policies intersect ALL permissive policies, including legacy broad ones.
 -- They DO NOT remove the underlying legacy grants: review these before final cutover.
 DO $preflight$
+DECLARE
+  v_missing_columns text[];
 BEGIN
   IF to_regprocedure('public.guard_profile_privilege_fields()') IS NULL
      OR to_regclass('public.deals') IS NULL
@@ -20,6 +22,46 @@ BEGIN
      OR to_regprocedure('public.lourex_stage_order(text)') IS NULL
   THEN
     RAISE EXCEPTION 'R1 current-schema prerequisites missing. Do not apply a partial migration.';
+  END IF;
+
+  -- Fail before creating any policies/triggers if the connected database has
+  -- drifted from the exact columns consumed by this migration.
+  SELECT pg_catalog.array_agg(required.table_name || '.' || required.column_name)
+    INTO v_missing_columns
+  FROM (VALUES
+    ('profiles','id'),
+    ('profiles','role'),
+    ('profiles','status'),
+    ('deals','id'),
+    ('deals','customer_id'),
+    ('deals','source_request_id'),
+    ('deals','assigned_turkish_partner_id'),
+    ('deals','assigned_saudi_partner_id'),
+    ('deals','operational_status'),
+    ('shipments','id'),
+    ('shipments','deal_id'),
+    ('shipments','current_stage_code'),
+    ('purchase_requests','id'),
+    ('purchase_requests','converted_deal_id'),
+    ('tracking_updates','shipment_id'),
+    ('tracking_updates','deal_id'),
+    ('tracking_updates','stage_code'),
+    ('tracking_updates','updated_by'),
+    ('tracking_updates','updated_by_role'),
+    ('attachments','entity_type'),
+    ('attachments','entity_id'),
+    ('attachments','uploaded_by'),
+    ('notifications','user_id'),
+    ('lourex_customers','id')
+  ) AS required(table_name,column_name)
+  LEFT JOIN information_schema.columns actual
+    ON actual.table_schema = 'public'
+    AND actual.table_name = required.table_name
+    AND actual.column_name = required.column_name
+  WHERE actual.column_name IS NULL;
+
+  IF v_missing_columns IS NOT NULL THEN
+    RAISE EXCEPTION 'R1 missing required live-schema columns: %', v_missing_columns;
   END IF;
 END;
 $preflight$;
