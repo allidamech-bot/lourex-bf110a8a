@@ -902,7 +902,12 @@ export const PurchaseRequestForm = ({
             sizeDimensions: trimPayload(form.sizeDimensions),
             color: trimPayload(form.color),
             material: trimPayload(form.material),
-            technicalSpecs: trimPayload(form.technicalSpecs),
+            technicalSpecs: [
+               trimPayload(form.technicalSpecs),
+               sourceProduct
+                 ? `${lang === "ar" ? "مرجع المنتج" : "Product reference"}: ${sourceProduct.slug} (${lang === "ar" ? sourceProduct.nameAr : sourceProduct.nameEn})`
+                 : "",
+             ].filter(Boolean).join("\n"),
             referenceLink: trimPayload(form.referenceLink),
             preferredShippingMethod: trimPayload(form.preferredShippingMethod),
             deliveryNotes: trimPayload(form.deliveryNotes),
@@ -917,9 +922,6 @@ export const PurchaseRequestForm = ({
             destination: trimPayload(form.destination),
             deliveryAddress: trimPayload(form.deliveryAddress),
             isFullSourcing: form.isFullSourcing,
-            internalNotes: sourceProduct
-              ? `${lang === "ar" ? "مرجع المنتج" : "Product reference"}: ${sourceProduct.slug} (${lang === "ar" ? sourceProduct.nameAr : sourceProduct.nameEn})`
-              : undefined,
           },
           uploads,
       );

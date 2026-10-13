@@ -1561,23 +1561,14 @@ export const submitPurchaseRequestClarificationReply = async (requestId: string,
     throw new Error("This request is not waiting for clarification.");
   }
 
-  const now = new Date().toISOString();
-  const internalNotes = appendPurchaseRequestHistoryNote(current.internal_notes, {
-    type: "customer_replied",
-    author: customerRecord.full_name || current.full_name || user.email || "Customer",
-    message: cleanMessage,
-    createdAt: now,
-  });
-
+  // The RPC checks the authenticated customer and request status under a
+  // row lock, then appends the reply and changes status atomically. Generic
+  // customer PATCH requests cannot change workflow or internal note fields.
   const result = await safeStructuredMutation(() =>
-    db
-      .from("purchase_requests")
-      .update({
-        status: "under_review" satisfies PurchaseRequestStatus,
-        internal_notes: internalNotes,
-        updated_at: now,
-      })
-      .eq("id", requestId),
+    db.rpc("submit_purchase_request_clarification_reply", {
+      p_request_id: requestId,
+      p_message: cleanMessage,
+    }),
   );
 
   if (result.error) {
