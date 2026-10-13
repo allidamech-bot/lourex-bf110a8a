@@ -87,7 +87,7 @@ BEGIN
 
   RETURN result;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.lourex_report_top_customers(p_start timestamp with time zone, p_end timestamp with time zone, p_limit integer DEFAULT 4)
  RETURNS TABLE(customer_id uuid, full_name text, email text, requests_count bigint, deals_count bigint)
@@ -123,7 +123,7 @@ BEGIN
   ORDER BY COALESCE(deal_counts.deals_count, 0) DESC, COALESCE(request_counts.requests_count, 0) DESC, customer.full_name
   LIMIT GREATEST(COALESCE(p_limit, 4), 1);
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.lourex_report_top_expense_categories(p_start timestamp with time zone, p_end timestamp with time zone, p_limit integer DEFAULT 4)
  RETURNS TABLE(category text, amount numeric)
@@ -147,7 +147,7 @@ BEGIN
   ORDER BY amount DESC, category
   LIMIT GREATEST(COALESCE(p_limit, 4), 1);
 END;
-$function$
+$function$;
 
 REVOKE ALL ON FUNCTION public.lourex_report_summary(timestamp with time zone,timestamp with time zone) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.lourex_report_summary(timestamp with time zone,timestamp with time zone) TO authenticated;
