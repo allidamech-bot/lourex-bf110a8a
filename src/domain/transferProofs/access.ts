@@ -13,14 +13,12 @@ type TransferProofAccessContext = {
 type TransferProofRequestRow = {
   id: string;
   customer_id: string | null;
-  email: string | null;
   transfer_proof_url: string | null;
 };
 
 type ProfileRow = {
   id: string;
   role: string | null;
-  email?: string | null;
 };
 
 const normalizeStoragePath = (value: string) => {
@@ -77,7 +75,7 @@ export const createTransferProofSignedUrl = async ({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, role, email")
+    .select("id, role")
     .eq("id", user.id)
     .maybeSingle<ProfileRow>();
 
@@ -87,7 +85,7 @@ export const createTransferProofSignedUrl = async ({
 
   const { data: request, error: requestError } = await supabase
     .from("purchase_requests")
-    .select("id, customer_id, email, transfer_proof_url")
+    .select("id, customer_id, transfer_proof_url")
     .eq("id", safeRequestId)
     .maybeSingle<TransferProofRequestRow>();
 
