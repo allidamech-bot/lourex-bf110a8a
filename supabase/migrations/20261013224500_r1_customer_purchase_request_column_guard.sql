@@ -115,3 +115,61 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.submit_purchase_request_clarification_reply(uuid,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.submit_purchase_request_clarification_reply(uuid,text) TO authenticated;
+
+
+-- Old cancel_purchase_request SECURITY DEFINER treated every partner as
+-- "internal", allowing unassigned partners to cancel any customer request.
+-- Only active owner/operations staff, or the verified owning customer, may
+-- cancel. An arbitrary matching contact email does not confer ownership.
+CREATE OR REPLACE FUNCTION public.cancel_purchase_request(
+ p_request_id uuid,
+ p_reason text DEFAULT ''
+)
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=''
+SET row_security='off'
+AS $function$
+DECLARE
+ v_actor uuid := auth.uid();
+ v_is_staff boolean;
+ v_is_customer boolean;
+ v_request public.purchase_requests%rowtype;
+BEGIN
+ IF v_actor IS NULL THEN
+   RAISE EXCEPTION 'Sign in before cancelling a request' USING ERRCODE='42501';
+ END IF;
+ v_is_staff := public.is_lourex_role(v_actor,ARRAY['owner','operations_employee']);
+ v_is_customer := public.is_lourex_role(v_actor,ARRAY['customer']);
+ IF NOT (v_is_staff OR v_is_customer) THEN
+   RAISE EXCEPTION 'Role cannot cancel purchase requests' USING ERRCODE='42501';
+ END IF;
+
+ SELECT * INTO v_request FROM public.purchase_requests
+ WHERE id=p_request_id FOR UPDATE;
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'Purchase request was not found' USING ERRCODE='P0002';
+ END IF;
+
+ IF v_is_customer THEN
+   IF v_request.status NOT IN ('intake_submitted','awaiting_clarification')
+     OR NOT EXISTS (
+       SELECT 1 FROM public.lourex_customers c
+       WHERE c.id=v_request.customer_id AND c.auth_user_id=v_actor
+     )
+   THEN
+     RAISE EXCEPTION 'Customer is not authorized to cancel this request'
+       USING ERRCODE='42501';
+   END IF;
+ ELSIF v_request.status IN ('converted_to_deal','cancelled') THEN
+   RAISE EXCEPTION 'This request cannot be cancelled in its current state'
+     USING ERRCODE='23514';
+ END IF;
+
+ UPDATE public.purchase_requests
+ SET status='cancelled',updated_at=now()
+ WHERE id=p_request_id;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.cancel_purchase_request(uuid,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.cancel_purchase_request(uuid,text) TO authenticated;
