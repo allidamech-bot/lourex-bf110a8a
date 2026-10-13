@@ -840,6 +840,25 @@ const mapAttachment = (row: AttachmentRow): AttachmentRecord => ({
   createdAt: row.created_at,
 });
 
+/** Resolve a private document into a short-lived signed link at read time.
+ * Never persist signed links or return public URLs for private evidence.
+ */
+const signPrivateAttachmentRows = async (rows: AttachmentRow[]): Promise<AttachmentRow[]> =>
+  Promise.all(rows.map(async (row) => {
+    if (row.bucket_name !== STORAGE_BUCKETS.DOCUMENTS) return row;
+    if (!row.storage_path) return { ...row, file_url: "" };
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKETS.DOCUMENTS)
+      .createSignedUrl(row.storage_path, 600);
+    if (error || !data?.signedUrl) {
+      logOperationalError("private_attachment_signed_url", error || new Error("Unable to sign document URL"), {
+        attachmentId: row.id,
+      });
+      return { ...row, file_url: "" };
+    }
+    return { ...row, file_url: data.signedUrl };
+  }));
+
 const mapTrackingUpdate = (row: TrackingUpdateRow): TrackingUpdateRecord => ({
   id: row.id,
   shipmentId: row.shipment_id,
@@ -1251,7 +1270,7 @@ export const loadPurchaseRequests = async (
           .order("created_at", { ascending: false }),
   ]);
 
-  const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
+  const attachmentsMap = getAttachmentMap((await signPrivateAttachmentRows(attachmentRows || [])).map(mapAttachment));
 
   const conversionMap = new Map<string, { dealId?: string; dealNumber?: string }>();
   ((conversions || []) as AuditConversionRow[]).forEach((row) => {
@@ -2096,7 +2115,7 @@ export const loadDeals = async (): Promise<OperationalDeal[]> => {
       .filter((row): row is ShipmentRow & { deal_id: string } => typeof row.deal_id === "string")
       .map((row) => [row.deal_id, row]),
   );
-  const attachmentsMap = getAttachmentMap((attachmentRows || []).map(mapAttachment));
+  const attachmentsMap = getAttachmentMap((await signPrivateAttachmentRows(attachmentRows || [])).map(mapAttachment));
   const trackingUpdates = (customerTrackingRows || []).map(mapTrackingUpdate);
   const trackingMap = getTrackingMap(trackingUpdates);
   const profileMap = new Map<string, ProfileRow>((profileRows || []).map((row) => [row.id, row]));
@@ -2332,8 +2351,13 @@ export const uploadDealAttachment = async (input: {
     throw new Error("Operation forbidden: Deal is closed.");
   }
 
+  if (currentDeal.dealNumber !== input.dealNumber) {
+    throw new Error("Deal reference does not match the selected operation.");
+  }
   const filePath = `${STORAGE_PATHS.DEAL_ATTACHMENTS(input.dealNumber)}/${Date.now()}-${input.file.name}`;
-  const publicUrl = await uploadFile("DOCUMENTS", filePath, input.file);
+  const uploaded = await uploadFileToStorage("DOCUMENTS", filePath, input.file);
+  // Persist only an immutable private Storage reference. Generate view links on demand.
+  const storedFileReference = `storage://${uploaded.bucket}/${uploaded.path}`;
 
   const inserted = await db
     .from<AttachmentRow>("attachments")
@@ -2342,9 +2366,9 @@ export const uploadDealAttachment = async (input: {
       entity_id: input.dealId,
       category: input.category || "reference",
       file_name: input.file.name,
-      file_url: publicUrl,
-      bucket_name: STORAGE_BUCKETS.PRODUCT_IMAGES,
-      storage_path: filePath,
+      file_url: storedFileReference,
+      bucket_name: uploaded.bucket,
+      storage_path: uploaded.path,
       visibility: input.visibility || "internal",
       uploaded_by: user.id,
     })
@@ -2376,7 +2400,8 @@ export const uploadDealAttachment = async (input: {
     }
   });
 
-  return mapAttachment(inserted.data);
+  const [viewableAttachment] = await signPrivateAttachmentRows([inserted.data]);
+  return mapAttachment(viewableAttachment);
 };
 
 export const loadShipments = async (): Promise<OperationalShipment[]> => {
