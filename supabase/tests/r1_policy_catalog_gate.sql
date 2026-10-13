@@ -69,7 +69,9 @@ BEGIN
         'Saudi Partners can view ledger lines',
         'Allowed partners can insert tracking updates',
         'Saudi partner can insert destination tracking updates',
-        'Dashboard internal can update purchase requests'
+        'Dashboard internal can update purchase requests',
+        'Public can view customer visible tracking updates',
+        'Assigned partners can insert tracking updates'
       )
       OR (p.tablename IN ('deals','shipments','purchase_requests',
                           'tracking_updates','audit_logs','lourex_customers',
@@ -129,6 +131,16 @@ BEGIN
       AND p.prosecdef
   ) THEN
     RAISE EXCEPTION 'R1: global report RPC still bypasses caller RLS';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'log_system_event'
+      AND pg_get_functiondef(p.oid) LIKE '%R1: system event writer requires owner or operations%'
+  ) THEN
+    RAISE EXCEPTION 'R1: privileged system event RPC is not guarded';
   END IF;
 
   RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
