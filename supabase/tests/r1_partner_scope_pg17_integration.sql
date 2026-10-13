@@ -191,7 +191,7 @@ BEGIN
       WHERE schemaname='public'
         AND tablename=target_table
         AND permissive='RESTRICTIVE'
-        AND cmd='SELECT'
+        AND cmd IN ('SELECT','ALL')
     ) THEN
       RAISE EXCEPTION 'No restrictive SELECT policy on %',target_table;
     END IF;
