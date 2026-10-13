@@ -36,6 +36,15 @@ describe("R1 customer request field protection", () => {
     expect(reply).not.toContain('.from("purchase_requests")\n      .update({');
   });
 
+  it("limits cancellation to active staff and the actual request customer", () => {
+    expect(sql).toContain("CREATE OR REPLACE FUNCTION public.cancel_purchase_request");
+    expect(sql).toContain("v_is_staff := public.is_lourex_role(v_actor,ARRAY['owner','operations_employee'])");
+    expect(sql).toContain("v_is_customer := public.is_lourex_role(v_actor,ARRAY['customer'])");
+    expect(sql).toContain("c.id=v_request.customer_id AND c.auth_user_id=v_actor");
+    expect(sql).toContain("status NOT IN ('intake_submitted','awaiting_clarification')");
+    expect(sql).not.toContain("v_user_role IN ('owner', 'operations_employee', 'turkish_partner'");
+  });
+
   it("does not expose privileged RPC to anonymous users", () => {
     expect(sql).toContain("FROM PUBLIC,anon");
     expect(sql).toContain("TO authenticated");
