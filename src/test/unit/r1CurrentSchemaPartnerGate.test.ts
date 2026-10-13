@@ -37,6 +37,13 @@ describe("R1 current-schema partner restrictions", () => {
     expect(sql).toContain("REVOKE ALL ON FUNCTION public.lourex_r1_is_assigned_deal(uuid) FROM PUBLIC, anon");
   });
 
+  it("does not let inactive partners bypass restrictive RLS predicates", () => {
+    expect(sql).toContain("CREATE OR REPLACE FUNCTION public.lourex_r1_is_partner_actor()");
+    expect(sql).toContain("NOT public.lourex_r1_is_partner_actor()");
+    expect(sql).not.toContain("NOT public.is_lourex_role(auth.uid(), ARRAY['turkish_partner','saudi_partner'])");
+    expect(sql).toContain("REVOKE ALL ON FUNCTION public.lourex_r1_is_partner_actor() FROM PUBLIC, anon");
+  });
+
   it("guards the structural columns and disallows direct stage and evidence edits", () => {
     expect(sql).toContain("to_jsonb(NEW) - ARRAY['operational_status','updated_at']");
     expect(sql).toContain("to_jsonb(NEW) - ARRAY['current_stage_code','customer_visible_note','updated_at']");
