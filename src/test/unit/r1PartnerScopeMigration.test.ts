@@ -8,6 +8,9 @@ const related = readFileSync(
   "supabase/migrations/20261013124000_r1_related_objects_lockdown.sql", "utf8",
 );
 const stagingGate = readFileSync("supabase/tests/r1_policy_catalog_gate.sql", "utf8");
+const reporting = readFileSync(
+  "supabase/migrations/20261013125000_r1_reporting_rpc_boundary.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -76,6 +79,14 @@ describe("R1 partner-scope migration source checks", () => {
     expect(related).toContain("p_profile_id IN (");
     expect(related).toContain("event actor must be the authenticated user");
     expect(related).toContain("shipment event is not in the actor scope");
+  });
+
+  it("makes aggregation reports respect caller RLS and secures global health snapshots", () => {
+    expect(reporting).toContain("ALTER FUNCTION public.lourex_report_summary");
+    expect(reporting).toContain("ALTER FUNCTION public.lourex_report_top_customers");
+    expect(reporting).toContain("ALTER FUNCTION public.lourex_report_top_expense_categories");
+    expect(reporting.match(/SECURITY INVOKER/g)).toHaveLength(3);
+    expect(reporting).toContain("Only owner and operations may capture system health");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
