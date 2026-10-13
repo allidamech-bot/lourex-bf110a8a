@@ -119,7 +119,7 @@ export const createTransferProofSignedUrl = async ({
   }
 
   const storedProofPath = normalizeStoragePath(request.transfer_proof_url || "");
-  if (storedProofPath && storedProofPath !== safeStoragePath) {
+  if (!storedProofPath || storedProofPath !== safeStoragePath) {
     throw new Error("Transfer proof file does not match the active proof for this request.");
   }
 
