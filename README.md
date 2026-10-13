@@ -102,7 +102,7 @@ AI_MODEL=your_model_id
 ALLOWED_ORIGIN=https://www.lou-rex.com,https://lou-rex.com
 ```
 
-`VITE_SUPABASE_ANON_KEY` is intentionally not used by the frontend. Use `VITE_SUPABASE_PUBLISHABLE_KEY` consistently for Vercel and local development.
+Use `VITE_SUPABASE_PUBLISHABLE_KEY` from the standalone LOUREX Supabase project. Do not use the legacy `VITE_SUPABASE_ANON_KEY`. AI API credentials are optional and must remain **server-side Supabase Edge Function secrets**, never `VITE_*` variables. No AI provider is enabled automatically; configuring one may incur provider charges.
 
 ---
 
