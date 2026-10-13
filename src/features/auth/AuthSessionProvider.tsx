@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import type { LourexProfile } from "@/features/auth/rbac";
