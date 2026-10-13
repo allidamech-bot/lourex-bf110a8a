@@ -143,6 +143,8 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
     setProfileError(false);
     setProfileMissing(false);
+    // A sign-out must leave no pending spinner, even when a profile fetch is in flight.
+    setLoading(false);
     if (!isSupabaseConfigured) return;
     await supabase.auth.signOut();
   }, []);
