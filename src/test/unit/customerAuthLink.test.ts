@@ -21,6 +21,7 @@ describe("R1-F customer authentication link", () => {
     expect(source).toContain("isCustomerLinkedToUser(linkedCustomer, user.id)");
     expect(source).not.toContain("request.customer_id === user.id");
     expect(source).not.toContain("userEmail === requestEmail");
+    expect(source).toContain("if (!storedProofPath || storedProofPath !== safeStoragePath) {");
     expect(source).not.toContain('select("id, customer_id, email, transfer_proof_url")');
   });
 
