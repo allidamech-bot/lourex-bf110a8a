@@ -58,6 +58,9 @@ CREATE TABLE public.shipments (
   id uuid PRIMARY KEY,
   deal_id uuid,
   current_stage_code text DEFAULT 'deal_accepted',
+  status text DEFAULT 'deal_accepted',
+  customer_visible_note text,
+  destination text,
   updated_at timestamptz DEFAULT now()
 );
 CREATE TABLE public.tracking_updates (
@@ -66,13 +69,16 @@ CREATE TABLE public.tracking_updates (
   deal_id uuid,
   stage_code text,
   updated_by uuid,
-  updated_by_role text
+  updated_by_role text,
+  customer_note text,
+  occurred_at timestamptz DEFAULT now()
 );
 CREATE TABLE public.attachments (
   id uuid PRIMARY KEY,
   entity_type text,
   entity_id uuid,
-  uploaded_by uuid
+  uploaded_by uuid,
+  file_name text
 );
 CREATE TABLE public.notifications (
   id uuid PRIMARY KEY,
@@ -93,6 +99,9 @@ END;
 $enable$;
 
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT UPDATE ON public.deals, public.shipments TO authenticated;
+GRANT INSERT ON public.tracking_updates TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.attachments TO authenticated;
 CREATE POLICY profiles_select_own ON public.profiles
   FOR SELECT TO authenticated USING (id=auth.uid());
 CREATE POLICY profiles_insert_own ON public.profiles
@@ -149,6 +158,25 @@ CREATE POLICY "Customers own requests" ON public.purchase_requests
 CREATE POLICY "Customers own customer record" ON public.lourex_customers
   FOR SELECT TO authenticated USING (auth_user_id=auth.uid());
 
+
+-- Mimic the permissive partner writes that were present before R1 so the
+-- RESTRICTIVE policies must actually enforce assignment and prevent abuse.
+CREATE POLICY "Legacy all internal deals UPDATE" ON public.deals
+  FOR UPDATE TO authenticated
+  USING (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']))
+  WITH CHECK (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']));
+CREATE POLICY "Legacy all internal shipments UPDATE" ON public.shipments
+  FOR UPDATE TO authenticated
+  USING (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']))
+  WITH CHECK (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']));
+CREATE POLICY "Legacy all internal tracking INSERT" ON public.tracking_updates
+  FOR INSERT TO authenticated
+  WITH CHECK (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']));
+CREATE POLICY "Legacy all internal attachments ALL" ON public.attachments
+  FOR ALL TO authenticated
+  USING (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']))
+  WITH CHECK (public.is_lourex_role(auth.uid(),ARRAY['owner','operations_employee','turkish_partner','saudi_partner']));
+
 INSERT INTO public.profiles(id,role,partner_type,status) VALUES
 ('00000000-0000-0000-0000-000000000001','owner',null,'active'),
 ('00000000-0000-0000-0000-000000000002','operations_employee',null,'active'),
@@ -176,6 +204,55 @@ INSERT INTO public.tracking_updates(id,shipment_id) VALUES
 INSERT INTO public.attachments(id,entity_type,entity_id) VALUES
 ('60000000-0000-0000-0000-000000000001','purchase_request','20000000-0000-0000-0000-000000000001'),
 ('60000000-0000-0000-0000-000000000002','purchase_request','20000000-0000-0000-0000-000000000002');
+
+
+-- Replica of the currently connected DB's INSERT timeline -> shipment/deal
+-- trigger path. This proves the partner structural guards preserve legitimate
+-- nested writes while denying direct browser modifications.
+CREATE FUNCTION public.validate_tracking_update() RETURNS trigger
+LANGUAGE plpgsql SET search_path=''
+AS $verify_tracking$
+DECLARE v_order integer; v_current integer;
+BEGIN
+  SELECT public.lourex_stage_order(s.current_stage_code)
+    INTO v_current FROM public.shipments s WHERE s.id=NEW.shipment_id;
+  v_order:=public.lourex_stage_order(NEW.stage_code);
+  IF v_order=0 OR v_order>v_current+1 OR v_order<v_current THEN
+    RAISE EXCEPTION 'Tracking stage transition invalid';
+  END IF;
+  RETURN NEW;
+END;
+$verify_tracking$;
+
+CREATE FUNCTION public.apply_tracking_update() RETURNS trigger
+LANGUAGE plpgsql SET search_path=''
+AS $apply_tracking$
+BEGIN
+  UPDATE public.shipments
+  SET current_stage_code=NEW.stage_code,
+      customer_visible_note=NEW.customer_note,
+      updated_at=now()
+  WHERE id=NEW.shipment_id;
+
+  UPDATE public.deals
+  SET operational_status=CASE
+       WHEN NEW.stage_code IN ('product_preparation','transfer_to_port','origin_port','origin_customs','departed_origin') THEN 'origin_execution'
+       WHEN NEW.stage_code='in_transit' THEN 'in_transit'
+       WHEN NEW.stage_code IN ('arrived_destination','destination_customs','transfer_to_warehouse') THEN 'destination_execution'
+       WHEN NEW.stage_code='delivered' THEN 'delivered'
+       ELSE operational_status END,
+      updated_at=now()
+  WHERE id=NEW.deal_id;
+  RETURN NEW;
+END;
+$apply_tracking$;
+
+CREATE TRIGGER validate_tracking_update BEFORE INSERT
+  ON public.tracking_updates FOR EACH ROW
+  EXECUTE FUNCTION public.validate_tracking_update();
+CREATE TRIGGER apply_tracking_update AFTER INSERT
+  ON public.tracking_updates FOR EACH ROW
+  EXECUTE FUNCTION public.apply_tracking_update();
 
 \ir ../migrations/20261013162000_r1_existing_schema_partner_containment.sql
 
@@ -223,6 +300,108 @@ BEGIN
   END IF;
 END;
 $turkish_a$;
+
+
+DO $mutation_turkish_a$
+DECLARE blocked boolean; affected integer;
+BEGIN
+  blocked:=false;
+  BEGIN
+    UPDATE public.deals
+    SET customer_id='10000000-0000-0000-0000-000000000002'
+    WHERE id='30000000-0000-0000-0000-000000000001';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE NOT IN ('42501','P0001') THEN RAISE; END IF;
+    blocked:=true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Partner altered deal customer'; END IF;
+
+  blocked:=false;
+  BEGIN
+    UPDATE public.shipments SET destination='cross-border-redirection'
+    WHERE id='40000000-0000-0000-0000-000000000001';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE NOT IN ('42501','P0001') THEN RAISE; END IF;
+    blocked:=true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Partner altered shipment route'; END IF;
+
+  UPDATE public.shipments SET destination='cross-border-redirection'
+  WHERE id='40000000-0000-0000-0000-000000000002';
+  GET DIAGNOSTICS affected=ROW_COUNT;
+  IF affected<>0 THEN RAISE EXCEPTION 'Partner altered foreign shipment'; END IF;
+
+  blocked:=false;
+  BEGIN
+    INSERT INTO public.tracking_updates
+    (id,shipment_id,deal_id,stage_code,updated_by,updated_by_role)
+    VALUES (
+      '50000000-0000-0000-0000-000000000003',
+      '40000000-0000-0000-0000-000000000002',
+      '30000000-0000-0000-0000-000000000002',
+      'product_preparation',
+      '00000000-0000-0000-0000-000000000003',
+      'turkish_partner'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE NOT IN ('42501','P0001') THEN RAISE; END IF;
+    blocked:=true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Cross-partner tracking INSERT was permitted'; END IF;
+
+  blocked:=false;
+  BEGIN
+    INSERT INTO public.tracking_updates
+    (id,shipment_id,deal_id,stage_code,updated_by,updated_by_role)
+    VALUES (
+      '50000000-0000-0000-0000-000000000004',
+      '40000000-0000-0000-0000-000000000001',
+      '30000000-0000-0000-0000-000000000001',
+      'product_preparation',
+      '00000000-0000-0000-0000-000000000004',
+      'turkish_partner'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE NOT IN ('42501','P0001') THEN RAISE; END IF;
+    blocked:=true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Spoofed tracking actor was permitted'; END IF;
+
+  blocked:=false;
+  BEGIN
+    INSERT INTO public.tracking_updates
+    (id,shipment_id,deal_id,stage_code,updated_by,updated_by_role)
+    VALUES (
+      '50000000-0000-0000-0000-000000000005',
+      '40000000-0000-0000-0000-000000000001',
+      '30000000-0000-0000-0000-000000000001',
+      'origin_customs',
+      '00000000-0000-0000-0000-000000000003',
+      'turkish_partner'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE NOT IN ('42501','P0001') THEN RAISE; END IF;
+    blocked:=true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Skipped tracking stages were permitted'; END IF;
+
+  INSERT INTO public.tracking_updates
+  (id,shipment_id,deal_id,stage_code,updated_by,updated_by_role,customer_note)
+  VALUES (
+    '50000000-0000-0000-0000-000000000006',
+    '40000000-0000-0000-0000-000000000001',
+    '30000000-0000-0000-0000-000000000001',
+    'product_preparation',
+    '00000000-0000-0000-0000-000000000003',
+    'turkish_partner','Product preparation started'
+  );
+
+  DELETE FROM public.attachments
+  WHERE id='60000000-0000-0000-0000-000000000001';
+  GET DIAGNOSTICS affected=ROW_COUNT;
+  IF affected<>0 THEN RAISE EXCEPTION 'Partner deleted evidence'; END IF;
+END;
+$mutation_turkish_a$;
 
 SELECT pg_catalog.set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
 DO $turkish_b$
@@ -299,4 +478,18 @@ END;
 $anon$;
 
 RESET ROLE;
+DO $verify_after_nested_update$
+BEGIN
+  IF (SELECT current_stage_code FROM public.shipments
+      WHERE id='40000000-0000-0000-0000-000000000001') <> 'product_preparation'
+    OR (SELECT operational_status FROM public.deals
+        WHERE id='30000000-0000-0000-0000-000000000001') <> 'origin_execution' THEN
+    RAISE EXCEPTION 'Nested tracking trigger did not update assigned shipment and deal';
+  END IF;
+  IF (SELECT destination FROM public.shipments
+      WHERE id='40000000-0000-0000-0000-000000000001') IS NOT NULL THEN
+    RAISE EXCEPTION 'Partner unauthorized route mutation persisted';
+  END IF;
+END;
+$verify_after_nested_update$;
 ROLLBACK;
