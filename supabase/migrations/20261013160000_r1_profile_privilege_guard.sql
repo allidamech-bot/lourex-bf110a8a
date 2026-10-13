@@ -4,6 +4,15 @@
 -- Active owners may administer account access, except disabling the final owner.
 -- Nonuser service-side mutations (no auth.uid) retain trusted backend access.
 
+-- Preserve legacy partner_type='turkey' while accepting the current
+-- application canonical 'turkish'. No existing profile rows are rewritten.
+-- Restrict this to the confirmed historical check constraint name.
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_partner_type_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_partner_type_check
+  CHECK (partner_type IS NULL OR partner_type IN ('turkey', 'turkish', 'saudi'))
+  NOT VALID;
+ALTER TABLE public.profiles VALIDATE CONSTRAINT profiles_partner_type_check;
+
 CREATE OR REPLACE FUNCTION public.guard_profile_privilege_fields()
 RETURNS trigger
 LANGUAGE plpgsql
