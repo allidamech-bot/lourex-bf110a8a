@@ -26,6 +26,7 @@ BEGIN
     ('ledger_lines', 'Lourex R1 Saudi assigned ledger lines'),
     ('ledger_accounts', 'Lourex R1 Saudi assigned ledger accounts'),
     ('profiles', 'Lourex users can read allowed profiles'),
+    ('notifications', 'Lourex R1 scoped notification recipients'),
     ('supplier_packing_lists', 'supplier_packing_lists_select'),
     ('supplier_packing_list_items', 'supplier_packing_items_select')
   ) AS t(tbl, name)
@@ -70,6 +71,7 @@ BEGIN
         'Allowed partners can insert tracking updates',
         'Saudi partner can insert destination tracking updates',
         'Dashboard internal can update purchase requests',
+        'Internal Lourex users can insert notifications',
         'Public can view customer visible tracking updates',
         'Assigned partners can insert tracking updates'
       )
@@ -167,6 +169,12 @@ BEGIN
       AND (storage.foldername(o.name))[1] = 'deal-attachments'
   ) THEN
     RAISE EXCEPTION 'R1: deal attachment objects found in public product-images bucket';
+  END IF;
+
+  IF has_function_privilege(
+    'anon', 'public.lourex_r1_can_notify(uuid)', 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'R1: anonymous users can execute notification recipient check';
   END IF;
 
   RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
