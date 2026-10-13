@@ -66,7 +66,7 @@ export default function ProductsPage() {
         </section>
 
         <section className="container mx-auto px-4 pb-24 pt-8 sm:px-6 lg:px-8">
-          <div className="sticky top-16 z-20 rounded-[1.5rem] border border-border/75 bg-card/95 p-3 shadow-soft backdrop-blur-xl sm:p-4">
+          <div className="sticky top-[72px] z-20 rounded-[1.5rem] border border-border/75 bg-card/95 p-3 shadow-soft backdrop-blur-xl sm:p-4">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem]">
               <label className="relative block">
                 <span className="sr-only">{t("products.listing.searchPlaceholder")}</span>
