@@ -1,0 +1,104 @@
+-- Run with psql -v ON_ERROR_STOP=1 -f supabase/tests/r1_policy_catalog_gate.sql
+-- Against an isolated staging clone with ALL migrations applied. Read-only.
+-- Passing this catalog test does not replace negative/positive access tests
+-- with real owner, employee, Turkish, Saudi and customer authenticated sessions.
+
+DO $$
+DECLARE
+  missing text[];
+  unsafe text[];
+BEGIN
+  SELECT array_agg(t.name)
+  INTO missing
+  FROM (VALUES
+    ('deals', 'Lourex R1 scoped deals read'),
+    ('deals', 'Lourex R1 owner ops update deals'),
+    ('purchase_requests', 'Lourex R1 scoped requests read'),
+    ('shipments', 'Lourex R1 scoped shipments read'),
+    ('shipments', 'Lourex R1 assigned shipments update'),
+    ('tracking_updates', 'Lourex R1 scoped tracking read'),
+    ('tracking_updates', 'Lourex R1 assigned tracking insert'),
+    ('audit_logs', 'Lourex R1 owner ops read audit'),
+    ('lourex_customers', 'Lourex R1 scoped customer directory'),
+    ('attachments', 'Lourex R1 partner assigned attachments read'),
+    ('shipment_events', 'Lourex R1 assigned shipment events read'),
+    ('ledger_entries', 'Lourex R1 Saudi assigned ledger entries'),
+    ('ledger_lines', 'Lourex R1 Saudi assigned ledger lines'),
+    ('ledger_accounts', 'Lourex R1 Saudi assigned ledger accounts'),
+    ('profiles', 'Lourex users can read allowed profiles')
+  ) AS t(tbl, name)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public'
+      AND p.tablename = t.tbl
+      AND p.policyname = t.name
+  );
+
+  IF missing IS NOT NULL THEN
+    RAISE EXCEPTION 'R1 missing security policies: %', missing;
+  END IF;
+
+  SELECT array_agg(p.tablename || ':' || p.policyname)
+  INTO unsafe
+  FROM pg_policies p
+  WHERE p.schemaname = 'public'
+    AND (
+      p.policyname IN (
+        'Internal Lourex roles can view deals',
+        'Internal Lourex roles can update deals',
+        'Internal Lourex roles can view shipments',
+        'Internal Lourex roles can insert shipments',
+        'Internal Lourex roles can update shipments',
+        'Internal Lourex roles can view purchase requests',
+        'Internal Lourex roles can view tracking updates',
+        'Internal users can view tracking updates',
+        'Internal Lourex roles can view customers',
+        'Internal Lourex roles can view attachments',
+        'Internal Lourex roles can manage attachments',
+        'shipment_events_internal_full_access',
+        'Internal roles can view shipment events',
+        'Internal roles can view system events',
+        'Internal roles can view health snapshots',
+        'Turkish Brokers have full logistics SELECT',
+        'Turkish Brokers have full logistics INSERT',
+        'Turkish Brokers have full logistics UPDATE',
+        'Saudi Partners can view ledger accounts',
+        'Saudi Partners can view ledger entries',
+        'Saudi Partners can view ledger lines',
+        'Allowed partners can insert tracking updates',
+        'Saudi partner can insert destination tracking updates',
+        'Dashboard internal can update purchase requests'
+      )
+      OR (p.tablename IN ('deals','shipments','purchase_requests',
+                          'tracking_updates','audit_logs','lourex_customers',
+                          'attachments','shipment_events','system_events',
+                          'system_health_snapshots')
+          AND COALESCE(p.qual, '') LIKE '%is_lourex_internal%')
+    );
+
+  IF unsafe IS NOT NULL THEN
+    RAISE EXCEPTION 'R1 legacy broad policies remain: %', unsafe;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relname IN ('deals','shipments','purchase_requests',
+                        'tracking_updates','audit_logs','lourex_customers',
+                        'attachments','shipment_events','ledger_entries',
+                        'ledger_lines','ledger_accounts','profiles')
+      AND NOT c.relrowsecurity
+  ) THEN
+    RAISE EXCEPTION 'R1: a protected relation has RLS disabled';
+  END IF;
+
+  IF has_function_privilege(
+    'anon', 'public.lourex_r1_is_assigned_deal(uuid)', 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'R1: anon can execute assignment helper';
+  END IF;
+
+  RAISE NOTICE 'R1 policy catalog gate passed; execute role-session tests next';
+END;
+$$;
