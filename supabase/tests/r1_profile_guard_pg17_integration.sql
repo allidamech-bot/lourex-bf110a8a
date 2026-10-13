@@ -23,7 +23,8 @@ CREATE TABLE public.profiles (
   status text NOT NULL DEFAULT 'active',
   verification_status text NOT NULL DEFAULT 'pending',
   verified_at timestamptz,
-  full_name text NOT NULL DEFAULT ''
+  full_name text NOT NULL DEFAULT '',
+  CONSTRAINT profiles_partner_type_check CHECK (partner_type IS NULL OR partner_type IN ('turkey','saudi'))
 );
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
@@ -146,7 +147,7 @@ DECLARE
   changed integer;
   denied boolean := false;
 BEGIN
-  UPDATE public.profiles SET role='turkish_partner', partner_type='turkey'
+  UPDATE public.profiles SET role='turkish_partner', partner_type='turkish'
     WHERE id='00000000-0000-0000-0000-000000000004';
   GET DIAGNOSTICS changed = ROW_COUNT;
   IF changed <> 1 THEN RAISE EXCEPTION 'Owner could not manage a different user'; END IF;
