@@ -85,7 +85,7 @@ describe("R1 partner-scope migration source checks", () => {
     expect(reporting).toContain("ALTER FUNCTION public.lourex_report_summary");
     expect(reporting).toContain("ALTER FUNCTION public.lourex_report_top_customers");
     expect(reporting).toContain("ALTER FUNCTION public.lourex_report_top_expense_categories");
-    expect(reporting.match(/SECURITY INVOKER/g)).toHaveLength(3);
+    expect(reporting.match(/SECURITY INVOKER;/g)).toHaveLength(3);
     expect(reporting).toContain("Only owner and operations may capture system health");
   });
 
