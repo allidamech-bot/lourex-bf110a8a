@@ -7,14 +7,17 @@ const sql = readFileSync(
 );
 
 describe("R1 profile privilege escalation boundary", () => {
-  it("protects both self INSERT and UPDATE paths, not just UI controls", () => {
+  it("guards both self INSERT and UPDATE paths without blocking owner administration", () => {
     expect(sql).toContain("BEFORE INSERT OR UPDATE ON public.profiles");
     expect(sql).toContain("IF TG_OP = 'INSERT'");
     expect(sql).toContain("ELSIF TG_OP = 'UPDATE'");
-    expect(sql).toContain("current_user <> 'authenticated'");
+    expect(sql).toContain("v_owner := public.is_lourex_role(v_actor, ARRAY['owner'])");
+    expect(sql).toContain("IF NOT v_owner AND");
+    expect(sql).toContain('CREATE POLICY "Active owner can manage profile access"');
+    expect(sql).toContain('CREATE POLICY "Active owner can view profiles"');
   });
 
-  it("prevents untrusted users from setting every privileged account field", () => {
+  it("protects each privileged account field against untrusted self edits", () => {
     for (const field of ["role", "partner_type", "status", "verification_status", "verified_at"]) {
       expect(sql).toContain(`NEW.${field} IS DISTINCT FROM OLD.${field}`);
     }
@@ -23,8 +26,16 @@ describe("R1 profile privilege escalation boundary", () => {
     expect(sql).toContain("NEW.verification_status IS DISTINCT FROM 'pending'");
   });
 
-  it("keeps the trigger function invoker-scoped with no exposed RPC grants", () => {
-    expect(sql).toContain("SECURITY INVOKER");
+  it("preserves a live owner under concurrent role/status changes", () => {
+    expect(sql).toContain("OLD.role = 'owner'");
+    expect(sql).toContain("OLD.status = 'active'");
+    expect(sql).toContain("pg_advisory_xact_lock");
+    expect(sql).toContain("p.role = 'owner' AND p.status = 'active'");
+    expect(sql).toContain("Cannot disable or downgrade the final active owner");
+  });
+
+  it("locks privileged trigger execution down and preserves searchable schema boundaries", () => {
+    expect(sql).toContain("SECURITY DEFINER");
     expect(sql).toContain("SET search_path = ''");
     expect(sql).toContain(
       "REVOKE ALL ON FUNCTION public.guard_profile_privilege_fields() FROM PUBLIC, anon, authenticated",
