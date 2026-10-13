@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+const preflight = readFileSync(
+  "supabase/migrations/20261013120000_r1_required_schema_preflight.sql", "utf8",
+);
 const migration = readFileSync(
   "supabase/migrations/20261013123000_r1_partner_scope_lockdown.sql", "utf8",
 );
@@ -35,6 +38,14 @@ const partnerType = readFileSync(
  * PostgreSQL RLS integration tests before a production deployment.
  */
 describe("R1 partner-scope migration source checks", () => {
+  it("aborts before DDL when the connected schema lacks R1 prerequisites", () => {
+    expect(preflight).toContain("R1 SCHEMA PREREQUISITES NOT MET");
+    expect(preflight).toContain("to_regclass('public.' || name)");
+    expect(preflight).toContain("to_regprocedure(signature)");
+    expect(preflight).toContain("'ledger_entries'");
+    expect(preflight).toContain("'supplier_packing_lists'");
+  });
+
   it("drops global logistics and ledger privileges", () => {
     for (const name of [
       "Turkish Brokers have full logistics SELECT",
