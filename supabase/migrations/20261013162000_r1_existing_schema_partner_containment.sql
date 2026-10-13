@@ -6,7 +6,8 @@
 -- They DO NOT remove the underlying legacy grants: review these before final cutover.
 DO $preflight$
 BEGIN
-  IF to_regclass('public.deals') IS NULL
+  IF to_regprocedure('public.guard_profile_privilege_fields()') IS NULL
+     OR to_regclass('public.deals') IS NULL
      OR to_regclass('public.shipments') IS NULL
      OR to_regclass('public.purchase_requests') IS NULL
      OR to_regclass('public.tracking_updates') IS NULL
