@@ -103,25 +103,25 @@ GRANT EXECUTE ON FUNCTION public.is_lourex_role(uuid,text[]) TO authenticated;
 
 CREATE FUNCTION public.current_lourex_role() RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=''
-AS $ SELECT role FROM public.profiles WHERE id=auth.uid() AND status='active' $;
+AS $$ SELECT role FROM public.profiles WHERE id=auth.uid() AND status='active' $$;
 GRANT EXECUTE ON FUNCTION public.current_lourex_role() TO authenticated;
 
 CREATE FUNCTION public.lourex_stage_order(p_stage text) RETURNS integer
 LANGUAGE sql IMMUTABLE SET search_path=''
-AS $ SELECT CASE p_stage WHEN 'deal_accepted' THEN 1
+AS $$ SELECT CASE p_stage WHEN 'deal_accepted' THEN 1
   WHEN 'product_preparation' THEN 2 WHEN 'transfer_to_port' THEN 3
   WHEN 'origin_port' THEN 4 WHEN 'origin_customs' THEN 5
   WHEN 'departed_origin' THEN 6 WHEN 'in_transit' THEN 7
   WHEN 'arrived_destination' THEN 8 WHEN 'destination_customs' THEN 9
   WHEN 'transfer_to_warehouse' THEN 10 WHEN 'delivered' THEN 11
-  ELSE 0 END $;
+  ELSE 0 END $$;
 GRANT EXECUTE ON FUNCTION public.lourex_stage_order(text) TO authenticated;
 
 -- The real profile guard is separately validated in PR #16 against PostgreSQL.
 -- This disposable fixture supplies only its preflight signature.
 CREATE FUNCTION public.guard_profile_privilege_fields() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
-AS $ BEGIN RETURN NEW; END $;
+AS $$ BEGIN RETURN NEW; END $$;
 
 -- Exactly the dangerous pre-R1 shape: every active internal role can SELECT
 -- any row in six operational tables.
