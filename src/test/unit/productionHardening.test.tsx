@@ -26,28 +26,9 @@ afterEach(() => {
 
 describe("production hardening safeguards", () => {
   it("keeps the old external Supabase project reference out of source", () => {
-    const oldProjectRef = String.fromCharCode(
-      103,
-      120,
-      109,
-      113,
-      99,
-      104,
-      122,
-      110,
-      102,
-      111,
-      108,
-      101,
-      114,
-      108,
-      105,
-      111,
-      114,
-      112,
-      107,
-      122,
-    );
+    // A new LOUREX source may contain the confirmed project ID; the obsolete
+    // project ID must not appear anywhere in the shipped client source.
+    const oldProjectRef = String.fromCharCode(113, 101, 122, 114, 122, 119, 111, 105, 121, 104, 98, 106, 114, 114, 120, 110, 114, 113, 114, 97);
     const offenders = walk(srcRoot).filter((path) => readFileSync(path, "utf8").includes(oldProjectRef));
     expect(offenders).toEqual([]);
   });
