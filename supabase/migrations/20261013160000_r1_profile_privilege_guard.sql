@@ -41,6 +41,25 @@ BEGIN
     RETURN OLD;
   END IF;
 
+  -- Preserve the final owner across *all* UPDATE paths, including service-role
+  -- maintenance requests without a user JWT. This check must precede the
+  -- trusted backend actor-null early return below.
+  IF TG_OP = 'UPDATE'
+    AND OLD.role = 'owner'
+    AND OLD.status = 'active'
+    AND (NEW.role IS DISTINCT FROM 'owner' OR NEW.status IS DISTINCT FROM 'active')
+  THEN
+    PERFORM pg_catalog.pg_advisory_xact_lock(62180, 20261013);
+    SELECT count(*) INTO v_active_other_owners
+    FROM public.profiles p
+    WHERE p.role = 'owner' AND p.status = 'active' AND p.id <> OLD.id;
+
+    IF v_active_other_owners < 1 THEN
+      RAISE EXCEPTION 'Cannot disable or downgrade the final active owner.'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
   -- Server-side signup and trusted maintenance may run without user JWT context.
   IF v_actor IS NULL THEN
     RETURN NEW;
@@ -71,22 +90,6 @@ BEGIN
         USING ERRCODE = '42501';
     END IF;
 
-    -- Serialize active-owner removal/downgrade so concurrent updates cannot
-    -- each observe another owner and collectively leave no active owner.
-    IF OLD.role = 'owner'
-      AND OLD.status = 'active'
-      AND (NEW.role IS DISTINCT FROM 'owner' OR NEW.status IS DISTINCT FROM 'active')
-    THEN
-      PERFORM pg_catalog.pg_advisory_xact_lock(62180, 20261013);
-      SELECT count(*) INTO v_active_other_owners
-      FROM public.profiles p
-      WHERE p.role = 'owner' AND p.status = 'active' AND p.id <> OLD.id;
-
-      IF v_active_other_owners < 1 THEN
-        RAISE EXCEPTION 'Cannot disable or downgrade the final active owner.'
-          USING ERRCODE = '23514';
-      END IF;
-    END IF;
   END IF;
 
   RETURN NEW;
