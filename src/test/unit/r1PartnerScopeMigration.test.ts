@@ -26,6 +26,9 @@ const storage = readFileSync(
 const notifications = readFileSync(
   "supabase/migrations/20261013135000_r1_notification_recipient_scope.sql", "utf8",
 );
+const partnerType = readFileSync(
+  "supabase/migrations/20261013140000_r1_partner_type_consistency.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -142,6 +145,13 @@ describe("R1 partner-scope migration source checks", () => {
     expect(notifications).toContain("recipient.status = 'active'");
     expect(notifications).toContain("REVOKE ALL ON FUNCTION public.lourex_r1_can_notify(uuid) FROM PUBLIC, anon");
     expect(notifications).toContain("WITH CHECK (public.lourex_r1_can_notify(user_id))");
+  });
+
+  it("repairs legacy turkey partner types to canonical turkish without changing roles", () => {
+    expect(partnerType).toContain("DROP CONSTRAINT IF EXISTS profiles_partner_type_check");
+    expect(partnerType).toContain("WHEN role = 'turkish_partner' THEN 'turkish'");
+    expect(partnerType).toContain("CHECK (partner_type IS NULL OR partner_type IN ('turkish', 'saudi'))");
+    expect(stagingGate).toContain("inconsistent stored partner_type");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
