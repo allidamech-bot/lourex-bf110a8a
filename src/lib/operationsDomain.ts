@@ -1,4 +1,5 @@
 import { writeAuditLog } from "@/domain/audit/service";
+import { isCustomerLinkedToUser } from "@/domain/customers/identity";
 import { loadFinancialEntries, createFinancialEntry, loadFinancialEditRequests, createFinancialEditRequest, updateFinancialEditRequestStatus } from "@/domain/accounting/service";
 import { isSupabaseConfigured, logOptionalBackendUnavailableOnce, optionalBackendTables, supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -217,6 +218,7 @@ export type CustomerRow = {
   email: string;
   country?: string | null;
   city?: string | null;
+  auth_user_id?: string | null;
 };
 
 export type FinancialEntryRow = {
@@ -673,12 +675,12 @@ const getCurrentCustomerRecord = async () => {
     method: "lookup",
   });
 
-  // In the Lourex Cloud ownership model, lourex_customers.id is intentionally equal to auth.users.id,
-  // and purchase_requests.customer_id stores that same authenticated user id.
+  // Customer record IDs are distinct from Supabase auth user IDs.
+  // Ownership is determined only by the server-managed auth_user_id link.
   const byUserId = await db
     .from<CustomerRow>("lourex_customers")
     .select("*")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (byUserId.data) {
@@ -699,60 +701,52 @@ const getCurrentCustomerRecord = async () => {
     return null;
   }
 
-  const byEmail = await db
-    .from<CustomerRow>("lourex_customers")
-    .select("*")
-    .eq("email", userEmail)
-    .maybeSingle();
-
+  // Let the authenticated database RPC resolve unlinked historical records.
+  // A matching contact email in the browser is never proof of ownership, so
+  // never query, hydrate, or return a customer record based on email alone.
   const upsertedCustomer = await db
     .rpc<CurrentCustomerUpsertRow>("upsert_current_customer_record", {
-      p_full_name: user.user_metadata?.full_name || byEmail.data?.full_name || "",
+      p_full_name: user.user_metadata?.full_name || "",
       p_email: userEmail,
-      p_phone: byEmail.data?.phone || "",
-      p_country: byEmail.data?.country || "",
-      p_city: byEmail.data?.city || "",
+      p_phone: "",
+      p_country: "",
+      p_city: "",
     })
     .maybeSingle();
 
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
-    logOptionalBackendUnavailableOnce("upsert_current_customer_record", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"));
-
-    if (byEmail.data) {
-      trackEvent("customer_profile_resolution", {
-        flow: "customer_request",
-        authenticated: true,
-        method: "email_fallback_customer_record",
-      });
-      return byEmail.data;
-    }
-
-    logOperationalError("customer_profile_resolution", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"), {
-      flow: "customer_request",
-    });
+    logOptionalBackendUnavailableOnce(
+      "upsert_current_customer_record",
+      upsertedCustomer.error || new Error("Customer upsert returned no customer_id"),
+    );
     return null;
   }
 
-  const upserted = await db
+  // Fail closed even if the RPC returned an ID: do not proceed without the
+  // persisted relationship between this customer row and the auth user.
+  const linkedCustomer = await db
     .from<CustomerRow>("lourex_customers")
     .select("*")
     .eq("id", upsertedCustomer.data.customer_id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
+
+  if (linkedCustomer.error || !isCustomerLinkedToUser(linkedCustomer.data, user.id)) {
+    logOperationalError(
+      "customer_profile_resolution",
+      linkedCustomer.error || new Error("Customer ID not linked to authenticated user"),
+      { flow: "customer_request", customerLinkMismatch: true },
+    );
+    return null;
+  }
 
   trackEvent("customer_profile_resolution", {
     flow: "customer_request",
     authenticated: true,
-    method: upserted.data ? "upserted_customer_record" : "upserted_customer_id_fallback",
+    method: "upserted_customer_record",
   });
 
-  return upserted.data || byEmail.data || {
-    id: upsertedCustomer.data.customer_id,
-    full_name: user.user_metadata?.full_name || "",
-    phone: "",
-    email: userEmail,
-    country: "",
-    city: "",
-  };
+  return linkedCustomer.data;
 };
 
 // writeAuditLog moved to @/domain/audit/service
@@ -986,7 +980,15 @@ export const createPurchaseRequestRecord = async (input: {
 
   const customerId = upsertedCustomer.data.customer_id;
 
-  if (customerId !== user.id) {
+  // Validate the RPC result against the authoritative customer/auth mapping.
+  const linkedCustomer = await db
+    .from<CustomerRow>("lourex_customers")
+    .select("id, auth_user_id")
+    .eq("id", customerId)
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (linkedCustomer.error || !isCustomerLinkedToUser(linkedCustomer.data, user.id)) {
     const error = {
       message: "The purchase request could not be linked to the signed-in customer account.",
     };
@@ -1051,14 +1053,14 @@ export const createPurchaseRequestRecord = async (input: {
     return inserted;
   }
 
-  if (!inserted.data.id || inserted.data.customer_id !== user.id) {
+  if (!inserted.data.id || inserted.data.customer_id !== customerId) {
     const error = {
       message: "The purchase request was not linked to your customer account. Please try again or contact LOUREX support.",
     };
     logOperationalError("purchase_request_create", new Error(error.message), {
       flow: "purchase_request_create",
       requestId: inserted.data.id,
-      customerLinked: inserted.data.customer_id === user.id,
+      customerLinked: inserted.data.customer_id === customerId,
     });
     return { data: null, error };
   }
@@ -1192,7 +1194,7 @@ export const loadPurchaseRequests = async (
   let currentCustomerId: string | null = null;
   if (isCustomer) {
     const customerRecord = await getCurrentCustomerRecord();
-    currentCustomerId = customerRecord?.id || user?.id || null;
+    currentCustomerId = customerRecord?.id || null;
   }
 
   let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
@@ -3177,11 +3179,9 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   // Customer ownership check
   if (profile.role === "customer") {
     customer = await getCurrentCustomerRecord();
-    const requestEmail = String(request.email || "").trim().toLowerCase();
-    const ownsRequest =
-      request.customer_id === user.id ||
-      (customer?.id ? request.customer_id === customer.id : false) ||
-      (Boolean(userEmail) && requestEmail === userEmail);
+    // An arbitrary request contact email is not proof of account ownership.
+    // Enforce the persisted lourex_customers.auth_user_id mapping instead.
+    const ownsRequest = Boolean(customer?.id && request.customer_id === customer.id);
 
     if (!ownsRequest) {
       throw new Error("ليس لديك صلاحية لرفع إثبات دفع لهذا الطلب.");
@@ -3196,7 +3196,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const fullPath = `${storagePath}/${fileName}`;
 
   const uploaded = await uploadFileToStorage("TRANSFER_PROOFS", fullPath, file);
-  const resolvedCustomerId = customer?.id || request.customer_id || user.id;
+  const resolvedCustomerId = request.customer_id || customer?.id || null;
 
   console.info("[lourex:transfer-proof:rpc-context]", {
     authUid: user.id,
