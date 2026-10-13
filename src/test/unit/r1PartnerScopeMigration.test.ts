@@ -11,6 +11,9 @@ const stagingGate = readFileSync("supabase/tests/r1_policy_catalog_gate.sql", "u
 const reporting = readFileSync(
   "supabase/migrations/20261013125000_r1_reporting_rpc_boundary.sql", "utf8",
 );
+const packing = readFileSync(
+  "supabase/migrations/20261013130000_r1_supplier_packing_scope.sql", "utf8",
+);
 
 /**
  * Source-level regression gates only. Run staging SQL and authenticated
@@ -87,6 +90,17 @@ describe("R1 partner-scope migration source checks", () => {
     expect(reporting).toContain("ALTER FUNCTION public.lourex_report_top_expense_categories");
     expect(reporting.match(/SECURITY INVOKER;/g)).toHaveLength(3);
     expect(reporting).toContain("Only owner and operations may capture system health");
+  });
+
+  it("removes global supplier packing access and rejects foreign submissions", () => {
+    expect(packing).toContain("DROP POLICY IF EXISTS supplier_packing_lists_select");
+    expect(packing).toContain("DROP POLICY IF EXISTS supplier_packing_items_select");
+    expect(packing).toContain("public.lourex_r1_is_assigned_deal(deal_id)");
+    expect(packing).toContain("public.lourex_r1_is_assigned_shipment(shipment_id)");
+    expect(packing).toContain("SECURITY DEFINER");
+    expect(packing).toContain("v_shipment_id IS NULL");
+    expect(packing).toContain("NOT public.lourex_r1_is_assigned_deal(v_deal_id)");
+    expect(packing).toContain("R1: supplier packing list shipment is not assigned to partner");
   });
 
   it("includes a real-database catalog test without pretending it ran", () => {
