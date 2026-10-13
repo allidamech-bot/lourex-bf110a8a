@@ -24,6 +24,14 @@ describe("R1-F customer authentication link", () => {
     expect(source).not.toContain('select("id, customer_id, email, transfer_proof_url")');
   });
 
+  it("scopes customer notification events and purchase requests by the linked customer record", () => {
+    const source = readFileSync("src/domain/notifications/customerInbox.ts", "utf8");
+    expect(source).toContain('.eq("auth_user_id", user.id)');
+    expect(source).toContain('const customerId = linkedCustomer?.auth_user_id === user.id ? linkedCustomer.id : null');
+    expect(source).toContain('.eq("customer_id", customerId)');
+    expect(source).not.toContain('.eq("customer_id", user.id)');
+  });
+
   it("does not assume customer primary keys are Supabase authentication IDs", () => {
     const source = readFileSync("src/lib/operationsDomain.ts", "utf8");
     expect(source).toContain('.eq("auth_user_id", user.id)');
