@@ -542,11 +542,11 @@ export default function AccountingPage() {
         headerAction={
           <div className="flex items-center gap-3">
              <div className="text-right hidden sm:block">
-              <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("accounting.focusedContext")}</p>
-              <p className="text-sm font-bold text-amber-500">{focusDeal || t("accounting.global")}</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("accounting.focusedContext")}</p>
+              <p className="text-sm font-bold text-primary">{focusDeal || t("accounting.global")}</p>
             </div>
-            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
-              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-primary/20 bg-card text-heading hover:text-primary h-12 px-6">
+              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-primary")} />
               <span className="font-bold">{t("common.refresh")}</span>
             </Button>
           </div>
@@ -557,11 +557,11 @@ export default function AccountingPage() {
             { label: t("accounting.labels.totalIncome"), value: totals.income, icon: TrendingUp, accent: "text-emerald-400" },
             { label: t("accounting.labels.totalExpense"), value: totals.expense, icon: TrendingDown, accent: "text-rose-400" },
             { label: t("accounting.labels.net"), value: totals.net, icon: Wallet, accent: totals.net >= 0 ? "text-emerald-400" : "text-rose-400" },
-            { label: t("accounting.labels.lockedEntries"), value: totals.lockedCount, icon: Receipt, accent: "text-amber-200" },
+            { label: t("accounting.labels.lockedEntries"), value: totals.lockedCount, icon: Receipt, accent: "text-primary" },
           ].map((item) => (
-            <BentoCard key={item.label} className="p-5 border-amber-200/10 bg-stone-900/50">
+            <BentoCard key={item.label} className="p-5 border-primary/20 bg-card">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
                 <item.icon className={cn("h-4 w-4", item.accent)} />
               </div>
               <p className={cn("mt-4 text-2xl font-black", item.accent)}>
@@ -594,17 +594,17 @@ export default function AccountingPage() {
             <div className="space-y-6">
               {focusedDeal && (
                 <div className="grid grid-cols-1 gap-6">
-                  <BentoCard className="p-6 border-amber-500/20 bg-amber-500/5">
+                  <BentoCard className="p-6 border-primary/20 bg-primary-soft">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div>
-                        <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{t("accounting.statementReadiness")}</p>
-                        <h3 className="mt-1 font-serif text-2xl font-bold text-stone-100">
+                        <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{t("accounting.statementReadiness")}</p>
+                        <h3 className="mt-1 font-serif text-2xl font-bold text-foreground">
                           {statementSummary?.ready ? t("accounting.readyForFinalReview") : t("accounting.needsReviewBeforeIssue")}
                         </h3>
                       </div>
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                        statementSummary?.ready ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-200 border-amber-500/20"
+                        statementSummary?.ready ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-primary-soft text-primary border-primary/20"
                       )}>
                         {statementSummary?.currencySummaries.length || 0} {t("accounting.currencyGroupsCount")}
                       </span>
@@ -612,26 +612,26 @@ export default function AccountingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {statementSummary?.currencySummaries.map((item) => (
-                        <div key={item.currency} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/10">
-                          <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{item.currency}</p>
-                          <p className="mt-1 text-lg font-bold text-stone-100">{item.net.toLocaleString()} {item.currency}</p>
+                        <div key={item.currency} className="p-4 rounded-2xl bg-background/75 border border-primary/20">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.currency}</p>
+                          <p className="mt-1 text-lg font-bold text-foreground">{item.net.toLocaleString()} {item.currency}</p>
                           <p className="mt-1 text-[10px] font-bold text-stone-700 uppercase">{t("accounting.linkedEntriesCount", { count: item.entriesCount })}</p>
                         </div>
                       ))}
                     </div>
 
                     {statementSummary && statementSummary.issues.length > 0 && (
-                      <div className="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-sm font-medium text-amber-200">
+                      <div className="mt-6 p-4 rounded-2xl bg-primary-soft border border-primary/20 text-sm font-medium text-primary">
                         {statementSummary.issues[0]}
                       </div>
                     )}
                   </BentoCard>
 
-                  <BentoCard className="p-6 border-amber-500/20 bg-amber-500/5">
+                  <BentoCard className="p-6 border-primary/20 bg-primary-soft">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{t("accounting.dealSignal")}</p>
-                        <h3 className="mt-1 font-serif text-2xl font-bold text-stone-100">{focusedDeal.dealNumber}</h3>
+                        <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{t("accounting.dealSignal")}</p>
+                        <h3 className="mt-1 font-serif text-2xl font-bold text-foreground">{focusedDeal.dealNumber}</h3>
                       </div>
                       <div className={cn(
                         "h-12 w-12 flex items-center justify-center rounded-2xl border",
@@ -641,16 +641,16 @@ export default function AccountingPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/10">
-                        <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("accounting.referenceValue")}</p>
-                        <p className="mt-1 text-lg font-bold text-stone-100">{focusedDeal.totalValue.toLocaleString()} {focusedDeal.currency}</p>
+                      <div className="p-4 rounded-2xl bg-background/75 border border-primary/20">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("accounting.referenceValue")}</p>
+                        <p className="mt-1 text-lg font-bold text-foreground">{focusedDeal.totalValue.toLocaleString()} {focusedDeal.currency}</p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/10">
-                        <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{t("accounting.accountingReference")}</p>
-                        <p className="mt-1 text-lg font-bold text-stone-100">{focusedDeal.accountingReference || "-"}</p>
+                      <div className="p-4 rounded-2xl bg-background/75 border border-primary/20">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("accounting.accountingReference")}</p>
+                        <p className="mt-1 text-lg font-bold text-foreground">{focusedDeal.accountingReference || "-"}</p>
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-stone-500 leading-relaxed">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed">
                       {totals.net >= 0 ? t("accounting.positiveSignal") : t("accounting.negativeSignal")}
                       {dealFinancialSignal ? ` ${dealFinancialSignal.variance.toLocaleString()} ${focusedDeal.currency}.` : ""}
                     </p>
@@ -667,16 +667,16 @@ export default function AccountingPage() {
             description={lang === "ar" ? "مراجعة إرشادية فقط ولا تنشئ أو تعدل قيودا مالية." : "Read-only advisory review for data integrity."}
             icon={<Sparkles className="h-6 w-6" />}
             headerAction={
-              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview("finance_audit_review")} className="h-10 border-amber-200/15 bg-stone-900/40 text-stone-200 hover:text-amber-200">
+              <Button type="button" variant="outline" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview("finance_audit_review")} className="h-10 border-primary/20 bg-card text-heading hover:text-primary">
                 {aiReviewLoading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Sparkles className="me-2 h-4 w-4" />}
                 {lang === "ar" ? "راجع القيود" : "Review entries"}
               </Button>
             }
           >
-            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <BentoCard className="p-6 border-primary/20 bg-card">
               <div className="flex flex-wrap gap-2 mb-6">
                 {(["customer_balance_review", "settlement_review", "accounting_risk_briefing"] as const).map((mode) => (
-                  <Button key={mode} type="button" variant="outline" size="sm" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview(mode)} className="h-9 border-amber-200/10 bg-stone-950/40 text-stone-300 hover:text-stone-100">
+                  <Button key={mode} type="button" variant="outline" size="sm" disabled={aiReviewLoading} onClick={() => void handleFinanceAiReview(mode)} className="h-9 border-primary/20 bg-background/75 text-foreground hover:text-foreground">
                     {t(`accounting.pro.aiActions.${mode}`)}
                   </Button>
                 ))}
@@ -685,19 +685,19 @@ export default function AccountingPage() {
               {aiReview ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                   {aiUsedFallback && (
-                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200">
+                    <div className="p-3 rounded-xl bg-primary-soft border border-primary/20 text-xs text-primary">
                       {lang === "ar" ? "مساعد الذكاء الاصطناعي غير متاح، تم استخدام المحلل المحلي." : "AI assistant unavailable, local analyzer used."}
                     </div>
                   )}
-                  {aiReviewTitle && <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{aiReviewTitle}</p>}
-                  <pre className="p-6 rounded-2xl bg-stone-950/60 border border-amber-200/5 font-sans text-sm text-stone-300 whitespace-pre-wrap leading-relaxed max-h-[30rem] overflow-y-auto">
+                  {aiReviewTitle && <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{aiReviewTitle}</p>}
+                  <pre className="p-6 rounded-2xl bg-background/75 border border-primary/20 font-sans text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-[30rem] overflow-y-auto">
                     {aiReview}
                   </pre>
                 </div>
               ) : (
                 <div className="py-12 text-center">
                   <Sparkles className="h-8 w-8 text-stone-800 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-stone-600">{lang === "ar" ? "اضغط على زر المراجعة لبدء تحليل الذكاء الاصطناعي" : "Click review to start AI analysis"}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{lang === "ar" ? "اضغط على زر المراجعة لبدء تحليل الذكاء الاصطناعي" : "Click review to start AI analysis"}</p>
                 </div>
               )}
             </BentoCard>
@@ -712,20 +712,20 @@ export default function AccountingPage() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={t("accounting.searchPlaceholder")}
-                  className="h-10 w-64 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
+                  className="h-10 w-64 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25"
                 />
-                <Button variant="outline" size="sm" onClick={handleExport} className="h-10 border-stone-800 bg-stone-900/40 text-stone-400 hover:text-stone-100">
+                <Button variant="outline" size="sm" onClick={handleExport} className="h-10 border-stone-800 bg-card text-muted-foreground hover:text-foreground">
                   <FileSpreadsheet className="h-4 w-4 me-2" />
                   CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExportPdf} className="h-10 border-stone-800 bg-stone-900/40 text-stone-400 hover:text-stone-100">
+                <Button variant="outline" size="sm" onClick={handleExportPdf} className="h-10 border-stone-800 bg-card text-muted-foreground hover:text-foreground">
                   <FileText className="h-4 w-4 me-2" />
                   PDF
                 </Button>
               </div>
             }
           >
-            <BentoCard className="p-0 border-amber-200/10 bg-stone-900/50 overflow-hidden">
+            <BentoCard className="p-0 border-primary/20 bg-card overflow-hidden">
               <div className="divide-y divide-amber-200/5">
                 {[...dealEntries, ...globalEntries].length === 0 ? (
                   <div className="p-12 text-center">
@@ -738,11 +738,11 @@ export default function AccountingPage() {
                   </div>
                 ) : (
                   [...dealEntries, ...globalEntries].map((row) => (
-                    <div key={row.id} className="p-6 hover:bg-stone-800/20 transition-colors group">
+                    <div key={row.id} className="p-6 hover:bg-secondary transition-colors group">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                         <div>
-                          <p className="text-xs font-black text-stone-500 uppercase tracking-widest">{row.entryNumber}</p>
-                          <h4 className="mt-1 font-bold text-stone-100">
+                          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{row.entryNumber}</p>
+                          <h4 className="mt-1 font-bold text-foreground">
                             {row.scope === "deal" ? `${t("accounting.scopeDeal")}: ${row.dealNumber}` : row.scope === "customer" ? `${t("accounting.scopeCustomer")}: ${row.customerName}` : t("accounting.scopeGlobal")}
                           </h4>
                         </div>
@@ -751,8 +751,8 @@ export default function AccountingPage() {
                           visibleEditRequests.some(r => r.financialEntryId === row.id && r.status === "pending")
                             ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
                             : row.locked 
-                              ? "bg-amber-500/10 text-amber-200 border-amber-500/20" 
-                              : "bg-stone-800 text-stone-400 border-stone-700"
+                              ? "bg-primary-soft text-primary border-primary/20" 
+                              : "bg-secondary text-muted-foreground border-stone-700"
                         )}>
                           {visibleEditRequests.some(r => r.financialEntryId === row.id && r.status === "pending")
                             ? t("editRequests.pending")
@@ -763,41 +763,41 @@ export default function AccountingPage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
-                          <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("accounting.labels.type")}</p>
+                        <div className="p-4 rounded-xl bg-background/75 border border-stone-800">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("accounting.labels.type")}</p>
                           <p className={cn("font-bold", row.type === 'income' ? 'text-emerald-400' : 'text-rose-400')}>
                             {row.type === "income" ? t("accounting.typeIncome") : t("accounting.typeExpense")}
                           </p>
                         </div>
-                        <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
-                          <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("accounting.labels.amount")}</p>
-                          <p className="font-bold text-stone-100">{row.amount.toLocaleString()} {row.currency}</p>
+                        <div className="p-4 rounded-xl bg-background/75 border border-stone-800">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("accounting.labels.amount")}</p>
+                          <p className="font-bold text-foreground">{row.amount.toLocaleString()} {row.currency}</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
-                          <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("accounting.labels.category")}</p>
-                          <p className="font-bold text-stone-300 truncate">{row.category || "-"}</p>
+                        <div className="p-4 rounded-xl bg-background/75 border border-stone-800">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("accounting.labels.category")}</p>
+                          <p className="font-bold text-foreground truncate">{row.category || "-"}</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-stone-950/40 border border-stone-800">
-                          <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{t("common.date")}</p>
-                          <p className="font-bold text-stone-300">{new Date(row.entryDate).toLocaleDateString(locale)}</p>
+                        <div className="p-4 rounded-xl bg-background/75 border border-stone-800">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("common.date")}</p>
+                          <p className="font-bold text-foreground">{new Date(row.entryDate).toLocaleDateString(locale)}</p>
                         </div>
                       </div>
 
-                      <p className="text-sm text-stone-400 leading-relaxed mb-6 italic">"{row.note || t("accounting.noNotes")}"</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-6 italic">"{row.note || t("accounting.noNotes")}"</p>
 
                       <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-wrap gap-4 text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+                        <div className="flex flex-wrap gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           <span>{t("accounting.pro.createdBy")}: {row.createdBy || "-"}</span>
                           <span>{t("accounting.pro.createdAt")}: {new Date(row.createdAt).toLocaleDateString(locale)}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           {row.dealNumber && (
-                            <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-xs font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest">
+                            <Link to={`/dashboard/deals?deal=${row.dealNumber}`} className="text-xs font-black text-primary hover:text-primary uppercase tracking-widest">
                               {t("accounting.openDeal")}
                             </Link>
                           )}
                           {row.locked && (
-                            <Link to={`/dashboard/edit-requests?deal=${row.dealNumber || focusDeal || ""}&entry=${row.id}`} className="text-xs font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest">
+                            <Link to={`/dashboard/edit-requests?deal=${row.dealNumber || focusDeal || ""}&entry=${row.id}`} className="text-xs font-black text-primary hover:text-primary uppercase tracking-widest">
                               {t("accounting.requestCorrection")}
                             </Link>
                           )}
@@ -813,13 +813,13 @@ export default function AccountingPage() {
 
         <aside className="space-y-12">
           <DashboardSection title={t("accounting.createTitle")} icon={<FilePenLine className="h-6 w-6" />}>
-            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
-              <div className="mb-8 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-3">
-                <div className="flex items-center gap-2 text-[10px] font-black text-amber-500 uppercase tracking-widest">
+            <BentoCard className="p-6 border-primary/20 bg-card">
+              <div className="mb-8 p-4 rounded-2xl bg-primary-soft border border-primary/20 space-y-3">
+                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
                   <Info className="h-3 w-3" />
                   {t("accounting.guidanceTitle")}
                 </div>
-                <ul className="text-xs font-medium text-stone-500 space-y-2 list-disc list-inside">
+                <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc list-inside">
                   <li>{t("accounting.guidance.entryPurpose")}</li>
                   <li>{t("accounting.guidance.lockedMeaning")}</li>
                 </ul>
@@ -828,55 +828,55 @@ export default function AccountingPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("common.type")}</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("common.type")}</Label>
                     <select
                       value={type}
                       onChange={(event) => setType(event.target.value as "income" | "expense")}
-                      className="w-full h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-4 text-sm text-stone-100 outline-none focus:ring-1 focus:ring-amber-500/20"
+                      className="w-full h-11 rounded-xl border border-primary/20 bg-background/75 px-4 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/25"
                     >
-                      <option value="expense" className="bg-stone-900">{t("accounting.typeExpense")}</option>
-                      <option value="income" className="bg-stone-900">{t("accounting.typeIncome")}</option>
+                      <option value="expense" className="bg-card">{t("accounting.typeExpense")}</option>
+                      <option value="income" className="bg-card">{t("accounting.typeIncome")}</option>
                     </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("common.amount")}</Label>
-                      <Input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("common.amount")}</Label>
+                      <Input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="h-11 bg-background/75 border-primary/20 text-foreground" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("common.currency")}</Label>
-                      <Input value={currency} onChange={(event) => setCurrency(event.target.value)} className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("common.currency")}</Label>
+                      <Input value={currency} onChange={(event) => setCurrency(event.target.value)} className="h-11 bg-background/75 border-primary/20 text-foreground" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("common.date")}</Label>
-                    <Input type="date" value={entryDate} onChange={(event) => setEntryDate(event.target.value)} className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("common.date")}</Label>
+                    <Input type="date" value={entryDate} onChange={(event) => setEntryDate(event.target.value)} className="h-11 bg-background/75 border-primary/20 text-foreground" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("accounting.counterparty")}</Label>
-                    <Input value={counterparty} onChange={(event) => setCounterparty(event.target.value)} className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("accounting.counterparty")}</Label>
+                    <Input value={counterparty} onChange={(event) => setCounterparty(event.target.value)} className="h-11 bg-background/75 border-primary/20 text-foreground" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("common.category")}</Label>
-                    <Input value={category} onChange={(event) => setCategory(event.target.value)} className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("common.category")}</Label>
+                    <Input value={category} onChange={(event) => setCategory(event.target.value)} className="h-11 bg-background/75 border-primary/20 text-foreground" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("accounting.paymentMethod")}</Label>
-                    <Input value={method} onChange={(event) => setMethod(event.target.value)} className="h-11 bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("accounting.paymentMethod")}</Label>
+                    <Input value={method} onChange={(event) => setMethod(event.target.value)} className="h-11 bg-background/75 border-primary/20 text-foreground" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("accounting.descriptionLabel")}</Label>
-                    <Textarea rows={4} value={note} onChange={(event) => setNote(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("accounting.descriptionLabel")}</Label>
+                    <Textarea rows={4} value={note} onChange={(event) => setNote(event.target.value)} className="bg-background/75 border-primary/20 text-foreground" />
                   </div>
                 </div>
 
-                <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-black text-stone-950 shadow-xl hover:brightness-110 uppercase tracking-widest" onClick={handleCreateEntry} disabled={submitting || !canCreateAccountingEntries}>
+                <Button className="w-full h-14 rounded-2xl bg-primary font-black text-primary-foreground shadow-xl hover:brightness-110 uppercase tracking-widest" onClick={handleCreateEntry} disabled={submitting || !canCreateAccountingEntries}>
                   {submitting ? t("accounting.creating") : t("accounting.createLocked")}
                 </Button>
               </div>
@@ -884,13 +884,13 @@ export default function AccountingPage() {
           </DashboardSection>
 
           {focusDeal && (
-            <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+            <BentoCard className="p-6 border-primary/20 bg-card">
               <Link to={`/dashboard/deals?deal=${focusDeal}`} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
-                  <Route className="h-5 w-5 text-amber-500" />
-                  <span className="font-bold text-stone-100">{t("accounting.backToDeal")}</span>
+                  <Route className="h-5 w-5 text-primary" />
+                  <span className="font-bold text-foreground">{t("accounting.backToDeal")}</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-stone-600 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
               </Link>
             </BentoCard>
           )}
