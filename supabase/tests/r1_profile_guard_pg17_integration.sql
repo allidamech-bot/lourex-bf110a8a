@@ -167,6 +167,35 @@ END;
 $owner_tests$;
 
 RESET ROLE;
+-- Exercise service-side deletes (including auth.users cascade semantics).
+DO $delete_guard_tests$
+DECLARE
+  denied boolean := false;
+  affected integer;
+BEGIN
+  INSERT INTO public.profiles(id,role,status)
+    VALUES ('00000000-0000-0000-0000-000000000008','owner','active');
+
+  DELETE FROM public.profiles
+  WHERE id='00000000-0000-0000-0000-000000000008';
+  GET DIAGNOSTICS affected = ROW_COUNT;
+  IF affected <> 1 THEN RAISE EXCEPTION 'Second owner deletion should remain allowed'; END IF;
+
+  BEGIN
+    DELETE FROM public.profiles
+    WHERE id='00000000-0000-0000-0000-000000000001';
+  EXCEPTION WHEN check_violation THEN
+    denied := true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Final active owner DELETE succeeded'; END IF;
+
+  DELETE FROM public.profiles
+    WHERE id='00000000-0000-0000-0000-000000000005';
+  GET DIAGNOSTICS affected = ROW_COUNT;
+  IF affected <> 1 THEN RAISE EXCEPTION 'Non-owner account deletion blocked'; END IF;
+END;
+$delete_guard_tests$;
+
 DO $post_tests$
 BEGIN
   IF (SELECT count(*) FROM public.profiles WHERE role='owner' AND status='active') <> 1 THEN
