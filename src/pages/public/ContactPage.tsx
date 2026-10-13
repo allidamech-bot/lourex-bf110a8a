@@ -200,7 +200,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO 
         title={t("nav.contact")}
         description={
@@ -212,19 +212,19 @@ export default function ContactPage() {
       />
       <SiteHeader />
 
-      <main className="container mx-auto px-4 py-12 md:px-8">
-        <div className="rounded-[2rem] border border-amber-200/15 bg-stone-50/5 p-6 shadow-2xl backdrop-blur-xl md:p-10">
+      <main className="container mx-auto px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2.25rem] border border-border/70 bg-card/60 p-5 shadow-soft sm:p-8 lg:p-12">
           <SectionHeading
             eyebrow={t("contact.eyebrow")}
             title={t("contact.title")}
             description={t("contact.description")}
           />
 
-          <div className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-            <section className="rounded-[1.75rem] border border-amber-500/15 bg-stone-900/50 p-6 md:p-8">
+          <div className="mt-10 grid items-start gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(310px,0.8fr)] xl:gap-10">
+            <section className="rounded-[1.75rem] border border-border/70 bg-background p-6 shadow-soft md:p-9">
               <div className="max-w-2xl">
-                <h2 className="font-serif text-2xl font-semibold text-stone-100">{t("contact.formTitle")}</h2>
-                <p className="mt-3 text-sm leading-7 text-stone-400">
+                <h2 className="text-2xl font-bold text-heading">{t("contact.formTitle")}</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {t("contact.formDescription")}
                 </p>
               </div>
@@ -239,7 +239,7 @@ export default function ContactPage() {
                       maxLength={100}
                       disabled={isSubmitting}
                       aria-invalid={Boolean(errors.name)}
-                      className="bg-stone-950/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 focus:border-amber-500/50"
+                      className="min-h-12 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/25"
                     />
                     {errors.name ? <p className="text-sm text-red-400">{errors.name}</p> : null}
                   </div>
@@ -253,7 +253,7 @@ export default function ContactPage() {
                       maxLength={255}
                       disabled={isSubmitting}
                       aria-invalid={Boolean(errors.email)}
-                      className="bg-stone-950/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 focus:border-amber-500/50"
+                      className="min-h-12 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/25"
                     />
                     {errors.email ? <p className="text-sm text-red-400">{errors.email}</p> : null}
                   </div>
@@ -268,7 +268,7 @@ export default function ContactPage() {
                       maxLength={40}
                       disabled={isSubmitting}
                       aria-invalid={Boolean(errors.phone)}
-                      className="bg-stone-950/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 focus:border-amber-500/50"
+                      className="min-h-12 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/25"
                     />
                     {errors.phone ? <p className="text-sm text-red-400">{errors.phone}</p> : null}
                   </div>
@@ -281,7 +281,7 @@ export default function ContactPage() {
                       maxLength={100}
                       disabled={isSubmitting}
                       aria-invalid={Boolean(errors.company)}
-                      className="bg-stone-950/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 focus:border-amber-500/50"
+                      className="min-h-12 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/25"
                     />
                     {errors.company ? <p className="text-sm text-red-400">{errors.company}</p> : null}
                   </div>
@@ -296,17 +296,17 @@ export default function ContactPage() {
                     maxLength={1000}
                     disabled={isSubmitting}
                     aria-invalid={Boolean(errors.message)}
-                    className="bg-stone-950/50 border-amber-200/10 text-stone-100 placeholder:text-stone-600 focus:border-amber-500/50"
+                    className="min-h-12 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/25"
                   />
                   {errors.message ? <p className="text-sm text-red-400">{errors.message}</p> : null}
                 </div>
 
-                <Button type="submit" className="w-full md:w-auto bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-semibold text-stone-950 hover:brightness-110" disabled={isSubmitting}>
+                <Button type="submit" className="min-h-12 w-full rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-soft transition hover:opacity-90 md:w-auto" disabled={isSubmitting}>
                   <SendHorizonal className="me-2 h-4 w-4" />
                   {isSubmitting ? t("contact.submitting") : t("contact.submit")}
                 </Button>
                 {submitSucceeded ? (
-                  <p className="text-sm text-amber-500" role="status">
+                  <p className="text-sm text-primary" role="status">
                     {t("contact.successDescription")}
                   </p>
                 ) : null}
@@ -317,39 +317,39 @@ export default function ContactPage() {
               {cards.map((item) => (
                 <div
                   key={`${item.label}-${item.value}`}
-                  className="rounded-[1.6rem] border border-amber-200/10 bg-stone-900/50 p-5"
+                  className="rounded-[1.4rem] border border-border/70 bg-card p-5 transition-colors hover:border-primary/25"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
                       <item.icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm text-stone-500">{item.label}</p>
+                      <p className="text-sm text-muted-foreground">{item.label}</p>
                       {item.label === t("contact.labels.website") ? (
                         <a
                           href={publicContactInfo.websiteUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-2 block break-words font-medium text-amber-200 [overflow-wrap:anywhere] hover:underline"
+                          className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
                         >
                           {item.value}
                         </a>
                       ) : item.label === t("contact.labels.email") ? (
                         <a
                           href={`mailto:${publicContactInfo.email}`}
-                          className="mt-2 block break-words font-medium text-amber-200 [overflow-wrap:anywhere] hover:underline"
+                          className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
                         >
                           {item.value}
                         </a>
                       ) : item.label === t("contact.labels.phone") ? (
                         <a
                           href={`tel:${publicContactInfo.phoneTel}`}
-                          className="mt-2 block font-medium text-amber-200 hover:underline"
+                          className="mt-2 block font-medium text-primary hover:underline"
                         >
                           {item.value}
                         </a>
                       ) : (
-                        <p className="mt-2 font-medium text-stone-200">{item.value}</p>
+                        <p className="mt-2 font-medium text-heading">{item.value}</p>
                       )}
                     </div>
                   </div>
@@ -359,7 +359,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="mt-8 opacity-80">
+        <div className="mt-10">
           <SupportConversationWidget />
         </div>
       </main>
