@@ -217,6 +217,7 @@ export type CustomerRow = {
   email: string;
   country?: string | null;
   city?: string | null;
+  auth_user_id?: string | null;
 };
 
 export type FinancialEntryRow = {
@@ -673,12 +674,12 @@ const getCurrentCustomerRecord = async () => {
     method: "lookup",
   });
 
-  // In the Lourex Cloud ownership model, lourex_customers.id is intentionally equal to auth.users.id,
-  // and purchase_requests.customer_id stores that same authenticated user id.
+  // Customer record IDs are distinct from Supabase auth user IDs.
+  // Ownership is determined only by the server-managed auth_user_id link.
   const byUserId = await db
     .from<CustomerRow>("lourex_customers")
     .select("*")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (byUserId.data) {
@@ -718,7 +719,7 @@ const getCurrentCustomerRecord = async () => {
   if (upsertedCustomer.error || !upsertedCustomer.data?.customer_id) {
     logOptionalBackendUnavailableOnce("upsert_current_customer_record", upsertedCustomer.error || new Error("Customer upsert returned no customer_id"));
 
-    if (byEmail.data) {
+    if (byEmail.data?.auth_user_id === user.id) {
       trackEvent("customer_profile_resolution", {
         flow: "customer_request",
         authenticated: true,
@@ -986,7 +987,15 @@ export const createPurchaseRequestRecord = async (input: {
 
   const customerId = upsertedCustomer.data.customer_id;
 
-  if (customerId !== user.id) {
+  // Validate the RPC result against the authoritative customer/auth mapping.
+  const linkedCustomer = await db
+    .from<CustomerRow>("lourex_customers")
+    .select("id, auth_user_id")
+    .eq("id", customerId)
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (linkedCustomer.error || !linkedCustomer.data) {
     const error = {
       message: "The purchase request could not be linked to the signed-in customer account.",
     };
@@ -1051,14 +1060,14 @@ export const createPurchaseRequestRecord = async (input: {
     return inserted;
   }
 
-  if (!inserted.data.id || inserted.data.customer_id !== user.id) {
+  if (!inserted.data.id || inserted.data.customer_id !== customerId) {
     const error = {
       message: "The purchase request was not linked to your customer account. Please try again or contact LOUREX support.",
     };
     logOperationalError("purchase_request_create", new Error(error.message), {
       flow: "purchase_request_create",
       requestId: inserted.data.id,
-      customerLinked: inserted.data.customer_id === user.id,
+      customerLinked: inserted.data.customer_id === customerId,
     });
     return { data: null, error };
   }
@@ -1192,7 +1201,7 @@ export const loadPurchaseRequests = async (
   let currentCustomerId: string | null = null;
   if (isCustomer) {
     const customerRecord = await getCurrentCustomerRecord();
-    currentCustomerId = customerRecord?.id || user?.id || null;
+    currentCustomerId = customerRecord?.id || null;
   }
 
   let explicitRowsPromise: Promise<PurchaseRequestRow[]>;
