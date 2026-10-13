@@ -24,6 +24,23 @@ DECLARE
   v_owner boolean := false;
   v_active_other_owners integer;
 BEGIN
+  -- Even a service-privileged delete (e.g. auth.users ON DELETE CASCADE)
+  -- must not remove the final active owner.
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.role = 'owner' AND OLD.status = 'active' THEN
+      PERFORM pg_catalog.pg_advisory_xact_lock(62180, 20261013);
+      SELECT count(*) INTO v_active_other_owners
+      FROM public.profiles p
+      WHERE p.role = 'owner' AND p.status = 'active' AND p.id <> OLD.id;
+
+      IF v_active_other_owners < 1 THEN
+        RAISE EXCEPTION 'Cannot delete the final active owner.'
+          USING ERRCODE = '23514';
+      END IF;
+    END IF;
+    RETURN OLD;
+  END IF;
+
   -- Server-side signup and trusted maintenance may run without user JWT context.
   IF v_actor IS NULL THEN
     RETURN NEW;
@@ -78,7 +95,7 @@ $function$;
 
 DROP TRIGGER IF EXISTS guard_profile_privilege_fields_trigger ON public.profiles;
 CREATE TRIGGER guard_profile_privilege_fields_trigger
-BEFORE INSERT OR UPDATE ON public.profiles
+BEFORE INSERT OR UPDATE OR DELETE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.guard_profile_privilege_fields();
 
 -- The owner must be able to view and update other account rows in order for
