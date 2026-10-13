@@ -1,16 +1,12 @@
 export const publicContactInfo = {
   company: "LOUREX",
-  email: "alidamish@lou-rex.com",
-  phone: "00905392411642",
+  email: "lourrex@proton.me",
+  phone: "+90 539 241 1642",
   phoneTel: "+905392411642",
   whatsappNumbers: {
     turkey: {
       number: "905392411642",
       display: "+90 539 241 1642",
-    },
-    saudi: {
-      number: "966571660357",
-      display: "+966 57 166 0357",
     },
   },
   website: "www.lou-rex.com",
@@ -20,8 +16,13 @@ export const publicContactInfo = {
     tiktok: "https://www.tiktok.com/@lourex49",
   },
   location: {
-    en: "Istanbul, Turkey",
-    ar: "إسطنبول، تركيا",
+    en: "Homs, Syria",
+    ar: "حمص، سوريا",
+  },
+  commercialRegistration: {
+    number: "62800",
+    en: "Commercial Registration No. 62800",
+    ar: "السجل التجاري رقم 62800",
   },
   operationsDesk: {
     en: "Operations Desk",

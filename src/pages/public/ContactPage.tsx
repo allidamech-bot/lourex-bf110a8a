@@ -98,8 +98,8 @@ export default function ContactPage() {
       },
       {
         icon: MessageSquareText,
-        label: t("contact.labels.operationsDesk"),
-        value: dir === "rtl" ? publicContactInfo.operationsDesk.ar : publicContactInfo.operationsDesk.en,
+        label: dir === "rtl" ? "السجل التجاري" : "Commercial Registration",
+        value: dir === "rtl" ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en,
       },
       {
         icon: Clock3,

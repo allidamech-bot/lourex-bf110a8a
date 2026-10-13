@@ -15,9 +15,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Open Sans", "system-ui", "sans-serif"],
-        serif: ["Montserrat", "system-ui", "sans-serif"],
-        heading: ["Montserrat", "system-ui", "sans-serif"],
+        sans: ["Manrope", "Open Sans", "system-ui", "sans-serif"],
+        serif: ["Manrope", "system-ui", "sans-serif"],
+        heading: ["Manrope", "system-ui", "sans-serif"],
         body: ["Open Sans", "system-ui", "sans-serif"],
         arabic: ["Tajawal", "sans-serif"],
       },
@@ -27,6 +27,13 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        heading: "hsl(var(--heading))",
+        footer: {
+          DEFAULT: "hsl(var(--footer-background))",
+          foreground: "hsl(var(--footer-foreground))",
+          muted: "hsl(var(--footer-muted))",
+          accent: "hsl(var(--footer-accent))",
+        },
         gold: {
           DEFAULT: "hsl(var(--gold))",
           light: "hsl(var(--gold-light))",
@@ -43,6 +50,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          soft: "hsl(var(--primary-soft))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

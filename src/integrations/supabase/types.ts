@@ -228,6 +228,67 @@ export type Database = {
           },
         ]
       }
+      conversation_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          customer_id: string | null
+          deal_id: string | null
+          id: string
+          message: string
+          read_at: string | null
+          request_id: string | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          id?: string
+          message: string
+          read_at?: string | null
+          request_id?: string | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          request_id?: string | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_messages_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_messages: {
         Row: {
           content: string
@@ -815,6 +876,63 @@ export type Database = {
           },
         ]
       }
+      notification_events: {
+        Row: {
+          channel_hint: string
+          created_at: string
+          customer_id: string | null
+          event_type: string
+          id: string
+          metadata: Json
+          order_id: string | null
+          provider_email_configured: boolean
+          provider_messaging_configured: boolean
+          status: string
+          tracking_id: string | null
+        }
+        Insert: {
+          channel_hint?: string
+          created_at?: string
+          customer_id?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          order_id?: string | null
+          provider_email_configured?: boolean
+          provider_messaging_configured?: boolean
+          status?: string
+          tracking_id?: string | null
+        }
+        Update: {
+          channel_hint?: string
+          created_at?: string
+          customer_id?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          order_id?: string | null
+          provider_email_configured?: boolean
+          provider_messaging_configured?: boolean
+          status?: string
+          tracking_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -917,6 +1035,66 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_followups: {
+        Row: {
+          admin_note: string
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          customer_note: string
+          deal_id: string | null
+          id: string
+          request_id: string
+          stage_code: string
+          stage_title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          admin_note?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          customer_note?: string
+          deal_id?: string | null
+          id?: string
+          request_id: string
+          stage_code: string
+          stage_title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          admin_note?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          customer_note?: string
+          deal_id?: string | null
+          id?: string
+          request_id?: string
+          stage_code?: string
+          stage_title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_followups_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_followups_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -1318,6 +1496,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_catalog_products: {
+        Row: {
+          brand: string
+          category_id: string
+          created_at: string
+          created_by: string | null
+          description_ar: string
+          description_en: string
+          dimensions: string
+          id: string
+          image_alt_ar: string
+          image_alt_en: string
+          image_url: string
+          is_featured: boolean
+          material: string
+          moq: string
+          name_ar: string
+          name_en: string
+          origin_country: string
+          packaging: string
+          price_note_ar: string
+          price_note_en: string
+          short_description_ar: string
+          short_description_en: string
+          slug: string
+          status: string
+          tags_ar: string[]
+          tags_en: string[]
+          technical_specs: string
+          unit: string
+          updated_at: string
+          updated_by: string | null
+          weight: string
+        }
+        Insert: {
+          brand?: string
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string
+          description_en?: string
+          dimensions?: string
+          id?: string
+          image_alt_ar?: string
+          image_alt_en?: string
+          image_url?: string
+          is_featured?: boolean
+          material?: string
+          moq?: string
+          name_ar?: string
+          name_en?: string
+          origin_country?: string
+          packaging?: string
+          price_note_ar?: string
+          price_note_en?: string
+          short_description_ar?: string
+          short_description_en?: string
+          slug: string
+          status?: string
+          tags_ar?: string[]
+          tags_en?: string[]
+          technical_specs?: string
+          unit?: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: string
+        }
+        Update: {
+          brand?: string
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string
+          description_en?: string
+          dimensions?: string
+          id?: string
+          image_alt_ar?: string
+          image_alt_en?: string
+          image_url?: string
+          is_featured?: boolean
+          material?: string
+          moq?: string
+          name_ar?: string
+          name_en?: string
+          origin_country?: string
+          packaging?: string
+          price_note_ar?: string
+          price_note_en?: string
+          short_description_ar?: string
+          short_description_en?: string
+          slug?: string
+          status?: string
+          tags_ar?: string[]
+          tags_en?: string[]
+          technical_specs?: string
+          unit?: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: string
+        }
+        Relationships: []
       }
       product_prices: {
         Row: {
@@ -2001,6 +2281,201 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_packing_list_items: {
+        Row: {
+          created_at: string
+          height_cm: number
+          id: string
+          item_cbm: number
+          item_index: number
+          item_name: string
+          item_total_weight_kg: number
+          length_cm: number
+          packing_list_id: string
+          quantity: number
+          weight_kg: number
+          width_cm: number
+        }
+        Insert: {
+          created_at?: string
+          height_cm?: number
+          id?: string
+          item_cbm?: number
+          item_index?: number
+          item_name?: string
+          item_total_weight_kg?: number
+          length_cm?: number
+          packing_list_id: string
+          quantity?: number
+          weight_kg?: number
+          width_cm?: number
+        }
+        Update: {
+          created_at?: string
+          height_cm?: number
+          id?: string
+          item_cbm?: number
+          item_index?: number
+          item_name?: string
+          item_total_weight_kg?: number
+          length_cm?: number
+          packing_list_id?: string
+          quantity?: number
+          weight_kg?: number
+          width_cm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_packing_list_items_packing_list_id_fkey"
+            columns: ["packing_list_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_packing_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_packing_lists: {
+        Row: {
+          created_at: string
+          deal_id: string | null
+          id: string
+          shipment_id: string | null
+          shipment_reference: string
+          source: string
+          status: string
+          submitted_by: string | null
+          submitted_by_role: string
+          total_cbm: number
+          total_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          shipment_id?: string | null
+          shipment_reference: string
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          submitted_by_role: string
+          total_cbm?: number
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          shipment_id?: string | null
+          shipment_reference?: string
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          submitted_by_role?: string
+          total_cbm?: number
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_packing_lists_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_packing_lists_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_packing_lists_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_conversations: {
+        Row: {
+          assigned_admin_id: string | null
+          assigned_to: string | null
+          contact: string
+          conversation_type: string
+          created_at: string
+          customer_id: string | null
+          deal_id: string | null
+          id: string
+          message: string
+          name: string
+          opened_at: string | null
+          related_reference: string | null
+          request_id: string | null
+          resolved_at: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          assigned_to?: string | null
+          contact: string
+          conversation_type?: string
+          created_at?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          id?: string
+          message: string
+          name: string
+          opened_at?: string | null
+          related_reference?: string | null
+          request_id?: string | null
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          assigned_to?: string | null
+          contact?: string
+          conversation_type?: string
+          created_at?: string
+          customer_id?: string | null
+          deal_id?: string | null
+          id?: string
+          message?: string
+          name?: string
+          opened_at?: string | null
+          related_reference?: string | null
+          request_id?: string | null
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversations_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
@@ -2050,6 +2525,145 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_updates: {
+        Row: {
+          created_at: string
+          customer_note: string
+          deal_id: string | null
+          id: string
+          note: string
+          occurred_at: string
+          previous_stage_code: string | null
+          shipment_id: string
+          stage_code: string
+          updated_by: string | null
+          updated_by_role: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          customer_note?: string
+          deal_id?: string | null
+          id?: string
+          note?: string
+          occurred_at?: string
+          previous_stage_code?: string | null
+          shipment_id: string
+          stage_code: string
+          updated_by?: string | null
+          updated_by_role?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          customer_note?: string
+          deal_id?: string | null
+          id?: string
+          note?: string
+          occurred_at?: string
+          previous_stage_code?: string | null
+          shipment_id?: string
+          stage_code?: string
+          updated_by?: string | null
+          updated_by_role?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_updates_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracking_updates_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfer_proofs: {
+        Row: {
+          created_at: string
+          customer_id: string
+          deal_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          rejection_reason: string | null
+          request_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_bucket: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          deal_id?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_bucket?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          deal_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_bucket?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_proofs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "lourex_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_proofs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_proofs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -2217,6 +2831,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_lourex_customer_id: { Args: never; Returns: string }
       current_lourex_role: { Args: never; Returns: string }
       extract_legacy_line: {
         Args: { label: string; source: string }
@@ -2235,7 +2850,20 @@ export type Database = {
         Returns: boolean
       }
       is_lourex_internal: { Args: { user_id: string }; Returns: boolean }
+      is_lourex_role: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: boolean
+      }
       is_verified_user: { Args: never; Returns: boolean }
+      log_security_audit_event: {
+        Args: {
+          p_actor_id?: string
+          p_area: string
+          p_event_type: string
+          p_payload?: Json
+        }
+        Returns: undefined
+      }
       lookup_shipment_by_tracking: {
         Args: { p_tracking_id: string }
         Returns: {
@@ -2260,6 +2888,15 @@ export type Database = {
           p_notes?: string
           p_price_per_unit: number
           p_rfq_id: string
+        }
+        Returns: string
+      }
+      submit_supplier_packing_list: {
+        Args: {
+          p_items: Json
+          p_shipment_reference: string
+          p_total_cbm: number
+          p_total_weight_kg: number
         }
         Returns: string
       }
@@ -2300,6 +2937,17 @@ export type Database = {
           customer_id: string
         }[]
       }
+      upsert_lourex_customer_record: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_email: string
+          p_full_name?: string
+          p_phone?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
@@ -2326,12 +2974,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2355,11 +3003,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2380,11 +3028,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2405,11 +3053,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2422,11 +3070,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

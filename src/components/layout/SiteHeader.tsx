@@ -87,7 +87,7 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="bg-stone-950/90 backdrop-blur-xl sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible border-b border-amber-200/15"
+          className="sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70"
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
@@ -99,15 +99,15 @@ export const SiteHeader = () => {
                 onClick={() => setIsOpen(false)}
                 aria-label="Lourex home"
             >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
               <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
             </span>
-              <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
+              <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
             </Link>
 
             <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/15 bg-stone-900 text-stone-100 transition-colors hover:bg-stone-800"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:border-primary/40 hover:text-primary"
                 onClick={() => setIsOpen((value) => !value)}
                 aria-label={t("nav.menu")}
                 aria-expanded={isOpen}
@@ -128,10 +128,10 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
           >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
             <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
           </span>
-            <span className="font-serif text-xl font-bold text-stone-100">LOUREX</span>
+            <span className="font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
           </Link>
 
           <nav
@@ -144,8 +144,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
-                                : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
+                                ? "bg-primary-soft text-primary"
+                                : "text-muted-foreground hover:bg-secondary hover:text-heading"
                         }`
                     }
                 >
@@ -160,8 +160,8 @@ export const SiteHeader = () => {
                     className={({ isActive }) =>
                         `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3.5 2xl:text-sm ${
                             isActive
-                                ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
-                                : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
+                                ? "bg-primary-soft text-primary"
+                                : "text-muted-foreground hover:bg-secondary hover:text-heading"
                         }`
                     }
                 >
@@ -170,7 +170,7 @@ export const SiteHeader = () => {
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-3 border-s border-amber-200/15 ps-4">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-s border-border ps-4">
             <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
               {user ? <NotificationBell userId={user.id} /> : null}
 
@@ -181,7 +181,7 @@ export const SiteHeader = () => {
                   <>
                     <Link
                         to="/profile"
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200/20 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/20"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/25 bg-primary-soft text-sm font-bold text-primary transition hover:border-primary/50"
                         title={userName}
                     >
                       {userName.slice(0, 1).toUpperCase()}
@@ -190,7 +190,7 @@ export const SiteHeader = () => {
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className="h-10 rounded-xl px-3 text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
+                        className="h-10 rounded-xl px-3 text-muted-foreground hover:bg-secondary hover:text-heading"
                         title={signOutLabel}
                     >
                       <LogOut className="h-4 w-4" />
@@ -200,7 +200,7 @@ export const SiteHeader = () => {
                   <Button
                       variant="default"
                       asChild
-                      className="h-10 rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 px-5 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110"
+                      className="h-10 rounded-xl bg-primary px-5 font-semibold text-primary-foreground shadow-soft transition hover:bg-primary/90"
                   >
                     <Link to="/auth">{signInLabel}</Link>
                   </Button>
@@ -209,17 +209,19 @@ export const SiteHeader = () => {
           </div>
         </div>
 
+        <div className="meridian-line pointer-events-none absolute inset-x-0 bottom-[-1px] opacity-60" aria-hidden="true" />
+
         {/* Mobile drawer */}
         {isOpen ? (
             <div className="fixed inset-0 z-[10000] lg:hidden" role="dialog" aria-modal="true" aria-label={t("nav.mobileNavigation")}>
               <button
                   type="button"
-                  className="absolute inset-0 h-full w-full bg-black/65 backdrop-blur-sm"
+                  className="absolute inset-0 h-full w-full bg-foreground/40 backdrop-blur-sm"
                   aria-label={t("common.close")}
                   onClick={() => setIsOpen(false)}
               />
               <div
-                  className={`absolute inset-y-0 ${isRtl ? "left-0" : "right-0"} flex h-[100dvh] w-[min(100vw,26rem)] max-w-full overflow-hidden border-amber-200/15 bg-stone-950 shadow-2xl ${isRtl ? "border-r" : "border-l"}`}
+                  className={`absolute inset-y-0 ${isRtl ? "left-0" : "right-0"} flex h-[100dvh] w-[min(100vw,26rem)] max-w-full overflow-hidden border-border bg-background shadow-2xl ${isRtl ? "border-r" : "border-l"}`}
               >
               <div className="flex h-full w-full max-w-full min-w-0 flex-col overflow-y-auto overscroll-contain p-4 sm:p-5">
                 <div className="mb-8 flex items-center justify-between">
@@ -228,16 +230,16 @@ export const SiteHeader = () => {
                       className="flex min-w-0 shrink items-center gap-3"
                       onClick={() => setIsOpen(false)}
                   >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-stone-900">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
                   <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
                 </span>
-                    <span className="min-w-0 truncate font-serif text-xl font-bold text-stone-100">LOUREX</span>
+                    <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
                   </Link>
 
                   <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="rounded-lg p-2 text-stone-400 hover:bg-stone-800"
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"
                       aria-label={t("common.close")}
                   >
                     <X size={20} />
@@ -248,15 +250,15 @@ export const SiteHeader = () => {
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="mb-6 block w-full max-w-full rounded-2xl border border-amber-200/15 bg-stone-900/50 px-4 py-4 transition-colors hover:bg-stone-800"
+                        className="mb-6 block w-full max-w-full rounded-2xl border border-border bg-card px-4 py-4 shadow-soft transition-colors hover:border-primary/40"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-base font-bold text-amber-200 ring-1 ring-amber-500/20">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-base font-bold text-primary">
                           {userName.slice(0, 1).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-stone-100">{userName}</p>
-                          <p className="truncate text-xs text-stone-400">
+                          <p className="truncate text-sm font-semibold text-heading">{userName}</p>
+                          <p className="truncate text-xs text-muted-foreground">
                             {roleLabel || userEmail || workspaceLabel}
                           </p>
                         </div>
@@ -264,7 +266,7 @@ export const SiteHeader = () => {
                     </Link>
                 ) : null}
 
-                <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-amber-200/15 bg-stone-900/50 px-3 py-2">
+                <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
                   <ThemeToggle />
@@ -278,8 +280,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                               `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                                   isActive
-                                      ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
-                                      : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
+                                      ? "bg-primary-soft text-primary"
+                                      : "text-muted-foreground hover:bg-secondary hover:text-heading"
                               }`
                           }
                       >
@@ -296,8 +298,8 @@ export const SiteHeader = () => {
                           className={({ isActive }) =>
                               `flex min-h-11 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                                   isActive
-                                      ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
-                                      : "text-stone-300 hover:bg-stone-800/50 hover:text-stone-100"
+                                      ? "bg-primary-soft text-primary"
+                                      : "text-muted-foreground hover:bg-secondary hover:text-heading"
                               }`
                           }
                       >
@@ -307,12 +309,12 @@ export const SiteHeader = () => {
                   ))}
                 </nav>
 
-                <div className="mt-auto border-t border-amber-200/10 pt-6">
+                <div className="mt-auto border-t border-border pt-6">
                   {isAuthenticated ? (
                       <button
                           type="button"
                           onClick={() => void handleLogout()}
-                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800 hover:text-stone-100"
+                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-heading"
                       >
                         <span>{signOutLabel}</span>
                         <LogOut className="h-4 w-4 opacity-70" />
@@ -321,7 +323,7 @@ export const SiteHeader = () => {
                       <Button
                           variant="default"
                           asChild
-                          className="h-11 w-full rounded-xl bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-semibold text-stone-950 shadow-lg shadow-amber-950/20 hover:brightness-110"
+                          className="h-11 w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-soft hover:bg-primary/90"
                       >
                         <Link to="/auth" onClick={() => setIsOpen(false)}>
                           {signInLabel}
