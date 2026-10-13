@@ -47,6 +47,52 @@ BEGIN
 END;
 $function$;
 
+
+-- Customer-created requests must start unapproved. RLS checked their customer
+-- ID but previously allowed any status and forged payment approval on INSERT.
+CREATE OR REPLACE FUNCTION public.lourex_r1_guard_customer_request_inserts()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=''
+AS $function$
+BEGIN
+  IF current_user='authenticated'
+     AND NOT public.is_lourex_role(auth.uid(), ARRAY['owner','operations_employee'])
+  THEN
+    IF NEW.status IS DISTINCT FROM 'intake_submitted'
+       OR NEW.converted_deal_id IS NOT NULL
+       OR NEW.reviewed_by IS NOT NULL
+       OR NEW.last_reviewed_at IS NOT NULL
+       OR NEW.transfer_proof_status IS NOT NULL
+       OR NEW.transfer_proof_url IS NOT NULL
+       OR NEW.transfer_proof_name IS NOT NULL
+       OR NEW.transfer_proof_uploaded_at IS NOT NULL
+       OR NEW.transfer_accepted_at IS NOT NULL
+       OR NEW.transfer_accepted_by IS NOT NULL
+       OR NEW.transfer_rejection_reason IS NOT NULL
+       OR NEW.tracking_code IS NOT NULL
+       OR btrim(COALESCE(NEW.internal_notes,'')) <> ''
+    THEN
+      RAISE EXCEPTION
+        'CUSTOMER_INSERT_PROTECTED: new request cannot start with approved or managed fields'
+        USING ERRCODE='42501';
+    END IF;
+    -- New customer requests receive authoritative server timestamps.
+    NEW.created_at := now();
+    NEW.submitted_at := now();
+    NEW.updated_at := now();
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS lourex_r1_guard_customer_request_inserts ON public.purchase_requests;
+CREATE TRIGGER lourex_r1_guard_customer_request_inserts
+BEFORE INSERT ON public.purchase_requests
+FOR EACH ROW
+EXECUTE FUNCTION public.lourex_r1_guard_customer_request_inserts();
+REVOKE ALL ON FUNCTION public.lourex_r1_guard_customer_request_inserts() FROM PUBLIC, anon, authenticated;
+
 DROP TRIGGER IF EXISTS lourex_r1_guard_customer_request_updates ON public.purchase_requests;
 CREATE TRIGGER lourex_r1_guard_customer_request_updates
 BEFORE UPDATE ON public.purchase_requests
