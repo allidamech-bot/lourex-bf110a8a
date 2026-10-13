@@ -19,9 +19,9 @@ describe("help center content resolver", () => {
   });
 
   it("resolves partner help for partner roles", () => {
-    const content = resolveHelpContent({ pageKey: "partner_settlements", language: "ar", role: "turkey_partner" });
+    const content = resolveHelpContent({ pageKey: "partner_settlements", language: "ar", role: "turkish_partner" });
 
-    expect(audienceFromRole("turkey_partner")).toBe("partner");
+    expect(audienceFromRole("turkish_partner")).toBe("partner");
     expect(content.audience).toBe("partner");
     expect(content.topics.some((topic) => topic.title.includes("المبالغ المستحقة"))).toBe(true);
   });
