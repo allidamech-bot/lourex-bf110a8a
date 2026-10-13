@@ -3187,11 +3187,9 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   // Customer ownership check
   if (profile.role === "customer") {
     customer = await getCurrentCustomerRecord();
-    const requestEmail = String(request.email || "").trim().toLowerCase();
-    const ownsRequest =
-      request.customer_id === user.id ||
-      (customer?.id ? request.customer_id === customer.id : false) ||
-      (Boolean(userEmail) && requestEmail === userEmail);
+    // An arbitrary request contact email is not proof of account ownership.
+    // Enforce the persisted lourex_customers.auth_user_id mapping instead.
+    const ownsRequest = Boolean(customer?.id && request.customer_id === customer.id);
 
     if (!ownsRequest) {
       throw new Error("ليس لديك صلاحية لرفع إثبات دفع لهذا الطلب.");
@@ -3206,7 +3204,7 @@ export const uploadTransferProof = async (requestId: string, file: File) => {
   const fullPath = `${storagePath}/${fileName}`;
 
   const uploaded = await uploadFileToStorage("TRANSFER_PROOFS", fullPath, file);
-  const resolvedCustomerId = customer?.id || request.customer_id || user.id;
+  const resolvedCustomerId = request.customer_id || customer?.id || null;
 
   console.info("[lourex:transfer-proof:rpc-context]", {
     authUid: user.id,
