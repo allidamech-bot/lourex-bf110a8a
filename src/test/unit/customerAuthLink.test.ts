@@ -14,6 +14,16 @@ describe("R1-F customer authentication link", () => {
     expect(isCustomerLinkedToUser({ auth_user_id: "auth-a" }, null)).toBe(false);
   });
 
+  it("never authorizes transfer proof signed URLs by contact email or matching auth UUID to customer PK", () => {
+    const source = readFileSync("src/domain/transferProofs/access.ts", "utf8");
+    expect(source).toContain('.eq("id", request.customer_id)');
+    expect(source).toContain('.eq("auth_user_id", user.id)');
+    expect(source).toContain("isCustomerLinkedToUser(linkedCustomer, user.id)");
+    expect(source).not.toContain("request.customer_id === user.id");
+    expect(source).not.toContain("userEmail === requestEmail");
+    expect(source).not.toContain('select("id, customer_id, email, transfer_proof_url")');
+  });
+
   it("does not assume customer primary keys are Supabase authentication IDs", () => {
     const source = readFileSync("src/lib/operationsDomain.ts", "utf8");
     expect(source).toContain('.eq("auth_user_id", user.id)');
