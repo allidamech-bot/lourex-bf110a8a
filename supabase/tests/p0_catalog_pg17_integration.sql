@@ -7,9 +7,9 @@ CREATE ROLE authenticated NOLOGIN;
 CREATE SCHEMA storage;
 CREATE TABLE storage.objects (bucket_id text NOT NULL, name text NOT NULL);
 CREATE FUNCTION storage.foldername(p_name text) RETURNS text[] LANGUAGE sql IMMUTABLE
-AS $ SELECT string_to_array(p_name,'/') $;
+AS $$ SELECT string_to_array(p_name,'/') $$;
 CREATE FUNCTION storage.extension(p_name text) RETURNS text LANGUAGE sql IMMUTABLE
-AS $ SELECT split_part(p_name,'.',array_length(string_to_array(p_name,'.'),1)) $;
+AS $$ SELECT split_part(p_name,'.',array_length(string_to_array(p_name,'.'),1)) $$;
 GRANT USAGE ON SCHEMA storage TO anon, authenticated;
 GRANT SELECT, INSERT ON storage.objects TO anon, authenticated;
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
