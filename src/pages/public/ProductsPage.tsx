@@ -70,7 +70,7 @@ export default function ProductsPage() {
               </nav>
               <p className="lrx-kicker">THE LIVING TRADE / CATALOG</p>
               <h1 id="catalog-title">{isArabic ? <>منتجك القادم.<br /><span>فرصتك التالية.</span></> : <>Your next product.<br /><span>Your next possibility.</span></>}</h1>
-              <p className="lrx-catalog-description">{t("products.listing.description")}</p>
+              <p className="lrx-catalog-description">{isArabic ? "استكشف المنتجات المعروضة وحدّد ما تحتاجه تجارتك. أنشئ طلب توريد بالمواصفات والكمية والوجهة المناسبة لك." : "Explore the catalog and define what your business needs. Start a sourcing request with your specifications, quantity and destination."}</p>
               <div className="lrx-catalog-intro-actions">
                 <a href="#catalog-browser" className="lrx-text-link">{isArabic ? "استكشف الكتالوج" : "Explore the catalog"}<ArrowDown size={16} aria-hidden="true" /></a>
                 <Link to="/request" className="lrx-primary">{isArabic ? "لديك منتج محدّد؟" : "Have a specific product in mind?"}<ArrowUpRight size={17} className="rtl:-scale-x-100" aria-hidden="true" /></Link>
@@ -80,7 +80,7 @@ export default function ProductsPage() {
               <div className="lrx-catalog-brief-top"><span>LOUREX / SOURCING BRIEF</span><img src="/lourex-official.jpeg" alt="" width="56" height="56" /></div>
               <p>{isArabic ? "من المنتج، إلى طلب واضح." : "From a product to a clear brief."}</p>
               <ol>
-                {(isArabic ? ["المنتج", "المواصفات", "الكمية", "الوجهة"] : ["Product", "Specifications", "Quantity", "Destination"]).map((label, index) => (
+                {(isArabic ? ["المنتج", "المواصفات", "الكمية", "الوجهة"] : ["Product", "Specs", "Quantity", "Destination"]).map((label, index) => (
                   <li key={label}><span className="lrx-brief-facet" aria-hidden="true">0{index + 1}</span><span>{label}</span></li>
                 ))}
               </ol>
@@ -92,7 +92,7 @@ export default function ProductsPage() {
 
         <section id="catalog-browser" className="lrx-catalog-shell lrx-catalog-browser" aria-labelledby="catalog-browser-title">
           <div className="lrx-catalog-browser-heading">
-            <div><p className="lrx-kicker">LOUREX / PRODUCT EXPLORER</p><h2 id="catalog-browser-title">{t("products.listing.title")}</h2></div>
+            <div><p className="lrx-kicker">LOUREX / PRODUCT EXPLORER</p><h2 id="catalog-browser-title">{isArabic ? "استكشف الكتالوج" : "Explore the catalog"}</h2></div>
             <p className="lrx-catalog-disclaimer">{t("products.listing.examplesEyebrow")}</p>
           </div>
           <div className="lrx-catalog-controls">
@@ -123,7 +123,7 @@ export default function ProductsPage() {
             <div className="lrx-catalog-results" aria-busy={loading}>
               <div className="lrx-catalog-results-bar">
                 <h3>{activeCategory ? (isArabic ? activeCategory.labelAr : activeCategory.labelEn) : t("products.listing.allCategories")}</h3>
-                <span role="status" aria-live="polite">{loading ? (isArabic ? "جارٍ التحميل…" : "Loading…") : loadError ? (isArabic ? "تعذّر التحميل" : "Unable to load") : `${products.length} ${isArabic ? "نتيجة" : "results"}`}</span>
+                <span role="status" aria-live="polite">{loading ? (isArabic ? "جارٍ التحميل…" : "Loading…") : loadError ? (isArabic ? "تعذّر التحميل" : "Unable to load") : `${products.length} ${isArabic ? "نتيجة" : products.length === 1 ? "result" : "results"}`}</span>
                 {hasFilters && <button type="button" onClick={resetFilters}>{isArabic ? "إعادة ضبط" : "Reset filters"}<X size={13} aria-hidden="true" /></button>}
               </div>
               {loading ? (
