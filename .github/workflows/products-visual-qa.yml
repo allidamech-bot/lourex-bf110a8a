@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
+      HERO_UI: ${{ github.head_ref == 'fix/lourex-living-hero' }}
       FOCUSED_UI: ${{ startsWith(github.head_ref, 'fix/lourex-') }}
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +29,7 @@ jobs:
       - name: Compare TypeScript diagnostics with the existing baseline
         run: node scripts/check-homepage-types.mjs
       - run: npx eslint src/pages/public/ProductsPage.tsx src/pages/public/RequestPage.tsx src/components/shared/TradeEmblem.tsx src/test/unit/productsPageExperience.test.tsx src/test/unit/requestPageExperience.test.tsx
+      - run: npx eslint src/components/HeroSection.tsx src/components/home/TradeField.tsx src/components/home/SourcingIllustration.tsx src/pages/public/HomePage.tsx
       - if: env.FOCUSED_UI != 'true'
         run: npm test
       - run: node scripts/build-homepage-preview.mjs
@@ -36,7 +38,9 @@ jobs:
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/preview.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ && break || sleep 1; done
-          if [ "$FOCUSED_UI" = "true" ]; then
+          if [ "$HERO_UI" = "true" ]; then
+            node scripts/living-hero-qa.mjs
+          elif [ "$FOCUSED_UI" = "true" ]; then
             node scripts/mobile-shell-qa.mjs
             node scripts/site-polish-qa.mjs
             LOUREX_MOBILE_FIX_QA=1 node scripts/workspace-visual-qa.mjs
@@ -50,6 +54,7 @@ jobs:
         with:
           name: products-screenshots-and-results
           path: |
+            living-hero-qa/
             polish-qa/
             mobile-shell-qa/
             products-qa/

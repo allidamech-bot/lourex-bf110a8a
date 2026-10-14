@@ -246,3 +246,10 @@
 @media(prefers-reduced-motion:reduce){.lourex-home *,.lourex-home *::before,.lourex-home *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.lrx-flow path{stroke-dashoffset:0}.lrx-official-emblem{transform:none}}
 
 .lrx-milestone>span:last-child{overflow-wrap:anywhere}
+
+/* Quiet mineral planes connect the chapters; their entrances run once. */
+.lourex-home :is(#explore,#sourcing,#featured-products){background-image:linear-gradient(150deg,transparent 44%,#34577714 44.1%,transparent 73%),linear-gradient(30deg,transparent 61%,#a9302412 61.1%,transparent 88%),radial-gradient(ellipse at 15% 10%,#d6ad6c0c,transparent 60%)}
+.lourex-home #sourcing{background-image:linear-gradient(30deg,transparent 42%,#d6ad6c12 42.1%,transparent 73%),linear-gradient(155deg,transparent 61%,#34577718 61.1%,transparent 88%)}
+.lourex-home .lrx-category-art{transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .5s}
+@media(hover:hover){.lourex-home .lrx-category:hover .lrx-category-art{transform:scale(1.07) rotate(-2deg);opacity:1}}
+.lourex-home .lrx-journey-detail{background:linear-gradient(120deg,#241f18b8,#161616c9);box-shadow:inset 0 1px #d6ad6c12}
