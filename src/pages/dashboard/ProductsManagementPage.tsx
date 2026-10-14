@@ -388,30 +388,30 @@ if (!canManage) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-amber-200/15 bg-stone-900/55 p-6 shadow-2xl backdrop-blur-xl">
+      <div className="rounded-[2rem] border border-primary/20 bg-card p-6 shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
 <Sparkles className="h-4 w-4" />
                {t("productManagement.eyebrow")}
              </div>
-             <h1 className="mt-4 font-serif text-3xl font-bold text-stone-100">{t("productManagement.title")}</h1>
-             <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-400">
+             <h1 className="mt-4 font-serif text-3xl font-bold text-foreground">{t("productManagement.title")}</h1>
+             <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
                {t("productManagement.description")}
              </p>
           </div>
           <div className="flex flex-wrap gap-2">
-<Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : "text-amber-500"}`} />
+<Button variant="outline" onClick={() => void refresh()} disabled={loading} className="border-primary/20 bg-card text-foreground hover:bg-stone-50/10">
+               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-primary" : "text-primary"}`} />
                {t("common.refresh")}
              </Button>
-             <Button variant="gold" onClick={resetForm} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+             <Button variant="gold" onClick={resetForm} className="bg-primary font-bold text-primary-foreground shadow-2xl hover:brightness-110">
                <PackagePlus className="h-4 w-4" />
                {t("productManagement.newProduct")}
              </Button>
              {draftHasContent ? (
-               <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                 <Trash2 className="h-4 w-4 text-amber-500" />
+               <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-primary/20 bg-card text-foreground hover:bg-stone-50/10">
+                 <Trash2 className="h-4 w-4 text-primary" />
                  {t("productManagement.clearDraft")}
                </Button>
              ) : null}
@@ -421,10 +421,10 @@ if (!canManage) {
 
       <div className="flex flex-wrap gap-3">
 <Select value={statusFilter} onValueChange={(value: "all" | "active" | "draft" | "archived") => setStatusFilter(value)}>
-           <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+           <SelectTrigger className="w-36 bg-background/75 border-primary/20 text-foreground">
              <SelectValue placeholder={t("productManagement.statusFilter")} />
            </SelectTrigger>
-           <SelectContent className="bg-stone-900 border-amber-200/15">
+           <SelectContent className="bg-card border-primary/20">
              <SelectItem value="all" className="cursor-pointer">{t("productManagement.allStatuses")}</SelectItem>
              <SelectItem value="active" className="cursor-pointer">{t("common.active")}</SelectItem>
              <SelectItem value="draft" className="cursor-pointer">{t("statuses.draft")}</SelectItem>
@@ -432,10 +432,10 @@ if (!canManage) {
            </SelectContent>
          </Select>
          <Select value={featuredFilter} onValueChange={(value: "all" | "featured" | "non-featured") => setFeaturedFilter(value)}>
-           <SelectTrigger className="w-36 bg-stone-950/40 border-amber-200/10 text-stone-100">
+           <SelectTrigger className="w-36 bg-background/75 border-primary/20 text-foreground">
              <SelectValue placeholder={t("productManagement.featuredFilter")} />
            </SelectTrigger>
-           <SelectContent className="bg-stone-900 border-amber-200/15">
+           <SelectContent className="bg-card border-primary/20">
              <SelectItem value="all" className="cursor-pointer">{t("productManagement.allProducts")}</SelectItem>
              <SelectItem value="featured" className="cursor-pointer">{t("productManagement.featuredOnly")}</SelectItem>
              <SelectItem value="non-featured" className="cursor-pointer">{t("productManagement.nonFeatured")}</SelectItem>
@@ -444,19 +444,19 @@ if (!canManage) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-[2rem] border border-primary/20 bg-card p-5 shadow-2xl backdrop-blur-xl">
           <div className="relative mb-4">
-            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-stone-500" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("productManagement.searchPlaceholder")} className="pl-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
+            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("productManagement.searchPlaceholder")} className="pl-9 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" />
           </div>
 
 {loading ? (
-             <div className="flex items-center gap-2 rounded-2xl border border-amber-200/10 bg-stone-950/40 p-5 text-sm text-stone-500">
-               <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+             <div className="flex items-center gap-2 rounded-2xl border border-primary/20 bg-background/75 p-5 text-sm text-muted-foreground">
+               <Loader2 className="h-4 w-4 animate-spin text-primary" />
                {t("productManagement.loading")}
              </div>
            ) : filteredProducts.length === 0 ? (
-             <div className="rounded-2xl border border-dashed border-amber-200/10 bg-stone-950/20 p-6 text-sm text-stone-500">{t("productManagement.emptyFiltered")}</div>
+             <div className="rounded-2xl border border-dashed border-primary/20 bg-background/75 p-6 text-sm text-muted-foreground">{t("productManagement.emptyFiltered")}</div>
            ) : (
             <div className="space-y-3">
               {filteredProducts.map((product) => (
@@ -466,19 +466,19 @@ if (!canManage) {
                   onClick={() => selectProduct(product)}
                   className={`flex w-full gap-3 rounded-2xl border p-3 text-left transition ${
                     selectedProductId === product.id
-                      ? "border-amber-500/40 bg-amber-500/10 shadow-[0_12px_40px_-12px_rgba(251,191,36,0.25)]"
-                      : "border-amber-200/10 bg-stone-950/30 hover:border-amber-500/25 hover:bg-stone-900/50"
+                      ? "border-primary/20 bg-primary-soft shadow-[0_12px_40px_-12px_rgba(251,191,36,0.25)]"
+                      : "border-primary/20 bg-background/75 hover:border-primary/20 hover:bg-card"
                   }`}
                 >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-stone-950/80">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-background/75">
                     {product.images[0]?.url ? <img src={product.images[0].url} alt={product.nameEn} className="h-full w-full object-contain p-1" /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-stone-100">{product.nameEn || product.nameAr}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-400">{product.shortDescriptionEn || product.shortDescriptionAr}</p>
+                    <p className="truncate font-semibold text-foreground">{product.nameEn || product.nameAr}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{product.shortDescriptionEn || product.shortDescriptionAr}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge variant="outline" className="border-amber-200/20 text-stone-400">{product.status}</Badge>
-                      {product.isFeatured ? <Badge className="bg-amber-500/10 text-amber-200 border-amber-500/20">{t("productManagement.featuredBadge")}</Badge> : null}
+                      <Badge variant="outline" className="border-primary/20 text-muted-foreground">{product.status}</Badge>
+                      {product.isFeatured ? <Badge className="bg-primary-soft text-primary border-primary/20">{t("productManagement.featuredBadge")}</Badge> : null}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -491,7 +491,7 @@ if (!canManage) {
                           event.stopPropagation();
                           void handleArchive(product.id);
                         }}
-                        className="h-8 w-8 p-0 text-stone-500 hover:text-amber-300"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
                       >
                         <Archive className="h-4 w-4" />
                       </Button>
@@ -504,7 +504,7 @@ if (!canManage) {
                           event.stopPropagation();
                           void handleRestore(product.id);
                         }}
-                        className="h-8 w-8 p-0 text-stone-500 hover:text-emerald-300"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-300"
                       >
                         <ArchiveRestore className="h-4 w-4" />
                       </Button>
@@ -517,7 +517,7 @@ if (!canManage) {
                         event.stopPropagation();
                         void handleToggleFeatured(product.id, product.isFeatured);
                       }}
-                      className={`h-8 w-8 p-0 ${product.isFeatured ? "text-amber-400" : "text-stone-500"} hover:text-amber-300`}
+                      className={`h-8 w-8 p-0 ${product.isFeatured ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
                     >
                       <Star className="h-4 w-4" />
                     </Button>
@@ -528,20 +528,20 @@ if (!canManage) {
           )}
         </div>
 
-        <div className="rounded-[2rem] border border-amber-200/10 bg-stone-900/50 p-5 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-[2rem] border border-primary/20 bg-card p-5 shadow-2xl backdrop-blur-xl">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-<h2 className="font-serif text-2xl font-semibold text-stone-100">{selectedProductId ? t("seller.editProduct") : t("productManagement.createProduct")}</h2>
-               <p className="mt-1 text-sm text-stone-500">{t("productManagement.formDescription")}</p>
+<h2 className="font-serif text-2xl font-semibold text-foreground">{selectedProductId ? t("seller.editProduct") : t("productManagement.createProduct")}</h2>
+               <p className="mt-1 text-sm text-muted-foreground">{t("productManagement.formDescription")}</p>
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
 {draftHasContent ? (
-                 <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                   <Trash2 className="h-4 w-4 text-amber-500" />
+                 <Button variant="outline" onClick={clearDraft} disabled={saving || uploading} className="border-primary/20 bg-card text-foreground hover:bg-stone-50/10">
+                   <Trash2 className="h-4 w-4 text-primary" />
                    {t("productManagement.clearDraft")}
                  </Button>
                ) : null}
-               <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+               <Button variant="gold" onClick={() => void saveProduct()} disabled={saving || uploading} className="bg-primary font-bold text-primary-foreground shadow-2xl hover:brightness-110">
                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                  {t("common.save")}
                </Button>
@@ -550,57 +550,57 @@ if (!canManage) {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label className="text-stone-300">{t("productManagement.labels.productImage")}</Label>
-              <div className="grid gap-4 rounded-2xl border border-dashed border-amber-200/15 bg-stone-950/30 p-4 md:grid-cols-[12rem_minmax(0,1fr)]">
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-stone-950/80">
-                  {form.imageUrl ? <img src={form.imageUrl} alt={form.imageAltEn || form.nameEn} className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-10 w-10 text-stone-600" />}
+              <Label className="text-foreground">{t("productManagement.labels.productImage")}</Label>
+              <div className="grid gap-4 rounded-2xl border border-dashed border-primary/20 bg-background/75 p-4 md:grid-cols-[12rem_minmax(0,1fr)]">
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-background/75">
+                  {form.imageUrl ? <img src={form.imageUrl} alt={form.imageAltEn || form.nameEn} className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-10 w-10 text-muted-foreground" />}
                 </div>
                 <div className="space-y-3">
-                  <Input type="file" accept="image/*" onChange={(event) => void handleImageChange(event)} disabled={uploading} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
-{uploading ? <p className="flex items-center gap-2 text-sm text-stone-500"><Loader2 className="h-4 w-4 animate-spin text-amber-500" /> {t("productManagement.uploadingImage")}</p> : null}
-                   <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder={t("productManagement.placeholders.imageUrl")} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" />
+                  <Input type="file" accept="image/*" onChange={(event) => void handleImageChange(event)} disabled={uploading} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" />
+{uploading ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin text-primary" /> {t("productManagement.uploadingImage")}</p> : null}
+                   <Input value={form.imageUrl || ""} onChange={(event) => updateField("imageUrl", event.target.value)} placeholder={t("productManagement.placeholders.imageUrl")} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" />
                 </div>
               </div>
             </div>
 
-              <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicName")}</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishName")}</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.slug")}</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder={t("productManagement.placeholders.slugAuto")} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+              <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.arabicName")}</Label><Input value={form.nameAr} onChange={(event) => updateField("nameAr", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.englishName")}</Label><Input value={form.nameEn} onChange={(event) => updateField("nameEn", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.slug")}</Label><Input value={form.slug || ""} onChange={(event) => updateField("slug", event.target.value)} placeholder={t("productManagement.placeholders.slugAuto")} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
              <div className="space-y-2">
-               <Label className="text-stone-300">{t("productManagement.labels.category")}</Label>
+               <Label className="text-foreground">{t("productManagement.labels.category")}</Label>
                <Select value={form.categoryId} onValueChange={(value) => updateField("categoryId", value)}>
-                 <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
-                 <SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">{categories.map((category) => <SelectItem key={category.id} value={category.id} className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{category.labelEn}</SelectItem>)}</SelectContent>
+                 <SelectTrigger className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25"><SelectValue /></SelectTrigger>
+                 <SelectContent className="bg-card border-primary/20 text-foreground">{categories.map((category) => <SelectItem key={category.id} value={category.id} className="focus:bg-secondary focus:text-foreground cursor-pointer">{category.labelEn}</SelectItem>)}</SelectContent>
                </Select>
              </div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicShortDesc")}</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishShortDesc")}</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.arabicDesc")}</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.englishDesc")}</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.originCountry")}</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.brand")}</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.unit")}</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.packaging")}</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.weight")}</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.dimensions")}</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.material")}</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.moqNote")}</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2 md:col-span-2"><Label className="text-stone-300">{t("productManagement.labels.technicalSpecs")}</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.arabicTags")}</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
-             <div className="space-y-2"><Label className="text-stone-300">{t("productManagement.labels.englishTags")}</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.arabicShortDesc")}</Label><Textarea value={form.shortDescriptionAr} onChange={(event) => updateField("shortDescriptionAr", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.englishShortDesc")}</Label><Textarea value={form.shortDescriptionEn} onChange={(event) => updateField("shortDescriptionEn", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-foreground">{t("productManagement.labels.arabicDesc")}</Label><Textarea value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} className="min-h-28 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-foreground">{t("productManagement.labels.englishDesc")}</Label><Textarea value={form.descriptionEn} onChange={(event) => updateField("descriptionEn", event.target.value)} className="min-h-28 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.originCountry")}</Label><Input value={form.originCountry} onChange={(event) => updateField("originCountry", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.brand")}</Label><Input value={form.brand || ""} onChange={(event) => updateField("brand", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.unit")}</Label><Input value={form.unit || ""} onChange={(event) => updateField("unit", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.packaging")}</Label><Input value={form.packaging || ""} onChange={(event) => updateField("packaging", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.weight")}</Label><Input value={form.weight || ""} onChange={(event) => updateField("weight", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.dimensions")}</Label><Input value={form.dimensions || ""} onChange={(event) => updateField("dimensions", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.material")}</Label><Input value={form.material || ""} onChange={(event) => updateField("material", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.moqNote")}</Label><Input value={form.moq || ""} onChange={(event) => updateField("moq", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2 md:col-span-2"><Label className="text-foreground">{t("productManagement.labels.technicalSpecs")}</Label><Textarea value={form.technicalSpecs || ""} onChange={(event) => updateField("technicalSpecs", event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.arabicTags")}</Label><Input value={tagsAr} onChange={(event) => setTagsAr(event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
+             <div className="space-y-2"><Label className="text-foreground">{t("productManagement.labels.englishTags")}</Label><Input value={tagsEn} onChange={(event) => setTagsEn(event.target.value)} className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25" /></div>
              <div className="space-y-2">
-               <Label className="text-stone-300">{t("productManagement.labels.status")}</Label>
+               <Label className="text-foreground">{t("productManagement.labels.status")}</Label>
               <Select value={form.status} onValueChange={(value: ProductCatalogAdminInput["status"]) => updateField("status", value)}>
-                <SelectTrigger className="bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"><SelectValue /></SelectTrigger>
-<SelectContent className="bg-stone-900 border-amber-200/15 text-stone-100">
-                   <SelectItem value="active" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("common.active")}</SelectItem>
-                   <SelectItem value="draft" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("statuses.draft")}</SelectItem>
-                   <SelectItem value="archived" className="focus:bg-stone-800 focus:text-stone-100 cursor-pointer">{t("statuses.archived")}</SelectItem>
+                <SelectTrigger className="bg-background/75 border-primary/20 text-foreground focus:ring-primary/25"><SelectValue /></SelectTrigger>
+<SelectContent className="bg-card border-primary/20 text-foreground">
+                   <SelectItem value="active" className="focus:bg-secondary focus:text-foreground cursor-pointer">{t("common.active")}</SelectItem>
+                   <SelectItem value="draft" className="focus:bg-secondary focus:text-foreground cursor-pointer">{t("statuses.draft")}</SelectItem>
+                   <SelectItem value="archived" className="focus:bg-secondary focus:text-foreground cursor-pointer">{t("statuses.archived")}</SelectItem>
                  </SelectContent>
               </Select>
             </div>
-<div className="flex items-center justify-between rounded-2xl border border-amber-200/10 bg-stone-950/40 p-4">
-                <div><Label className="text-stone-100">{t("productManagement.labels.featuredProduct")}</Label><p className="mt-1 text-xs text-stone-500">{t("productManagement.showFirstInCatalog")}</p></div>
+<div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-background/75 p-4">
+                <div><Label className="text-foreground">{t("productManagement.labels.featuredProduct")}</Label><p className="mt-1 text-xs text-muted-foreground">{t("productManagement.showFirstInCatalog")}</p></div>
                 <Switch checked={form.isFeatured} onCheckedChange={(value) => updateField("isFeatured", value)} />
               </div>
           </div>

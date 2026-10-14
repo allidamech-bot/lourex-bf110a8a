@@ -49,30 +49,30 @@ export const CustomerLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-950 text-stone-100 selection:bg-amber-500/30 selection:text-amber-200">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.03),transparent_40%)] pointer-events-none" />
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground selection:bg-primary-soft selection:text-primary">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_5%_3%,rgba(8,127,120,0.055),transparent_40%)] dark:bg-[radial-gradient(ellipse_at_5%_3%,rgba(54,211,192,0.04),transparent_40%)]" />
       <SiteHeader />
       <main className="relative w-full max-w-full overflow-x-hidden pb-24 pt-8">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 rounded-[2rem] border border-amber-200/10 bg-stone-900/55 p-6 shadow-2xl shadow-black/25 backdrop-blur-xl">
+          <div className="mb-8 rounded-[1.75rem] border border-border/70 bg-card/90 p-6 shadow-soft backdrop-blur-xl sm:p-8">
             <div className={`flex flex-col gap-4 ${isRtl ? "text-right" : "text-left"}`}>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-500/80">LOUREX PORTAL</span>
-                <h1 className="mt-1 font-serif text-2xl font-bold text-stone-100 md:text-3xl">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80">LOUREX PORTAL</span>
+                <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-heading sm:text-[2rem]">
                   {isRtl ? "بوابة العميل" : "Customer Portal"}
                 </h1>
               </div>
-              <nav className="flex max-w-full gap-2 overflow-x-auto pb-1" aria-label={isRtl ? "تنقل بوابة العميل" : "Customer portal navigation"}>
+              <nav className="flex max-w-full gap-2 overflow-x-auto pb-2 scroll-smooth" aria-label={isRtl ? "تنقل بوابة العميل" : "Customer portal navigation"}>
                 {links.map((link) => (
                   <NavLink
                     key={link.to}
                     to={link.to}
                     end={link.end}
                     className={({ isActive }) =>
-                      `flex min-w-fit items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold transition-all ${
+                      `flex min-h-11 min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                         isActive
-                          ? "bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20"
-                          : "text-stone-400 hover:bg-stone-800/70 hover:text-stone-100"
+                          ? "bg-primary-soft text-primary ring-1 ring-primary/20"
+                          : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                       }`
                     }
                   >

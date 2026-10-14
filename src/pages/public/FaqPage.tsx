@@ -101,18 +101,18 @@ export default function FaqPage() {
   }, [localizedFaqs]);
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO title={title} description={description} url="https://www.lou-rex.com/faq" />
       <SiteHeader />
       <main className="container mx-auto px-4 py-14 md:px-8 md:py-20">
         <div className="max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/90">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/90">
             {isArabic ? "إجابات مختصرة لمحركات البحث" : "Crawlable answers"}
           </p>
-          <h1 className="mt-5 font-serif text-4xl font-bold text-stone-100 md:text-6xl">
+          <h1 className="mt-5 font-serif text-4xl font-bold text-foreground md:text-6xl">
             {title}
           </h1>
-          <p className="mt-6 text-lg leading-9 text-stone-300">
+          <p className="mt-6 text-lg leading-9 text-foreground">
             {description}
           </p>
         </div>
@@ -121,12 +121,12 @@ export default function FaqPage() {
           {localizedFaqs.map((faq) => (
             <article
               key={faq.q}
-              className="rounded-[1.5rem] border border-amber-200/15 bg-stone-50/5 p-6"
+              className="rounded-[1.5rem] border border-primary/20 bg-card p-6"
             >
-              <h2 className="font-serif text-2xl font-semibold text-stone-100">
+              <h2 className="font-serif text-2xl font-semibold text-foreground">
                 {faq.q}
               </h2>
-              <p className="mt-4 text-sm leading-7 text-stone-400">
+              <p className="mt-4 text-sm leading-7 text-muted-foreground">
                 {faq.a}
               </p>
             </article>

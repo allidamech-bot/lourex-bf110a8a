@@ -132,7 +132,7 @@ export default function AeoPage({ kind }: AeoPageProps) {
   const description = isArabic ? content.introAr : content.introEn;
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO
         title={title}
         description={description}
@@ -141,36 +141,36 @@ export default function AeoPage({ kind }: AeoPageProps) {
       <SiteHeader />
       <main className="container mx-auto px-4 py-14 md:px-8 md:py-20">
         <div className="max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/90">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/90">
             {isArabic ? "تعريف قابل للفهم لمحركات البحث" : "AI-search answer page"}
           </p>
-          <h1 className="mt-5 font-serif text-4xl font-bold text-stone-100 md:text-6xl">
+          <h1 className="mt-5 font-serif text-4xl font-bold text-foreground md:text-6xl">
             {title}
           </h1>
-          <p className="mt-6 text-lg leading-9 text-stone-300">
+          <p className="mt-6 text-lg leading-9 text-foreground">
             {description}
           </p>
           {kind !== "about" ? (
-            <p className="mt-5 text-base leading-8 text-stone-400">
+            <p className="mt-5 text-base leading-8 text-muted-foreground">
               {isArabic ? AR_DEFINITION : EN_DEFINITION}
             </p>
           ) : null}
         </div>
 
         <section className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-amber-200/15 bg-stone-50/5 p-6">
-            <h2 className="font-serif text-2xl font-semibold text-stone-100">
+          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6">
+            <h2 className="font-serif text-2xl font-semibold text-foreground">
               {isArabic ? "كيف تعمل لوريكس" : "How LOUREX works"}
             </h2>
-            <p className="mt-4 text-sm leading-7 text-stone-400">
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
               {isArabic ? content.focusAr : content.focusEn}
             </p>
           </div>
-          <div className="rounded-[1.5rem] border border-amber-200/15 bg-stone-50/5 p-6">
-            <h2 className="font-serif text-2xl font-semibold text-stone-100">
+          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6">
+            <h2 className="font-serif text-2xl font-semibold text-foreground">
               {isArabic ? "نطاق التركيز" : "Sourcing focus"}
             </h2>
-            <p className="mt-4 text-sm leading-7 text-stone-400">
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
               {isArabic
                 ? "تشمل الكلمات المفتاحية الطبيعية: وسيط توريد، تنسيق الموردين، إدارة طلبات الشراء، متابعة الصفقات، متابعة الشحن والتسليم، الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية."
                 : "Natural focus terms include trade intermediary, sourcing coordination, supplier coordination, purchase request management, deal follow-up, delivery tracking, chocolate, biscuits, food products, Turkish products, and Syrian products."}
@@ -178,8 +178,8 @@ export default function AeoPage({ kind }: AeoPageProps) {
           </div>
         </section>
 
-        <section className="mt-10 rounded-[1.5rem] border border-stone-200/10 bg-stone-900/45 p-6">
-          <h2 className="font-serif text-2xl font-semibold text-stone-100">
+        <section className="mt-10 rounded-[1.5rem] border border-border/70 bg-secondary/65 p-6">
+          <h2 className="font-serif text-2xl font-semibold text-foreground">
             {isArabic ? "صفحات مرتبطة" : "Related public pages"}
           </h2>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -187,7 +187,7 @@ export default function AeoPage({ kind }: AeoPageProps) {
               <Link
                 key={link.to}
                 to={link.to}
-                className="rounded-full border border-amber-200/15 bg-stone-950/50 px-4 py-2 text-sm text-stone-300 transition hover:border-amber-300/30 hover:text-amber-200"
+                className="rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-sm text-foreground transition hover:border-primary/20 hover:text-primary"
               >
                 {isArabic ? link.ar : link.en}
               </Link>

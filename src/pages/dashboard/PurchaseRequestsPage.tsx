@@ -111,15 +111,15 @@ const valueOrDash = (value: unknown) => {
 };
 
 const statusBadgeClasses: Record<PurchaseRequestStatus, string> = {
-    intake_submitted: "border-amber-500/20 bg-amber-500/5 text-amber-200",
-    under_review: "border-amber-500/30 bg-amber-500/10 text-amber-100",
-    awaiting_clarification: "border-amber-200/15 bg-stone-50/5 text-amber-300",
+    intake_submitted: "border-primary/20 bg-primary-soft text-primary",
+    under_review: "border-primary/20 bg-primary-soft text-primary",
+    awaiting_clarification: "border-primary/20 bg-card text-primary",
     ready_for_conversion: "border-emerald-500/20 bg-emerald-500/5 text-emerald-100",
-    transfer_proof_pending: "border-amber-500/20 bg-amber-500/5 text-amber-200",
+    transfer_proof_pending: "border-primary/20 bg-primary-soft text-primary",
     transfer_proof_rejected: "border-rose-500/20 bg-rose-500/5 text-rose-100",
-    in_progress: "border-amber-200/20 bg-stone-50/5 text-stone-100",
+    in_progress: "border-primary/20 bg-card text-foreground",
     completed: "border-emerald-500/30 bg-emerald-500/15 text-emerald-100",
-    cancelled: "border-stone-700 bg-stone-800 text-stone-400",
+    cancelled: "border-stone-700 bg-secondary text-muted-foreground",
 };
 
 const getStatusBadgeClass = (status: PurchaseRequestStatus | string | null | undefined) =>
@@ -1055,23 +1055,23 @@ export default function PurchaseRequestsPage() {
                 headerAction={
                     <div className="flex flex-wrap items-center gap-3">
                          <div className="relative w-64">
-                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder={t("requests.searchPlaceholder")}
-                                className="ps-9 bg-stone-950/40 border-amber-200/10 text-stone-100 focus:ring-amber-500/20 h-10"
+                                className="ps-9 bg-background/75 border-primary/20 text-foreground focus:ring-primary/25 h-10"
                             />
                         </div>
-                        <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
-                            <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+                        <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-primary/20 bg-card text-heading hover:text-primary h-12 px-6">
+                            <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-primary")} />
                             <span className="font-bold">{t("common.refresh")}</span>
                         </Button>
                     </div>
                 }
             >
                 <DashboardGrid variant="main">
-                    <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+                    <BentoCard className="p-6 border-primary/20 bg-card">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                             {[
                                 { label: t("requests.total"), value: requestMetrics.total },
@@ -1079,9 +1079,9 @@ export default function PurchaseRequestsPage() {
                                 { label: t("requests.ready"), value: requestMetrics.ready },
                                 { label: t("requests.converted"), value: requestMetrics.converted },
                             ].map((item) => (
-                                <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800 text-center">
-                                    <p className="text-2xl font-black text-stone-100">{item.value}</p>
-                                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mt-1">{item.label}</p>
+                                <div key={item.label} className="p-4 rounded-2xl bg-background/75 border border-stone-800 text-center">
+                                    <p className="text-2xl font-black text-foreground">{item.value}</p>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">{item.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -1095,8 +1095,8 @@ export default function PurchaseRequestsPage() {
                                     className={cn(
                                         "h-9 rounded-xl px-4 text-xs font-bold uppercase tracking-widest transition-all",
                                         activeFilter === filter.key
-                                        ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
-                                        : "border-stone-800 bg-stone-950/40 text-stone-500 hover:text-stone-300"
+                                        ? "bg-primary-soft text-primary border-primary/20"
+                                        : "border-stone-800 bg-background/75 text-muted-foreground hover:text-foreground"
                                     )}
                                     onClick={() => setActiveFilter(filter.key)}
                                 >
@@ -1107,7 +1107,7 @@ export default function PurchaseRequestsPage() {
 
                         <div className="space-y-4 max-h-[50rem] overflow-y-auto pr-2 custom-scrollbar">
                             {filteredRows.length === 0 ? (
-                                <div className="py-12 text-center text-stone-600 italic">{t("requests.noMatches")}</div>
+                                <div className="py-12 text-center text-muted-foreground italic">{t("requests.noMatches")}</div>
                             ) : (
                                 filteredRows.map((row) => (
                                     <div
@@ -1115,8 +1115,8 @@ export default function PurchaseRequestsPage() {
                                         className={cn(
                                             "w-full rounded-[1.5rem] border transition-all group overflow-hidden",
                                             selectedRow?.id === row.id
-                                                ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-950/20"
-                                                : "border-amber-200/5 bg-stone-950/30 hover:border-amber-200/20"
+                                                ? "border-primary/20 bg-primary-soft shadow-lg shadow-amber-950/20"
+                                                : "border-primary/20 bg-background/75 hover:border-primary/20"
                                         )}
                                     >
                                         <button
@@ -1126,16 +1126,16 @@ export default function PurchaseRequestsPage() {
                                         >
                                             <div className="flex min-w-0 justify-between items-start gap-4 mb-4">
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{row.requestNumber}</p>
-<h4 className="font-bold text-stone-100 text-lg mt-1 group-hover:text-amber-200 transition-colors truncate">
+                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{row.requestNumber}</p>
+<h4 className="font-bold text-foreground text-lg mt-1 group-hover:text-primary transition-colors truncate">
                                                             {row.productName || t("requests.genericRequest")}
                                                         </h4>
                                                         {isProductSourcedRequest(row.internalNotes || "") && (
-                                                            <span className="inline-block px-2 py-0.5 mt-1 text-[8px] font-black uppercase tracking-widest rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                                            <span className="inline-block px-2 py-0.5 mt-1 text-[8px] font-black uppercase tracking-widest rounded-full bg-primary-soft text-primary border border-primary/20">
                                                                 {t("requests.labels.productSourced")}
                                                             </span>
                                                         )}
-                                                        <p className="text-xs text-stone-500 font-medium mt-1 truncate">{row.customer.fullName}</p>
+                                                        <p className="text-xs text-muted-foreground font-medium mt-1 truncate">{row.customer.fullName}</p>
                                                 </div>
                                                 <span className={cn(
                                                     "shrink-0 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
@@ -1152,11 +1152,11 @@ export default function PurchaseRequestsPage() {
                                             </div>
                                         </button>
 
-                                        <div className="flex items-center gap-2 p-3 bg-stone-900/40 border-t border-amber-200/5">
+                                        <div className="flex items-center gap-2 p-3 bg-card border-t border-primary/20">
                                              <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary"
                                                 onClick={() => setSelectedRequest(row.id, true)}
                                             >
                                                 <Eye className="me-1.5 h-3.5 w-3.5" />
@@ -1165,7 +1165,7 @@ export default function PurchaseRequestsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                                                className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary"
                                                 disabled={updatingStatusId === row.id || !canResubmitPurchaseRequest(row.status)}
                                                 onClick={() => void handleResubmitRequest(row)}
                                             >
@@ -1192,23 +1192,23 @@ export default function PurchaseRequestsPage() {
                     <aside className="space-y-12">
                         {selectedRow ? (
                             <div className="space-y-12">
-                                <BentoCard className="p-8 border-amber-200/10 bg-stone-900/50">
+                                <BentoCard className="p-8 border-primary/20 bg-card">
                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
                                         <div>
-                                            <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest">{selectedRow.requestNumber}</p>
-<h3 className="mt-1 font-serif text-3xl font-bold text-stone-100">
+                                            <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{selectedRow.requestNumber}</p>
+<h3 className="mt-1 font-serif text-3xl font-bold text-foreground">
                                                     {selectedRow.productName || t("requests.genericRequest")}
                                                 </h3>
                                                 {isProductSourcedRequest(selectedRow.internalNotes || "") && (
-                                                    <span className="inline-block px-2 py-0.5 mt-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                                    <span className="inline-block px-2 py-0.5 mt-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-primary-soft text-primary border border-primary/20">
                                                         {t("requests.labels.productSourced")}
                                                     </span>
                                                 )}
-                                                <p className="text-sm text-stone-500 font-medium mt-2 min-w-0 break-words">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
+                                                <p className="text-sm text-muted-foreground font-medium mt-2 min-w-0 break-words">{selectedRow.customer.fullName} • {selectedRow.customer.email}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3">
                                             {isInternal && selectedRow.convertedDealNumber && (
-                                                <Button variant="outline" asChild className="h-10 border-stone-800 bg-stone-900/40 text-stone-200">
+                                                <Button variant="outline" asChild className="h-10 border-stone-800 bg-card text-heading">
                                                     <Link to={`/dashboard/deals?deal=${selectedRow.convertedDealNumber}`}>
                                                         <Eye className="me-2 h-4 w-4" />
                                                         {t("requests.openDeal")}
@@ -1219,7 +1219,7 @@ export default function PurchaseRequestsPage() {
                                                 <Button
                                                     disabled={convertingId === selectedRow.id || (!selectedRow.convertedDealNumber && !canConvertPurchaseRequest({ role: profile?.role, status: selectedRow.status, convertedDealNumber: selectedRow.convertedDealNumber }))}
                                                     onClick={handleConvert}
-                                                    className="h-10 rounded-xl bg-gradient-to-r from-amber-100 to-amber-700 font-black text-stone-950 shadow-xl uppercase text-xs tracking-widest"
+                                                    className="h-10 rounded-xl bg-gradient-to-r from-amber-100 to-amber-700 font-black text-primary-foreground shadow-xl uppercase text-xs tracking-widest"
                                                 >
                                                     {convertingId === selectedRow.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4 me-2" />}
                                                     {selectedRow.convertedDealNumber ? t("requests.goToDeal") : t("requests.convert")}
@@ -1235,22 +1235,22 @@ export default function PurchaseRequestsPage() {
                                             { label: t("requests.labels.shipping"), value: selectedRow.preferredShippingMethod },
                                             { label: t("requests.labels.expectedDate"), value: selectedRow.expectedSupplyDate },
                                         ].map((item) => (
-                                            <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
-                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-1">{item.label}</p>
-                                                <p className="font-bold text-stone-300">{item.value || "â€”"}</p>
+                                            <div key={item.label} className="p-4 rounded-2xl bg-background/75 border border-stone-800">
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{item.label}</p>
+                                                <p className="font-bold text-foreground">{item.value || "â€”"}</p>
                                             </div>
                                         ))}
                                     </div>
 
                                     <DashboardSection title={t("requests.labels.details")}>
                                         <div className="space-y-6">
-                                            <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
-                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.intake.productTitle")}</p>
-                                                <p className="text-sm text-stone-400 leading-relaxed">{selectedRow.productDescription || t("requests.noDescription")}</p>
+                                            <div className="p-4 rounded-2xl bg-background/75 border border-stone-800">
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">{t("requests.intake.productTitle")}</p>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">{selectedRow.productDescription || t("requests.noDescription")}</p>
                                             </div>
-                                            <div className="p-4 rounded-2xl bg-stone-950/40 border border-stone-800">
-                                                <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest mb-2">{t("requests.labels.technicalSpecs")}</p>
-                                                <p className="text-sm text-stone-400 leading-relaxed font-mono">{selectedRow.technicalSpecs || t("requests.noReference")}</p>
+                                            <div className="p-4 rounded-2xl bg-background/75 border border-stone-800">
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">{t("requests.labels.technicalSpecs")}</p>
+                                                <p className="text-sm text-muted-foreground leading-relaxed font-mono">{selectedRow.technicalSpecs || t("requests.noReference")}</p>
                                             </div>
                                         </div>
                                     </DashboardSection>
@@ -1271,16 +1271,16 @@ export default function PurchaseRequestsPage() {
                                                         onMarkReady={() => void handleSmartReadyForSourcing()}
                                                     />
 
-                                                    <BentoCard className="p-6 border-amber-200/10 bg-stone-950/40">
+                                                    <BentoCard className="p-6 border-primary/20 bg-background/75">
                                                         <div className="flex items-center justify-between mb-6">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary-soft text-primary">
                                                                     <Sparkles className="h-4 w-4" />
                                                                 </div>
-                                                                <h4 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{t("requests.ai.title")}</h4>
+                                                                <h4 className="font-bold text-foreground uppercase tracking-widest text-xs">{t("requests.ai.title")}</h4>
                                                             </div>
                                                             {aiOutput && (
-                                                                <Button variant="ghost" size="sm" onClick={() => void handleCopyAiOutput()} className="text-stone-500 hover:text-amber-200">
+                                                                <Button variant="ghost" size="sm" onClick={() => void handleCopyAiOutput()} className="text-muted-foreground hover:text-primary">
                                                                     <Copy className="h-4 w-4" />
                                                                 </Button>
                                                             )}
@@ -1292,7 +1292,7 @@ export default function PurchaseRequestsPage() {
                                                                     key={action.mode}
                                                                     variant="outline"
                                                                     size="sm"
-                                                                    className="justify-start h-9 border-stone-800 bg-stone-900/40 text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-amber-200 hover:border-amber-200/20"
+                                                                    className="justify-start h-9 border-stone-800 bg-card text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/20"
                                                                     disabled={Boolean(aiActionLoading)}
                                                                     onClick={() => void handleAiAction(action.mode)}
                                                                 >
@@ -1303,25 +1303,25 @@ export default function PurchaseRequestsPage() {
                                                         </div>
 
                                                         {aiOutput && (
-                                                            <div className="p-4 rounded-2xl bg-stone-900/60 border border-amber-200/5 animate-in fade-in slide-in-from-top-2">
-                                                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">{aiOutputTitle}</p>
-                                                                <pre className="font-sans text-xs text-stone-400 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">{aiOutput}</pre>
+                                                            <div className="p-4 rounded-2xl bg-card border border-primary/20 animate-in fade-in slide-in-from-top-2">
+                                                                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">{aiOutputTitle}</p>
+                                                                <pre className="font-sans text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">{aiOutput}</pre>
                                                             </div>
                                                         )}
                                                     </BentoCard>
 
                                                     <div className="space-y-4">
-                                                        <Label className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("requests.labels.internalNotes")}</Label>
+                                                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("requests.labels.internalNotes")}</Label>
                                                         <Textarea
                                                             rows={6}
                                                             value={internalNotesDraft}
                                                             onChange={(event) => setInternalNotesDraft(event.target.value)}
-                                                            className="bg-stone-950/40 border-amber-200/10 text-stone-100 text-sm"
+                                                            className="bg-background/75 border-primary/20 text-foreground text-sm"
                                                             placeholder={t("requests.notesPlaceholder")}
                                                         />
                                                         <Button
                                                             variant="outline"
-                                                            className="w-full h-11 border-stone-800 bg-stone-900/40 text-stone-300 font-bold uppercase tracking-widest text-[10px]"
+                                                            className="w-full h-11 border-stone-800 bg-card text-foreground font-bold uppercase tracking-widest text-[10px]"
                                                             onClick={handleSaveNotes}
                                                             disabled={savingNotesId === selectedRow.id}
                                                         >
@@ -1355,8 +1355,8 @@ export default function PurchaseRequestsPage() {
                                 </BentoCard>
                             </div>
                         ) : (
-                            <div className="h-full flex items-center justify-center p-12 rounded-[2rem] bg-stone-900/20 border border-dashed border-stone-800">
-                                <p className="text-stone-600 font-medium italic">{t("requests.details.selectToView")}</p>
+                            <div className="h-full flex items-center justify-center p-12 rounded-[2rem] bg-card border border-dashed border-stone-800">
+                                <p className="text-muted-foreground font-medium italic">{t("requests.details.selectToView")}</p>
                             </div>
                         )}
                     </aside>

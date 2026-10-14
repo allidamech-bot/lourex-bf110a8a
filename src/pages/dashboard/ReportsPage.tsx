@@ -423,28 +423,28 @@ export default function ReportsPage() {
         icon={<BarChart3 className="h-6 w-6" />}
         headerAction={
           <div className="flex flex-wrap items-center gap-3">
-             <div className="flex items-center gap-2 px-4 h-11 rounded-xl bg-stone-900/40 border border-amber-200/10">
-              <Calendar className="h-4 w-4 text-stone-500" />
+             <div className="flex items-center gap-2 px-4 h-11 rounded-xl bg-card border border-primary/20">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
               <select
                 value={range}
                 onChange={(event) => setRange(event.target.value as ReportRange)}
-                className="bg-transparent text-sm text-stone-200 outline-none"
+                className="bg-transparent text-sm text-heading outline-none"
               >
-                <option value="monthly" className="bg-stone-900">{t("reports.ranges.monthly")}</option>
-                <option value="quarterly" className="bg-stone-900">{t("reports.ranges.quarterly")}</option>
-                <option value="semiannual" className="bg-stone-900">{t("reports.ranges.semiannual")}</option>
-                <option value="annual" className="bg-stone-900">{t("reports.ranges.annual")}</option>
-                <option value="custom" className="bg-stone-900">{t("reports.ranges.custom")}</option>
+                <option value="monthly" className="bg-card">{t("reports.ranges.monthly")}</option>
+                <option value="quarterly" className="bg-card">{t("reports.ranges.quarterly")}</option>
+                <option value="semiannual" className="bg-card">{t("reports.ranges.semiannual")}</option>
+                <option value="annual" className="bg-card">{t("reports.ranges.annual")}</option>
+                <option value="custom" className="bg-card">{t("reports.ranges.custom")}</option>
               </select>
             </div>
             {range === 'custom' && (
               <>
-                <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100" />
-                <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-xl border border-amber-200/10 bg-stone-950/40 px-3 text-sm text-stone-100" />
+                <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-11 rounded-xl border border-primary/20 bg-background/75 px-3 text-sm text-foreground" />
+                <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-11 rounded-xl border border-primary/20 bg-background/75 px-3 text-sm text-foreground" />
               </>
             )}
-            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 h-12 px-6">
-              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+            <Button variant="outline" size="lg" onClick={() => void refresh()} className="rounded-2xl border-primary/20 bg-card text-heading hover:text-primary h-12 px-6">
+              <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-primary")} />
               <span className="font-bold">{t("common.refresh")}</span>
             </Button>
           </div>
@@ -458,13 +458,13 @@ export default function ReportsPage() {
             { label: t("reports.metrics.customers"), value: metrics.customers, icon: Users },
             { label: t("reports.metrics.income"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "متعدد" : "Mixed") : formatMoney(metrics.income, undefined, locale), icon: Receipt },
           ].map((item) => (
-            <BentoCard key={item.label} className={cn("p-5 border-amber-200/10 bg-stone-900/50", item.action && "cursor-pointer hover:border-amber-200/30 transition-all")} onClick={item.action}>
+            <BentoCard key={item.label} className={cn("p-5 border-primary/20 bg-card", item.action && "cursor-pointer hover:border-primary/20 transition-all")} onClick={item.action}>
                <div className="flex items-center justify-between mb-4">
-                <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
-                <item.icon className="h-4 w-4 text-amber-500/50" />
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
+                <item.icon className="h-4 w-4 text-primary/50" />
               </div>
               <div className="flex items-end justify-between">
-                <p className="text-3xl font-black text-stone-100">{item.value}</p>
+                <p className="text-3xl font-black text-foreground">{item.value}</p>
                 {item.action && <ExternalLink className="h-3 w-3 text-stone-700" />}
               </div>
             </BentoCard>
@@ -474,15 +474,15 @@ export default function ReportsPage() {
 
       {drillDownData && (
         <DashboardSection title={t(`reports.drilldowns.${drillDownData.type}`)}>
-          <BentoCard className="p-0 border-amber-200/15 bg-stone-900/55 overflow-hidden">
-            <div className="p-6 border-b border-amber-200/10 flex justify-between items-center">
-              <h3 className="font-bold text-stone-100 uppercase tracking-widest text-xs">{drillDownData.type} Details</h3>
-              <Button variant="ghost" size="sm" onClick={() => setDrillDownData(null)} className="text-stone-500 hover:text-stone-300">{t("common.close")}</Button>
+          <BentoCard className="p-0 border-primary/20 bg-card overflow-hidden">
+            <div className="p-6 border-b border-primary/20 flex justify-between items-center">
+              <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{drillDownData.type} Details</h3>
+              <Button variant="ghost" size="sm" onClick={() => setDrillDownData(null)} className="text-muted-foreground hover:text-foreground">{t("common.close")}</Button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-stone-300">
+              <table className="w-full text-sm text-foreground">
                 <thead>
-                  <tr className="border-b border-amber-200/10 text-left text-stone-500 font-bold uppercase tracking-widest text-[10px]">
+                  <tr className="border-b border-primary/20 text-left text-muted-foreground font-bold uppercase tracking-widest text-[10px]">
                     <th className="p-4">{t("common.id")}</th>
                     <th className="p-4">{t("common.status")}</th>
                     <th className="p-4 text-right">{t("common.value")}</th>
@@ -490,12 +490,12 @@ export default function ReportsPage() {
                 </thead>
                 <tbody className="divide-y divide-amber-200/5">
                   {drillDownData.items.map((item) => (
-                    <tr key={item.id} className="hover:bg-stone-800/30 transition-colors">
-                      <td className="p-4 font-mono text-xs text-stone-400">{item.id}</td>
+                    <tr key={item.id} className="hover:bg-secondary transition-colors">
+                      <td className="p-4 font-mono text-xs text-muted-foreground">{item.id}</td>
                       <td className="p-4">
-                        <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-200 uppercase tracking-widest">{item.status}</span>
+                        <span className="rounded-full bg-primary-soft border border-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-widest">{item.status}</span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-stone-200 text-right">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-heading text-right">
                         {item.totalValue ? formatMoney(item.totalValue, item.currency, locale) : item.amount ? formatMoney(item.amount, item.currency, locale) : "-"}
                       </td>
                     </tr>
@@ -544,7 +544,7 @@ export default function ReportsPage() {
 
       <DashboardGrid variant="balanced">
         <DashboardSection title={t("reports.operationsRead")} description={t("reports.operationsReadDescription")}>
-          <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+          <BentoCard className="p-6 border-primary/20 bg-card">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { label: t("reports.metrics.audits"), value: metrics.audits },
@@ -554,9 +554,9 @@ export default function ReportsPage() {
                 { label: t("reports.metrics.profit"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(metrics.income - metrics.expense, undefined, locale) },
                 { label: t("reports.metrics.averageValue"), value: metrics.currencyGroups > 1 ? (locale === "ar" ? "عملات متعددة" : "Multiple currencies") : formatMoney(Math.round(metrics.averageOperationValue), undefined, locale) },
               ].map((item) => (
-                <div key={item.label} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
-                  <p className="mt-1 text-xl font-bold text-stone-100">{item.value}</p>
+                <div key={item.label} className="p-4 rounded-2xl bg-background/75 border border-primary/20">
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
+                  <p className="mt-1 text-xl font-bold text-foreground">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -564,16 +564,16 @@ export default function ReportsPage() {
         </DashboardSection>
 
         <DashboardSection title={t("reports.shipmentSummary")} description={t("reports.shipmentSummaryDescription")}>
-          <BentoCard className="p-6 border-amber-200/10 bg-stone-900/50">
+          <BentoCard className="p-6 border-primary/20 bg-card">
             <div className="space-y-4">
               {[
                 { label: t("reports.inTransit"), value: metrics.inTransit },
                 { label: t("reports.destination"), value: metrics.destination },
                 { label: t("reports.delivered"), value: metrics.delivered },
               ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{item.label}</p>
-                  <p className="text-2xl font-black text-amber-500">{item.value}</p>
+                <div key={item.label} className="flex items-center justify-between p-4 rounded-2xl bg-background/75 border border-primary/20">
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
+                  <p className="text-2xl font-black text-primary">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -585,24 +585,24 @@ export default function ReportsPage() {
         <DashboardSection title={t("reports.topCustomers")}>
           <div className="space-y-4">
             {snapshot?.topCustomers.map((customer) => (
-              <BentoCard key={customer.customerId} className="p-5 border-amber-200/10 bg-stone-900/50">
+              <BentoCard key={customer.customerId} className="p-5 border-primary/20 bg-card">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h4 className="font-bold text-stone-100">{customer.fullName}</h4>
-                    <p className="text-xs text-stone-500">{customer.email}</p>
+                    <h4 className="font-bold text-foreground">{customer.fullName}</h4>
+                    <p className="text-xs text-muted-foreground">{customer.email}</p>
                   </div>
-                  <div className="text-right text-[10px] font-black text-amber-500/70 uppercase tracking-widest">
+                  <div className="text-right text-[10px] font-black text-primary/70 uppercase tracking-widest">
                     {customer.dealsCount} {t("dashboardNav.deals")}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="text-right p-3 rounded-xl bg-stone-950/40 border border-stone-800">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-stone-600 mb-1">{t("reports.labels.outstandingBalance")}</p>
-                    <p className="font-bold text-stone-200 text-sm">{formatMoney(customer.outstandingBalance, undefined, locale)}</p>
+                  <div className="text-right p-3 rounded-xl bg-background/75 border border-stone-800">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("reports.labels.outstandingBalance")}</p>
+                    <p className="font-bold text-heading text-sm">{formatMoney(customer.outstandingBalance, undefined, locale)}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-stone-950/40 border border-stone-800">
-                    <p className="text-[9px] font-black text-stone-600 uppercase tracking-tighter">{t("reports.editRequests")}</p>
-                    <p className="font-bold text-stone-200 text-sm">{customer.pendingEditRequests}</p>
+                  <div className="p-3 rounded-xl bg-background/75 border border-stone-800">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter">{t("reports.editRequests")}</p>
+                    <p className="font-bold text-heading text-sm">{customer.pendingEditRequests}</p>
                   </div>
                 </div>
               </BentoCard>
@@ -613,21 +613,21 @@ export default function ReportsPage() {
         <DashboardSection title={t("reports.topExpenses")}>
           <div className="space-y-4">
             {snapshot?.topExpenseCategories.map((item) => (
-              <div key={item.category} className="flex items-center justify-between rounded-xl border border-amber-200/5 bg-stone-900/30 p-4 hover:bg-stone-900/50 transition-colors">
-                <span className="font-bold text-stone-400">{item.category}</span>
-                <span className="font-black text-stone-100">{formatMoney(Number(item.amount), undefined, locale)}</span>
+              <div key={item.category} className="flex items-center justify-between rounded-xl border border-primary/20 bg-card p-4 hover:bg-card transition-colors">
+                <span className="font-bold text-muted-foreground">{item.category}</span>
+                <span className="font-black text-foreground">{formatMoney(Number(item.amount), undefined, locale)}</span>
               </div>
             ))}
           </div>
         </DashboardSection>
       </DashboardGrid>
 
-      <div className="flex flex-wrap items-center justify-center gap-4 pt-12 border-t border-amber-200/5">
-        <Button onClick={handleExport} variant="outline" className="h-12 rounded-2xl border-amber-200/15 bg-stone-900/50 text-stone-200 hover:text-amber-200">
+      <div className="flex flex-wrap items-center justify-center gap-4 pt-12 border-t border-primary/20">
+        <Button onClick={handleExport} variant="outline" className="h-12 rounded-2xl border-primary/20 bg-card text-heading hover:text-primary">
           <Download className="h-4 w-4 me-2" />
           {t("common.exportCsv")}
         </Button>
-        <Button onClick={handleExportPdf} variant="outline" className="h-12 rounded-2xl border-amber-200/15 bg-stone-900/50 text-stone-200 hover:text-amber-200">
+        <Button onClick={handleExportPdf} variant="outline" className="h-12 rounded-2xl border-primary/20 bg-card text-heading hover:text-primary">
           <Printer className="h-4 w-4 me-2" />
           {t("common.exportPdf")}
         </Button>

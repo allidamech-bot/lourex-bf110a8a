@@ -87,11 +87,11 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="sticky top-0 z-[1000] h-16 w-full max-w-full overflow-visible border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70"
+          className="sticky top-0 z-[1000] h-[72px] w-full max-w-full overflow-visible border-b border-border/70 bg-background/95 shadow-[0_12px_28px_-25px_rgba(8,127,120,0.5)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85"
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
-        <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center px-4 sm:px-6 lg:hidden">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1700px] items-center px-4 sm:px-6 xl:hidden">
           <div className="flex w-full items-center justify-between gap-4">
             <Link
                 to="/"
@@ -99,7 +99,7 @@ export const SiteHeader = () => {
                 onClick={() => setIsOpen(false)}
                 aria-label="Lourex home"
             >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
               <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
             </span>
               <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
@@ -107,7 +107,7 @@ export const SiteHeader = () => {
 
             <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
                 onClick={() => setIsOpen((value) => !value)}
                 aria-label={t("nav.menu")}
                 aria-expanded={isOpen}
@@ -119,7 +119,7 @@ export const SiteHeader = () => {
 
         {/* Desktop header */}
         <div
-            className="mx-auto hidden h-16 w-full max-w-[1700px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 lg:grid"
+            className="mx-auto hidden h-[72px] w-full max-w-[1700px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 sm:px-6 xl:grid"
             dir={isRtl ? "rtl" : "ltr"}
         >
           <Link
@@ -128,14 +128,14 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
           >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
             <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
           </span>
             <span className="font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
           </Link>
 
           <nav
-              className="hidden min-w-0 items-center justify-center gap-1.5 lg:flex"
+              className="hidden min-w-0 items-center justify-center gap-1 xl:flex"
               aria-label={t("nav.primaryNavigation")}
           >
             {canSeeDashboardMenu ? (
@@ -153,7 +153,7 @@ export const SiteHeader = () => {
                 </NavLink>
             ) : null}
 
-            {publicLinks.map((link) => (
+            {publicLinks.filter((_, index) => [0, 1, 2, 4, 6].includes(index)).map((link) => (
                 <NavLink
                     key={`${link.to}-${link.label}`}
                     to={link.to}
@@ -168,10 +168,29 @@ export const SiteHeader = () => {
                   {link.label}
                 </NavLink>
             ))}
+            <details className="group relative shrink-0">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-heading [&::-webkit-details-marker]:hidden">
+                {lang === "ar" ? "المزيد" : "More"}
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform group-open:rotate-90 ${isRtl ? "rotate-180" : ""}`} aria-hidden="true" />
+              </summary>
+              <div className="absolute end-0 top-[calc(100%+0.5rem)] z-50 min-w-[205px] rounded-2xl border border-border/80 bg-popover p-2 shadow-[0_20px_55px_-30px_rgba(0,0,0,0.4)]">
+                {publicLinks.filter((_, index) => [3, 5].includes(index)).map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={({ isActive }) =>
+                      `block rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${isActive ? "bg-primary-soft text-primary" : "text-foreground hover:bg-secondary"}`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </details>
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-3 border-s border-border ps-4">
-            <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
+            <div className="hidden shrink-0 items-center gap-2.5 xl:flex">
               {user ? <NotificationBell userId={user.id} /> : null}
 
               <LanguageSwitcher />
@@ -213,7 +232,7 @@ export const SiteHeader = () => {
 
         {/* Mobile drawer */}
         {isOpen ? (
-            <div className="fixed inset-0 z-[10000] lg:hidden" role="dialog" aria-modal="true" aria-label={t("nav.mobileNavigation")}>
+            <div className="fixed inset-0 z-[10000] xl:hidden" role="dialog" aria-modal="true" aria-label={t("nav.mobileNavigation")}>
               <button
                   type="button"
                   className="absolute inset-0 h-full w-full bg-foreground/40 backdrop-blur-sm"
@@ -230,7 +249,7 @@ export const SiteHeader = () => {
                       className="flex min-w-0 shrink items-center gap-3"
                       onClick={() => setIsOpen(false)}
                   >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-soft">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
                   <img src="/logo.png" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
                 </span>
                     <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>

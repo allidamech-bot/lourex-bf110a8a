@@ -366,28 +366,28 @@ export default function OverviewPage() {
       value: metrics.requests,
       icon: ClipboardList,
       helper: t("overview.reviewDescription"),
-      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
+      accent: "from-amber-500/20 to-amber-200/5 text-primary ring-amber-500/20",
     },
     {
       label: t("overview.metrics.deals"),
       value: metrics.deals,
       icon: PackageSearch,
       helper: t("overview.readyDescription"),
-      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
+      accent: "from-amber-500/20 to-amber-200/5 text-primary ring-amber-500/20",
     },
     {
       label: t("overview.activeShipments"),
       value: metrics.shipments,
       icon: Truck,
       helper: t("overview.currentOpsDescription"),
-      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
+      accent: "from-amber-500/20 to-amber-200/5 text-primary ring-amber-500/20",
     },
     {
       label: t("reports.metrics.linkedEntries"),
       value: metrics.financialEntries,
       icon: WalletCards,
       helper: t("overview.editDescription"),
-      accent: "from-amber-500/20 to-amber-200/5 text-amber-200 ring-amber-500/20",
+      accent: "from-amber-500/20 to-amber-200/5 text-primary ring-amber-500/20",
     },
   ];
 
@@ -404,7 +404,7 @@ export default function OverviewPage() {
          headerAction={
            <div className="flex items-center gap-6">
              <div className="text-right hidden sm:block">
-               <p className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em]">{t("commandCenter.systemTrend")}</p>
+               <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">{t("commandCenter.systemTrend")}</p>
               <div className="flex items-center gap-2 justify-end text-emerald-400 font-black">
                 <ArrowUpRight className="h-3 w-3" />
                 {executiveWorkspaceState.momentum.trend}
@@ -415,9 +415,9 @@ export default function OverviewPage() {
                size="lg"
                onClick={() => window.location.reload()}
                disabled={loading}
-               className="rounded-2xl border-amber-200/10 bg-stone-900/40 text-stone-200 hover:text-amber-200 hover:bg-stone-800 transition-all shadow-xl backdrop-blur-md h-14"
+               className="rounded-2xl border-primary/20 bg-card text-heading hover:text-primary hover:bg-secondary transition-all shadow-xl backdrop-blur-md h-14"
              >
-               <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-amber-500")} />
+               <RefreshCw className={cn("me-2 h-4 w-4", loading && "animate-spin text-primary")} />
                <span className="font-bold">{t("commandCenter.syncSystem")}</span>
              </Button>
           </div>
@@ -469,9 +469,9 @@ export default function OverviewPage() {
               icon={<Receipt className="h-5 w-5" />}
             >
              <DashboardGrid variant="kpi">
-               <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+               <BentoCard className="p-5 border-primary/20 bg-card">
                  <div className="flex items-center justify-between">
-                   <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.totalIncome")}</p>
+                   <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("overview.totalIncome")}</p>
                   <ArrowUpRight className="h-4 w-4 text-emerald-400" />
                 </div>
                 <p className="mt-4 text-2xl font-black text-emerald-400">
@@ -479,9 +479,9 @@ export default function OverviewPage() {
                 </p>
               </BentoCard>
 
-              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+              <BentoCard className="p-5 border-primary/20 bg-card">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.operationalCosts")}</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("overview.operationalCosts")}</p>
                   <Truck className="h-4 w-4 text-rose-400" />
                 </div>
                 <p className="mt-4 text-2xl font-black text-rose-400">
@@ -489,12 +489,12 @@ export default function OverviewPage() {
                 </p>
               </BentoCard>
 
-              <BentoCard className="p-5 border-amber-200/10 bg-stone-900/50">
+              <BentoCard className="p-5 border-primary/20 bg-card">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{t("overview.netRevenue")}</p>
-                  <WalletCards className="h-4 w-4 text-amber-200" />
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t("overview.netRevenue")}</p>
+                  <WalletCards className="h-4 w-4 text-primary" />
                 </div>
-                <p className="mt-4 text-2xl font-black text-stone-100">
+                <p className="mt-4 text-2xl font-black text-foreground">
                   {(
                     financialEntries.filter(e => e.type === "income").reduce((sum, e) => sum + e.amount, 0) -
                     financialEntries.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amount, 0)
@@ -581,10 +581,10 @@ export default function OverviewPage() {
               secondaryWidgets={
                 <div className="space-y-6">
                    <CustomerRetentionAlerts alerts={customerAlerts.slice(0, 5)} />
-<BentoCard className="rounded-[2rem] p-0 border-amber-200/10 bg-stone-900/50">
-                     <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-amber-200/10">
-                       <h3 className="font-serif text-lg font-bold text-stone-100">{t("overview.liveActivity")}</h3>
-                       <Clock3 className="h-4 w-4 text-stone-600" />
+<BentoCard className="rounded-[2rem] p-0 border-primary/20 bg-card">
+                     <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-primary/20">
+                       <h3 className="font-serif text-lg font-bold text-foreground">{t("overview.liveActivity")}</h3>
+                       <Clock3 className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="px-6 pb-6 pt-4">
                       {recentActivity.length > 0 ? (
@@ -599,7 +599,7 @@ export default function OverviewPage() {
                           }))}
                         />
                       ) : (
-                        <div className="py-8 text-center text-sm text-stone-500">{t("overview.noRequests")}</div>
+                        <div className="py-8 text-center text-sm text-muted-foreground">{t("overview.noRequests")}</div>
                       )}
                     </div>
                   </BentoCard>
@@ -613,7 +613,7 @@ export default function OverviewPage() {
                     { label: t("overview.quickReview"), to: "/dashboard/requests" },
                     { label: t("overview.quickDeals"), to: "/dashboard/deals" },
                   ].map((item) => (
-                    <Link key={item.label} to={item.to} className="p-4 rounded-2xl bg-stone-950/40 border border-amber-200/5 text-xs font-bold text-stone-400 hover:border-amber-200/20 transition-all flex items-center justify-between group">
+                    <Link key={item.label} to={item.to} className="p-4 rounded-2xl bg-background/75 border border-primary/20 text-xs font-bold text-muted-foreground hover:border-primary/20 transition-all flex items-center justify-between group">
                       {item.label}
                       <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
@@ -670,8 +670,8 @@ export default function OverviewPage() {
                 </div>
               </div>
 
-<div className="space-y-6 pt-8 border-t border-amber-200/5">
-                 <h3 className="text-xs font-black uppercase tracking-[0.4em] text-stone-600 text-center">{t("overview.experimentalAutonomousFabric")}</h3>
+<div className="space-y-6 pt-8 border-t border-primary/20">
+                 <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground text-center">{t("overview.experimentalAutonomousFabric")}</h3>
                 <div className="grid gap-6 lg:grid-cols-2">
                   <ProductionLazySection>
                     <RuntimeInfrastructureCenter dataset={eventSystemDataset} language={lang === "ar" ? "ar" : "en"} locale={locale} />
@@ -712,7 +712,7 @@ const HealthCard = ({ label, value, status, icon }: {
       <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
         {icon}
       </div>
-      <p className="text-[10px] font-black uppercase text-stone-600 tracking-widest">{label}</p>
+      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{label}</p>
       <div className="mt-4 flex items-end justify-between">
         <h3 className="text-3xl font-black text-white">{score === null ? "—" : `${score}%`}</h3>
         {status && score !== null && (
@@ -725,7 +725,7 @@ const HealthCard = ({ label, value, status, icon }: {
         <div className="h-1 mt-4 rounded-full bg-white/5" aria-label="Score unavailable" />
       ) : (
         <Progress value={score} className="h-1 mt-4 bg-white/5" indicatorClassName={cn(
-          score > 80 ? "bg-emerald-500" : score > 50 ? "bg-amber-500" : "bg-rose-500"
+          score > 80 ? "bg-emerald-500" : score > 50 ? "bg-primary" : "bg-rose-500"
         )} />
       )}
     </GlassPanel>

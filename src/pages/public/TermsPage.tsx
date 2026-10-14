@@ -11,7 +11,7 @@ export default function TermsPage() {
 
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <SEO 
         title={t("consent.tosTitle")}
         description={
@@ -25,19 +25,19 @@ export default function TermsPage() {
         <div className="container mx-auto px-4 md:px-8 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                <ScrollText className="w-5 h-5 text-amber-500" />
+              <div className="w-10 h-10 rounded-lg bg-primary-soft border border-primary/20 flex items-center justify-center">
+                <ScrollText className="w-5 h-5 text-primary" />
               </div>
-              <h1 className="font-serif text-3xl md:text-4xl font-bold text-stone-100">
+              <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
                 {t("consent.tosTitle")}
               </h1>
             </div>
-            <div className="rounded-xl border border-amber-200/10 bg-stone-50/5 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
-              <p className="text-sm text-stone-400 leading-relaxed whitespace-pre-line font-medium">
+            <div className="rounded-xl border border-primary/20 bg-card p-6 md:p-8 backdrop-blur-xl shadow-soft">
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line font-medium">
                 {t("consent.tosContent")}
               </p>
             </div>
-            <p className="text-xs text-stone-600 font-bold uppercase tracking-widest mt-6 text-center">
+            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-6 text-center">
               {t("legal.lastUpdated")}: March 2026
             </p>
           </motion.div>

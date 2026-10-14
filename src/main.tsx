@@ -5,7 +5,7 @@ import "./index.css";
 import "./styles/purchase-requests-hardening.css";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <App />
   </ThemeProvider>
 );

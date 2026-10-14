@@ -1,155 +1,23 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
-import { FileBadge, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ArrowUpRight, FileBadge, Globe2, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { publicContactInfo, getWhatsAppUrl } from "@/lib/contactInfo";
 
-const Footer = forwardRef<HTMLElement>((_props, ref) => {
-  const { t, lang } = useI18n();
-  const isArabic = lang === "ar";
+type FooterNavLink = { label: string; href: string };
 
-  const navLinks = [
-    { label: t("nav.about"), href: "/about" },
-    { label: isArabic ? "من هي لوريكس؟" : "About LOUREX", href: "/about-lourex" },
-    { label: t("nav.whyLourex"), href: "/why-lourex" },
-    { label: isArabic ? "الأسئلة الشائعة" : "FAQ", href: "/faq" },
-    { label: t("nav.contact"), href: "/contact" },
-  ];
-
-  const sourcingLinks = [
-    { label: isArabic ? "توريد الشوكولاتة" : "Chocolate Sourcing", href: "/chocolate-sourcing" },
-    { label: isArabic ? "توريد البسكويت" : "Biscuits Sourcing", href: "/biscuits-sourcing" },
-    { label: isArabic ? "توريد المواد الغذائية" : "Food Products Sourcing", href: "/food-products-sourcing" },
-    { label: isArabic ? "المنتجات التركية" : "Turkish Products", href: "/turkish-products" },
-    { label: isArabic ? "المنتجات السورية" : "Syrian Products", href: "/syrian-products" },
-  ];
-
-  const legalLinks = [
-    { label: t("consent.privacyTitle"), href: "/privacy" },
-    { label: t("consent.tosTitle"), href: "/terms" },
-  ];
-
-  const platformLinks = [
-    { label: t("nav.purchaseRequest"), href: "/request" },
-    { label: t("nav.trackShipment"), href: "/track" },
-    { label: isArabic ? "المنتجات" : "Products", href: "/products" },
-  ];
-
-  const contactLinks = [
-    { label: publicContactInfo.email, href: `mailto:${publicContactInfo.email}`, icon: Mail },
-    { label: publicContactInfo.phone, href: `tel:${publicContactInfo.phoneTel}`, icon: Phone, ltr: true },
-    {
-      label: isArabic ? "واتساب" : "WhatsApp",
-      href: getWhatsAppUrl(isArabic ? "مرحباً لوريكس، أحتاج إلى المساعدة." : "Hello LOUREX, I need support."),
-      icon: MessageCircle,
-    },
-    { label: publicContactInfo.website, href: publicContactInfo.websiteUrl, icon: Globe },
-  ];
-
-  const socialLinks = [
-    { label: "Instagram", href: publicContactInfo.social.instagram },
-    { label: "TikTok", href: publicContactInfo.social.tiktok },
-  ];
-
-  const isExternal = (href: string) => href.startsWith("http");
-
-  return (
-    <footer ref={ref} className="relative overflow-hidden bg-footer text-footer-foreground">
-      <div className="meridian-line absolute inset-x-0 top-0" aria-hidden="true" />
-      <svg
-        className="pointer-events-none absolute -top-24 end-[-10%] h-[420px] w-[720px] text-footer-accent/10"
-        viewBox="0 0 720 420"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path d="M0 360 C 180 120, 420 80, 720 140" stroke="currentColor" strokeWidth="1" />
-        <path d="M40 420 C 240 200, 460 160, 720 230" stroke="currentColor" strokeWidth="1" />
-        <path d="M120 420 C 300 270, 500 250, 720 320" stroke="currentColor" strokeWidth="1" />
-      </svg>
-
-      <div className="container relative mx-auto px-4 md:px-8">
-        <div className="grid gap-10 py-14 lg:grid-cols-[1.3fr_2fr] lg:gap-16">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-3 rounded-2xl bg-footer-foreground/[0.06] p-2 pe-4 ring-1 ring-footer-foreground/10">
-              <img src="/logo.png" alt="LOUREX official logo" className="h-10 w-10 object-contain" />
-              <span className="font-heading text-lg font-extrabold tracking-[0.08em]">LOUREX</span>
-            </div>
-            <p className="max-w-sm text-sm leading-7 text-footer-muted">
-              {isArabic
-                ? "وساطة وتنسيق توريد للمواد الغذائية والحلويات بين المشترين التجاريين والموردين."
-                : "Trade intermediary and sourcing coordination for food and sweets products."}
-            </p>
-            <ul className="space-y-2.5">
-              {contactLinks.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target={isExternal(link.href) ? "_blank" : undefined}
-                    rel={isExternal(link.href) ? "noreferrer" : undefined}
-                    className="group inline-flex items-center gap-2.5 text-sm text-footer-foreground/90 transition-colors hover:text-footer-accent"
-                  >
-                    <link.icon className="h-4 w-4 text-footer-accent" />
-                    <span dir={link.ltr ? "ltr" : undefined}>{link.label}</span>
-                  </a>
-                </li>
-              ))}
-              <li className="inline-flex items-center gap-2.5 text-sm text-footer-foreground/90">
-                <MapPin className="h-4 w-4 text-footer-accent" />
-                {isArabic ? publicContactInfo.location.ar : publicContactInfo.location.en}
-              </li>
-              <li className="flex items-center gap-2.5 text-sm text-footer-muted">
-                <FileBadge className="h-4 w-4 text-footer-accent" />
-                {isArabic ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en}
-              </li>
-            </ul>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-            <FooterColumn title={isArabic ? "المنصة" : "Platform"} links={platformLinks} />
-            <FooterColumn title={isArabic ? "التوريد" : "Sourcing"} links={sourcingLinks} />
-            <FooterColumn title={isArabic ? "لوريكس" : "LOUREX"} links={navLinks} />
-            <div>
-              <FooterColumn title={isArabic ? "قانوني" : "Legal"} links={legalLinks} />
-              <h4 className="mb-3 mt-6 text-xs font-semibold text-footer-muted">
-                {isArabic ? "القنوات الرسمية" : "Official channels"}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    target="_blank"
-                    rel="me noreferrer"
-                    className="rounded-full px-3 py-1 text-xs ring-1 ring-footer-foreground/15 transition hover:text-footer-accent hover:ring-footer-accent/50"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-footer-foreground/10 py-6 text-xs text-footer-muted sm:flex-row">
-          <p>
-            {"\u00A9"} {new Date().getFullYear()} {isArabic ? "لوريكس LOUREX. جميع الحقوق محفوظة." : "LOUREX. All rights reserved."}
-          </p>
-          <a href={publicContactInfo.websiteUrl} className="transition-colors hover:text-footer-accent">
-            {publicContactInfo.website}
-          </a>
-        </div>
-      </div>
-    </footer>
-  );
-});
-
-const FooterColumn = ({ title, links }: { title: string; links: Array<{ label: string; href: string }> }) => (
+const FooterColumn = ({ title, links }: { title: string; links: FooterNavLink[] }) => (
   <div>
-    <h4 className="mb-4 text-xs font-semibold text-footer-muted">{title}</h4>
-    <ul className="space-y-2.5">
+    <h3 className="mb-5 text-[11px] font-bold uppercase tracking-[0.13em] text-footer-accent">
+      {title}
+    </h3>
+    <ul className="space-y-3">
       {links.map((link) => (
         <li key={link.href}>
-          <Link to={link.href} className="text-sm text-footer-foreground/85 transition-colors hover:text-footer-accent">
+          <Link
+            to={link.href}
+            className="inline-flex min-h-7 items-center text-[13px] font-medium text-footer-foreground/75 transition-colors hover:text-footer-foreground focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-footer-accent"
+          >
             {link.label}
           </Link>
         </li>
@@ -157,6 +25,116 @@ const FooterColumn = ({ title, links }: { title: string; links: Array<{ label: s
     </ul>
   </div>
 );
+
+const Footer = forwardRef<HTMLElement>((_props, ref) => {
+  const { t, lang } = useI18n();
+  const ar = lang === "ar";
+
+  const platformLinks: FooterNavLink[] = [
+    { label: ar ? "المنتجات" : "Products", href: "/products" },
+    { label: t("nav.purchaseRequest"), href: "/request" },
+    { label: t("nav.trackShipment"), href: "/track" },
+  ];
+
+  const sourcingLinks: FooterNavLink[] = [
+    { label: ar ? "توريد الشوكولاتة" : "Chocolate sourcing", href: "/chocolate-sourcing" },
+    { label: ar ? "توريد البسكويت" : "Biscuit sourcing", href: "/biscuits-sourcing" },
+    { label: ar ? "توريد المواد الغذائية" : "Food products", href: "/food-products-sourcing" },
+    { label: ar ? "المنتجات التركية" : "Turkish products", href: "/turkish-products" },
+    { label: ar ? "المنتجات السورية" : "Syrian products", href: "/syrian-products" },
+  ];
+
+  const companyLinks: FooterNavLink[] = [
+    { label: t("nav.about"), href: "/about" },
+    { label: ar ? "من هي لوريكس؟" : "About LOUREX", href: "/about-lourex" },
+    { label: t("nav.whyLourex"), href: "/why-lourex" },
+    { label: ar ? "الأسئلة الشائعة" : "FAQ", href: "/faq" },
+    { label: t("nav.contact"), href: "/contact" },
+  ];
+
+  const whatsapp = getWhatsAppUrl(ar ? "مرحباً لوريكس، أحتاج إلى المساعدة." : "Hello LOUREX, I need support.");
+
+  return (
+    <footer ref={ref} className="relative isolate overflow-hidden bg-footer text-footer-foreground">
+      <div className="meridian-line absolute inset-x-0 top-0" aria-hidden="true" />
+      <div aria-hidden="true" className="pointer-events-none absolute -end-48 -top-72 h-[46rem] w-[46rem] rounded-full border border-footer-accent/10" />
+      <div aria-hidden="true" className="pointer-events-none absolute -end-20 -top-40 h-[31rem] w-[31rem] rounded-full border border-footer-accent/10" />
+      <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-7 border-b border-footer-foreground/15 py-12 sm:py-16 lg:flex-row lg:items-center">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-footer-accent">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-footer-foreground/15 bg-footer-foreground/5">
+                <img src="/logo.png" alt="LOUREX official logo" className="h-9 w-9 object-contain" />
+              </span>
+              <span className="text-2xl font-extrabold tracking-[0.06em]">LOUREX</span>
+            </Link>
+            <p className="mt-4 max-w-[27rem] text-sm leading-7 text-footer-muted">
+              {ar
+                ? "تنسيق التوريد والتجارة الدولية، من طلب الشراء حتى التسليم."
+                : "International sourcing and trade coordination, from request to delivery."}
+            </p>
+          </div>
+          <Link
+            to="/request"
+            className="group inline-flex min-h-12 w-fit items-center justify-center gap-3 rounded-2xl bg-footer-accent px-6 py-3 text-sm font-bold text-[#072D2B] transition-colors hover:bg-[#A7EFE6] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-footer-accent/30"
+          >
+            {ar ? "ابدأ طلب شراء" : "Start a sourcing request"}
+            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 rtl:-scale-x-100" aria-hidden="true" />
+          </Link>
+        </div>
+
+        <div className="grid gap-x-10 gap-y-11 border-b border-footer-foreground/15 py-12 sm:grid-cols-2 sm:py-14 lg:grid-cols-[1.1fr_1fr_1fr_1.4fr]">
+          <FooterColumn title={ar ? "المنصة" : "Platform"} links={platformLinks} />
+          <FooterColumn title={ar ? "التوريد" : "Sourcing"} links={sourcingLinks} />
+          <FooterColumn title={ar ? "الشركة" : "Company"} links={companyLinks} />
+
+          <div>
+            <h3 className="mb-5 text-[11px] font-bold uppercase tracking-[0.13em] text-footer-accent">
+              {ar ? "تواصل معنا" : "Get in touch"}
+            </h3>
+            <address className="space-y-3 not-italic">
+              <a href={"mailto:" + publicContactInfo.email} className="flex items-start gap-3 text-[13px] text-footer-foreground/85 transition-colors hover:text-footer-accent">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                <span dir="ltr" className="break-all">{publicContactInfo.email}</span>
+              </a>
+              <a href={"tel:" + publicContactInfo.phoneTel} className="flex items-start gap-3 text-[13px] text-footer-foreground/85 transition-colors hover:text-footer-accent">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                <span dir="ltr">{publicContactInfo.phone}</span>
+              </a>
+              <div className="flex items-start gap-3 text-[13px] text-footer-foreground/85">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                <span>{ar ? publicContactInfo.location.ar : publicContactInfo.location.en}</span>
+              </div>
+              <div className="flex items-start gap-3 text-[12px] text-footer-muted">
+                <FileBadge className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                <span>{ar ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en}</span>
+              </div>
+              <a href={publicContactInfo.websiteUrl} target="_blank" rel="noreferrer" className="flex items-start gap-3 text-[13px] text-footer-foreground/85 transition-colors hover:text-footer-accent">
+                <Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                {publicContactInfo.website}
+              </a>
+            </address>
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <a href={whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-footer-foreground/20 px-3.5 py-2 text-xs font-semibold transition-colors hover:border-footer-accent/60 hover:text-footer-accent">
+                <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
+              </a>
+              <a href={publicContactInfo.social.instagram} target="_blank" rel="me noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-footer-foreground/20 px-3.5 py-2 text-xs transition-colors hover:border-footer-accent/60 hover:text-footer-accent">Instagram</a>
+              <a href={publicContactInfo.social.tiktok} target="_blank" rel="me noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-footer-foreground/20 px-3.5 py-2 text-xs transition-colors hover:border-footer-accent/60 hover:text-footer-accent">TikTok</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-start justify-between gap-4 py-6 text-xs text-footer-muted sm:flex-row sm:items-center">
+          <span>{"© " + new Date().getFullYear() + " LOUREX. " + (ar ? "جميع الحقوق محفوظة." : "All rights reserved.")}</span>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link to="/privacy" className="transition-colors hover:text-footer-accent">{t("consent.privacyTitle")}</Link>
+            <Link to="/terms" className="transition-colors hover:text-footer-accent">{t("consent.tosTitle")}</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+});
 
 Footer.displayName = "Footer";
 
