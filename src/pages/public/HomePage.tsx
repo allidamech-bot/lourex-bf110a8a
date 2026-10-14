@@ -124,8 +124,8 @@ export default function HomePage() {
   const active = steps[activeStep];
   const ActiveIcon = active.icon;
   const reveal = {
-    initial: reducedMotion ? false : { opacity: 0, y: 36, clipPath: "polygon(0 0,100% 0,100% 85%,0 100%)" },
-    whileInView: { opacity: 1, y: 0, clipPath: "polygon(0 0,100% 0,100% 100%,0 100%)" },
+    initial: reducedMotion ? false : { opacity: 0, y: 36 },
+    whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, amount: 0.12 },
     transition: { duration: reducedMotion ? 0 : 0.85, ease: [.22, 1, .36, 1] as const },
   };

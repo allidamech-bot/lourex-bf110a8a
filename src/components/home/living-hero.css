@@ -79,8 +79,3 @@
 .lrx-living-hero[data-reduced-motion=true]{background:linear-gradient(150deg,#a930241c,transparent 42%),linear-gradient(30deg,transparent 45%,#34577729 45.1%,transparent 80%),linear-gradient(155deg,transparent 52%,#d6ad6c16 52.1%,transparent 90%),#0a0a0a}
 .lrx-living-hero[data-reduced-motion=true] .lrx-emblem-mount img{filter:none;mix-blend-mode:normal}
 .lrx-living-hero[data-reduced-motion=true] .lrx-trade-message{backdrop-filter:none}
-@media(prefers-reduced-motion:reduce){
- .lourex-home>header{backdrop-filter:none!important}
- .lrx-living-hero *,.lrx-living-hero *::before,.lrx-living-hero *::after{filter:none!important;backdrop-filter:none!important;mix-blend-mode:normal!important;clip-path:none!important}
- .lrx-emblem-mount::before,.lrx-emblem-mount::after{display:none}
-}
