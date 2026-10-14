@@ -96,7 +96,7 @@ const mapProductRow = (row: ProductCatalogProductRow): ProductCatalogItem => ({
   descriptionAr: row.description_ar || "",
   descriptionEn: row.description_en || "",
   categoryId: row.category_id || "food-fmcg",
-  originCountry: row.origin_country || "Turkey",
+  originCountry: row.origin_country || "",
   brand: row.brand || "",
   moq: row.moq || "",
   unit: row.unit || "",
@@ -133,7 +133,7 @@ const mapAdminInput = (input: ProductCatalogAdminInput) => ({
   description_ar: input.descriptionAr.trim(),
   description_en: input.descriptionEn.trim(),
   category_id: input.categoryId || "food-fmcg",
-  origin_country: input.originCountry.trim() || "Turkey",
+  origin_country: input.originCountry.trim(),
   brand: input.brand?.trim() || "",
   moq: input.moq?.trim() || "",
   unit: input.unit?.trim() || "",
@@ -166,7 +166,8 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
   try {
     const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
     if (!isAvailable) {
-      return includeInactive ? productCatalogItems : fallbackActiveProducts();
+      if (includeInactive) throw new Error("Catalog storage is not configured. Contact the administrator.");
+      return [];
     }
     let query = productDb.from("product_catalog_products").select(PRODUCT_SELECT).order("is_featured", { ascending: false }).order("updated_at", { ascending: false });
 
@@ -179,22 +180,20 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
         markTableUnavailable("product_catalog_products");
-        return includeInactive ? productCatalogItems : fallbackActiveProducts();
+        if (includeInactive) throw error;
+        return [];
       }
       throw error;
     }
 
     const mapped = ((data || []) as ProductCatalogProductRow[]).map(mapProductRow);
 
-    if (mapped.length === 0 && !includeInactive) {
-      return fallbackActiveProducts();
-    }
-
     return mapped;
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       markTableUnavailable("product_catalog_products");
-      return includeInactive ? productCatalogItems : fallbackActiveProducts();
+      if (includeInactive) throw error;
+      return [];
     }
     throw error;
   }
@@ -204,7 +203,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
   try {
     const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
     if (!isAvailable) {
-      return getProductBySlug(slug);
+      return import.meta.env.DEV ? getProductBySlug(slug) : null;
     }
     let query = productDb
       .from("product_catalog_products")
@@ -220,7 +219,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
         markTableUnavailable("product_catalog_products");
-        return getProductBySlug(slug);
+        return import.meta.env.DEV ? getProductBySlug(slug) : null;
       }
       throw error;
     }
@@ -235,7 +234,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       markTableUnavailable("product_catalog_products");
-      return getProductBySlug(slug);
+      return import.meta.env.DEV ? getProductBySlug(slug) : null;
     }
     throw error;
   }
@@ -263,7 +262,7 @@ export const updateCatalogProduct = async (id: string, input: Partial<ProductCat
   if (input.descriptionAr !== undefined) partialPayload.description_ar = input.descriptionAr.trim();
   if (input.descriptionEn !== undefined) partialPayload.description_en = input.descriptionEn.trim();
   if (input.categoryId !== undefined) partialPayload.category_id = input.categoryId;
-  if (input.originCountry !== undefined) partialPayload.origin_country = input.originCountry.trim() || "Turkey";
+  if (input.originCountry !== undefined) partialPayload.origin_country = input.originCountry.trim();
   if (input.brand !== undefined) partialPayload.brand = input.brand?.trim() || "";
   if (input.moq !== undefined) partialPayload.moq = input.moq?.trim() || "";
   if (input.unit !== undefined) partialPayload.unit = input.unit?.trim() || "";
@@ -408,12 +407,12 @@ export const buildProductRequestPrefill = (
     productName: name,
     productDescription: [description, shortDescription].filter(Boolean).join("\n\n"),
     brand: product.brand || "",
-    manufacturingCountry: product.originCountry || "Turkey",
+    manufacturingCountry: product.originCountry || "",
     material: product.material || "",
     technicalSpecs: [product.technicalSpecs, product.packaging ? `Packaging: ${product.packaging}` : "", priceNote].filter(Boolean).join("\n"),
     weight: product.weight || "",
     sizeDimensions: product.dimensions || "",
-    qualityLevel: product.tagsEn.includes("Demo item") ? "" : "Commercial sourcing quality",
+    qualityLevel: "",
     referenceLink: typeof window !== "undefined" ? `${window.location.origin}/products/${product.slug}` : `/products/${product.slug}`,
     deliveryNotes: isArabic
       ? `طلب مبدئي من كتالوج Lourex للمنتج: ${product.nameAr}. يرجى مراجعة الكمية والسعر والشحن حسب التوفر.`

@@ -36,7 +36,7 @@ const emptyForm: ProductCatalogAdminInput = {
   descriptionAr: "",
   descriptionEn: "",
   categoryId: "food-fmcg",
-  originCountry: "Turkey",
+  originCountry: "",
   brand: "",
   moq: "",
   unit: "",
@@ -47,7 +47,7 @@ const emptyForm: ProductCatalogAdminInput = {
   technicalSpecs: "",
   priceNoteAr: "هذا المنتج للعرض كنموذج خدمة توريد. الطلب النهائي حسب المواصفات والكمية والوجهة.",
   priceNoteEn: "This product is displayed as a sourcing service example. Final requests depend on specifications, quantity, and destination.",
-  status: "active",
+  status: "draft",
   isFeatured: false,
   imageUrl: "",
   imageAltAr: "",
@@ -164,11 +164,14 @@ const clearProductManagementDraft = () => {
 };
 
 const uploadProductImage = async (file: File, slug: string) => {
-  const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+  const extension = ({
+    "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif",
+  } as Record<string, string>)[file.type];
+  if (!extension) throw new Error("Unsupported product image format");
   const path = `catalog/${slug || createProductSlug(file.name)}/${Date.now()}.${extension}`;
   const { error } = await supabase.storage.from("product-images").upload(path, file, {
     cacheControl: "3600",
-    upsert: true,
+    upsert: false,
   });
 
   if (error) throw error;
@@ -187,7 +190,7 @@ const handleDuplicateSlugError = (error: unknown): string | null => {
 };
 
 export default function ProductsManagementPage() {
-   const { t } = useI18n();
+   const { t, lang } = useI18n();
   const { profile } = useAuthSession();
   const canManage = Boolean(profile?.role && PRODUCT_MANAGEMENT_ROLES.includes(profile.role));
   const categories = listProductCategories();
@@ -282,8 +285,12 @@ export default function ProductsManagementPage() {
     event.target.value = "";
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error(t("productManagement.toasts.uploadImageFile"));
+    if (!["image/jpeg","image/png","image/webp","image/avif"].includes(file.type)) {
+      toast.error(lang === "ar" ? "نوع الصورة غير مدعوم. استخدم JPG أو PNG أو WebP أو AVIF." : "Unsupported format. Use JPG, PNG, WebP, or AVIF.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error(lang === "ar" ? "حجم الصورة كبير. الحد الأعلى 8 ميغابايت." : "Image exceeds the 8 MB size limit.");
       return;
     }
 
