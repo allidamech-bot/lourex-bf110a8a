@@ -23,11 +23,10 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   await page.waitForTimeout(200);
   if(width===430||width===1440)await page.screenshot({path:`${out}/${engine}-${lang}-${width}-hero.png`});
   if(engine==='webkit'&&lang==='ar'&&width===430){
-   await writeFile(`${out}/webkit-paint-dom.json`,JSON.stringify(await page.evaluate(()=>document.elementsFromPoint(100,150).map(el=>({tag:el.tagName,cls:el.className,rect:el.getBoundingClientRect().toJSON(),style:{background:getComputedStyle(el).background,filter:getComputedStyle(el).filter,backdrop:getComputedStyle(el).backdropFilter}}))),null,2));
-   await page.evaluate(()=>window.scrollTo(0,1));await page.waitForTimeout(100);await page.evaluate(()=>window.scrollTo(0,0));await page.waitForTimeout(100);
-   await page.screenshot({path:`${out}/webkit-ar-430-repaint.png`});
-   const noSvg=await page.addStyleTag({content:'svg{visibility:hidden!important}'});await page.screenshot({path:`${out}/webkit-svg-off.png`});await noSvg.evaluate(el=>el.remove());
-   const noRest=await page.addStyleTag({content:'.lourex-home main>section:not(#lourex-hero){display:none!important}'});await page.screenshot({path:`${out}/webkit-rest-off.png`});await noRest.evaluate(el=>el.remove());
+   const shot=await page.screenshot();
+   const pixels=await page.evaluate(async png=>{const image=new Image();image.src=`data:image/png;base64,${png}`;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return [[10,100],[100,150],[230,240]].map(([x,y])=>Array.from(ctx.getImageData(x,y,1,1).data).slice(0,3));},shot.toString('base64'));
+   if(pixels.every(pixel=>pixel.every(channel=>channel===0)))errors.push('WebKit offscreen paint block returned');
+   metrics.paintSamples=pixels;
   }
   const steps=page.locator('.lrx-milestone');
   for(let i=0;i<5;i++){await steps.nth(i).click();if(await steps.nth(i).getAttribute('aria-pressed')!=='true'||!await page.locator('#lrx-journey-detail svg').count())errors.push(`Journey step ${i+1} broken`);}

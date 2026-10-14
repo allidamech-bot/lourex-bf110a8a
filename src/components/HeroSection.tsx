@@ -21,8 +21,8 @@ export default function HeroSection() {
   const still = paused || reduced || !visible || hidden;
   const enter = { initial: reduced ? false as const : { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .85 } };
   return (
-    <section ref={heroRef} id="lourex-hero" className="lrx-living-hero" data-motion={still ? "paused" : "running"} data-reduced-motion={reduced ? "true" : "false"} aria-labelledby="lourex-hero-title">
-      {!reduced && <TradeField />}
+    <section ref={heroRef} id="lourex-hero" className="lrx-living-hero" data-motion={still ? "paused" : "running"} aria-labelledby="lourex-hero-title">
+      <TradeField />
       <div className="lrx-living-scrim" aria-hidden="true" />
       <div className="lrx-living-mast" dir="ltr"><span>LOUREX / THE LIVING TRADE</span><span className="lrx-mineral-key"><i/><i/><i/></span></div>
       <div className="lrx-living-stage">
