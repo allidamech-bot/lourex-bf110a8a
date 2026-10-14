@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
+  type LucideIcon,
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
@@ -36,7 +37,15 @@ export default function HomePage() {
   const progress = useSpring(scrollYProgress, { stiffness: 125, damping: 30, restDelta: 0.001 });
   const [activeStep, setActiveStep] = useState(0);
 
-  const steps = [
+  const steps: {
+    icon: LucideIcon;
+    name: string;
+    short: string;
+    title: string;
+    description: string;
+    link: string;
+    cta: string;
+  }[] = [
     {
       icon: ClipboardCheck,
       name: ar ? "الاحتياج" : "THE BRIEF",
@@ -65,6 +74,7 @@ export default function HomePage() {
       cta: ar ? "تعرف على LOUREX" : "Discover our approach",
     },
     {
+      icon: Boxes,
       name: ar ? "التجهيز" : "PREPARATION",
       short: ar ? "متابعة الطلب" : "Follow the operation",
       title: ar ? "من الموافقة إلى المتابعة." : "A clearer path from agreement to progress.",
