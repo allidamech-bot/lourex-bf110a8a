@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import Footer from "@/components/Footer";
 import { ShipmentIntelligencePanel } from "@/features/shipments/components/ShipmentIntelligencePanel";
 import { analyzeShipmentIntelligence } from "@/features/shipments/lib/shipmentIntelligence";
 import { ShipmentTimeline } from "@/features/tracking/components/ShipmentTimeline";
@@ -131,20 +132,20 @@ export default function TrackPage() {
         url="https://www.lou-rex.com/track"
       />
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-16">
+      <main className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">
           <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             <ShieldCheck className="h-4 w-4" />
             {t("publicTracking.eyebrow")}
           </div>
-          <h1 className="font-serif text-4xl font-bold text-foreground sm:text-5xl md:text-6xl">
+          <h1 className="text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold leading-[1.14] tracking-tight text-heading">
             {t("publicTracking.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
             {t("publicTracking.description")}
           </p>
 
-          <div className="mt-8 rounded-[1.8rem] border border-primary/20 bg-card p-3 shadow-soft backdrop-blur-xl">
+          <div className="mt-9 rounded-[1.75rem] border border-border/70 bg-card p-3 shadow-[0_20px_60px_-40px_rgba(8,127,120,0.3)] sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute start-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -153,13 +154,13 @@ export default function TrackPage() {
                   onChange={(event) => setTrackingId(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && submitLookup()}
                   placeholder={t("publicTracking.placeholder")}
-                  className="h-14 w-full rounded-2xl border border-primary/20 bg-secondary/65 ps-12 pe-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/20"
+                  className="h-14 w-full rounded-xl border border-border/80 bg-background ps-12 pe-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
                 />
               </div>
               <button
                 onClick={submitLookup}
                 disabled={loading}
-                className="h-14 rounded-2xl bg-primary px-8 text-sm font-bold text-primary-foreground shadow-lg shadow-amber-950/20 transition-colors hover:brightness-110 disabled:opacity-60"
+                className="h-14 rounded-xl bg-primary px-8 text-sm font-bold text-primary-foreground shadow-soft transition-all hover:opacity-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:opacity-60"
               >
                 {loading ? t("publicTracking.loading") : t("publicTracking.cta")}
               </button>
@@ -280,6 +281,7 @@ export default function TrackPage() {
           </div>
         ) : null}
       </main>
+      <Footer />
     </div>
   );
 }
