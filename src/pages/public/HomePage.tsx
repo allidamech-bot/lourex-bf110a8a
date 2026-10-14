@@ -133,7 +133,7 @@ export default function HomePage() {
   return (
     <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#090909] text-white" data-lourex-home>
       <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX | International Trading & Resources"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
-      <SiteHeader />
+      <SiteHeader overlayOnHome />
       <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#A93024] via-[#345777] to-[#D6A653]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
       <main>
         <HeroSection />
