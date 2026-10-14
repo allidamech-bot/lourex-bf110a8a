@@ -119,7 +119,7 @@ html[dir=rtl] .lrx-interior-kicker{letter-spacing:0}
  .lourex-workspace .lrx-dashboard-side{padding:10px}
  .lourex-workspace .lrx-dashboard-nav{scroll-snap-type:x proximity;scroll-padding-inline:10px;padding-bottom:8px}
  .lourex-workspace .lrx-dashboard-nav a{flex:none;min-height:46px;padding-inline:14px;white-space:nowrap}
- .lourex-workspace main>div:first-child{padding:20px!important}
+ .lourex-workspace .lrx-workspace-heading{padding:20px!important}
 }
 @media(prefers-reduced-motion:reduce){
  .lrx-interior-card,.lrx-interior-link,.lourex-contact .lrx-contact-detail{transition:none}
