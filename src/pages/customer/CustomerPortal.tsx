@@ -1,3 +1,4 @@
+import { FLOATING_AI_ENABLED } from "@/lib/siteExperience";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -658,7 +659,7 @@ const CustomerPortal = () => {
           </BentoCard>
         </div>
 
-        <CustomerAIAssistantStub requests={recentRequests} deals={deals} />
+        {FLOATING_AI_ENABLED && <CustomerAIAssistantStub requests={recentRequests} deals={deals} />}
       </>
   );
 };

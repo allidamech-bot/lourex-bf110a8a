@@ -90,9 +90,10 @@ export const CustomerAIAssistantStub = ({ requests, deals }: CustomerAIAssistant
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div data-lourex-floating-ai className="fixed bottom-6 right-6 z-50">
         <Button
           onClick={() => setIsOpen(!isOpen)}
+          aria-label={lang === "ar" ? "افتح مساعد LOUREX AI" : "Open LOUREX AI Assistant"}
           className="h-14 w-14 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-[0_8px_30px_rgb(245,158,11,0.3)] flex items-center justify-center border-4 border-stone-950"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-7 w-7" />}

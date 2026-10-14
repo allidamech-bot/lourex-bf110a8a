@@ -7,7 +7,7 @@ const id='00000000-0000-4000-8000-000000000039';
 for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
  const browser=await launcher.launch();
  for(const lang of ['en','ar'])for(const role of ['customer','owner']){
-  const routes=process.env.LOUREX_MOBILE_FIX_QA? (role==='customer'?['/request']:['/dashboard']) : role==='customer'?['/request','/customer-portal','/customer-portal/operations','/customer-portal/requests','/customer-portal/request-detail','/customer-portal/tracking','/customer-portal/tracking-pro','/customer-portal/notifications','/profile']:['/dashboard','/dashboard/operations-briefing','/dashboard/predictive-intelligence','/dashboard/requests','/dashboard/products','/dashboard/customers','/dashboard/deals','/dashboard/tracking','/dashboard/accounting','/dashboard/edit-requests','/dashboard/settlements','/dashboard/audit','/dashboard/reports','/dashboard/notifications','/dashboard/system','/dashboard/health','/profile'];
+  const routes=process.env.LOUREX_MOBILE_FIX_QA? (role==='customer'?['/request','/customer-portal']:['/dashboard']) : role==='customer'?['/request','/customer-portal','/customer-portal/operations','/customer-portal/requests','/customer-portal/request-detail','/customer-portal/tracking','/customer-portal/tracking-pro','/customer-portal/notifications','/profile']:['/dashboard','/dashboard/operations-briefing','/dashboard/predictive-intelligence','/dashboard/requests','/dashboard/products','/dashboard/customers','/dashboard/deals','/dashboard/tracking','/dashboard/accounting','/dashboard/edit-requests','/dashboard/settlements','/dashboard/audit','/dashboard/reports','/dashboard/notifications','/dashboard/system','/dashboard/health','/profile'];
   for(const route of routes)for(const width of (process.env.LOUREX_MOBILE_FIX_QA?[430]:route==='/request'?[320,390,430,768,1024,1440]:[390,1440])){
    const context=await browser.newContext({viewport:{width,height:width<768?844:1000},isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
    const user={id,email:'visual-fixture@example.invalid',aud:'authenticated',role:'authenticated',user_metadata:{full_name:'Visual QA Fixture'},app_metadata:{provider:'email',providers:['email']},created_at:'2026-01-01T00:00:00Z'};
@@ -53,6 +53,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
     if(await checkbox.getAttribute('aria-checked')!=='true')errors.push('Product specification checkbox did not activate');
     await checkbox.click();
    }
+   if(process.env.LOUREX_MOBILE_FIX_QA && await page.locator('button[aria-label*="LOUREX AI"], [data-lourex-floating-ai]').count())errors.push('Floating AI still visible');
    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))errors.push('Horizontal page overflow');
    await page.screenshot({path:`${output}/${engine}-${lang}-${role}-${width}-${route.slice(1).replaceAll('/','-')}.png`,fullPage:true});
    results.push({engine,lang,role,route,width,fixtureOnly:true,errors});console.log(JSON.stringify(results.at(-1)));await context.close();

@@ -99,9 +99,9 @@ export const DashboardLayout = () => {
             className="w-full max-w-full min-w-0 rounded-[1.75rem] border border-border/70 bg-card/90 p-3 shadow-soft backdrop-blur-xl xl:sticky xl:top-[5.5rem] xl:self-start"
             aria-label="Sidebar"
           >
-            <div className="mb-5 ms-3 h-0.5 w-10 rounded-full bg-primary" />
+            <div className="mb-5 ms-3 hidden xl:block h-0.5 w-10 rounded-full bg-primary" />
 
-            <div className="mb-5 rounded-2xl border border-border/50 bg-secondary/55 p-4">
+            <div className="mb-5 hidden xl:block rounded-2xl border border-border/50 bg-secondary/55 p-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
                 {t("identity.labels.workspace")}
               </p>

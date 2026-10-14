@@ -26,7 +26,7 @@ const BentoCard = forwardRef<HTMLDivElement, BentoCardProps>(({ children, classN
       transition={{ delay, duration: 0.35, ease: "easeOut" }}
       onClick={onClick}
       className={cn(
-        "relative w-full max-w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-amber-200/10 bg-stone-50/5 p-4 text-stone-100 shadow-2xl shadow-black/25 backdrop-blur-xl transition-all duration-300 hover:border-amber-200/20 hover:bg-stone-50/[0.07] sm:p-5",
+        "relative w-full max-w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-border bg-card p-4 text-card-foreground shadow-soft transition-all duration-300 hover:border-gold/30 sm:p-5",
         spanClasses[span],
         className,
         onClick && "cursor-pointer"
@@ -36,7 +36,7 @@ const BentoCard = forwardRef<HTMLDivElement, BentoCardProps>(({ children, classN
       {/* Subtle top-edge shimmer */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-50"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(253,230,138,0.3), transparent)" }}
+        style={{ background: "linear-gradient(90deg, transparent, hsl(var(--gold) / 0.3), transparent)" }}
       />
       {children}
     </motion.div>

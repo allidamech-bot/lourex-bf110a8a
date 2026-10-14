@@ -70,7 +70,7 @@ const isSubmitInquiryResponse = (
   (!("message" in value) || typeof value.message === "string");
 
 export default function ContactPage() {
-  const { dir, t } = useI18n();
+  const { dir, t, lang } = useI18n();
   const [values, setValues] = useState<ContactFormValues>(initialValues);
   const [errors, setErrors] = useState<ContactFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -315,11 +315,11 @@ export default function ContactPage() {
               </form>
             </section>
 
-            <section className="space-y-4">
+            <section className="lrx-contact-details" aria-label={lang === "ar" ? "بيانات التواصل" : "Contact details"}>
               {cards.map((item) => (
                 <div
                   key={`${item.label}-${item.value}`}
-                  className="rounded-[1.4rem] border border-border/70 bg-card p-5 transition-colors hover:border-primary/25"
+                  className="lrx-contact-detail"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
@@ -330,6 +330,7 @@ export default function ContactPage() {
                       {item.label === t("contact.labels.website") ? (
                         <a
                           href={publicContactInfo.websiteUrl}
+                          dir="ltr"
                           target="_blank"
                           rel="noreferrer"
                           className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
@@ -339,6 +340,7 @@ export default function ContactPage() {
                       ) : item.label === t("contact.labels.email") ? (
                         <a
                           href={`mailto:${publicContactInfo.email}`}
+                          dir="ltr"
                           className="mt-2 block break-words font-medium text-primary [overflow-wrap:anywhere] hover:underline"
                         >
                           {item.value}
@@ -362,9 +364,10 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="mt-10">
-          <SupportConversationWidget />
-        </div>
+        <details className="lrx-contact-support mt-8">
+          <summary>{lang === "ar" ? "تحتاج مساعدة في متابعة طلب؟" : "Need help following up a request?"}</summary>
+          <div className="pt-4"><SupportConversationWidget /></div>
+        </details>
       </main>
       <Footer />
     </div>
