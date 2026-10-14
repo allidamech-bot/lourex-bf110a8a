@@ -3,7 +3,7 @@ import { chromium, webkit } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 const output='site-qa';
 await mkdir(output,{recursive:true});
-const core=['/request','/track','/contact','/products/sample-cleaning-liquid'];
+const core=['/request','/track','/contact','/products'];
 const other=['/','/about','/about-lourex','/chocolate-sourcing','/biscuits-sourcing','/food-products-sourcing','/turkish-products','/syrian-products','/faq','/privacy','/terms','/guidelines','/why-lourex','/auth'];
 const results=[];
 for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
@@ -47,10 +47,11 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
     await page.locator('main form button[type="submit"]').click();
     if(!await page.locator('main [aria-invalid="true"]').count())errors.push('Empty contact form did not validate');
    }
-   if(route.startsWith('/products/')){
-    const href=await page.locator('main a[href*="/request?source=products"]').getAttribute('href');
-    if(!href?.includes('product='))errors.push('Product request attribution lost');
-    if(await page.locator('main img[src="/logo.png"]').count())errors.push('Logo presented as product photograph');
+   if(route==='/products'){
+    if(await page.locator('[data-product-id]').count() && !await page.locator('.lrx-catalog-results').count())
+      errors.push('Catalog is missing its results container');
+    if(!await page.locator('a[href="/request"]').count())
+      errors.push('Empty catalog lost sourcing request CTA');
    }
    // Reveal viewport-triggered content before assessing full-page captures.
    await page.evaluate(async()=>{for(const e of document.querySelectorAll('main section')){e.scrollIntoView();await new Promise(r=>setTimeout(r,25));}});
