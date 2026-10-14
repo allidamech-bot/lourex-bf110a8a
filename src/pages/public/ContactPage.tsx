@@ -214,7 +214,7 @@ export default function ContactPage() {
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2.25rem] border border-border/70 bg-card/60 p-5 shadow-soft sm:p-8 lg:p-12">
+        <div className="lrx-contact-shell relative overflow-hidden rounded-[2.25rem] border border-border/70 bg-card/60 p-5 shadow-soft sm:p-8 lg:p-12">
           <SectionHeading
             as="h1"
             eyebrow={t("contact.eyebrow")}
@@ -223,7 +223,7 @@ export default function ContactPage() {
           />
 
           <div className="mt-10 grid items-start gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(310px,0.8fr)] xl:gap-10">
-            <section className="rounded-[1.75rem] border border-border/70 bg-background p-6 shadow-soft md:p-9">
+            <section className="lrx-contact-form rounded-[1.75rem] border border-border/70 bg-background p-6 shadow-soft md:p-9">
               <div className="max-w-2xl">
                 <h2 className="text-2xl font-bold text-heading">{t("contact.formTitle")}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
@@ -237,6 +237,8 @@ export default function ContactPage() {
                     <Input
                       value={values.name}
                       onChange={updateValue("name")}
+                      aria-label={t("contact.placeholders.name")}
+                      autoComplete="name"
                       placeholder={t("contact.placeholders.name")}
                       maxLength={100}
                       disabled={isSubmitting}
@@ -251,6 +253,8 @@ export default function ContactPage() {
                       type="email"
                       value={values.email}
                       onChange={updateValue("email")}
+                      aria-label={t("contact.placeholders.email")}
+                      autoComplete="email"
                       placeholder={t("contact.placeholders.email")}
                       maxLength={255}
                       disabled={isSubmitting}
@@ -266,6 +270,9 @@ export default function ContactPage() {
                     <Input
                       value={values.phone}
                       onChange={updateValue("phone")}
+                      aria-label={t("contact.placeholders.phone")}
+                      autoComplete="tel"
+                      inputMode="tel"
                       placeholder={t("contact.placeholders.phone")}
                       maxLength={40}
                       disabled={isSubmitting}
@@ -279,6 +286,8 @@ export default function ContactPage() {
                     <Input
                       value={values.company}
                       onChange={updateValue("company")}
+                      aria-label={t("contact.placeholders.company")}
+                      autoComplete="organization"
                       placeholder={t("contact.placeholders.company")}
                       maxLength={100}
                       disabled={isSubmitting}
@@ -293,6 +302,7 @@ export default function ContactPage() {
                   <Textarea
                     value={values.message}
                     onChange={updateValue("message")}
+                    aria-label={t("contact.placeholders.message")}
                     placeholder={t("contact.placeholders.message")}
                     rows={7}
                     maxLength={1000}
