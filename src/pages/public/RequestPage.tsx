@@ -1,6 +1,7 @@
 import { SEO } from "@/components/seo/SEO";
 import { ClipboardList, PackageSearch, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import Footer from "@/components/Footer";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { PurchaseRequestForm } from "@/features/purchase-requests/components/PurchaseRequestForm";
 import { RequestContactGate } from "@/features/purchase-requests/components/RequestContactGate";
@@ -97,26 +98,33 @@ export default function RequestPage() {
         url="https://www.lou-rex.com/request"
       />
       <SiteHeader />
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.05),transparent_30%)]" />
-        <div className="container relative mx-auto px-4 py-12 md:px-8 md:py-16">
-          <PageHelpBox pageKey="request" className="mb-8 opacity-80" />
-          <div className="grid gap-10 xl:grid-cols-[0.95fr_1.05fr]">
-            <div className="space-y-6">
+      <main className="relative overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_5%,rgba(8,127,120,0.06),transparent_32%)] dark:bg-[radial-gradient(ellipse_at_10%_5%,rgba(54,211,192,0.04),transparent_32%)]" />
+        <div className="container relative mx-auto px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+          <PageHelpBox pageKey="request" className="mb-7" />
+          <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] xl:gap-16">
+            <div className="space-y-7 xl:sticky xl:top-28">
               <SectionHeading
                 eyebrow={t("requestPage.eyebrow")}
                 title={t("requestPage.title")}
                 description={t("requestPage.description")}
               />
-              <div className="grid gap-4">
-                {cards.map((item) => (
-                  <div key={item.title} className="rounded-[1.7rem] border border-primary/20 bg-card p-5 shadow-soft backdrop-blur-xl">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mt-5 font-serif text-2xl font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.desc}</p>
-                  </div>
+              <div className="overflow-hidden rounded-[1.65rem] border border-border/70 bg-card shadow-soft">
+                {cards.map((item, index) => (
+                  <details key={item.title} className="group border-b border-border/70 last:border-b-0">
+                    <summary className="flex min-h-[78px] cursor-pointer list-none items-center gap-4 px-5 py-4 transition-colors hover:bg-secondary/50 [&::-webkit-details-marker]:hidden">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                        <item.icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[10px] font-bold tabular-nums text-primary/70">0{index + 1}</span>
+                        <span className="block text-sm font-bold leading-6 text-heading">{item.title}</span>
+                      </span>
+                      <span aria-hidden="true" className="text-xl font-light text-primary group-open:hidden">+</span>
+                      <span aria-hidden="true" className="hidden text-xl font-light text-primary group-open:block">−</span>
+                    </summary>
+                    <p className="px-5 pb-5 text-sm leading-7 text-muted-foreground">{item.desc}</p>
+                  </details>
                 ))}
               </div>
             </div>
@@ -164,7 +172,8 @@ export default function RequestPage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
