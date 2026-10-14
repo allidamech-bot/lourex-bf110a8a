@@ -234,7 +234,9 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate dir={dir}>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
+                    <label htmlFor="contact-name" className="block text-sm font-semibold leading-6 text-heading">${t("contact.placeholders.name")}</label>
                     <Input
+                      id="contact-name"
                       value={values.name}
                       onChange={updateValue("name")}
                       aria-label={t("contact.placeholders.name")}
@@ -249,8 +251,10 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <label htmlFor="contact-email" className="block text-sm font-semibold leading-6 text-heading">${t("contact.placeholders.email")}</label>
                     <Input
                       type="email"
+                      id="contact-email"
                       value={values.email}
                       onChange={updateValue("email")}
                       aria-label={t("contact.placeholders.email")}
@@ -267,7 +271,9 @@ export default function ContactPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
+                    <label htmlFor="contact-phone" className="block text-sm font-semibold leading-6 text-heading">${t("contact.placeholders.phone")}</label>
                     <Input
+                      id="contact-phone"
                       value={values.phone}
                       onChange={updateValue("phone")}
                       aria-label={t("contact.placeholders.phone")}
@@ -283,7 +289,9 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <label htmlFor="contact-company" className="block text-sm font-semibold leading-6 text-heading">${t("contact.placeholders.company")}</label>
                     <Input
+                      id="contact-company"
                       value={values.company}
                       onChange={updateValue("company")}
                       aria-label={t("contact.placeholders.company")}
@@ -299,7 +307,9 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <label htmlFor="contact-message" className="block text-sm font-semibold leading-6 text-heading">${t("contact.placeholders.message")}</label>
                   <Textarea
+                    id="contact-message"
                     value={values.message}
                     onChange={updateValue("message")}
                     aria-label={t("contact.placeholders.message")}
