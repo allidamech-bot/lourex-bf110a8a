@@ -38,9 +38,11 @@ describe("Request page presentation preserves the operational form boundary", ()
   it("keeps catalog attribution and the form inside the contact gate", async () => {
     mount("/request?source=products&product=sample-cleaning-liquid", "ar");
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.getByTestId("contact-gate")).toHaveTextContent("Existing request form");
+    expect(await screen.findByTestId("contact-gate")).toHaveTextContent("Existing request form");
     expect(capture.gate).toHaveBeenCalledWith("ar");
-    expect(capture.form).toHaveBeenLastCalledWith(expect.objectContaining({ mode: "create", sourceProductId: "sample-cleaning-liquid", requestId: undefined }));
+    await waitFor(() => expect(capture.form).toHaveBeenLastCalledWith(
+      expect.objectContaining({ mode: "create", sourceProductId: "sample-cleaning-liquid", sourceProduct: null, requestId: undefined }),
+    ));
     expect(fetchRequests).not.toHaveBeenCalled();
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
     const summaries = document.querySelectorAll("summary");
