@@ -5,7 +5,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
-  ChevronRight,
   ClipboardCheck,
   Globe2,
   Handshake,
@@ -13,7 +12,6 @@ import {
   PackageSearch,
   Plane,
   SearchCheck,
-  ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/seo/SEO";
