@@ -45,7 +45,7 @@ export default function HomeProductSpotlight() {
         className="bg-background py-20 sm:py-28 lg:py-32"
       >
         <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 xl:px-14">
-          <div className="grid overflow-hidden rounded-[28px] border border-border/70 bg-card shadow-[0_30px_90px_-60px_rgba(8,127,120,0.45)] lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid overflow-hidden rounded-[28px] border border-border/70 bg-card shadow-[0_30px_90px_-60px_rgba(52,115,218,0.4)] lg:grid-cols-[1.05fr_0.95fr]">
             <div className="flex flex-col justify-center p-7 sm:p-12 lg:p-16">
               <span className="inline-flex items-center gap-3 text-[11px] font-extrabold uppercase tracking-[0.14em] text-primary rtl:tracking-normal">
                 <span className="h-px w-8 bg-primary/60" aria-hidden="true" />
@@ -69,7 +69,7 @@ export default function HomeProductSpotlight() {
                 </Link>
               </div>
             </div>
-            <div className="relative flex min-h-[330px] flex-col justify-between overflow-hidden bg-[#0C3530] p-7 text-white sm:min-h-[410px] sm:p-10 lg:min-h-[520px]">
+            <div className="relative flex min-h-[330px] flex-col justify-between overflow-hidden bg-[#102644] p-7 text-white sm:min-h-[410px] sm:p-10 lg:min-h-[520px]">
               <div aria-hidden="true" className="pointer-events-none absolute inset-0">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_57%_47%,rgba(116,227,210,0.25),transparent_48%)]" />
                 <div className="absolute -end-48 -top-32 h-[40rem] w-[40rem] rounded-full border border-white/15" />
@@ -77,11 +77,11 @@ export default function HomeProductSpotlight() {
                 <div className="absolute end-[-2rem] top-20 h-[17rem] w-[17rem] rounded-full border border-white/15" />
               </div>
               <div className="relative flex items-center justify-between gap-4">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#B8F1E9] rtl:tracking-normal">LOUREX / TRADE BRIEF</span>
-                <PackageSearch className="h-5 w-5 text-[#B8F1E9]" aria-hidden="true" />
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#B7D6FF] rtl:tracking-normal">LOUREX / TRADE BRIEF</span>
+                <PackageSearch className="h-5 w-5 text-[#B7D6FF]" aria-hidden="true" />
               </div>
               <div className="relative max-w-lg">
-                <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-[1.2rem] border border-white/25 bg-white/10 text-[#8CEADB] backdrop-blur">
+                <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-[1.2rem] border border-white/25 bg-white/10 text-[#8FB7FF] backdrop-blur">
                   <PackageSearch className="h-8 w-8" strokeWidth={1.3} aria-hidden="true" />
                 </div>
                 <p className="text-[clamp(1.5rem,3vw,2.75rem)] font-extrabold leading-snug">
@@ -89,8 +89,8 @@ export default function HomeProductSpotlight() {
                 </p>
                 <div className="mt-7 flex flex-wrap gap-2.5">
                   {(ar ? ["المنتج", "المواصفات", "الكمية", "الوجهة"] : ["Product", "Specifications", "Quantity", "Destination"]).map((label, i) => (
-                    <span key={label} className="rounded-full border border-white/25 bg-white/[0.07] px-3 py-2 text-[11px] font-bold text-[#D6F9F3]">
-                      <span className="me-1 text-[#8CEADB]">0{i + 1}</span> {label}
+                    <span key={label} className="rounded-full border border-white/25 bg-white/[0.07] px-3 py-2 text-[11px] font-bold text-[#DDEAFF]">
+                      <span className="me-1 text-[#8FB7FF]">0{i + 1}</span> {label}
                     </span>
                   ))}
                 </div>
@@ -143,9 +143,9 @@ export default function HomeProductSpotlight() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: reducedMotion ? 0 : 0.55, delay: reducedMotion ? 0 : index * 0.09 }}
-                className="group flex w-[min(83vw,360px)] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_65px_-42px_rgba(8,127,120,0.4)] sm:w-auto"
+                className="group flex w-[min(83vw,360px)] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_65px_-42px_rgba(52,115,218,0.36)] sm:w-auto"
               >
-                <Link to={`/products/${product.slug}`} aria-label={name} className="relative flex aspect-[1.22] items-center justify-center overflow-hidden bg-[#E7F2EC] dark:bg-[#172D29]">
+                <Link to={`/products/${product.slug}`} aria-label={name} className="relative flex aspect-[1.22] items-center justify-center overflow-hidden bg-[#152845] dark:bg-[#152845]">
                   <div aria-hidden="true" className="pointer-events-none absolute -end-20 -top-24 h-64 w-64 rounded-full border border-primary/15" />
                   <div aria-hidden="true" className="pointer-events-none absolute -end-7 -top-10 h-44 w-44 rounded-full border border-primary/10" />
                   {image ? (

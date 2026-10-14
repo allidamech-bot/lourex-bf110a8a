@@ -1,0 +1,179 @@
+/*
+ * LOUREX — The Living Trade.
+ * Homepage-scoped tokens and signature visuals only.
+ * All internal/public routes outside the homepage retain their original theme.
+ */
+.lourex-home {
+  color-scheme: dark;
+  --background: 218 50% 5%;
+  --foreground: 213 52% 96%;
+  --heading: 0 0% 100%;
+  --card: 217 42% 10%;
+  --card-foreground: 216 47% 95%;
+  --popover: 219 40% 10%;
+  --popover-foreground: 216 47% 96%;
+  --primary: 353 78% 57%;
+  --primary-foreground: 0 0% 100%;
+  --primary-soft: 223 43% 18%;
+  --secondary: 216 43% 14%;
+  --secondary-foreground: 214 50% 92%;
+  --muted: 218 34% 17%;
+  --muted-foreground: 216 24% 73%;
+  --accent: 219 42% 18%;
+  --accent-foreground: 213 55% 95%;
+  --border: 217 34% 24%;
+  --input: 218 34% 25%;
+  --ring: 353 78% 57%;
+  --footer-background: 219 56% 5%;
+  --footer-foreground: 215 50% 95%;
+  --footer-muted: 216 25% 74%;
+  --footer-accent: 353 81% 71%;
+}
+
+.lourex-home .lrx-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  color: #a3bfea;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.lourex-home .lrx-kicker::before {
+  content: "";
+  width: 2.15rem;
+  height: 1px;
+  background: linear-gradient(90deg, #5596f4, #e95066);
+}
+
+.lourex-home .lrx-category {
+  isolation: isolate;
+  background: linear-gradient(145deg, #152640, #091321 85%);
+}
+
+.lourex-home .lrx-category--confectionery {
+  background: radial-gradient(circle at 60% 30%, #543248 0, transparent 53%), linear-gradient(140deg,#202137,#101523);
+}
+
+.lourex-home .lrx-category--snacks {
+  background: radial-gradient(circle at 67% 33%, #3b477b 0, transparent 57%),linear-gradient(140deg,#172744,#0b1527);
+}
+
+.lourex-home .lrx-category--food {
+  background: radial-gradient(circle at 66% 31%, #245b78 0, transparent 52%),linear-gradient(140deg,#132c42,#0a1929);
+}
+
+.lourex-home .lrx-category--other {
+  background: radial-gradient(circle at 67% 30%, #6a2e53 0, transparent 56%),linear-gradient(140deg,#251c37,#121524);
+}
+
+.lourex-home .lrx-category::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, rgba(4,10,21,.82), rgba(4,10,21,0) 80%);
+}
+
+
+/* Product artworks replace stock icon badges; preserve generous negative space. */
+.lourex-home .lrx-category {
+  min-height: 350px;
+  box-shadow: inset 0 1px rgba(255,255,255,.045), 0 25px 60px -40px rgba(0,0,0,.7);
+}
+.lourex-home .lrx-category::before {
+  content: "";
+  position: absolute;
+  inset: -60% auto auto -70%;
+  width: 68%;
+  height: 240%;
+  transform: rotate(24deg) translateX(-25%);
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(229,239,255,.055), transparent);
+  transition: transform .9s cubic-bezier(.2,.8,.2,1);
+}
+.lourex-home .lrx-category:hover::before {
+  transform: rotate(24deg) translateX(380%);
+}
+.lourex-home .lrx-category::after {
+  z-index: 0;
+  background: linear-gradient(0deg, rgba(3,8,18,.93) 0%, rgba(4,9,20,.65) 25%, transparent 75%);
+}
+.lourex-home .lrx-category-art {
+  position: absolute;
+  inset: 0 -6% auto -6%;
+  height: 84%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(171,205,253,.86);
+  opacity: 1;
+  transform: translateZ(0);
+  transition: transform .6s cubic-bezier(.2,.8,.2,1);
+}
+.lourex-home .lrx-category:hover .lrx-category-art {
+  transform: translateY(-7px) scale(1.035);
+}
+.lourex-home .lrx-category-art svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 20px 20px rgba(0,0,0,.18));
+}
+.lourex-home .lrx-category:hover {
+  border-color: rgba(126,169,237,.66);
+}
+.lourex-home .lrx-category:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Only the public homepage receives this signature header/footer skin. */
+.lourex-home > header {
+  background: rgba(5,11,21,.94) !important;
+  border-bottom-color: rgba(84,115,163,.3) !important;
+  box-shadow: 0 10px 30px -24px rgba(1,5,14,.92) !important;
+}
+.lourex-home > header .meridian-line,
+.lourex-home footer .meridian-line {
+  background-image: linear-gradient(90deg,transparent,#357ddd 30%,#e7465c 72%,transparent);
+  opacity: .68;
+}
+.lourex-home > header .font-heading,
+.lourex-home > header .text-heading {
+  color: #f8fbff;
+}
+.lourex-home > header .text-muted-foreground { color: #b5c7dc; }
+.lourex-home > header .hover\:text-heading:hover { color: #fff; }
+.lourex-home > header .bg-primary-soft { background: rgba(226,70,98,.14); }
+.lourex-home > header .text-primary { color: #ff8494; }
+.lourex-home > header .bg-card,
+.lourex-home > header .bg-background { background: #152239; }
+.lourex-home > header .border-border { border-color: rgba(131,158,200,.3); }
+.lourex-home footer .bg-footer-accent {
+  background: #e7465c;
+  color: #fff;
+}
+.lourex-home footer .bg-footer-accent:hover {
+  background: #f26577;
+}
+.lourex-home #featured-products {
+  background: #080f1d;
+}
+
+/* Motion is optional and never required to discover or activate navigation. */
+@media (prefers-reduced-motion: reduce) {
+  .lourex-home .lrx-category-art,
+  .lourex-home .lrx-category,
+  .lourex-home .lrx-category::before {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+@media (max-width: 389px) {
+  .lourex-home .lrx-category {
+    min-height: 300px;
+  }
+  .lourex-home .lrx-category-art {
+    height: 79%;
+  }
+}
