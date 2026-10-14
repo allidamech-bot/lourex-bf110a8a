@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -22,6 +22,8 @@ import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
+import HomeProductSpotlight from "@/components/home/HomeProductSpotlight";
+import TradeNetworkExperience from "@/components/home/TradeNetworkExperience";
 import { useI18n } from "@/lib/i18n";
 
 const EN_DESCRIPTION =
@@ -34,6 +36,8 @@ export default function HomePage() {
   const { lang } = useI18n();
   const ar = lang === "ar";
   const reducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
   const [activeSector, setActiveSector] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -142,6 +146,11 @@ export default function HomePage() {
         url="https://www.lou-rex.com/"
       />
       <SiteHeader />
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] origin-left bg-primary dark:bg-[#58E0D0]"
+        style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }}
+      />
       <main>
         <HeroSection />
 
@@ -258,6 +267,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <HomeProductSpotlight />
 
         {/* An actual interactive journey, showing the four existing site workflows. */}
         <section id="process" aria-labelledby="process-title" className="relative isolate overflow-hidden bg-[#091715] py-20 text-white sm:py-28 lg:py-36">
@@ -376,6 +387,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <TradeNetworkExperience />
 
         {/* Editorial reassurance without fictitious certifications, numbers or testimonials. */}
         <section className="relative overflow-hidden bg-[#E9F3EF] py-20 dark:bg-[#11201E] sm:py-28 lg:py-32">

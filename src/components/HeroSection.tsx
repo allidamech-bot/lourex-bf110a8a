@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Compass, Route } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-trade.jpg";
@@ -7,6 +8,9 @@ import { useI18n } from "@/lib/i18n";
 const HeroSection = () => {
   const { lang } = useI18n();
   const reducedMotion = useReducedMotion();
+  const imageFrame = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: imageFrame, offset: ["start end", "end start"] });
+  const imageParallaxY = useTransform(scrollYProgress, [0, 1], [-24, 24]);
   const ar = lang === "ar";
 
   const reveal = (delay: number) => ({
@@ -93,8 +97,8 @@ const HeroSection = () => {
 
         <motion.div {...reveal(0.16)} className="relative min-w-0 lg:ps-5">
           <div className="pointer-events-none absolute -start-2 -top-5 z-10 hidden h-32 w-32 rounded-tl-[4rem] border-s border-t border-[#087F78]/40 dark:border-[#56DCCA]/40 sm:block" aria-hidden="true" />
-          <div className="group relative min-h-[385px] overflow-hidden rounded-[26px] border border-[#CADBD6]/55 bg-[#092928] shadow-[0_40px_95px_-45px_rgba(9,63,58,0.55)] dark:border-[#324548]/60 dark:shadow-[0_40px_105px_-48px_rgba(0,0,0,0.9)] sm:min-h-[535px] lg:min-h-[600px] xl:min-h-[645px]">
-            <img
+          <div ref={imageFrame} className="group relative min-h-[385px] overflow-hidden rounded-[26px] border border-[#CADBD6]/55 bg-[#092928] shadow-[0_40px_95px_-45px_rgba(9,63,58,0.55)] dark:border-[#324548]/60 dark:shadow-[0_40px_105px_-48px_rgba(0,0,0,0.9)] sm:min-h-[535px] lg:min-h-[600px] xl:min-h-[645px]">
+            <motion.img
               src={heroImg}
               alt={ar ? "الشحن والتوريد الدولي للبضائع" : "International sourcing and freight operations"}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.045] motion-reduce:transform-none"
@@ -102,6 +106,7 @@ const HeroSection = () => {
               height={1080}
               fetchPriority="high"
               decoding="async"
+              style={reducedMotion ? undefined : { y: imageParallaxY, scale: 1.09 }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#031A1A]/95 via-[#041E1F]/25 to-[#05191A]/25" aria-hidden="true" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#10312C]/10 to-transparent" aria-hidden="true" />
@@ -152,6 +157,23 @@ const HeroSection = () => {
               </div>
             </div>
           </div>
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none absolute -start-6 top-[41%] z-20 hidden w-52 overflow-hidden rounded-2xl border border-[#D1E6DF] bg-white/95 p-4 text-[#123F3A] shadow-[0_25px_65px_-27px_rgba(3,37,33,0.4)] backdrop-blur-xl xl:block dark:border-[#2C524B] dark:bg-[#152B29]/95 dark:text-[#E7F8F4]"
+            animate={reducedMotion ? undefined : { y: [0, -7, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#087F78] dark:text-[#77DECE]">LOUREX / TRADE DESK</p>
+            <div className="mt-4 flex items-center justify-between">
+              {[ar ? "توريد" : "Source", ar ? "تنسيق" : "Align", ar ? "تسليم" : "Deliver"].map((text, index) => (
+                <div key={text} className="flex flex-col items-center gap-2">
+                  <span className={"h-2.5 w-2.5 rounded-full " + (index === 1 ? "bg-[#E4B458]" : "bg-[#087F78] dark:bg-[#5EDBC9]")} />
+                  <span className="text-[10px] font-bold">{text}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-px bg-gradient-to-r from-[#087F78]/35 via-[#E4B458]/50 to-[#087F78]/35" />
+          </motion.div>
           <div className="pointer-events-none absolute -bottom-5 -end-5 hidden h-24 w-24 rounded-br-[3rem] border-b border-e border-[#087F78]/40 dark:border-[#56DCCA]/40 sm:block" aria-hidden="true" />
         </motion.div>
       </div>
