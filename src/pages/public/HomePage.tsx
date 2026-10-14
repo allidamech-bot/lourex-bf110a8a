@@ -4,18 +4,16 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
-  Check,
+  Boxes,
   ChevronRight,
   ClipboardCheck,
-  Compass,
   Globe2,
   Handshake,
-  MapPinned,
+  PackageCheck,
   PackageSearch,
-  Route,
+  Plane,
+  SearchCheck,
   ShieldCheck,
-  Sparkles,
-  Truck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/seo/SEO";
@@ -23,455 +21,281 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import HomeProductSpotlight from "@/components/home/HomeProductSpotlight";
-import TradeNetworkExperience from "@/components/home/TradeNetworkExperience";
+import heroImg from "@/assets/hero-trade.jpg";
 import { useI18n } from "@/lib/i18n";
+import "./lourex-home.css";
 
 const EN_DESCRIPTION =
-  "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
-
+  "LOUREX is an international trading and sourcing coordination company connecting buyers with sourcing opportunities across commercial products and managing purchase requests, supplier coordination, and delivery follow-up.";
 const AR_DESCRIPTION =
-  "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.";
+  "لوريكس شركة تجارة دولية وتنسيق مصادر توريد، تربط المشترين بمصادر المنتجات، وتنسّق متطلبات الشراء والتواصل مع الموردين ومتابعة الطلبات حتى التسليم.";
 
 export default function HomePage() {
   const { lang } = useI18n();
   const ar = lang === "ar";
   const reducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
-  const [activeSector, setActiveSector] = useState(0);
+  const progress = useSpring(scrollYProgress, { stiffness: 125, damping: 30, restDelta: 0.001 });
   const [activeStep, setActiveStep] = useState(0);
 
-  const sectors = [
+  const steps = [
     {
-      eyebrow: ar ? "01 — الأغذية والحلويات" : "01 — CONFECTIONERY",
-      name: ar ? "الشوكولاتة والحلويات" : "Chocolate & sweets",
-      short: ar ? "خيارات توريد للعلامات والموزعين والمستوردين." : "Sourcing for brands, importers and distributors.",
-      statement: ar ? "من المنتج الذي تريده، إلى شريك التوريد المناسب." : "From the product you need to the sourcing partner who fits.",
-      link: "/chocolate-sourcing",
-      cta: ar ? "اكتشف توريد الشوكولاتة" : "Explore confectionery sourcing",
+      icon: ClipboardCheck,
+      name: ar ? "الاحتياج" : "THE BRIEF",
+      short: ar ? "عرّفنا بالمنتج" : "Define the request",
+      title: ar ? "كل تجارة تبدأ بحاجة واضحة." : "A better trade begins with a clear brief.",
+      description: ar ? "تحدد المنتج والكمية والمواصفات والوجهة من خلال طلب شراء واحد." : "Tell us what you need: products, quantities, specifications and delivery destination.",
+      link: "/request",
+      cta: ar ? "أنشئ طلب شراء" : "Create a request",
+    },
+    {
+      icon: SearchCheck,
+      name: ar ? "المصدر" : "SOURCING",
+      short: ar ? "الربط بالمورد" : "Connect with sources",
+      title: ar ? "من طلبك تبدأ خيارات التوريد." : "Your needs lead the sourcing conversation.",
+      description: ar ? "تعمل LOUREX على تنسيق البحث والتواصل مع المصادر المناسبة للمتطلبات التجارية." : "LOUREX coordinates sourcing discussions around your actual commercial requirements.",
+      link: "/products",
+      cta: ar ? "استكشف المنتجات" : "Browse products",
+    },
+    {
+      icon: Handshake,
+      name: ar ? "التنسيق" : "COORDINATION",
+      short: ar ? "ترتيب التفاصيل" : "Align the details",
+      title: ar ? "العلاقة التجارية تُبنى بالتفاصيل." : "The details make the connection work.",
+      description: ar ? "تنسيق الكميات والمواصفات والتواصل بين أطراف العملية ومراحلها." : "Bringing specifications, quantities and commercial conversations into one coordinated process.",
+      link: "/about",
+      cta: ar ? "تعرف على LOUREX" : "Discover our approach",
+    },
+    {
+      icon: Boxes,
+      name: ar ? "التجهيز" : "PREPARATION",
+      short: ar ? "متابعة الطلب" : "Follow the operation",
+      title: ar ? "من الموافقة إلى المتابعة." : "A clearer path from agreement to progress.",
+      description: ar ? "نعمل على متابعة الخطوات التجارية مع الجهات المعنية وفق المتطلبات المتفق عليها." : "Follow the agreed commercial steps with the relevant parties as the order progresses.",
+      link: "/auth",
+      cta: ar ? "بوابة الأعمال" : "Business workspace",
+    },
+    {
+      icon: Plane,
+      name: ar ? "الوجهة" : "DELIVERY",
+      short: ar ? "رؤية حتى الوصول" : "Visibility to destination",
+      title: ar ? "رحلة الطلب تبقى واضحة." : "Follow the journey to its destination.",
+      description: ar ? "اطلع على الحالات المتاحة لشحنتك باستخدام رقم التتبع، دون افتراض وسيلة نقل محددة." : "Check available shipment milestones with your tracking reference; transport modes depend on each order.",
+      link: "/track",
+      cta: ar ? "تتبع الشحنة" : "Track a shipment",
+    },
+  ];
+
+  const categories = [
+    {
+      code: "01", to: "/chocolate-sourcing",
+      name: ar ? "الشوكولاتة والحلويات" : "Confectionery & sweets",
+      note: ar ? "تنسيق توريد العلامات التجارية والمنتجات المعبأة" : "Commercial sourcing for confectionery products",
+      kind: "confectionery",
       icon: PackageSearch,
     },
     {
-      eyebrow: ar ? "02 — المنتجات المعبأة" : "02 — PACKAGED GOODS",
+      code: "02", to: "/biscuits-sourcing",
       name: ar ? "البسكويت والوجبات الخفيفة" : "Biscuits & snacks",
-      short: ar ? "تنسيق مواصفات التعبئة والكميات والطلبات." : "Coordinating packaging, quantities and purchase requests.",
-      statement: ar ? "تفاصيل واضحة تجعل كل طلب قابلًا للتنفيذ." : "Clear requirements turn an inquiry into an actionable request.",
-      link: "/biscuits-sourcing",
-      cta: ar ? "اكتشف توريد البسكويت" : "Explore biscuit sourcing",
-      icon: ClipboardCheck,
+      note: ar ? "التعبئة والكميات وطلبات التوريد" : "Packaging, quantities and purchase inquiries",
+      kind: "snacks",
+      icon: Boxes,
     },
     {
-      eyebrow: ar ? "03 — توريد الأغذية" : "03 — FOOD SOURCING",
-      name: ar ? "المنتجات الغذائية" : "Food products",
-      short: ar ? "مصادر متعددة وطلبات مصممة حسب احتياج العمل." : "Flexible sourcing tailored to commercial requirements.",
-      statement: ar ? "اختيارات أوسع، وتنسيق يربط التفاصيل ببعضها." : "More sourcing options, coordinated in one clear process.",
-      link: "/food-products-sourcing",
-      cta: ar ? "استكشف المنتجات الغذائية" : "Explore food sourcing",
+      code: "03", to: "/food-products-sourcing",
+      name: ar ? "المواد والمنتجات الغذائية" : "Food & FMCG",
+      note: ar ? "احتياجات متنوعة للتجار والموزعين" : "Sourcing needs for trade and distribution",
+      kind: "food",
       icon: Globe2,
     },
-  ];
-
-  const journey = [
     {
-      number: "01",
-      title: ar ? "حدّد ما تحتاجه" : "Define the requirement",
-      short: ar ? "مواصفات، كميات ووجهة." : "Specs, quantities, destination.",
-      label: ar ? "طلب الشراء" : "PURCHASE REQUEST",
-      headline: ar ? "البداية الصحيحة تصنع فرقًا." : "Start with clarity.",
-      description: ar
-        ? "أرسل المنتج والمواصفات والكمية المطلوبة ضمن طلب واحد منظم."
-        : "Bring products, specifications and quantities together in one structured request.",
-      cta: ar ? "إنشاء طلب" : "Create request",
-      to: "/request",
-      icon: ClipboardCheck,
-    },
-    {
-      number: "02",
-      title: ar ? "نراجع مصادر التوريد" : "Coordinate sourcing",
-      short: ar ? "تواصل منظم مع الموردين." : "Organised supplier coordination.",
-      label: ar ? "تنسيق الموردين" : "SUPPLIER COORDINATION",
-      headline: ar ? "الشريك المناسب يبدأ بمعلومات واضحة." : "Better sourcing starts with better coordination.",
-      description: ar
-        ? "ننسّق المتطلبات مع الأطراف المناسبة ونرتّب مسار المتابعة."
-        : "Align commercial requirements with the appropriate sourcing parties.",
-      cta: ar ? "تعرّف على لوريكس" : "About LOUREX",
-      to: "/about",
-      icon: Handshake,
-    },
-    {
-      number: "03",
-      title: ar ? "نتابع الصفقة" : "Follow the operation",
-      short: ar ? "مراحل ومسؤوليات واضحة." : "Visible stages and responsibilities.",
-      label: ar ? "إدارة العمليات" : "TRADE OPERATIONS",
-      headline: ar ? "كل خطوة لها مكان واضح." : "Every step in context.",
-      description: ar
-        ? "معلومات الطلب والتنسيق والمتابعة داخل مسار عمل واحد حسب صلاحيات كل طرف."
-        : "Request details and follow-up belong in one role-aware workspace.",
-      cta: ar ? "بوابة الأعمال" : "Business workspace",
-      to: "/auth",
-      icon: ShieldCheck,
-    },
-    {
-      number: "04",
-      title: ar ? "نراقب مسار الشحنة" : "Track the shipment",
-      short: ar ? "متابعة واضحة حتى التسليم." : "Visibility towards delivery.",
-      label: ar ? "متابعة الشحن" : "SHIPMENT TRACKING",
-      headline: ar ? "اعرف أين وصلت شحنتك." : "Keep the journey visible.",
-      description: ar
-        ? "اطّلع على حالة الشحنة ومراحلها المتاحة من خلال رقم التتبع."
-        : "Look up available shipment status and milestones using your tracking reference.",
-      cta: ar ? "تتبع شحنة" : "Track shipment",
-      to: "/track",
-      icon: Route,
+      code: "04", to: "/products",
+      name: ar ? "المزيد من المنتجات" : "More sourcing categories",
+      note: ar ? "التصنيفات المتاحة في كتالوج LOUREX" : "Explore the existing LOUREX catalog",
+      kind: "other",
+      icon: PackageCheck,
     },
   ];
 
-  const sector = sectors[activeSector];
-  const SectorIcon = sector.icon;
-  const step = journey[activeStep];
-  const StepIcon = step.icon;
-
+  const active = steps[activeStep];
+  const ActiveIcon = active.icon;
   const reveal = {
-    initial: reducedMotion ? false : { opacity: 0, y: 28 },
+    initial: reducedMotion ? false : { opacity: 0, y: 22 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.13 },
-    transition: { duration: reducedMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] as const },
+    viewport: { once: true, amount: 0.12 },
+    transition: { duration: reducedMotion ? 0 : 0.6 },
   };
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <SEO
-        title={ar ? "لوريكس | توريد وتجارة دولية" : "LOUREX | International Trade & Sourcing"}
-        description={ar ? AR_DESCRIPTION : EN_DESCRIPTION}
-        url="https://www.lou-rex.com/"
-      />
+    <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#050B15] text-white" data-lourex-home>
+      <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX | International Trading & Resources"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
       <SiteHeader />
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] origin-left bg-primary dark:bg-[#58E0D0]"
-        style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }}
-      />
+      <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#397AEF] to-[#F05265]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
       <main>
         <HeroSection />
 
-        {/* A quiet editorial ribbon, not invented performance metrics. */}
-        <section aria-label={ar ? "خدمات لوريكس" : "LOUREX capabilities"} className="relative border-y border-border/65 bg-white dark:bg-[#10191B]" id="explore">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-x-5 gap-y-6 px-5 py-8 sm:px-8 md:grid-cols-4 lg:px-10 xl:px-14">
-            {[
-              { icon: Compass, label: ar ? "شبكة توريد" : "SOURCING", detail: ar ? "ربط الاحتياج بالمصدر" : "Connect with sources" },
-              { icon: ClipboardCheck, label: ar ? "طلبات منظمة" : "TRADE REQUESTS", detail: ar ? "من الطلب إلى المتابعة" : "Structured workflows" },
-              { icon: Handshake, label: ar ? "تنسيق تجاري" : "COORDINATION", detail: ar ? "علاقات وخطوات أوضح" : "Aligned trade partners" },
-              { icon: Truck, label: ar ? "تتبع الشحن" : "LOGISTICS", detail: ar ? "وضوح مراحل التسليم" : "Delivery visibility" },
-            ].map((item, i) => (
-              <div key={item.label} className="flex items-start gap-3 md:border-e md:border-border/70 md:pe-5 md:last:border-e-0">
-                <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <p className="text-[11px] font-extrabold tracking-[0.11em] text-heading rtl:tracking-normal">{item.label}</p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{item.detail}</p>
-                  <span className="sr-only">{i + 1}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Sector selector: interactive actual sourcing routes, not static card repetition. */}
-        <section id="sourcing" className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-36" aria-labelledby="sourcing-title">
-          <div className="pointer-events-none absolute -end-64 top-12 h-[34rem] w-[34rem] rounded-full border border-primary/10" aria-hidden="true" />
-          <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 xl:px-14">
-            <motion.div {...reveal} className="mb-11 flex flex-col justify-between gap-8 lg:mb-16 lg:flex-row lg:items-end">
-              <div className="max-w-[47rem]">
-                <p className="flex items-center gap-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-primary rtl:tracking-normal">
-                  <span className="h-px w-9 bg-primary/55" aria-hidden="true" />
-                  {ar ? "مجالات التوريد" : "OUR EXPERTISE"}
-                </p>
-                <h2 id="sourcing-title" className="mt-6 text-[clamp(2.35rem,4.4vw,4.6rem)] font-extrabold leading-[1.18] tracking-[-0.04em] text-heading rtl:tracking-normal">
-                  {ar ? <>أكثر من منتجات. <span className="text-primary">شراكات تفتح أبوابًا.</span></> : <>Beyond products. <span className="text-primary">Built on connections.</span></>}
+        {/* Five connected milestones, with a single active trade brief and working routes. */}
+        <section id="explore" className="relative border-y border-[#24334A] bg-[#09111E] py-11 sm:py-14" aria-labelledby="journey-heading">
+          <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12 xl:px-16">
+            <div className="grid gap-8 lg:grid-cols-[270px_1fr] lg:gap-12">
+              <motion.div {...reveal}>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8AAAD5] rtl:tracking-normal">LOUREX / 01—05</p>
+                <h2 id="journey-heading" className="mt-3 max-w-[18ch] text-[clamp(1.6rem,2.8vw,2.6rem)] font-extrabold leading-tight text-white">
+                  {ar ? "رحلة طلبك مع LOUREX" : "Your trade journey"}
                 </h2>
-              </div>
-              <Link to="/products" className="group inline-flex min-h-12 w-fit items-center gap-3 border-b border-primary/45 py-2 text-sm font-bold text-primary transition-colors hover:border-primary">
-                {ar ? "استعرض كتالوج المنتجات" : "Explore the catalog"}
-                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 rtl:-scale-x-100" aria-hidden="true" />
-              </Link>
-            </motion.div>
-
-            <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-8">
-              <motion.div {...reveal} className="relative min-h-[420px] overflow-hidden rounded-[28px] bg-[#0E3430] p-7 text-white shadow-[0_35px_85px_-55px_rgba(8,127,120,0.65)] sm:min-h-[540px] sm:p-11">
-                <div className="pointer-events-none absolute -end-20 -top-48 h-[36rem] w-[36rem] rounded-full border border-[#79E7D9]/20" aria-hidden="true" />
-                <div className="pointer-events-none absolute -end-12 -top-20 h-[25rem] w-[25rem] rounded-full border border-[#79E7D9]/20" aria-hidden="true" />
-                <div className="pointer-events-none absolute -end-5 top-7 h-[17rem] w-[17rem] rounded-full border border-[#79E7D9]/20" aria-hidden="true" />
-
-                <div className="relative z-10 flex items-center justify-between gap-4">
-                  <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#9CEBDD] rtl:tracking-normal">LOUREX / SOURCING</span>
-                  <span className="text-xs font-bold tabular-nums text-[#B1E5DC]">0{activeSector + 1} / 03</span>
-                </div>
-
-                <div className="absolute end-[9%] top-[20%] flex h-40 w-40 items-center justify-center rounded-full border border-[#81E8DA]/25 bg-[#19645C]/20 text-[#84EADB] shadow-[0_0_85px_rgba(84,211,194,0.18)] sm:h-56 sm:w-56" aria-hidden="true">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div key={activeSector} initial={reducedMotion ? false : { opacity: 0, scale: 0.8, rotate: -15 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={reducedMotion ? undefined : { opacity: 0, scale: 1.12, rotate: 10 }} transition={{ duration: reducedMotion ? 0 : 0.4 }}>
-                      <SectorIcon className="h-20 w-20 stroke-[0.7] sm:h-28 sm:w-28" />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                <div className="relative z-10 flex h-full min-h-[345px] flex-col justify-end sm:min-h-[455px]">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div key={activeSector} initial={reducedMotion ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -12 }} transition={{ duration: reducedMotion ? 0 : 0.35 }} aria-live="polite">
-                      <p className="max-w-[28rem] text-[11px] font-extrabold uppercase tracking-[0.13em] text-[#8EE8DA] rtl:tracking-normal">{sector.eyebrow}</p>
-                      <h3 className="mt-4 max-w-[21ch] text-[clamp(1.85rem,3.6vw,3.2rem)] font-extrabold leading-[1.2] tracking-tight text-white rtl:tracking-normal">{sector.statement}</h3>
-                      <Link to={sector.link} className="group mt-8 inline-flex min-h-12 w-fit items-center gap-3 rounded-xl border border-white/35 bg-white/10 px-5 py-3 text-[13px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20">
-                        {sector.cta}
-                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 rtl:-scale-x-100" aria-hidden="true" />
-                      </Link>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+                <p className="mt-3 text-sm leading-7 text-[#9EB2CD]">{ar ? "اختر مرحلة لاستكشاف دورنا." : "Select a stage to see how we connect the process."}</p>
               </motion.div>
-
-              <motion.div {...reveal} className="flex flex-col gap-3" aria-label={ar ? "اختر قطاع التوريد" : "Select a sourcing sector"}>
-                {sectors.map((item, i) => (
+              <div className="relative grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-2">
+                <div className="pointer-events-none absolute start-[10%] end-[10%] top-8 hidden h-px bg-gradient-to-r from-[#4179E2] via-[#9863AA] to-[#E34B5F] sm:block" aria-hidden="true" />
+                {steps.map((item, index) => (
                   <button
-                    key={item.link}
+                    key={item.name}
                     type="button"
-                    onClick={() => setActiveSector(i)}
-                    aria-pressed={activeSector === i}
-                    className={"group relative flex min-h-[131px] w-full items-center gap-5 overflow-hidden rounded-[23px] border px-5 py-6 text-start transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:px-7 " + (
-                      activeSector === i
-                        ? "border-primary/35 bg-[#E5F5F0] shadow-[0_18px_45px_-34px_rgba(8,127,120,0.5)] dark:border-[#56DCCA]/35 dark:bg-[#15312F]"
-                        : "border-border/75 bg-card hover:-translate-y-0.5 hover:border-primary/25 hover:bg-secondary/60"
+                    onClick={() => setActiveStep(index)}
+                    aria-pressed={activeStep === index}
+                    className={"group relative flex min-h-[100px] flex-col items-start gap-2 rounded-xl border px-3 py-4 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#96BAFC] sm:min-h-[128px] sm:items-center sm:text-center " + (
+                      activeStep === index ? "border-[#7A93D4]/75 bg-[#1A2945]" : "border-[#273650] bg-[#101B2C] hover:border-[#5377B4] hover:bg-[#17243A]"
                     )}
                   >
-                    <div className={"flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors " + (activeSector === i ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary")}>
-                      <item.icon className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary rtl:tracking-normal">{item.eyebrow}</span>
-                      <span className="mt-2 block text-[18px] font-extrabold text-heading sm:text-[21px]">{item.name}</span>
-                      <span className="mt-1 block text-[13px] leading-6 text-muted-foreground">{item.short}</span>
-                    </div>
-                    <ArrowDownRight className={"h-5 w-5 shrink-0 transition-transform duration-300 " + (activeSector === i ? "rotate-[-45deg] text-primary" : "text-muted-foreground group-hover:-rotate-45 group-hover:text-primary")} aria-hidden="true" />
+                    <span className={"relative z-10 flex h-9 w-9 items-center justify-center rounded-full border " + (activeStep === index ? "border-[#FA7383] bg-[#A42B48] text-white" : "border-[#4C6490] bg-[#162B4B] text-[#A0C0F2]")}>
+                      <item.icon className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+                    </span>
+                    <span className="text-[10px] font-semibold tabular-nums text-[#91A8CB]">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="text-[12px] font-extrabold leading-snug text-white sm:text-[13px]">{item.name}</span>
                   </button>
                 ))}
-                <div className="mt-auto flex flex-wrap gap-x-5 gap-y-3 rounded-[22px] border border-border/70 bg-card px-6 py-5">
-                  <Link to="/turkish-products" className="inline-flex min-h-9 items-center gap-2 text-[13px] font-bold text-heading hover:text-primary">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    {ar ? "منتجات تركية" : "Turkish products"}
-                    <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                  </Link>
-                  <Link to="/syrian-products" className="inline-flex min-h-9 items-center gap-2 text-[13px] font-bold text-heading hover:text-primary">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#E4B458]" />
-                    {ar ? "منتجات سورية" : "Syrian products"}
-                    <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                  </Link>
-                </div>
-              </motion.div>
+              </div>
+            </div>
+            <div className="mt-6 grid min-h-[155px] gap-6 rounded-2xl border border-[#2E415A] bg-[#101F31] p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-7 lg:ms-[318px]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#A1BBE8]/20 bg-[#3265AD]/20 text-[#9BC5FF]"><ActiveIcon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" /></div>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={activeStep} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: reducedMotion ? 0 : 0.2 }} aria-live="polite">
+                  <h3 className="text-xl font-bold text-white">{active.title}</h3>
+                  <p className="mt-2 max-w-[670px] text-sm leading-7 text-[#AABDD4]">{active.description}</p>
+                </motion.div>
+              </AnimatePresence>
+              <Link to={active.link} className="group inline-flex min-h-11 w-fit items-center gap-2 whitespace-nowrap border-b border-[#E95D72]/50 text-[13px] font-bold text-[#FF9BA7] hover:border-[#FF9BA7]">
+                {active.cta}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/>
+              </Link>
             </div>
           </div>
         </section>
 
+        {/* Large editorial categories inspired by the approved moodboard, not stock card repetition. */}
+        <section id="sourcing" aria-labelledby="sourcing-heading" className="relative bg-[#060D19] py-20 sm:py-28">
+          <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12 xl:px-16">
+            <motion.div {...reveal} className="mb-10 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-[790px]">
+                <p className="lrx-kicker">LOUREX / SOURCING</p>
+                <h2 id="sourcing-heading" className="mt-5 text-[clamp(2.2rem,4.5vw,4.9rem)] font-extrabold leading-[1.15] tracking-tight text-white rtl:tracking-normal">
+                  {ar ? <>منتجات متعددة. <span className="text-[#91BFFC]">فرص أوسع.</span></> : <>Products are the beginning. <span className="text-[#91BFFC]">Connections create opportunity.</span></>}
+                </h2>
+              </div>
+              <Link to="/products" className="group inline-flex min-h-12 w-fit items-center gap-3 rounded-xl border border-[#53739F] px-5 text-sm font-bold text-white hover:border-[#A4C5F5] hover:bg-[#16243B]">
+                {ar ? "عرض جميع التصنيفات" : "Browse the catalog"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/>
+              </Link>
+            </motion.div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {categories.map((category, index) => (
+                <motion.div key={category.to} {...reveal} transition={{ duration: reducedMotion ? 0 : .5, delay: reducedMotion ? 0 : index * .07 }}>
+                  <Link to={category.to} className={"lrx-category lrx-category--" + category.kind + " group relative flex min-h-[290px] flex-col justify-between overflow-hidden rounded-[22px] border border-[#344560] p-6 transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93BAFC] sm:min-h-[340px]"}>
+                    <div className="lrx-category-art" aria-hidden="true">
+                      <category.icon className="h-24 w-24 stroke-[0.65] sm:h-28 sm:w-28" />
+                      <span className="lrx-category-halo" />
+                    </div>
+                    <div className="relative z-10 flex items-center justify-between text-[11px] font-bold tracking-[0.12em] text-[#A9C6EA]">
+                      <span>LOUREX / {category.code}</span><ArrowDownRight className="h-5 w-5 -rotate-90 transition-transform group-hover:-rotate-45 rtl:rotate-180" aria-hidden="true"/>
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="max-w-[18ch] text-[clamp(1.3rem,2vw,1.8rem)] font-bold leading-snug text-white">{category.name}</h3>
+                      <p className="mt-3 text-[13px] leading-6 text-[#C3D1E4]">{category.note}</p>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Read-only real products or sourcing brief fallback; no placeholder product claims. */}
         <HomeProductSpotlight />
 
-        {/* An actual interactive journey, showing the four existing site workflows. */}
-        <section id="process" aria-labelledby="process-title" className="relative isolate overflow-hidden bg-[#091715] py-20 text-white sm:py-28 lg:py-36">
-          <div className="pointer-events-none absolute -start-64 -top-44 h-[38rem] w-[38rem] rounded-full bg-[#135D55]/20 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -end-32 -bottom-44 h-[32rem] w-[32rem] rounded-full border border-[#68DCCC]/10" aria-hidden="true" />
-          <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 xl:px-14">
-            <motion.div {...reveal} className="mb-11 max-w-3xl lg:mb-16">
-              <p className="flex items-center gap-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#73E5D5] rtl:tracking-normal">
-                <span className="h-px w-9 bg-[#73E5D5]/65" aria-hidden="true" />
-                {ar ? "رحلة العمل" : "THE TRADE JOURNEY"}
-              </p>
-              <h2 id="process-title" className="mt-6 text-[clamp(2.35rem,4.4vw,4.6rem)] font-extrabold leading-[1.17] tracking-tight text-white rtl:tracking-normal">
-                {ar ? <>عملية مترابطة. <span className="text-[#65DFCE]">من البداية إلى النهاية.</span></> : <>One connected process. <span className="text-[#65DFCE]">Every step matters.</span></>}
-              </h2>
-            </motion.div>
-
-            <div className="grid items-stretch gap-7 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:gap-12">
-              <div className="flex flex-col" aria-label={ar ? "خطوات عمل لوريكس" : "LOUREX process steps"}>
-                {journey.map((item, i) => (
-                  <button
-                    key={item.number}
-                    type="button"
-                    onClick={() => setActiveStep(i)}
-                    aria-pressed={activeStep === i}
-                    className={"group flex w-full items-center gap-5 border-b py-5 text-start transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#73E5D5]/60 sm:py-7 " + (
-                      activeStep === i ? "border-[#62DDCD]/55" : "border-white/15 hover:border-white/40"
-                    )}
-                  >
-                    <span className={"flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-[12px] font-extrabold tabular-nums transition-colors " + (
-                      activeStep === i ? "border-[#65DFCE] bg-[#65DFCE] text-[#062320]" : "border-white/20 text-white/55"
-                    )}>{item.number}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className={"block text-[18px] font-bold transition-colors sm:text-[21px] " + (activeStep === i ? "text-white" : "text-[#AABEB9] group-hover:text-white")}>{item.title}</span>
-                      <span className="mt-1 block text-[12px] leading-6 text-[#829E98] sm:text-[13px]">{item.short}</span>
-                    </span>
-                    <ArrowUpRight className={"h-5 w-5 shrink-0 transition-all duration-300 rtl:-scale-x-100 " + (activeStep === i ? "text-[#73E5D5]" : "text-[#628079] group-hover:text-[#73E5D5]")} aria-hidden="true" />
-                  </button>
-                ))}
-                <div className="mt-8 flex items-center gap-2">
-                  {journey.map((item, i) => (
-                    <button
-                      key={item.number}
-                      type="button"
-                      onClick={() => setActiveStep(i)}
-                      aria-label={(ar ? "المرحلة " : "Stage ") + item.number}
-                      aria-pressed={activeStep === i}
-                      className={"h-1.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#73E5D5] " + (activeStep === i ? "w-11 bg-[#73E5D5]" : "w-5 bg-white/20 hover:bg-white/40")}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative flex min-h-[460px] flex-col overflow-hidden rounded-[28px] border border-[#38524E]/70 bg-[linear-gradient(140deg,#132D29,#0E2522_62%,#071C1A)] p-6 shadow-[0_40px_90px_-55px_rgba(0,0,0,0.85)] sm:min-h-[565px] sm:p-10">
-                <div className="pointer-events-none absolute -end-20 -top-36 h-[29rem] w-[29rem] rounded-full border border-[#62DDCD]/15" aria-hidden="true" />
-                <div className="relative z-10 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="h-2 w-2 rounded-full bg-[#73E5D5]" />
-                    <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#B3DDD6]">LOUREX / WORKFLOW</span>
-                  </div>
-                  <span className="font-mono text-xs text-[#8ABBB0]">{step.number} / 04</span>
-                </div>
-
-                <div className="relative mt-8 min-h-[210px] sm:mt-11 sm:min-h-[245px]">
-                  <svg viewBox="0 0 640 300" className="absolute inset-0 h-full w-full overflow-visible" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                    <path d="M62 234 C145 234 154 99 237 124 S 343 285 405 189 S 500 85 578 80" stroke="#709F96" strokeOpacity="0.27" strokeWidth="2" strokeDasharray="5 8" />
-                    <motion.path
-                      d="M62 234 C145 234 154 99 237 124 S 343 285 405 189 S 500 85 578 80"
-                      stroke="#71E3D2"
-                      strokeWidth="3.4"
-                      strokeLinecap="round"
-                      initial={false}
-                      animate={{ pathLength: (activeStep + 1) / journey.length }}
-                      transition={{ duration: reducedMotion ? 0 : 0.85, ease: [0.22, 1, 0.36, 1] }}
-                    />
-                    {[
-                      [62, 234],
-                      [237, 124],
-                      [405, 189],
-                      [578, 80],
-                    ].map(([cx, cy], index) => (
-                      <g key={index}>
-                        <circle cx={cx} cy={cy} r="15" stroke="#8FE9DC" strokeOpacity={index <= activeStep ? "0.5" : "0.13"} strokeWidth="1" />
-                        <circle cx={cx} cy={cy} r={index === activeStep ? "8" : "5"} fill={index <= activeStep ? "#8BE9DA" : "#39615A"} />
-                      </g>
-                    ))}
-                  </svg>
-                  <div className="pointer-events-none absolute -end-2 top-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#A0C9C0]/65" aria-hidden="true">
-                    COORDINATED TRADE
-                  </div>
-                </div>
-
-                <div className="relative z-10 mt-auto border-t border-white/15 pt-7 sm:pt-8">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
-                      key={activeStep}
-                      initial={reducedMotion ? false : { opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={reducedMotion ? undefined : { opacity: 0, y: -10 }}
-                      transition={{ duration: reducedMotion ? 0 : 0.36 }}
-                      aria-live="polite"
-                    >
-                      <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#83E6D8] rtl:tracking-normal">
-                        <StepIcon className="h-4 w-4" aria-hidden="true" />
-                        {step.label}
-                      </p>
-                      <h3 className="mt-4 max-w-[24ch] text-[clamp(1.55rem,2.7vw,2.65rem)] font-bold leading-[1.23] text-white">{step.headline}</h3>
-                      <p className="mt-3 max-w-lg text-[14px] leading-7 text-[#A8C3BD]">{step.description}</p>
-                      <Link to={step.to} className="group mt-6 inline-flex min-h-11 items-center gap-3 text-sm font-bold text-[#86EADA] hover:text-white">
-                        {step.cta}
-                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-1 rtl:-scale-x-100" aria-hidden="true" />
-                      </Link>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <TradeNetworkExperience />
-
-        {/* Editorial reassurance without fictitious certifications, numbers or testimonials. */}
-        <section className="relative overflow-hidden bg-[#E9F3EF] py-20 dark:bg-[#11201E] sm:py-28 lg:py-32">
-          <div className="mx-auto grid max-w-[1500px] items-center gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.87fr)_minmax(0,1.13fr)] lg:gap-20 lg:px-10 xl:px-14">
+        {/* Distinctive LOUREX connection network; deliberately abstract, not live supplier telemetry. */}
+        <section id="network" aria-labelledby="network-heading" className="relative isolate overflow-hidden border-y border-[#24314A] bg-[#091524] py-20 sm:py-28">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_45%,rgba(40,86,153,.2),transparent_58%)]" aria-hidden="true"/>
+          <div className="relative mx-auto grid max-w-[1520px] gap-9 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16 lg:px-12 xl:px-16">
             <motion.div {...reveal}>
-              <p className="flex items-center gap-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-primary rtl:tracking-normal">
-                <span className="h-px w-9 bg-primary/55" aria-hidden="true" />
-                {ar ? "لماذا لوريكس؟" : "THE LOUREX APPROACH"}
-              </p>
-              <h2 className="mt-6 text-[clamp(2.25rem,4.2vw,4.3rem)] font-extrabold leading-[1.18] tracking-tight text-heading rtl:tracking-normal">
-                {ar ? "التجارة ليست مجرد شحنة. إنها ثقة تُبنى." : "Trade is more than a shipment. It's a relationship."}
+              <p className="lrx-kicker">LOUREX / THE CONNECTION</p>
+              <h2 id="network-heading" className="mt-5 max-w-[18ch] text-[clamp(2.35rem,4.7vw,5rem)] font-extrabold leading-[1.12] tracking-tight text-white rtl:tracking-normal">
+                {ar ? <>نحو مصادر جديدة. <span className="text-[#83B5FB]">بفكرة واحدة.</span></> : <>The right connection changes <span className="text-[#83B5FB]">everything.</span></>}
               </h2>
-              <p className="mt-6 max-w-[31rem] text-[16px] leading-9 text-muted-foreground">
+              <p className="mt-6 max-w-[490px] text-[15px] leading-9 text-[#AEC0D7]">
                 {ar
-                  ? "نؤمن أن وضوح التفاصيل، والتنسيق بين الأطراف، واستمرارية المتابعة هي أساس العلاقة التجارية الناجحة."
-                  : "Clear information, aligned partners and consistent follow-through are the foundation of better business."}
+                  ? "من احتياج التاجر إلى التواصل مع المصادر المناسبة، نربط التفاصيل والأطراف التجارية في مسار مفهوم."
+                  : "From the buyer's brief to sourcing conversations, we connect commercial needs, people and details in a clearer process."}
               </p>
-              <Link to="/about" className="group mt-8 inline-flex min-h-12 items-center gap-3 border-b border-primary/45 py-2 text-sm font-bold text-primary transition-colors hover:border-primary">
-                {ar ? "تعرّف على شركتنا" : "Discover our company"}
-                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-1 rtl:-scale-x-100" aria-hidden="true" />
+              <div className="mt-8 flex flex-wrap gap-2.5">
+                {(ar ? ["تحديد الاحتياج", "تنسيق الموردين", "متابعة العمليات"] : ["Requirements", "Supplier coordination", "Operations follow-up"]).map(label=>(
+                  <span key={label} className="rounded-full border border-[#48618A] bg-[#152640] px-3.5 py-2 text-xs font-semibold text-[#C6D9F2]">{label}</span>
+                ))}
+              </div>
+              <Link to="/why-lourex" className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-xl border border-[#6184B4] px-5 text-sm font-bold text-white transition-colors hover:border-[#A9CCFD] hover:bg-[#1C3050]">
+                {ar ? "لماذا LOUREX؟" : "Why LOUREX?"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/>
               </Link>
             </motion.div>
-
-            <motion.div {...reveal} className="relative overflow-hidden rounded-[28px] border border-border/70 bg-card p-7 shadow-[0_30px_65px_-55px_rgba(8,127,120,0.35)] sm:p-11">
-              <div className="pointer-events-none absolute -end-28 -top-40 h-[25rem] w-[25rem] rounded-full border border-primary/10" aria-hidden="true" />
-              <div className="pointer-events-none absolute -end-14 -top-28 h-[20rem] w-[20rem] rounded-full border border-primary/10" aria-hidden="true" />
-              <div className="relative flex items-center justify-between border-b border-border/80 pb-6">
-                <span className="text-[11px] font-bold uppercase tracking-[0.13em] text-primary rtl:tracking-normal">LOUREX / PRINCIPLES</span>
-                <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.5} aria-hidden="true" />
-              </div>
-              {[
-                { icon: Check, title: ar ? "مواصفات واضحة" : "Clear specifications", desc: ar ? "المنتج والكمية والاحتياج في ملف منظم." : "Products, quantity and requirements in context." },
-                { icon: Handshake, title: ar ? "تنسيق بين الأطراف" : "Aligned partnerships", desc: ar ? "تواصل وخطوات عمل أكثر وضوحًا." : "Commercial coordination with defined steps." },
-                { icon: MapPinned, title: ar ? "متابعة متصلة" : "Connected follow-through", desc: ar ? "رؤية أفضل لمراحل الطلب والشحنة." : "Better visibility into request and shipment stages." },
-              ].map((item, index) => (
-                <div key={item.title} className="group flex gap-5 border-b border-border/75 py-7 last:border-b-0 last:pb-0">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary transition-transform duration-300 group-hover:-translate-y-1">
-                    <item.icon className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-bold text-primary/75">0{index + 1}</p>
-                    <h3 className="mt-1 text-[18px] font-bold text-heading sm:text-[20px]">{item.title}</h3>
-                    <p className="mt-1 text-[13px] leading-7 text-muted-foreground">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+            <motion.div {...reveal} className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[25px] border border-[#30425E] bg-[#080F1D] sm:min-h-[430px]">
+              <div className="absolute -top-40 start-1/3 h-80 w-80 rounded-full bg-[#376BC1]/20 blur-[90px]" aria-hidden="true"/>
+              <svg viewBox="0 0 700 440" className="h-full w-full max-w-[740px]" role="img" aria-label={ar ? "رسم توضيحي لمسارات الاتصال التجاري حول LOUREX" : "Illustrative commercial network centered on LOUREX"}>
+                <defs><linearGradient id="lrx-map-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#4A98FF"/><stop offset="100%" stopColor="#F75A6F"/></linearGradient></defs>
+                <g fill="none" stroke="#3B5B88" strokeOpacity=".34" strokeWidth="1">
+                  <ellipse cx="350" cy="220" rx="278" ry="170"/><ellipse cx="350" cy="220" rx="195" ry="170"/>
+                  <ellipse cx="350" cy="220" rx="95" ry="170"/>
+                  <path d="M72 220H628M120 136Q350 188 580 136M120 304Q350 252 580 304"/>
+                  <circle cx="350" cy="220" r="128" strokeOpacity=".18"/><circle cx="350" cy="220" r="208" strokeOpacity=".14"/>
+                </g>
+                <g fill="none" stroke="url(#lrx-map-grad)" strokeWidth="2" strokeLinecap="round">
+                  <motion.path d="M90 120Q255 40 350 220T620 103" initial={reducedMotion?false:{pathLength:0}} whileInView={{pathLength:1}} viewport={{once:true}} transition={{duration:reducedMotion?0:1.6}} />
+                  <motion.path d="M88 337Q258 405 350 220T620 320" initial={reducedMotion?false:{pathLength:0}} whileInView={{pathLength:1}} viewport={{once:true}} transition={{duration:reducedMotion?0:1.8,delay:reducedMotion?0:.2}} />
+                  <motion.path d="M205 84Q251 205 350 220T492 365" initial={reducedMotion?false:{pathLength:0}} whileInView={{pathLength:1}} viewport={{once:true}} transition={{duration:reducedMotion?0:1.5}} />
+                </g>
+                {[{x:90,y:120},{x:620,y:103},{x:88,y:337},{x:620,y:320},{x:205,y:84},{x:492,y:365}].map((p,i)=>(
+                  <g key={i}><circle cx={p.x} cy={p.y} r="11" fill="#0D1A2C" stroke={i%2?"#EF5C74":"#649EF9"} strokeWidth="1.5"/><circle cx={p.x} cy={p.y} r="3.5" fill={i%2?"#EF5C74":"#649EF9"}/></g>
+                ))}
+                <circle cx="350" cy="220" r="57" fill="#071120" stroke="#89A6D4" strokeOpacity=".55" strokeWidth="1.5"/>
+                <text x="350" y="213" textAnchor="middle" fill="white" fontSize="25" fontWeight="800">LOUREX</text>
+                <text x="350" y="239" textAnchor="middle" fill="#A3BDDF" fontSize="11" letterSpacing="3">CONNECTION</text>
+              </svg>
+              <span className="absolute bottom-5 start-6 text-[10px] font-bold uppercase tracking-[0.12em] text-[#88A2C5] rtl:tracking-normal">{ar ? "تصوّر توضيحي لمسار التوريد" : "ILLUSTRATIVE NETWORK — NOT LIVE DATA"}</span>
             </motion.div>
           </div>
         </section>
 
-        {/* Signature closing action. */}
-        <section className="bg-background px-5 py-16 sm:px-8 sm:py-24 lg:px-10 xl:px-14">
-          <motion.div {...reveal} className="relative mx-auto max-w-[1450px] overflow-hidden rounded-[30px] bg-[#087F78] px-7 py-14 text-white shadow-[0_32px_90px_-52px_rgba(8,127,120,0.8)] sm:px-12 sm:py-20 lg:px-20 lg:py-24 dark:bg-[#164F48]">
-            <div className="pointer-events-none absolute -end-40 -top-52 h-[39rem] w-[39rem] rounded-full border border-white/20" aria-hidden="true" />
-            <div className="pointer-events-none absolute -end-16 -top-32 h-[28rem] w-[28rem] rounded-full border border-white/20" aria-hidden="true" />
-            <div className="pointer-events-none absolute -end-4 top-12 h-[13rem] w-[13rem] rounded-full border border-white/20" aria-hidden="true" />
-            <div className="relative z-10 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
-              <div>
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#BCF5EC] rtl:tracking-normal">
-                  {ar ? "لنعمل معًا" : "LET'S MOVE TRADE FORWARD"}
-                </p>
-                <h2 className="mt-5 max-w-[20ch] text-[clamp(2.4rem,4.7vw,5.2rem)] font-extrabold leading-[1.12] tracking-[-0.045em] text-white rtl:tracking-normal">
-                  {ar ? "فرصتك القادمة تبدأ بطلب واضح." : "The next opportunity starts with a conversation."}
-                </h2>
-                <p className="mt-5 max-w-xl text-[15px] leading-8 text-[#D4F5EF] sm:text-[17px]">
-                  {ar ? "شاركنا ما تحتاجه، ودعنا ننسّق الخطوة التالية." : "Tell us what your business needs. We'll help coordinate the next step."}
-                </p>
+        {/* Closing brand moment uses the project's existing photography, loaded only near viewport. */}
+        <section className="relative isolate overflow-hidden bg-[#060E1B]">
+          <img src={heroImg} alt={ar ? "مشهد تجاري للتوريد والنقل" : "International trade and transport scene"} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-45" width={1920} height={1080}/>
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#050B15]/95 via-[#050B15]/70 to-[#091528]/65 rtl:bg-gradient-to-l"/>
+          <div className="relative mx-auto grid max-w-[1520px] items-end gap-10 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.2fr_0.8fr] lg:px-12 xl:px-16">
+            <motion.div {...reveal}>
+              <p className="lrx-kicker">LOUREX / YOUR NEXT CONNECTION</p>
+              <h2 className="mt-6 max-w-[17ch] text-[clamp(2.5rem,5.3vw,5.6rem)] font-extrabold leading-[1.12] tracking-tight text-white rtl:tracking-normal">
+                {ar ? "الفرصة القادمة تبدأ بخطوة." : "Your next opportunity starts here."}
+              </h2>
+              <p className="mt-6 max-w-[600px] text-[16px] leading-9 text-[#C4D1E4]">{ar ? "أرسل طلبك التجاري ودعنا نتناقش في خيارات التوريد المناسبة." : "Tell us what your business needs and start a sourcing conversation."}</p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Link to="/request" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl bg-[#E83F51] px-6 text-sm font-bold text-white transition-colors hover:bg-[#FA6273]">{ar?"ابدأ الآن":"Start a request"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/></Link>
+                <Link to="/contact" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl border border-[#A5BDE1]/50 bg-[#0D1C30]/55 px-6 text-sm font-bold text-white transition-colors hover:bg-[#1A2D4A]">{ar?"تواصل معنا":"Talk to our team"}<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true"/></Link>
               </div>
-              <div className="flex flex-col items-start gap-3 lg:items-end">
-                <Link to="/request" className="group inline-flex min-h-[56px] w-full items-center justify-between gap-5 rounded-2xl bg-white px-6 py-4 text-sm font-extrabold text-[#0D4540] shadow-[0_20px_38px_-25px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#E5FCF7] sm:w-auto sm:min-w-[240px]">
-                  {ar ? "ابدأ طلب التوريد" : "Send a sourcing request"}
-                  <ArrowUpRight className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 rtl:-scale-x-100" aria-hidden="true" />
-                </Link>
-                <Link to="/contact" className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/40 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10 sm:w-auto sm:min-w-[240px]">
-                  {ar ? "تواصل مع فريقنا" : "Contact our team"}
-                  <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-                </Link>
+            </motion.div>
+            <div className="hidden justify-end lg:flex" aria-hidden="true">
+              <div className="border-s border-[#CF5472]/70 ps-8 text-end">
+                <span className="block text-[clamp(3rem,6vw,5rem)] font-black tracking-[0.08em] text-white">LOURE<span className="text-[#F04D62]">X</span></span>
+                <span className="block text-[11px] font-bold uppercase tracking-[0.24em] text-[#C1CDE2]">INTERNATIONAL TRADING & RESOURCES</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </section>
       </main>
-      <Footer />
+      <Footer/>
     </div>
   );
 }
