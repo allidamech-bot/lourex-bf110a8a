@@ -18,7 +18,9 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    await context.route('**/*.supabase.co/**',async handler=>{
     const url=new URL(handler.request().url());
     const profile={id,email:user.email,full_name:'Visual QA Fixture',role,status:'active',partner_type:null,phone:'+905550000039',country:'Türkiye',created_at:user.created_at};
-    const body=url.pathname.includes('/auth/v1/user')?user:url.pathname.includes('/rest/v1/profiles')?profile:[];
+    // A single-profile query and the customer/audit profile lists have different response shapes.
+    const profiles=url.searchParams.get('id')===`eq.${id}`?profile:[profile];
+    const body=url.pathname.includes('/auth/v1/user')?user:url.pathname.includes('/rest/v1/profiles')?profiles:[];
     await handler.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body)});
    });
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
