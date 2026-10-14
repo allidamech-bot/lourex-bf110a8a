@@ -61,8 +61,10 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
         <div className="lrx-footer-intro">
           <div>
             <Link to="/" className="inline-flex items-center gap-3 font-extrabold text-xl tracking-wider">
-              <img src="/lourex-official.jpeg" alt="LOUREX official logo" width="40" height="40" loading="lazy" className="h-10 w-10 object-contain" />
-              LOUREX
+              <span className="lrx-header-logo inline-flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
+                <img src="/lourex-official.jpeg" alt="" width="40" height="40" loading="lazy" className="h-full w-full object-contain" />
+              </span>
+              <span className="lrx-footer-brand-text" dir="ltr">LOUREX <span aria-hidden="true">|</span> <span dir="rtl" lang="ar">لوريكس</span></span>
             </Link>
             <p className="mt-2 max-w-md text-sm leading-6 text-footer-muted">
               {ar ? "التجارة الدولية ومصادر التوريد." : "International trading & sourcing."}

@@ -11,8 +11,9 @@ import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 
-export const SiteHeader = () => {
+export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { lang, t } = useI18n();
   const { user, profile, signOut } = useAuthSession();
   const navigate = useNavigate();
@@ -68,6 +69,29 @@ export const SiteHeader = () => {
   const canSeeDashboardMenu = Boolean(profile && profile.role !== "customer");
 
   useEffect(() => {
+    if (!overlayOnHome) return;
+
+    const updateScroll = () => setIsScrolled(window.scrollY > 24);
+    updateScroll();
+    window.addEventListener("scroll", updateScroll, { passive: true });
+    return () => window.removeEventListener("scroll", updateScroll);
+  }, [overlayOnHome]);
+
+  const transparentAtTop = overlayOnHome && !isScrolled && !isOpen;
+  const brand = (
+    <>
+      <span className="lrx-header-logo flex h-11 w-11 shrink-0 items-center justify-center" aria-hidden="true">
+        <img src="/lourex-official.jpeg" alt="" width="44" height="44" className="h-full w-full object-contain" />
+      </span>
+      <span className="lrx-header-wordmark min-w-0 whitespace-nowrap font-heading font-extrabold text-heading" dir="ltr">
+        <span>LOUREX</span>
+        <span className="lrx-brand-divider" aria-hidden="true">|</span>
+        <span dir="rtl" lang="ar">لوريكس</span>
+      </span>
+    </>
+  );
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow;
@@ -87,7 +111,8 @@ export const SiteHeader = () => {
 
   return (
       <header
-          className="sticky top-0 z-[1000] h-[72px] w-full max-w-full overflow-visible border-b border-border/70 bg-background/95 shadow-[0_12px_28px_-25px_rgba(214,173,108,0.2)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85"
+          className={`top-0 z-[1000] h-[72px] w-full max-w-full overflow-visible transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${overlayOnHome ? "fixed inset-x-0" : "sticky"} ${transparentAtTop ? "border-b border-transparent bg-transparent shadow-none backdrop-blur-none" : isOpen ? "border-b border-border/70 bg-background shadow-lg" : "border-b border-border/70 bg-background/95 shadow-[0_12px_28px_-25px_rgba(214,173,108,0.2)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85"}`}
+          data-transparent-home={transparentAtTop ? "true" : undefined}
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
@@ -99,15 +124,12 @@ export const SiteHeader = () => {
                 onClick={() => setIsOpen(false)}
                 aria-label="Lourex home"
             >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
-              <img src="/lourex-official.jpeg" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
-            </span>
-              <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
+              {brand}
             </Link>
 
             <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:border-primary/40 hover:bg-primary-soft hover:text-primary"
+                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d6ad6c] ${transparentAtTop ? "border border-transparent bg-transparent text-white hover:bg-white/10" : "border border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft hover:text-primary"}`}
                 onClick={() => setIsOpen((value) => !value)}
                 aria-label={t("nav.menu")}
                 aria-expanded={isOpen}
@@ -128,10 +150,7 @@ export const SiteHeader = () => {
               onClick={() => setIsOpen(false)}
               aria-label="Lourex home"
           >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
-            <img src="/lourex-official.jpeg" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
-          </span>
-            <span className="font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
+            {brand}
           </Link>
 
           <nav
@@ -228,7 +247,7 @@ export const SiteHeader = () => {
           </div>
         </div>
 
-        <div className="meridian-line pointer-events-none absolute inset-x-0 bottom-[-1px] opacity-60" aria-hidden="true" />
+        {!transparentAtTop ? <div className="meridian-line pointer-events-none absolute inset-x-0 bottom-[-1px] opacity-60" aria-hidden="true" /> : null}
 
         {/* Mobile drawer */}
         {isOpen ? (
@@ -249,10 +268,7 @@ export const SiteHeader = () => {
                       className="flex min-w-0 shrink items-center gap-3"
                       onClick={() => setIsOpen(false)}
                   >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-card shadow-soft">
-                  <img src="/lourex-official.jpeg" alt="LOUREX official logo" className="h-8 w-8 object-contain" />
-                </span>
-                    <span className="min-w-0 truncate font-heading text-lg font-extrabold tracking-[0.08em] text-heading">LOUREX</span>
+                    {brand}
                   </Link>
 
                   <button

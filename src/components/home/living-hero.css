@@ -1,5 +1,5 @@
 /* One living stage. No video, canvas, WebGL, external assets or frame loop. */
-.lrx-living-hero{position:relative;isolation:isolate;overflow:hidden;min-height:min(950px,calc(100svh - 72px));padding:30px clamp(24px,4.5vw,88px) 0;background:#0a0a0a;border-bottom:1px solid #493b2a}
+.lrx-living-hero{position:relative;isolation:isolate;overflow:hidden;min-height:min(950px,100svh);padding:102px clamp(24px,4.5vw,88px) 0;background:#0a0a0a;border-bottom:1px solid #493b2a}
 .lrx-trade-field{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .lrx-trade-field>svg{position:absolute;inset:-15% -5%;width:110%;height:130%;opacity:.7}
 .lrx-field-halo{position:absolute;width:65%;aspect-ratio:1;border-radius:50%;opacity:.75;animation:lrx-halo-drift 18s ease-in-out infinite alternate;will-change:transform}
@@ -48,7 +48,7 @@
 @media(min-width:1600px){.lrx-living-stage{min-height:760px}}
 @media(max-width:1023px){.lrx-living-stage{min-height:600px}.lrx-living-copy h1{font-size:clamp(52px,7vw,84px)}[dir=rtl] .lrx-living-copy h1{font-size:clamp(48px,6vw,76px)}.lrx-trade-message{font-size:8px;gap:8px;padding:8px}.lrx-living-eyebrow{font-size:8px;letter-spacing:.12em}.lrx-living-sequence{display:none}}
 @media(max-width:767px){
- .lrx-living-hero{min-height:0;padding:20px 20px 0}
+ .lrx-living-hero{min-height:0;padding:92px 20px 0}
  .lrx-living-mast{font-size:7px;letter-spacing:.13em;padding-bottom:16px}
  .lrx-living-stage{display:block;min-height:0;padding-top:185px}
  .lrx-living-visual{position:absolute;top:-10px;inset-inline-end:-55px;width:360px;max-width:none;margin:0;opacity:.68!important;z-index:0;pointer-events:none}
