@@ -9,9 +9,10 @@ import { fetchRequests } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { OperationsRequest } from "@/domain/operations/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getProductById } from "@/features/products/services/productCatalogService";
+import { fetchCatalogProductById } from "@/features/products/services/productCatalogService";
+import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 
 export default function RequestPage() {
   const { lang, t } = useI18n();
@@ -24,10 +25,23 @@ export default function RequestPage() {
   const [loadingEditRequest, setLoadingEditRequest] = useState(Boolean(editRequestId));
   const [editRequestError, setEditRequestError] = useState("");
 
-  const productSource = useMemo(
-    () => (!editRequestId && productId ? getProductById(productId) : null),
-    [editRequestId, productId],
-  );
+  const [productSource, setProductSource] = useState<ProductCatalogItem | null>(null);
+  const [loadingProductSource, setLoadingProductSource] = useState(Boolean(productId && !editRequestId));
+
+  useEffect(() => {
+    let cancelled = false;
+    setProductSource(null);
+    if (!productId || editRequestId) {
+      setLoadingProductSource(false);
+      return;
+    }
+    setLoadingProductSource(true);
+    void fetchCatalogProductById(productId)
+      .then(product => { if (!cancelled) setProductSource(product); })
+      .catch(() => { if (!cancelled) setProductSource(null); })
+      .finally(() => { if (!cancelled) setLoadingProductSource(false); });
+    return () => { cancelled = true; };
+  }, [productId, editRequestId]);
   const isCatalogInspiredRequest = !editRequestId && (requestSource === "products" || Boolean(productId));
 
   useEffect(() => {
@@ -137,7 +151,7 @@ export default function RequestPage() {
               </div>
             </div>
 
-            {loadingEditRequest ? (
+            {loadingEditRequest || loadingProductSource ? (
               <div className="rounded-[2rem] border border-border/70 bg-card p-8 shadow-soft text-sm text-muted-foreground backdrop-blur-xl">
                 {t("common.loading") || "Loading..."}
               </div>
@@ -172,7 +186,9 @@ export default function RequestPage() {
                     mode={editRequestId ? "edit" : "create"}
                     requestId={editRequestId || undefined}
                     initialRequest={editRequest}
-                    sourceProductId={productId}
+                    key={editRequestId || productId || "freeform"}
+                    sourceProductId={productId || undefined}
+                    sourceProduct={productSource}
                     onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
                   />
                 </RequestContactGate>
