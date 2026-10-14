@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import { useId, type SVGProps } from "react";
 
 type Variant = "confectionery" | "snacks" | "food" | "other";
 type Props = SVGProps<SVGSVGElement> & { variant: Variant };
@@ -9,7 +9,8 @@ type Props = SVGProps<SVGSVGElement> & { variant: Variant };
  * The glass, foils and packaging are illustrative trade categories, not real SKUs.
  */
 export default function SourcingIllustration({ variant, ...props }: Props) {
-  const id = "lrx-art-" + variant;
+  const instanceId = useId();
+  const id = "lrx-art-" + instanceId.replace(/:/g, "") + "-" + variant;
   const grad = (name: string) => "url(#" + id + "-" + name + ")";
 
   return (
