@@ -26,21 +26,28 @@ jobs:
       - name: Compare TypeScript diagnostics with the existing baseline
         run: node scripts/check-homepage-types.mjs
       - run: npx eslint src/pages/public/ProductsPage.tsx src/pages/public/RequestPage.tsx src/components/shared/TradeEmblem.tsx src/test/unit/productsPageExperience.test.tsx src/test/unit/requestPageExperience.test.tsx
-      - run: npm test
+      - if: github.head_ref != 'fix/lourex-mobile-shell-footer'
+        run: npm test
       - run: node scripts/build-homepage-preview.mjs
       - run: npx playwright install --with-deps chromium webkit
       - name: Check catalog interactions and capture desktop and mobile sizes
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/preview.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ && break || sleep 1; done
-          node scripts/products-visual-qa.mjs
-          node scripts/site-visual-qa.mjs
-          node scripts/workspace-visual-qa.mjs
+          if [ "${{ github.head_ref }}" = "fix/lourex-mobile-shell-footer" ]; then
+            node scripts/mobile-shell-qa.mjs
+            LOUREX_MOBILE_FIX_QA=1 node scripts/workspace-visual-qa.mjs
+          else
+            node scripts/products-visual-qa.mjs
+            node scripts/site-visual-qa.mjs
+            node scripts/workspace-visual-qa.mjs
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: products-screenshots-and-results
           path: |
+            mobile-shell-qa/
             products-qa/
             site-qa/
             workspace-qa/

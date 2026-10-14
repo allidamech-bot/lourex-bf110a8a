@@ -203,7 +203,7 @@ main button svg {
     gap: 1rem;
   }
 
-  main button,
+  main button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
   main a[role="button"] {
     width: 100%;
     justify-content: center;

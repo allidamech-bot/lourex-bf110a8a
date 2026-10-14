@@ -1,8 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark" data-lourex-surface="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#090909" />
+    <meta name="color-scheme" content="dark light" />
+    <style>
+      html,body{margin:0;min-height:100%;background:#090909;color:#f5f3ef;color-scheme:dark}
+      html.light,html.light body{background:#f9f8f6;color:#24211f;color-scheme:light}
+      html[data-lourex-surface=dark],html[data-lourex-surface=dark] body{background:#090909;color-scheme:dark}
+      .lrx-boot{min-height:100vh;min-height:100dvh;display:grid;place-content:center;justify-items:center;gap:20px;background:#090909;color:#d8b577;font:700 14px system-ui;letter-spacing:.2em}
+      .lrx-boot img{width:72px;height:72px;object-fit:contain}
+    </style>
+    <script>
+      // Apply the unified dark default once; subsequent explicit theme choices persist.
+      try {
+        if (localStorage.getItem('lourex-identity') !== 'living-trade-2') {
+          localStorage.setItem('theme', 'dark');
+          localStorage.setItem('lourex-identity', 'living-trade-2');
+        }
+        var preference = localStorage.getItem('theme');
+        var light = preference === 'light' || (preference === 'system' && matchMedia('(prefers-color-scheme:light)').matches);
+        var darkPage = ['/', '/products', '/catalog'].includes(location.pathname);
+        document.documentElement.className = light ? 'light' : 'dark';
+        document.documentElement.dataset.lourexSurface = darkPage || !light ? 'dark' : 'light';
+        document.querySelector('meta[name="theme-color"]').content = darkPage || !light ? '#090909' : '#f9f8f6';
+      } catch (_) {}
+    </script>
     <title>LOUREX | Trade Intermediary &amp; Sourcing Coordination</title>
     <meta name="description" content="LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.">
     <meta name="author" content="LOUREX" />
@@ -56,7 +80,7 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="lrx-boot" role="status" aria-label="LOUREX"><img src="/lourex-official.jpeg" alt="" width="72" height="72" /><span>LOUREX</span></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,12 +1,12 @@
 export const publicContactInfo = {
   company: "LOUREX",
   email: "lourrex@proton.me",
-  phone: "+90 539 241 1642",
+  phone: "00905392411642",
   phoneTel: "+905392411642",
   whatsappNumbers: {
     turkey: {
       number: "905392411642",
-      display: "+90 539 241 1642",
+      display: "00905392411642",
     },
   },
   website: "www.lou-rex.com",

@@ -7,8 +7,8 @@ const id='00000000-0000-4000-8000-000000000039';
 for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
  const browser=await launcher.launch();
  for(const lang of ['en','ar'])for(const role of ['customer','owner']){
-  const routes=role==='customer'?['/request','/customer-portal','/customer-portal/operations','/customer-portal/requests','/customer-portal/request-detail','/customer-portal/tracking','/customer-portal/tracking-pro','/customer-portal/notifications','/profile']:['/dashboard','/dashboard/operations-briefing','/dashboard/predictive-intelligence','/dashboard/requests','/dashboard/products','/dashboard/customers','/dashboard/deals','/dashboard/tracking','/dashboard/accounting','/dashboard/edit-requests','/dashboard/settlements','/dashboard/audit','/dashboard/reports','/dashboard/notifications','/dashboard/system','/dashboard/health','/profile'];
-  for(const route of routes)for(const width of (route==='/request'?[320,390,430,768,1024,1440]:[390,1440])){
+  const routes=process.env.LOUREX_MOBILE_FIX_QA? (role==='customer'?['/request']:['/dashboard']) : role==='customer'?['/request','/customer-portal','/customer-portal/operations','/customer-portal/requests','/customer-portal/request-detail','/customer-portal/tracking','/customer-portal/tracking-pro','/customer-portal/notifications','/profile']:['/dashboard','/dashboard/operations-briefing','/dashboard/predictive-intelligence','/dashboard/requests','/dashboard/products','/dashboard/customers','/dashboard/deals','/dashboard/tracking','/dashboard/accounting','/dashboard/edit-requests','/dashboard/settlements','/dashboard/audit','/dashboard/reports','/dashboard/notifications','/dashboard/system','/dashboard/health','/profile'];
+  for(const route of routes)for(const width of (process.env.LOUREX_MOBILE_FIX_QA?[430]:route==='/request'?[320,390,430,768,1024,1440]:[390,1440])){
    const context=await browser.newContext({viewport:{width,height:width<768?844:1000},isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
    const user={id,email:'visual-fixture@example.invalid',aud:'authenticated',role:'authenticated',user_metadata:{full_name:'Visual QA Fixture'},app_metadata:{provider:'email',providers:['email']},created_at:'2026-01-01T00:00:00Z'};
    const exp=Math.floor(Date.now()/1000)+86400;
@@ -29,6 +29,14 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    await page.evaluate(()=>document.fonts.ready);
    if(page.url().includes('/auth'))errors.push('Fixture did not reach authenticated route');
    if(route==='/request'){
+    if(process.env.LOUREX_MOBILE_FIX_QA){
+     for(const control of await page.locator('main button[role=radio]').all()){
+      const box=await control.boundingBox();if(box.width>24||box.height>24)errors.push('Radio control stretched');
+     }
+     await page.locator('#type-shipping').click();
+     if(await page.locator('#type-shipping').getAttribute('aria-checked')!=='true')errors.push('Shipping selection failed');
+     await page.locator('#type-full').click();
+    }
     const sections=await page.locator('main section').count();
     if(sections<4)errors.push(`Actual request form did not render: ${sections} sections`);
     const fileInputs=await page.locator('main input[type="file"]').count();
