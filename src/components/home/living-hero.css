@@ -74,3 +74,8 @@
 }
 @media(max-width:359px){.lrx-living-stage{padding-top:160px}.lrx-living-visual{width:320px;inset-inline-end:-55px}.lrx-living-copy h1{font-size:48px}[dir=rtl] .lrx-living-copy h1{font-size:46px}.lrx-living-actions{gap:8px 16px}.lrx-living-mast{font-size:6px}.lrx-motion-toggle{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.lrx-living-hero *{animation:none!important;transition:none!important;will-change:auto!important}.lrx-living-copy,.lrx-living-visual{opacity:1!important;transform:none!important}}
+
+/* The reduced-motion scene avoids SVG/compositing layers in Safari entirely. */
+.lrx-living-hero[data-reduced-motion=true]{background:linear-gradient(150deg,#a930241c,transparent 42%),linear-gradient(30deg,transparent 45%,#34577729 45.1%,transparent 80%),linear-gradient(155deg,transparent 52%,#d6ad6c16 52.1%,transparent 90%),#0a0a0a}
+.lrx-living-hero[data-reduced-motion=true] .lrx-emblem-mount img{filter:none;mix-blend-mode:normal}
+.lrx-living-hero[data-reduced-motion=true] .lrx-trade-message{backdrop-filter:none}

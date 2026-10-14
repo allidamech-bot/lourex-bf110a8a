@@ -13,7 +13,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   await page.locator('.lrx-emblem-mount img').evaluate(img=>img.decode());
   const metrics=await page.evaluate(()=>{
    const hero=document.querySelector('#lourex-hero'),title=hero.querySelector('h1'),cta=hero.querySelector('a[href="/request"]');
-   return {overflow:document.documentElement.scrollWidth>innerWidth+1,heroHeight:hero.getBoundingClientRect().height,titleWidth:title.getBoundingClientRect().width,ctaBottom:cta.getBoundingClientRect().bottom,motion:hero.dataset.motion,packetAnimation:getComputedStyle(hero.querySelector('.lrx-field-packet')).animationName,logo:hero.querySelector('img').getAttribute('src'),direction:document.documentElement.dir};
+   return {overflow:document.documentElement.scrollWidth>innerWidth+1,heroHeight:hero.getBoundingClientRect().height,titleWidth:title.getBoundingClientRect().width,ctaBottom:cta.getBoundingClientRect().bottom,motion:hero.dataset.motion,packetAnimation:hero.querySelector('.lrx-field-packet')?getComputedStyle(hero.querySelector('.lrx-field-packet')).animationName:'none',logo:hero.querySelector('img').getAttribute('src'),direction:document.documentElement.dir};
   });
   if(metrics.overflow)errors.push('Horizontal overflow');
   if(metrics.logo!=='/lourex-official.jpeg')errors.push('Official logo changed');
