@@ -11,12 +11,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Compare full TypeScript diagnostics with unchanged main baseline
+        run: node scripts/check-homepage-types.mjs
       - run: npm run build
       - run: npx playwright install --with-deps chromium webkit
       - name: Capture desktop and iPhone sized browsers
@@ -28,7 +31,9 @@ jobs:
         if: always()
         with:
           name: homepage-screenshots-and-results
-          path: homepage-qa/
+          path: |
+            homepage-qa/
+            homepage-types-*.txt
       - uses: actions/upload-artifact@v4
         with:
           name: homepage-built-preview
