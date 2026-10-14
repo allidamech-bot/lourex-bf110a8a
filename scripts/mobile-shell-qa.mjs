@@ -16,7 +16,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   const context=await browser.newContext({viewport:{width,height:width<768?932:1000},isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
   await boundFontRequests(context);
   // Reproduce a returning visitor whose old saved light choice caused the split identity.
-  await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme','light');},lang);
+  await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);if(!localStorage.getItem('lourex-identity'))localStorage.setItem('theme','light');},lang);
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base,{waitUntil:'domcontentloaded'});await page.locator('footer').waitFor();await page.evaluate(()=>document.fonts.ready);
   const footer=page.locator('footer');await footer.scrollIntoViewIfNeeded();
@@ -24,7 +24,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   if(width<768&&metrics.height>850)errors.push(`Footer too tall: ${metrics.height}`);
   if(metrics.overflow)errors.push('Page overflow');
   if(metrics.bg!=='rgb(9, 9, 9)'||metrics.scheme!=='dark')errors.push('Page chrome not dark');
-  if(await footer.locator('a[href="tel:+905392411642"]').innerText()!=='00905392411642')errors.push('Wrong phone display');
+  if(await footer.locator('a[href="tel:+905392411642"] bdi').textContent()!=='00905392411642')errors.push('Wrong phone display');
   if(await footer.locator('.lrx-footer-links a').count()!==10)errors.push('Secondary links lost');
   if(width===430||width===1440)await footer.screenshot({path:`${out}/${engine}-${lang}-${width}-footer.png`});
   if(width===430){

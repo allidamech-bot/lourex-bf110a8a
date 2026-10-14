@@ -131,9 +131,10 @@ html.light .lourex-request main [class*="#111111"]{background:hsl(var(--card));b
 .lrx-footer a:hover{color:hsl(var(--footer-accent))}
 .lrx-footer a.lrx-footer-cta:hover{color:#fff}
 @media(max-width:767px){
- .lrx-footer-intro{align-items:flex-start;gap:16px;flex-direction:column;padding-bottom:20px}
+ .lrx-footer-inner{padding-top:24px}
+ .lrx-footer-intro{align-items:flex-start;gap:16px;flex-direction:column;padding-bottom:16px}
  .lrx-footer-intro p{max-width:34ch;font-size:12px}
- .lrx-footer-content{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:20px}
+ .lrx-footer-content{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:16px}
  .lrx-footer-platform{justify-content:space-between;gap:4px 12px}
  .lrx-footer-platform a{font-size:12px}
  .lrx-footer-address{gap:0 12px}
