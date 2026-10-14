@@ -1,0 +1,38 @@
+name: P1 Security RPC PostgreSQL Integration
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261015024500_p1_legacy_rpc_access_hardening.sql'
+      - 'supabase/tests/p1_rpc_pg17_integration.sql'
+      - '.github/workflows/p1-rpc-pg17.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rpc-access-pg17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ephemeral-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run legacy RPC lockdown tests in disposable PostgreSQL 17
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD=ephemeral-ci-only \
+            -v "$PWD:/workspace:ro" \
+            postgres:17 \
+            psql -X -h 127.0.0.1 -U postgres -d postgres \
+              -v ON_ERROR_STOP=1 -f /workspace/supabase/tests/p1_rpc_pg17_integration.sql
