@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
   ArrowDownRight,
@@ -31,6 +31,8 @@ export default function HomePage() {
   const ar = lang === "ar";
   const reducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
+  const journeyRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: journeyProgress } = useScroll({ target: journeyRef, offset: ["start end", "end center"] });
   const progress = useSpring(scrollYProgress, { stiffness: 125, damping: 30, restDelta: 0.001 });
   const [activeStep, setActiveStep] = useState(0);
 
@@ -127,7 +129,7 @@ export default function HomePage() {
         <HeroSection />
 
         {/* Five connected milestones, with a single active trade brief and working routes. */}
-        <section id="explore" className="relative border-y border-[#24334A] bg-[#09111E] py-11 sm:py-14" aria-labelledby="journey-heading">
+        <section ref={journeyRef} id="explore" className="relative border-y border-[#24334A] bg-[#09111E] py-11 sm:py-14" aria-labelledby="journey-heading">
           <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="grid gap-8 lg:grid-cols-[270px_1fr] lg:gap-12">
               <motion.div {...reveal}>
@@ -138,7 +140,12 @@ export default function HomePage() {
                 <p className="mt-3 text-sm leading-7 text-[#9EB2CD]">{ar ? "اختر مرحلة لاستكشاف دورنا." : "Select a stage to see how we connect the process."}</p>
               </motion.div>
               <div className="relative grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-2">
-                <div className="pointer-events-none absolute start-[10%] end-[10%] top-8 hidden h-px bg-gradient-to-r from-[#4179E2] via-[#9863AA] to-[#E34B5F] sm:block" aria-hidden="true" />
+                <div className="pointer-events-none absolute start-[10%] end-[10%] top-8 hidden h-[2px] bg-[#30415D] sm:block" aria-hidden="true">
+                  <motion.div
+                    className="h-full w-full bg-gradient-to-r from-[#4179E2] via-[#9863AA] to-[#E34B5F]"
+                    style={{ scaleX: journeyProgress, transformOrigin: ar ? "right center" : "left center" }}
+                  />
+                </div>
                 {steps.map((item, index) => (
                   <button
                     key={item.name}
