@@ -6,10 +6,20 @@ const routes=['/','/products','/products/sample-cleaning-liquid','/request','/tr
 for(const [engine,launcher,lang,width] of [['webkit',webkit,'ar',430],['chromium',chromium,'en',1440]]){
  const browser=await launcher.launch(),context=await browser.newContext({viewport:{width,height:932},isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
  await boundFontRequests(context);
- await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);},lang);
+ await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme','light');localStorage.setItem('lourex-theme','light');},lang);
  const page=await context.newPage();let errors=[];page.on('pageerror',e=>errors.push(e.message));
  for(const route of routes){
   errors=[];await page.goto(`http://127.0.0.1:4173${route}`,{waitUntil:'domcontentloaded'});await page.locator('h1').first().waitFor();await page.evaluate(()=>document.fonts.ready);
+  const appearance=await page.evaluate(()=>{
+    const html=document.documentElement,root=document.querySelector('#root > div'),body=getComputedStyle(document.body);
+    return {dark:html.classList.contains('dark'),light:html.classList.contains('light'),surface:html.dataset.lourexSurface,scheme:getComputedStyle(html).colorScheme,meta:document.querySelector('meta[name="theme-color"]')?.content,body:body.backgroundColor,root:root?getComputedStyle(root).backgroundColor:null,stored:localStorage.getItem('theme')};
+  });
+  if(!appearance.dark||appearance.light||appearance.surface!=='dark'||appearance.scheme!=='dark'||appearance.meta!=='#090909'||appearance.stored!=='dark')errors.push('Legacy daytime preference reactivated: '+JSON.stringify(appearance));
+  if(await page.getByRole('button',{name:lang==='ar'?'تبديل المظهر':'Toggle theme'}).count())errors.push('Day/night toggle remains visible');
+  if(route==='/request' && await page.locator('.lourex-request').evaluate(el=>{
+    const rgb=getComputedStyle(el).backgroundColor.match(/[\d.]+/g)?.slice(0,3).map(Number)||[];
+    return rgb.length!==3||Math.max(...rgb)>80;
+  }))errors.push('Request page surface is not dark');
   if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))errors.push('Horizontal page overflow');
   if(await page.locator('button[aria-label*="LOUREX AI"], [data-lourex-floating-ai]').count())errors.push('Floating assistant still present');
   for(const input of await page.locator('main input,main textarea').all())if(await input.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))<16)errors.push('Input font triggers iOS zoom');
