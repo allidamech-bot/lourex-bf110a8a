@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 25
     env:
       HERO_UI: ${{ github.head_ref == 'fix/lourex-living-hero' }}
-      FOCUSED_UI: ${{ startsWith(github.head_ref, 'fix/lourex-') }}
+      FOCUSED_UI: ${{ startsWith(github.head_ref, 'fix/lourex-') || github.head_ref == 'fix/transparent-hero-header-bilingual' }}
     steps:
       - uses: actions/checkout@v4
         with:
