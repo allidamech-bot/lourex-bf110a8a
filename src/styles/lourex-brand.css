@@ -136,7 +136,8 @@ html.light .lourex-request main [class*="#111111"]{background:hsl(var(--card));b
  .lrx-footer-content{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:20px}
  .lrx-footer-platform{justify-content:space-between;gap:4px 12px}
  .lrx-footer-platform a{font-size:12px}
- .lrx-footer-address{gap:0 18px}
+ .lrx-footer-address{gap:0 12px}
+ .lrx-footer-address a{font-size:12px}
  .lrx-footer-links{gap:16px;border-top:1px solid #ffffff20;padding-top:20px}
  .lrx-footer-column a{font-size:12px;line-height:1.5;overflow-wrap:normal}
  .lrx-footer-column h3{letter-spacing:0}
@@ -147,5 +148,5 @@ main button[role=radio],main button[role=checkbox],main button[role=switch]{flex
 a[href^="tel:"]{direction:ltr;unicode-bidi:isolate;white-space:nowrap}
 html{min-height:100%;background:hsl(var(--background));color-scheme:light}
 html.dark{color-scheme:dark}
-html[data-lourex-surface=dark],html[data-lourex-surface=dark] body{background:#090909;color-scheme:dark}
+html[data-lourex-surface=dark],html[data-lourex-surface=dark] body{background:#090909;color-scheme:dark!important}
 body{min-height:100vh;min-height:100dvh;margin:0}

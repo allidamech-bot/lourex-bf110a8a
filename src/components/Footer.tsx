@@ -32,8 +32,8 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
 
   const platformLinks: FooterNavLink[] = [
     { label: ar ? "المنتجات" : "Products", href: "/products" },
-    { label: t("nav.purchaseRequest"), href: "/request" },
-    { label: t("nav.trackShipment"), href: "/track" },
+    { label: ar ? "طلب شراء" : "Request", href: "/request" },
+    { label: ar ? "تتبّع الطلب" : "Track", href: "/track" },
   ];
 
   const sourcingLinks: FooterNavLink[] = [
@@ -65,7 +65,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
               LOUREX
             </Link>
             <p className="mt-2 max-w-md text-sm leading-6 text-footer-muted">
-              {ar ? "تنسيق التوريد والتجارة الدولية، من طلب الشراء حتى التسليم." : "International sourcing and trade coordination, from request to delivery."}
+              {ar ? "التجارة الدولية ومصادر التوريد." : "International trading & sourcing."}
             </p>
           </div>
           <Link to="/request" className="lrx-footer-cta">
