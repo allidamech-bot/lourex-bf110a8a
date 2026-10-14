@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS public.product_catalog_products (
   CONSTRAINT product_catalog_products_status_check CHECK (status IN ('draft','active','archived'))
 );
 
+-- The 20260524 legacy migration may exist on other environments with unsafe defaults.
+-- Normalize those existing installations without modifying product records.
+ALTER TABLE public.product_catalog_products ALTER COLUMN status SET DEFAULT 'draft';
+ALTER TABLE public.product_catalog_products ALTER COLUMN origin_country SET DEFAULT '';
+
 CREATE INDEX IF NOT EXISTS product_catalog_products_status_idx ON public.product_catalog_products(status);
 CREATE INDEX IF NOT EXISTS product_catalog_products_category_idx ON public.product_catalog_products(category_id);
 CREATE INDEX IF NOT EXISTS product_catalog_products_featured_idx ON public.product_catalog_products(is_featured DESC,updated_at DESC);
