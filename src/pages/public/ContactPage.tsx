@@ -346,7 +346,8 @@ export default function ContactPage() {
                       ) : item.label === t("contact.labels.phone") ? (
                         <a
                           href={`tel:${publicContactInfo.phoneTel}`}
-                          className="mt-2 block font-medium text-primary hover:underline"
+                          dir="ltr"
+                          className="mt-2 block whitespace-nowrap font-medium text-primary hover:underline [unicode-bidi:isolate]"
                         >
                           {item.value}
                         </a>
