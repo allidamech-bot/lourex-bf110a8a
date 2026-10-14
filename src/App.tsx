@@ -51,6 +51,7 @@ const AeoPage = lazy(() => import("@/pages/public/AeoPage"));
 const FaqPage = lazy(() => import("@/pages/public/FaqPage"));
 const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage"));
 const TermsPage = lazy(() => import("@/pages/public/TermsPage"));
+const GuidelinesPage = lazy(() => import("@/pages/public/GuidelinesPage"));
 const WhyLourexPage = lazy(() => import("@/pages/public/WhyLourexPage"));
 const ContactPage = lazy(() => import("@/pages/public/ContactPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -243,7 +244,7 @@ const App = () => (
                     />
                     <Route
                       path="/guidelines"
-                      element={<PageWithAI component={<TermsPage />} />}
+                      element={<PageWithAI component={<GuidelinesPage />} />}
                     />
                     <Route
                       path="/why-lourex"
@@ -539,7 +540,7 @@ const App = () => (
                   <Route path="/faq" element={<FaqPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/terms" element={<TermsPage />} />
-                  <Route path="/guidelines" element={<TermsPage />} />
+                  <Route path="/guidelines" element={<GuidelinesPage />} />
                   <Route path="/why-lourex" element={<WhyLourexPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="*" element={<SupabaseSetupError />} />

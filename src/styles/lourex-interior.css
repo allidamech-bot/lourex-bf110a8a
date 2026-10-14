@@ -1,0 +1,126 @@
+/* LOUREX — The Living Trade | consistent interiors only. The cinematic homepage is deliberately excluded. */
+.lourex-public:not(.lourex-home)>main{
+  background:radial-gradient(ellipse 50% 28% at 97% 0%,rgba(54,85,117,.095),transparent 76%),
+             radial-gradient(ellipse 42% 22% at 0% 0%,rgba(169,48,36,.08),transparent 80%);
+}
+.lourex-public:not(.lourex-home)>main :is(h1,h2,h3){text-wrap:balance}
+.lourex-public:not(.lourex-home) main :is(h1,h2,h3){overflow-wrap:normal}
+.lourex-public:not(.lourex-home) main :is(p,li){line-height:1.85}
+.lourex-public:not(.lourex-home) main a:not([class*="bg-primary"]){text-underline-offset:4px}
+.lourex-public:not(.lourex-home) main :is(input,textarea,select){
+  min-height:46px;
+  font-size:16px;
+  border-color:hsl(var(--border));
+}
+.lourex-public:not(.lourex-home) main :is(input,textarea,select):focus-visible{
+  border-color:#d6ad6c;
+  outline:2px solid #d6ad6c80;
+  outline-offset:1px;
+}
+.lourex-public:not(.lourex-home) main ::placeholder{color:hsl(var(--muted-foreground)/.84)}
+
+/* Coherent editorial typography and mineral separators on information pages. */
+:is(.lourex-faq,.lourex-aeo,.lourex-privacy,.lourex-terms,.lourex-whylourex,.lourex-guidelines)>main{padding-block:clamp(42px,6vw,80px) clamp(68px,8vw,112px)}
+:is(.lourex-faq,.lourex-aeo,.lourex-guidelines) main>div:first-child,
+.lrx-interior-intro{
+  border-inline-start:2px solid #d6ad6c88;
+  border-bottom:1px solid #d6ad6c26;
+  padding:clamp(18px,3vw,32px) clamp(18px,4vw,48px) clamp(26px,4vw,44px);
+  background:linear-gradient(105deg,rgba(169,48,36,.075),rgba(17,17,17,.35) 44%,transparent 78%);
+}
+:is(.lourex-faq,.lourex-aeo,.lourex-guidelines) main>div:first-child h1,
+.lrx-interior-intro h1{font-size:clamp(2.2rem,5vw,4.6rem);line-height:1.13;letter-spacing:-.045em}
+html[dir=rtl] :is(.lourex-faq,.lourex-aeo,.lourex-guidelines) main>div:first-child h1,
+html[dir=rtl] .lrx-interior-intro h1{letter-spacing:0;line-height:1.38}
+:is(.lourex-faq,.lourex-aeo,.lourex-guidelines) main>div:first-child>p:last-child{max-width:60ch;color:#c5c0b8;font-size:clamp(15px,1.6vw,18px);line-height:1.9}
+.lrx-interior-kicker{font-size:11px;font-weight:800;letter-spacing:.17em;color:#d6ad6c}
+html[dir=rtl] .lrx-interior-kicker{letter-spacing:0}
+.lrx-interior-lead{max-width:62ch;margin-top:22px;font-size:clamp(15px,1.5vw,18px);color:#c4beb4}
+.lrx-interior-card{
+  min-width:0;padding:clamp(20px,3vw,32px);
+  border:1px solid #d6ad6c36;border-top:2px solid #d6ad6c88;
+  background:linear-gradient(145deg,#171717,#101010 76%);
+  box-shadow:0 26px 60px -46px #000;
+}
+.lrx-interior-card:hover{border-color:#d6ad6c68}
+.lrx-interior-link{
+  display:flex;align-items:center;gap:16px;min-height:82px;padding:14px 18px;
+  border:1px solid #d6ad6c30;background:linear-gradient(100deg,#171717,#101010);
+  transition:border-color .2s ease,background .2s ease;
+}
+.lrx-interior-link:hover{border-color:#d6ad6c88;background:#1d1a17}
+.lrx-interior-link:focus-visible{outline:2px solid #d6ad6c;outline-offset:3px}
+.lourex-faq article{border-color:#d6ad6c32}
+.lourex-faq article:hover{background:linear-gradient(90deg,#d6ad6c09,transparent 70%)}
+.lourex-aeo main>section:nth-of-type(1)>div{background:linear-gradient(135deg,#171717,#111)!important}
+.lourex-aeo main>section:last-of-type{border-top:1px solid #d6ad6c40}
+.lourex-whylourex main .space-y-4>div{border-top-color:#d6ad6c45!important}
+.lourex-whylourex main .space-y-4>div:hover{background:#d6ad6c08!important}
+:is(.lourex-privacy,.lourex-terms) main>div>div>div[class*="rounded-xl"]{
+  background:linear-gradient(155deg,#181715,#111)!important;
+  border-top-color:#d6ad6c88;
+  padding:clamp(20px,4vw,42px);
+}
+:is(.lourex-privacy,.lourex-terms) main>div{max-width:900px}
+:is(.lourex-privacy,.lourex-terms) main h1{font-size:clamp(2rem,5vw,3.4rem)}
+:is(.lourex-privacy,.lourex-terms) main p.whitespace-pre-line{color:#c5c1bb;font-weight:400;line-height:2}
+
+/* Contact page keeps the operational form and validation unchanged. */
+.lourex-contact .lrx-contact-shell{
+  border:1px solid #d6ad6c30;
+  border-top:2px solid #d6ad6c70;
+  border-radius:10px;
+  background:linear-gradient(120deg,#151414,#0e0e0e 74%)!important;
+  padding:clamp(18px,4vw,54px);
+}
+.lourex-contact .lrx-contact-shell>div:first-child{max-width:850px}
+.lourex-contact .lrx-contact-form{
+  border:1px solid #d6ad6c35;
+  border-top:2px solid #d6ad6c66;
+  border-radius:8px!important;
+  background:#101010!important;
+}
+.lourex-contact .lrx-contact-details{align-content:start}
+.lourex-contact .lrx-contact-detail{transition:background .2s;border-bottom-color:#d6ad6c30}
+.lourex-contact .lrx-contact-detail:hover{background:#d6ad6c08}
+.lourex-contact main input,.lourex-contact main textarea{border-radius:6px!important}
+.lourex-contact .lrx-contact-support{border-block:1px solid #d6ad6c30;padding:14px 4px}
+
+/* Sourcing request: bring the useful action and form closer to the mobile viewport. */
+.lourex-request .lrx-request-intro{background:linear-gradient(110deg,#a9302409,transparent 65%);padding-inline:clamp(0px,2vw,20px)}
+.lourex-request .lrx-request-intro h1{font-size:clamp(2.25rem,5vw,4rem);max-width:18ch;line-height:1.18}
+.lourex-request .lrx-request-intro>div>p:last-child{max-width:58ch;line-height:1.8}
+.lourex-request #purchase-request-form{scroll-margin-top:105px}
+.lrx-page-help{position:relative;border:1px solid #d6ad6c38!important;border-inline-start:3px solid #d6ad6c!important;background:linear-gradient(110deg,#1b1916,#111 72%)!important;border-radius:8px!important;box-shadow:none!important}
+.lrx-page-help h2{font-size:clamp(15px,2vw,18px)}
+.lrx-page-help>div>div p{line-height:1.6}
+
+/* Dashboard navigation: visually differentiated, contained, and swipeable on small viewports. */
+.lourex-workspace .lrx-dashboard-side{border-color:#d6ad6c32;background:linear-gradient(145deg,#161514,#0e0e0e)!important}
+.lourex-workspace .lrx-dashboard-nav{scrollbar-width:thin;scrollbar-color:#b99b6b55 transparent;overscroll-behavior-inline:contain}
+.lourex-workspace .lrx-dashboard-nav a{scroll-snap-align:start}
+.lourex-workspace .lrx-dashboard-nav a.active-nav-item{box-shadow:inset 0 -2px 0 #d6ad6c}
+.lourex-workspace .lrx-workspace-heading{background:linear-gradient(110deg,#1b1816,#111 80%)!important;border-top:2px solid #d6ad6c63}
+
+/* Safe widths, breathing space and readable content across iPhone sizes. */
+@media(max-width:767px){
+ .lrx-interior-intro{padding:24px 18px 26px}
+ :is(.lourex-faq,.lourex-aeo,.lourex-guidelines) main>div:first-child{padding:24px 18px 28px}
+ .lourex-request .lrx-request-intro{gap:0;padding-bottom:20px;margin-bottom:20px}
+ .lourex-request .lrx-request-intro h1{font-size:clamp(29px,7.3vw,42px);line-height:1.18;max-width:none;margin-block:14px}
+ .lourex-request .lrx-request-intro .lrx-trade-emblem{width:min(64%,210px);max-height:165px;justify-self:center}
+ .lourex-request .lrx-request-start{margin-top:12px}
+ .lourex-request>main>div.container{padding-top:32px}
+ .lourex-contact main{padding-block:32px 64px}
+ .lourex-contact .lrx-contact-shell{padding:18px}
+ .lourex-contact .lrx-contact-form{padding:20px 16px}
+ .lourex-contact .lrx-contact-shell>div.grid{margin-top:24px;gap:22px}
+ .lrx-page-help{padding:14px!important}
+ .lourex-workspace .lrx-dashboard-side{padding:10px}
+ .lourex-workspace .lrx-dashboard-nav{scroll-snap-type:x proximity;scroll-padding-inline:10px;padding-bottom:8px}
+ .lourex-workspace .lrx-dashboard-nav a{flex:none;min-height:46px;padding-inline:14px;white-space:nowrap}
+ .lourex-workspace .lrx-workspace-heading{padding:20px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .lrx-interior-card,.lrx-interior-link,.lourex-contact .lrx-contact-detail{transition:none}
+}

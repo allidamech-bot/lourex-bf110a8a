@@ -25,7 +25,7 @@ export function PageHelpBox({
     <>
       <div
         dir={isArabic ? "rtl" : "ltr"}
-        className={`rounded-2xl border border-gold/25 bg-card p-4 text-start shadow-sm ${className}`}
+        className={`lrx-page-help rounded-2xl border border-gold/25 bg-card p-4 text-start shadow-sm ${className}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">

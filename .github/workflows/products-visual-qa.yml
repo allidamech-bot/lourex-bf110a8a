@@ -43,6 +43,7 @@ jobs:
           elif [ "$FOCUSED_UI" = "true" ]; then
             node scripts/mobile-shell-qa.mjs
             node scripts/site-polish-qa.mjs
+            node scripts/interior-pages-qa.mjs
             LOUREX_MOBILE_FIX_QA=1 node scripts/workspace-visual-qa.mjs
           else
             node scripts/products-visual-qa.mjs
@@ -60,6 +61,7 @@ jobs:
             products-qa/
             site-qa/
             workspace-qa/
+            interior-qa/
             homepage-types-*.txt
       - uses: actions/upload-artifact@v4
         with:
