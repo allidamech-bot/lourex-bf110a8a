@@ -96,7 +96,7 @@ const mapProductRow = (row: ProductCatalogProductRow): ProductCatalogItem => ({
   descriptionAr: row.description_ar || "",
   descriptionEn: row.description_en || "",
   categoryId: row.category_id || "food-fmcg",
-  originCountry: row.origin_country || "Turkey",
+  originCountry: row.origin_country || "",
   brand: row.brand || "",
   moq: row.moq || "",
   unit: row.unit || "",
@@ -133,7 +133,7 @@ const mapAdminInput = (input: ProductCatalogAdminInput) => ({
   description_ar: input.descriptionAr.trim(),
   description_en: input.descriptionEn.trim(),
   category_id: input.categoryId || "food-fmcg",
-  origin_country: input.originCountry.trim() || "Turkey",
+  origin_country: input.originCountry.trim(),
   brand: input.brand?.trim() || "",
   moq: input.moq?.trim() || "",
   unit: input.unit?.trim() || "",
@@ -262,7 +262,7 @@ export const updateCatalogProduct = async (id: string, input: Partial<ProductCat
   if (input.descriptionAr !== undefined) partialPayload.description_ar = input.descriptionAr.trim();
   if (input.descriptionEn !== undefined) partialPayload.description_en = input.descriptionEn.trim();
   if (input.categoryId !== undefined) partialPayload.category_id = input.categoryId;
-  if (input.originCountry !== undefined) partialPayload.origin_country = input.originCountry.trim() || "Turkey";
+  if (input.originCountry !== undefined) partialPayload.origin_country = input.originCountry.trim();
   if (input.brand !== undefined) partialPayload.brand = input.brand?.trim() || "";
   if (input.moq !== undefined) partialPayload.moq = input.moq?.trim() || "";
   if (input.unit !== undefined) partialPayload.unit = input.unit?.trim() || "";
@@ -407,12 +407,12 @@ export const buildProductRequestPrefill = (
     productName: name,
     productDescription: [description, shortDescription].filter(Boolean).join("\n\n"),
     brand: product.brand || "",
-    manufacturingCountry: product.originCountry || "Turkey",
+    manufacturingCountry: product.originCountry || "",
     material: product.material || "",
     technicalSpecs: [product.technicalSpecs, product.packaging ? `Packaging: ${product.packaging}` : "", priceNote].filter(Boolean).join("\n"),
     weight: product.weight || "",
     sizeDimensions: product.dimensions || "",
-    qualityLevel: product.tagsEn.includes("Demo item") ? "" : "Commercial sourcing quality",
+    qualityLevel: "",
     referenceLink: typeof window !== "undefined" ? `${window.location.origin}/products/${product.slug}` : `/products/${product.slug}`,
     deliveryNotes: isArabic
       ? `طلب مبدئي من كتالوج Lourex للمنتج: ${product.nameAr}. يرجى مراجعة الكمية والسعر والشحن حسب التوفر.`
