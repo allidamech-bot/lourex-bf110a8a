@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown, ArrowUpRight, Check, Globe2, PackageSearch, SearchCheck } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Globe2, PackageSearch } from "lucide-react";
+import SourcingIllustration from "@/components/home/SourcingIllustration";
 import { Link } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 
@@ -25,10 +26,10 @@ const HeroSection = () => {
 
       <div className="relative mx-auto max-w-[1520px] px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:px-12 lg:pb-16 xl:px-16">
         <div className="mx-auto max-w-[1000px] text-center">
-          <motion.p {...reveal(0)} className="mx-auto inline-flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.19em] text-[#AAC7EB] sm:text-[11px] rtl:tracking-normal">
-            <span className="h-px w-7 bg-[#659BEA]/70" aria-hidden="true" />
+          <motion.p {...reveal(0)} className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-center text-[10px] font-extrabold uppercase tracking-[0.19em] text-[#AAC7EB] sm:text-[11px] rtl:tracking-normal">
+            <span className="hidden h-px w-7 bg-[#659BEA]/70 sm:block" aria-hidden="true" />
             LOUREX — INTERNATIONAL TRADING & RESOURCES
-            <span className="h-px w-7 bg-[#EC5263]/70" aria-hidden="true" />
+            <span className="hidden h-px w-7 bg-[#EC5263]/70 sm:block" aria-hidden="true" />
           </motion.p>
           <motion.h1 {...reveal(0.08)} id="lourex-hero-title" className="mx-auto mt-7 max-w-[19ch] text-[clamp(2.5rem,6.1vw,6.3rem)] font-extrabold leading-[1.12] tracking-[-0.055em] text-white rtl:max-w-[25ch] rtl:tracking-normal">
             {ar ? (
@@ -55,28 +56,27 @@ const HeroSection = () => {
         </div>
 
         <motion.div {...reveal(0.28)} className="relative mx-auto mt-12 grid max-w-[1280px] gap-5 lg:mt-14 lg:min-h-[335px] lg:grid-cols-[0.95fr_1.05fr_1fr] lg:items-center">
-          {/* A buyer's needs become a structured trade request. */}
-          <div className="relative z-10 mx-auto w-full max-w-[370px] overflow-hidden rounded-[22px] border border-[#7896B9]/30 bg-[#0D192B]/90 p-5 shadow-[0_28px_75px_-40px_rgba(0,0,0,0.8)] sm:p-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <span className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#93BEF4] rtl:tracking-normal">
-                <PackageSearch className="h-4 w-4" aria-hidden="true" />
-                {ar ? "احتياج العميل" : "THE BUYER'S BRIEF"}
-              </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4E8CEB]/15 text-[#91BFFC]"><SearchCheck className="h-4 w-4" aria-hidden="true" /></span>
+          {/* Product visual and customer brief tell a story without heavy media. */}
+          <div className="group relative z-10 mx-auto flex min-h-[345px] w-full max-w-[390px] flex-col justify-end overflow-hidden rounded-[24px] border border-[#7087AA]/35 bg-[#101C2E] shadow-[0_27px_75px_-43px_rgba(0,0,0,0.95)] sm:min-h-[390px]">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[73%] opacity-95 transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:transform-none" aria-hidden="true">
+              <SourcingIllustration variant="confectionery" className="h-full w-full" />
             </div>
-            <h2 className="mt-5 text-[22px] font-bold leading-snug text-white sm:text-[25px]">
-              {ar ? "تبحث عن منتج محدد؟" : "Looking for the right product?"}
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-[#A8BDCF]">
-              {ar ? "ابدأ بالمواصفات والكميات والوجهة." : "Start with your specifications, quantity and destination."}
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
-              {(ar ? ["اسم المنتج", "المواصفات", "الكمية المطلوبة", "بلد التسليم"] : ["Product", "Specifications", "Quantity", "Destination"]).map((label) => (
-                <span key={label} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#58749C]/20 bg-[#1A2B41]/75 px-3 text-[11px] font-semibold text-[#D1DFEE]">
-                  <Check className="h-3.5 w-3.5 shrink-0 text-[#6EACFF]" aria-hidden="true" />
-                  {label}
-                </span>
-              ))}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#091323] via-[#091323]/75 to-transparent" aria-hidden="true" />
+            <div className="relative z-10 p-5 sm:p-7">
+              <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#AECDF5] rtl:tracking-normal">
+                <PackageSearch className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+                {ar ? "الطلب يبدأ من المنتج" : "EVERY ORDER BEGINS WITH A PRODUCT"}
+              </div>
+              <h2 className="max-w-[18ch] text-[clamp(1.45rem,2vw,1.95rem)] font-extrabold leading-[1.2] text-white">
+                {ar ? "تبحث عن المنتج المناسب؟" : "The product you need. The connection we make."}
+              </h2>
+              <p className="mt-3 max-w-[31ch] text-[13px] leading-6 text-[#B9C9DF]">
+                {ar ? "شاركنا المواصفات والكمية والوجهة؛ ونبدأ من احتياجك." : "Share the specifications, quantity and destination. Your brief starts the journey."}
+              </p>
+              <Link to="/request" className="mt-5 inline-flex min-h-10 items-center gap-2 border-b border-[#91B5F4]/40 text-[12px] font-bold text-[#B6D6FF] transition-colors hover:border-[#B6D6FF]">
+                {ar ? "أنشئ طلبًا" : "Create your brief"}
+                <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
+              </Link>
             </div>
           </div>
 
