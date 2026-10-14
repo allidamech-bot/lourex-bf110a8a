@@ -78,3 +78,14 @@ CREATE POLICY "Owner and operations remove products" ON public.product_catalog_p
   FOR DELETE TO authenticated USING (
     (select public.is_lourex_role((select auth.uid()), ARRAY['owner','operations_employee']::text[]))
   );
+
+-- The admin UI uploads product art as product-images/catalog/<slug>/<unique-file>.
+-- Keep general product image reads public, and restrict catalog writes to LOUREX staff.
+DROP POLICY IF EXISTS "LOUREX staff upload catalog images" ON storage.objects;
+CREATE POLICY "LOUREX staff upload catalog images" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (
+    bucket_id='product-images'
+    AND (storage.foldername(name))[1]='catalog'
+    AND lower(storage.extension(name)) = ANY(ARRAY['jpg','jpeg','png','webp','avif'])
+    AND (select public.is_lourex_role((select auth.uid()), ARRAY['owner','operations_employee']::text[]))
+  );
