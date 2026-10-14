@@ -37,7 +37,70 @@ export default function HomeProductSpotlight() {
     };
   }, []);
 
-  if (!products.length) return null;
+  if (!products.length) {
+    return (
+      <section
+        id="featured-products"
+        aria-labelledby="sourcing-inquiry-heading"
+        className="bg-background py-20 sm:py-28 lg:py-32"
+      >
+        <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 xl:px-14">
+          <div className="grid overflow-hidden rounded-[28px] border border-border/70 bg-card shadow-[0_30px_90px_-60px_rgba(8,127,120,0.45)] lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="flex flex-col justify-center p-7 sm:p-12 lg:p-16">
+              <span className="inline-flex items-center gap-3 text-[11px] font-extrabold uppercase tracking-[0.14em] text-primary rtl:tracking-normal">
+                <span className="h-px w-8 bg-primary/60" aria-hidden="true" />
+                {ar ? "توريد حسب طلبك" : "YOUR SOURCING BRIEF"}
+              </span>
+              <h2 id="sourcing-inquiry-heading" className="mt-6 max-w-[16ch] text-[clamp(2.2rem,4.25vw,4.25rem)] font-extrabold leading-[1.14] tracking-[-0.045em] text-heading rtl:tracking-normal">
+                {ar ? <>المنتج الذي تبحث عنه. <span className="text-primary">نبدأ من تفاصيله.</span></> : <>Something specific in mind? <span className="text-primary">Start here.</span></>}
+              </h2>
+              <p className="mt-6 max-w-[31rem] text-[15px] leading-8 text-muted-foreground">
+                {ar
+                  ? "أرسل اسم المنتج، مواصفاته، الكمية ووجهة التسليم. يساعدنا الطلب الواضح في تنسيق الخطوة التالية."
+                  : "Share the product, specifications, quantities and destination. A clear request helps us coordinate the next step."}
+              </p>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link to="/request" className="group inline-flex min-h-12 items-center gap-3 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:opacity-90">
+                  {ar ? "قدّم طلب توريد" : "Submit a sourcing request"}
+                  <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
+                </Link>
+                <Link to="/products" className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-border px-5 text-sm font-bold text-heading transition-colors hover:border-primary/40 hover:text-primary">
+                  {ar ? "الكتالوج" : "Catalog"}
+                </Link>
+              </div>
+            </div>
+            <div className="relative flex min-h-[330px] flex-col justify-between overflow-hidden bg-[#0C3530] p-7 text-white sm:min-h-[410px] sm:p-10 lg:min-h-[520px]">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_57%_47%,rgba(116,227,210,0.25),transparent_48%)]" />
+                <div className="absolute -end-48 -top-32 h-[40rem] w-[40rem] rounded-full border border-white/15" />
+                <div className="absolute -end-20 -top-8 h-[28rem] w-[28rem] rounded-full border border-white/15" />
+                <div className="absolute end-[-2rem] top-20 h-[17rem] w-[17rem] rounded-full border border-white/15" />
+              </div>
+              <div className="relative flex items-center justify-between gap-4">
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#B8F1E9] rtl:tracking-normal">LOUREX / TRADE BRIEF</span>
+                <PackageSearch className="h-5 w-5 text-[#B8F1E9]" aria-hidden="true" />
+              </div>
+              <div className="relative max-w-lg">
+                <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-[1.2rem] border border-white/25 bg-white/10 text-[#8CEADB] backdrop-blur">
+                  <PackageSearch className="h-8 w-8" strokeWidth={1.3} aria-hidden="true" />
+                </div>
+                <p className="text-[clamp(1.5rem,3vw,2.75rem)] font-extrabold leading-snug">
+                  {ar ? "كل فرصة تجارية تبدأ بطلب محدّد." : "Every opportunity starts with a clear request."}
+                </p>
+                <div className="mt-7 flex flex-wrap gap-2.5">
+                  {(ar ? ["المنتج", "المواصفات", "الكمية", "الوجهة"] : ["Product", "Specifications", "Quantity", "Destination"]).map((label, i) => (
+                    <span key={label} className="rounded-full border border-white/25 bg-white/[0.07] px-3 py-2 text-[11px] font-bold text-[#D6F9F3]">
+                      <span className="me-1 text-[#8CEADB]">0{i + 1}</span> {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="featured-products" aria-labelledby="featured-products-title" className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-32">
