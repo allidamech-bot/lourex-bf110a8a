@@ -11,7 +11,7 @@ export default function PrivacyPage() {
 
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-privacy min-h-screen bg-background text-foreground">
       <SEO 
         title={t("consent.privacyTitle")}
         description={

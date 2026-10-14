@@ -1,0 +1,100 @@
+/* Shared identity for the full public site and operational surfaces.
+   Status colors and all business controls retain their semantic tokens. */
+.lourex-public{position:relative;isolation:isolate}
+.lourex-public>main{position:relative;min-height:60vh}
+.lourex-public>main::before{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 62%,hsl(var(--gold)/.045) 62.1%,transparent 62.3%),radial-gradient(ellipse at 85% 0%,hsl(var(--gold)/.06),transparent 50%)}
+.lourex-public h1{font-size:clamp(2.4rem,5.4vw,5.2rem);line-height:1.16;letter-spacing:-.045em;text-wrap:balance}
+html[dir=rtl] .lourex-public h1{letter-spacing:0;line-height:1.35}
+.lourex-public main h1::after{content:"";display:block;width:64px;height:3px;margin-top:24px;background:linear-gradient(90deg,#b84630 0 33%,#477193 33% 66%,#d6ad6c 66%);clip-path:polygon(0 0,100% 0,94% 100%,0 100%)}
+.lourex-track main h1::after{margin-inline:auto}
+.lourex-public :is(input,textarea,select){scroll-margin-top:110px}
+.lourex-public :is(button,a,input,textarea,select,summary):focus-visible,.lourex-workspace :is(button,a,input,textarea,select):focus-visible{outline:2px solid hsl(var(--gold));outline-offset:4px}
+.lourex-public main :is(section,article)[class*="rounded"]{box-shadow:0 16px 60px -45px #0008}
+.lourex-public main :is(h1,h2,h3){font-family:inherit}
+.lrx-brand-kicker{font-size:10px;font-weight:800;letter-spacing:.17em;color:hsl(var(--gold));line-height:1.8}
+html[dir=rtl] .lrx-brand-kicker{letter-spacing:0}
+.lrx-trade-emblem{position:relative;aspect-ratio:600/440;margin:0;display:grid;place-items:center;color:hsl(var(--gold));background:radial-gradient(ellipse,hsl(var(--gold)/.07),transparent 62%);overflow:hidden}
+.lrx-trade-emblem>svg{position:absolute;inset:0;width:100%;height:100%}
+.lrx-trade-emblem>img{width:43%;height:auto;clip-path:polygon(50% 7.5%,82.5% 27.4%,82.5% 70%,50% 90.4%,17.5% 68.5%,17.8% 27.2%);transform:scale(1.58);filter:drop-shadow(0 20px 25px #0008)}
+.lrx-trade-emblem figcaption{position:absolute;inset:52% 0 auto;display:flex;justify-content:space-between;padding-inline:1%;font-size:9px;font-weight:700;letter-spacing:.1em;color:hsl(var(--muted-foreground))}
+.lrx-trade-emblem>p{position:absolute;bottom:0;font-size:9px;letter-spacing:.28em;color:hsl(var(--muted-foreground))}
+.lrx-emblem-route{stroke-dasharray:900;stroke-dashoffset:900;animation:lrx-emblem-connect 1.6s ease-out forwards}
+@keyframes lrx-emblem-connect{to{stroke-dashoffset:0}}
+.lrx-request-intro{display:grid;grid-template-columns:1fr .65fr;gap:40px;align-items:center;padding:0 0 48px;border-bottom:1px solid hsl(var(--border));margin-bottom:32px}
+.lrx-request-intro h1{margin-block:18px;font-weight:800}
+.lrx-request-intro>div>p:last-child{max-width:45rem;color:hsl(var(--muted-foreground));line-height:2}
+.lrx-request-guide h2{margin-top:12px;max-width:24rem;font-size:clamp(1.4rem,2vw,2rem);font-weight:700;line-height:1.6;text-wrap:balance}
+.lourex-request .lrx-request-aside>div:last-child{border-radius:0;border-inline-start:1px solid hsl(var(--gold)/.4);border-inline-end:0;background:transparent;box-shadow:none}
+.lourex-request .lrx-request-aside details{border-color:hsl(var(--border));position:relative}
+.lourex-request .lrx-request-aside details summary{padding-inline:16px;min-height:72px}
+.lourex-request .lrx-request-aside details summary>span:first-child{background:hsl(var(--gold)/.08);color:hsl(var(--gold));clip-path:polygon(25% 0,100% 0,100% 75%,75% 100%,0 100%,0 25%);border-radius:0}
+.lourex-request main form section,.lourex-request main .space-y-6>section{border-radius:8px 8px 24px 8px;border-top:2px solid hsl(var(--gold)/.45);background:linear-gradient(135deg,hsl(var(--gold)/.035),transparent 45%),hsl(var(--card));padding:clamp(18px,3vw,32px)}
+.lourex-request main section h3{font-size:1.3rem;line-height:1.6}
+.lourex-request main input:not([type=checkbox]):not([type=radio]):not([type=file]),.lourex-request main textarea,.lourex-contact main input,.lourex-contact main textarea{border-radius:8px;background:hsl(var(--background)/.8);min-height:48px}
+.lourex-request main label{line-height:1.7}
+.lourex-request main button:disabled{cursor:not-allowed}
+.lourex-faq main{max-width:1200px}
+.lourex-faq main>div:first-child{padding-bottom:32px;border-bottom:1px solid hsl(var(--border))}
+.lourex-faq main>div:last-child{gap:0;counter-reset:faq}
+.lourex-faq article{position:relative;padding:32px 0 32px 64px;border-width:0 0 1px;border-radius:0;background:transparent;box-shadow:none!important}
+html[dir=rtl] .lourex-faq article{padding:32px 64px 32px 0}
+.lrx-faq-number{position:absolute;inset-inline-start:0;top:38px;font-size:11px;color:hsl(var(--gold));font-variant-numeric:tabular-nums}
+.lourex-faq article h2{font-size:clamp(1.15rem,2vw,1.5rem);line-height:1.7}
+.lourex-faq article p{max-width:60rem;margin-top:12px;line-height:2}
+.lourex-aeo main{max-width:1280px}
+.lourex-aeo main>div:first-child{border-inline-start:2px solid hsl(var(--gold)/.6);padding-inline-start:clamp(20px,4vw,48px)}
+.lourex-aeo main>section:nth-of-type(1)>div{border-radius:4px 4px 28px;border-color:hsl(var(--border));border-top:2px solid hsl(var(--gold)/.4);padding:clamp(24px,4vw,40px)}
+.lourex-privacy main,.lourex-terms main{padding-block:64px 96px}
+.lourex-privacy main .whitespace-pre-line,.lourex-terms main .whitespace-pre-line{line-height:2.2;font-size:15px}
+.lourex-privacy main [class*="rounded-xl"],.lourex-terms main [class*="rounded-xl"]{border-radius:4px 4px 24px;border-color:hsl(var(--border));border-top:2px solid hsl(var(--gold)/.5)}
+.lourex-whylourex main .space-y-4{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:40px}
+.lourex-whylourex main .space-y-4>div{margin:0;border:0;border-top:1px solid hsl(var(--border));border-radius:0;background:transparent;padding:30px 20px;box-shadow:none}
+.lourex-whylourex main h3{font-size:1.2rem;line-height:1.7}
+.lourex-track main>section:first-child{padding-top:16px;padding-bottom:32px}
+.lourex-track main>section:first-child>div:first-child{color:hsl(var(--gold));border-color:hsl(var(--gold)/.25);background:hsl(var(--gold)/.06)}
+.lourex-track main>section:first-child>div:nth-of-type(2){border-radius:8px;border-color:hsl(var(--gold)/.35);padding:16px;background:linear-gradient(110deg,hsl(var(--gold)/.035),transparent),hsl(var(--card))}
+.lourex-contact main>div:first-child{border:0;border-radius:0;background:transparent;padding:0;box-shadow:none}
+.lourex-contact main>div:first-child>div:first-child{padding-bottom:32px;border-bottom:1px solid hsl(var(--border))}
+.lourex-contact main section{border-radius:8px!important}
+.lourex-contact main section:first-child{border-top:2px solid hsl(var(--gold)/.5)}
+.lourex-productdetail main{background:radial-gradient(ellipse at 10% 5%,hsl(var(--gold)/.05),transparent 45%)}
+.lourex-productdetail main>div[aria-hidden]{display:none}
+.lourex-productdetail main [class*="aspect-"]{background:hsl(var(--secondary));border-radius:4px}
+.lourex-productdetail main dl{font-variant-numeric:tabular-nums}
+.lourex-workspace{--radius:.65rem}
+.lourex-workspace aside[class*="rounded"]{border-radius:8px;border-top:2px solid hsl(var(--gold)/.45)}
+.lourex-workspace aside nav a[aria-current=page]{box-shadow:inset 3px 0 0 hsl(var(--gold))}
+.lourex-workspace main :is(input,select,textarea){scroll-margin-top:100px}
+.lourex-auth{padding-block:48px;position:relative;isolation:isolate;background:radial-gradient(ellipse at 20% 10%,hsl(var(--gold)/.06),transparent 48%),hsl(var(--background))!important}
+.lourex-auth::before{content:"";position:fixed;z-index:-1;width:min(85vw,750px);aspect-ratio:1;inset:15% auto auto 55%;border:1px solid hsl(var(--gold)/.15);transform:rotate(30deg);pointer-events:none}
+.lourex-auth h1{color:hsl(var(--foreground));font-family:inherit;letter-spacing:.12em}
+.lourex-auth img{clip-path:polygon(50% 7.5%,82.5% 27.4%,82.5% 70%,50% 90.4%,17.5% 68.5%,17.8% 27.2%)}
+.lourex-auth form input{min-height:48px}
+@media(max-width:767px){
+ .lrx-request-intro{grid-template-columns:1fr;gap:8px;padding-bottom:28px;margin-bottom:24px}
+ .lrx-request-intro .lrx-trade-emblem{width:min(100%,360px);justify-self:center}
+ .lrx-request-intro h1{font-size:clamp(2.1rem,8vw,3rem)}
+ .lrx-request-aside{display:grid;grid-template-columns:1fr;gap:16px}
+ .lrx-request-aside>div{margin-top:0!important}
+ .lourex-whylourex main .space-y-4{grid-template-columns:1fr}
+ .lourex-public h1{font-size:clamp(2.1rem,8vw,3rem)}
+ .lourex-faq article{padding-inline-start:42px}
+ html[dir=rtl] .lourex-faq article{padding:28px 42px 28px 0}
+ .lourex-aeo main>div:first-child{padding-inline-start:18px}
+ .lourex-request main form section{padding:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .lrx-emblem-route{animation:none;stroke-dashoffset:0}
+ .lourex-public *,.lourex-workspace *,.lourex-auth *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+.lrx-detail-placeholder{display:grid;justify-items:center;gap:24px;color:hsl(var(--gold));text-align:center}
+.lrx-detail-placeholder svg{width:160px;max-width:70%;height:auto}
+.lrx-detail-placeholder p{font-size:12px;color:hsl(var(--muted-foreground))}
+@media(max-width:767px){.lrx-trade-emblem-compact{max-width:220px!important}}
+.lourex-workspace :is(table,[role=table]){font-variant-numeric:tabular-nums}
+.lourex-workspace thead{background:hsl(var(--secondary));color:hsl(var(--muted-foreground))}
+.lourex-workspace tbody tr{transition:background .15s}
+.lourex-workspace tbody tr:hover{background:hsl(var(--gold)/.035)}
+.lourex-workspace :is(h1,h2){font-family:inherit;text-wrap:balance}
+.lourex-workspace main>div:first-child{border-color:hsl(var(--border))}
+.lourex-workspace [class*="rounded-[1.75rem]"]{border-radius:12px}

@@ -180,7 +180,7 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center px-4 bg-background"
+      className="lourex-auth flex min-h-screen items-center justify-center px-4 bg-background"
       style={{
         background: "radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.03) 0%, #0c0a09 60%)",
       }}
@@ -192,8 +192,9 @@ const Auth = forwardRef<HTMLDivElement>((_props, _ref) => {
         className="w-full max-w-md relative"
       >
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.02),transparent_40%)] pointer-events-none" />
-        {/* Logo */}
+        {/* Official LOUREX identity */}
         <div className="mb-8 text-center relative z-10">
+          <img src="/lourex-official.jpeg" alt="" width="96" height="96" className="mx-auto mb-5 h-24 w-24 object-contain" />
           <h1 className="mb-1.5 font-serif text-3xl font-bold tracking-wider text-primary uppercase">LOUREX</h1>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
             {isLogin ? t("auth.signInDescription") : t("auth.signUpDescription")}

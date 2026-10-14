@@ -86,9 +86,9 @@ export const DashboardLayout = () => {
   const visibleLinks = dashboardLinks.filter((link) => profile && link.roles.includes(profile.role));
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground">
+    <div className="lourex-workspace min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_6%_8%,rgba(8,127,120,0.06),transparent_35%)] dark:bg-[radial-gradient(ellipse_at_6%_8%,rgba(54,211,192,0.035),transparent_32%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_6%_8%,rgba(170,54,36,0.06),transparent_35%)] dark:bg-[radial-gradient(ellipse_at_6%_8%,rgba(214,173,108,0.035),transparent_32%)]" />
         <div className="absolute inset-x-12 top-24 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
       </div>
 

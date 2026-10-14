@@ -20,7 +20,7 @@ export default function WhyLourexPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-whylourex min-h-screen bg-background text-foreground">
       <SEO 
         title={t("nav.whyLourex")}
         description={

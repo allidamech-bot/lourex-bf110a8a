@@ -125,7 +125,7 @@ export default function TrackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-track min-h-screen bg-background text-foreground">
       <SEO
         title={t("publicTracking.title")}
         description={t("publicTracking.description")}
@@ -154,6 +154,9 @@ export default function TrackPage() {
                   onChange={(event) => setTrackingId(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && submitLookup()}
                   placeholder={t("publicTracking.placeholder")}
+                  aria-label={t("publicTracking.placeholder")}
+                  aria-describedby={error ? "tracking-error" : undefined}
+                  aria-invalid={Boolean(error)}
                   className="h-14 w-full rounded-xl border border-border/80 bg-background ps-12 pe-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
                 />
               </div>
@@ -168,7 +171,7 @@ export default function TrackPage() {
           </div>
 
           {error ? (
-            <div className="mx-auto mt-4 flex max-w-2xl items-start gap-3 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-start text-sm text-red-400">
+            <div id="tracking-error" role="alert" className="mx-auto mt-4 flex max-w-2xl items-start gap-3 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-start text-sm text-red-400">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>

@@ -1,11 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
+import { MotionConfig } from "framer-motion";
 import App from "./App.tsx";
 import "./index.css";
 import "./styles/purchase-requests-hardening.css";
+import "./styles/lourex-brand.css";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-    <App />
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <MotionConfig reducedMotion="user"><App /></MotionConfig>
   </ThemeProvider>
 );

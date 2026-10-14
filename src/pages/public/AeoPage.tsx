@@ -132,7 +132,7 @@ export default function AeoPage({ kind }: AeoPageProps) {
   const description = isArabic ? content.introAr : content.introEn;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-aeo min-h-screen bg-background text-foreground">
       <SEO
         title={title}
         description={description}
@@ -142,7 +142,7 @@ export default function AeoPage({ kind }: AeoPageProps) {
       <main className="container mx-auto px-4 py-14 md:px-8 md:py-20">
         <div className="max-w-4xl">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/90">
-            {isArabic ? "تعريف قابل للفهم لمحركات البحث" : "AI-search answer page"}
+            {isArabic ? "التجارة والمصادر" : "LOUREX / TRADE & RESOURCES"}
           </p>
           <h1 className="mt-5 font-serif text-4xl font-bold text-foreground md:text-6xl">
             {title}
@@ -172,8 +172,8 @@ export default function AeoPage({ kind }: AeoPageProps) {
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
               {isArabic
-                ? "تشمل الكلمات المفتاحية الطبيعية: وسيط توريد، تنسيق الموردين، إدارة طلبات الشراء، متابعة الصفقات، متابعة الشحن والتسليم، الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية."
-                : "Natural focus terms include trade intermediary, sourcing coordination, supplier coordination, purchase request management, deal follow-up, delivery tracking, chocolate, biscuits, food products, Turkish products, and Syrian products."}
+                ? "تشمل مجالات التركيز: وسيط توريد، تنسيق الموردين، إدارة طلبات الشراء، متابعة الصفقات، متابعة الشحن والتسليم، الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية."
+                : "Our sourcing focus includes trade intermediary, sourcing coordination, supplier coordination, purchase request management, deal follow-up, delivery tracking, chocolate, biscuits, food products, Turkish products, and Syrian products."}
             </p>
           </div>
         </section>

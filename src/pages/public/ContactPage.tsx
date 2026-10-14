@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import { SEO } from "@/components/seo/SEO";
 import { SupportConversationWidget } from "@/components/SupportConversationWidget";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
@@ -200,7 +201,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-contact min-h-screen bg-background text-foreground">
       <SEO 
         title={t("nav.contact")}
         description={
@@ -215,6 +216,7 @@ export default function ContactPage() {
       <main className="container mx-auto px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
         <div className="relative overflow-hidden rounded-[2.25rem] border border-border/70 bg-card/60 p-5 shadow-soft sm:p-8 lg:p-12">
           <SectionHeading
+            as="h1"
             eyebrow={t("contact.eyebrow")}
             title={t("contact.title")}
             description={t("contact.description")}
@@ -363,6 +365,7 @@ export default function ContactPage() {
           <SupportConversationWidget />
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
