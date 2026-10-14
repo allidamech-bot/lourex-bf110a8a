@@ -15,8 +15,8 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
  for(const lang of ['ar','en'])for(const width of [320,390,430,768,1024,1440]){
   const context=await browser.newContext({viewport:{width,height:width<768?932:1000},isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
   await boundFontRequests(context);
-  // Reproduce a returning visitor whose old saved light choice caused the split identity.
-  await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);if(!localStorage.getItem('lourex-identity'))localStorage.setItem('theme','light');},lang);
+  // A visitor may have an old saved daytime preference; it must always be overridden.
+  await context.addInitScript(lang=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme','light');},lang);
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base,{waitUntil:'domcontentloaded'});await page.locator('footer').waitFor();await page.evaluate(()=>document.fonts.ready);
   const footer=page.locator('footer');await footer.scrollIntoViewIfNeeded();
@@ -34,11 +34,12 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    const dialog=page.getByRole('dialog');await dialog.waitFor();
    await dialog.getByRole('button',{name:lang==='ar'?'إغلاق':'Close'}).last().click();
    await page.screenshot({path:`${out}/${engine}-${lang}-request.png`,fullPage:true});
-   // An explicit new light preference persists, but homepage chrome remains dark.
+   // Even if an old client restores a daytime value, route reloads stay dark.
    await page.evaluate(()=>{localStorage.setItem('theme','light');});await page.reload({waitUntil:'domcontentloaded'});await page.locator('h1').first().waitFor();
-   if(!await page.locator('html').evaluate(el=>el.classList.contains('light')))errors.push('Explicit light choice not preserved');
+   if(!await page.locator('html').evaluate(el=>el.classList.contains('dark')&&!el.classList.contains('light')))errors.push('Saved daytime preference activated on request');
+   if(await page.getByRole('button',{name:lang==='ar'?'تبديل المظهر':'Toggle theme'}).count())errors.push('Removed appearance switch still shown');
    await page.goto(base,{waitUntil:'domcontentloaded'});await page.locator('footer').waitFor();
-   if(await page.locator('html').evaluate(el=>getComputedStyle(el).colorScheme)!=='dark')errors.push('Light choice makes homepage chrome light');
+   if(await page.locator('html').evaluate(el=>getComputedStyle(el).colorScheme)!=='dark')errors.push('Homepage chrome not dark');
    await page.goto(`${base}/contact`,{waitUntil:'domcontentloaded'});await page.locator('main a[href="tel:+905392411642"]').first().waitFor();
    const phone=page.locator('main a[href="tel:+905392411642"]').first();
    if(await phone.innerText()!=='00905392411642'||await phone.evaluate(el=>getComputedStyle(el).direction)!=='ltr')errors.push('Contact phone bidi incorrect');

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { getRoleDisplayName, getWorkspaceTitle } from "@/lib/identity";
@@ -213,7 +212,6 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
               {user ? <NotificationBell userId={user.id} /> : null}
 
               <LanguageSwitcher />
-              <ThemeToggle />
 
               {isAuthenticated ? (
                   <>
@@ -304,8 +302,7 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
                 <div className="mb-6 flex max-w-full flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
                   {user ? <NotificationBell userId={user.id} /> : null}
                   <LanguageSwitcher />
-                  <ThemeToggle />
-                </div>
+                    </div>
 
                 <nav className="min-w-0 flex-1 space-y-1.5" aria-label={t("nav.mobileNavigation")}>
                   {canSeeDashboardMenu ? (

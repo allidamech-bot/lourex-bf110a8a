@@ -14,7 +14,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    const exp=Math.floor(Date.now()/1000)+86400;
    const token=[Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,exp,role:'authenticated',aud:'authenticated'})).toString('base64url'),'visual-fixture-signature'].join('.');
    await boundFontRequests(context);
-   await context.addInitScript(({lang,user,exp,token})=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme','dark');localStorage.setItem('sb-gxmqchznfolerliorpkz-auth-token',JSON.stringify({access_token:token,refresh_token:'visual-fixture-refresh',expires_in:86400,expires_at:exp,token_type:'bearer',user}));},{lang,user,exp,token});
+   await context.addInitScript(({lang,user,exp,token})=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme','light');localStorage.setItem('sb-gxmqchznfolerliorpkz-auth-token',JSON.stringify({access_token:token,refresh_token:'visual-fixture-refresh',expires_in:86400,expires_at:exp,token_type:'bearer',user}));},{lang,user,exp,token});
    await context.route('**/*.supabase.co/**',async handler=>{
     const url=new URL(handler.request().url());
     const profile={id,email:user.email,full_name:'Visual QA Fixture',role,status:'active',partner_type:null,phone:'+905550000039',country:'Türkiye',created_at:user.created_at};
@@ -28,6 +28,8 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    await page.waitForTimeout(350);
    await page.evaluate(()=>document.fonts.ready);
    if(page.url().includes('/auth'))errors.push('Fixture did not reach authenticated route');
+   if(!await page.locator('html').evaluate(el=>el.classList.contains('dark')&&!el.classList.contains('light')))errors.push('Day theme leaked into authenticated workspace');
+   if(await page.getByRole('button',{name:lang==='ar'?'تبديل المظهر':'Toggle theme'}).count())errors.push('Theme switch still visible in workspace');
    if(route==='/request'){
     if(process.env.LOUREX_MOBILE_FIX_QA){
      for(const control of await page.locator('main button[role=radio]').all()){

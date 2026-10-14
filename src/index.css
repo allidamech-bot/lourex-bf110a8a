@@ -5,56 +5,8 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── LOUREX — Warm porcelain, mineral red & gold ── */
-  :root, .light {
-    --background: 40 20% 97%;
-    --foreground: 20 8% 13%;
-    --heading: 20 8% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 8% 13%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 8% 13%;
-    --primary: 8 64% 38%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 8 38% 94%;
-    --secondary: 40 14% 92%;
-    --secondary-foreground: 20 8% 13%;
-    --muted: 40 12% 93%;
-    --muted-foreground: 20 5% 42%;
-    --accent: 40 30% 90%;
-    --accent-foreground: 8 64% 32%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --success: 152 60% 36%;
-    --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
-    --border: 35 14% 84%;
-    --input: 35 14% 80%;
-    --ring: 8 64% 38%;
-    --radius: 0.875rem;
-    --surface-elevated: 0 0% 100%;
-    --surface-overlay: 40 20% 97%;
-    --gold: 36 52% 44%;
-    --gold-light: 36 55% 67%;
-    --gold-dark: 36 55% 34%;
-    --footer-background: 0 0% 5%;
-    --footer-foreground: 40 15% 94%;
-    --footer-muted: 35 6% 65%;
-    --footer-accent: 36 55% 66%;
-    --shadow-soft: 0 1px 2px hsl(177 53% 15% / 0.04), 0 8px 24px -12px hsl(177 53% 15% / 0.12);
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 20 8% 13%;
-    --sidebar-primary: 8 64% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 20% 92%;
-    --sidebar-accent-foreground: 20 8% 13%;
-    --sidebar-border: 35 14% 84%;
-    --sidebar-ring: 8 64% 38%;
-  }
-
   /* ── LOUREX — Charcoal, mineral red & gold ── */
-  .dark {
+  :root, .dark {
     --background: 0 0% 4%;
     --foreground: 40 15% 94%;
     --heading: 40 15% 97%;
