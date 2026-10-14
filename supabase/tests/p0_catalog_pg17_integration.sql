@@ -5,7 +5,7 @@ CREATE SCHEMA auth;
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE SCHEMA storage;
-CREATE TABLE storage.objects (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, bucket_id text NOT NULL, name text NOT NULL);
+CREATE TABLE storage.objects (bucket_id text NOT NULL, name text NOT NULL);
 CREATE FUNCTION storage.foldername(p_name text) RETURNS text[] LANGUAGE sql IMMUTABLE
 AS $ SELECT string_to_array(p_name,'/') $;
 CREATE FUNCTION storage.extension(p_name text) RETURNS text LANGUAGE sql IMMUTABLE
