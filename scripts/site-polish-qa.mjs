@@ -17,7 +17,7 @@ for(const [engine,launcher,lang,width] of [['webkit',webkit,'ar',430],['chromium
    const header=page.locator('header').first();
    const metrics=await header.evaluate(el=>{
     const img=el.querySelector('.lrx-header-logo img'),wordmark=el.querySelector('.lrx-header-wordmark');
-    return {position:getComputedStyle(el).position,topBackground:getComputedStyle(el).backgroundColor,wordmark:wordmark?.textContent?.replace(/\\s/g,''),logoClip:img?getComputedStyle(img).clipPath:'none',heroTop:document.querySelector('#lourex-hero')?.getBoundingClientRect().top};
+    return {position:getComputedStyle(el).position,topBackground:getComputedStyle(el).backgroundColor,wordmark:wordmark?.textContent?.replace(/\s/g,''),logoClip:img?getComputedStyle(img).clipPath:'none',heroTop:document.querySelector('#lourex-hero')?.getBoundingClientRect().top};
    });
    if(metrics.position!=='fixed'||metrics.topBackground!=='rgba(0, 0, 0, 0)')errors.push('Homepage header not transparent overlay');
    if(metrics.wordmark!=='LOUREX|لوريكس')errors.push('Bilingual wordmark missing');
