@@ -240,6 +240,29 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
   }
 };
 
+/**
+ * Resolve a catalog link against published Supabase rows only. Internal drafts
+ * and removed items must never prefill a customer sourcing request.
+ */
+export const fetchCatalogProductById = async (id: string): Promise<ProductCatalogItem | null> => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return null;
+  const available = await checkOptionalTableAvailable("product_catalog_products");
+  if (!available) return null;
+
+  const { data, error } = await productDb
+    .from("product_catalog_products")
+    .select(PRODUCT_SELECT)
+    .eq("id", id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) {
+    if (isOptionalBackendUnavailable(error)) return null;
+    throw error;
+  }
+  return data ? mapProductRow(data as ProductCatalogProductRow) : null;
+};
+
 export const createCatalogProduct = async (input: ProductCatalogAdminInput) => {
   const payload = mapAdminInput(input);
   const { data, error } = await productDb

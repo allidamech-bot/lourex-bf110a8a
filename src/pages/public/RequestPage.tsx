@@ -9,9 +9,10 @@ import { fetchRequests } from "@/domain/operations/service";
 import { useI18n } from "@/lib/i18n";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
 import type { OperationsRequest } from "@/domain/operations/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getProductById } from "@/features/products/services/productCatalogService";
+import { fetchCatalogProductById } from "@/features/products/services/productCatalogService";
+import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 
 export default function RequestPage() {
   const { lang, t } = useI18n();
@@ -24,10 +25,23 @@ export default function RequestPage() {
   const [loadingEditRequest, setLoadingEditRequest] = useState(Boolean(editRequestId));
   const [editRequestError, setEditRequestError] = useState("");
 
-  const productSource = useMemo(
-    () => (!editRequestId && productId ? getProductById(productId) : null),
-    [editRequestId, productId],
-  );
+  const [resolvedProduct, setResolvedProduct] = useState<{ id: string; item: ProductCatalogItem | null } | null>(null);
+  // The ID travels with the result so that navigating between two products can
+  // never temporarily prefill the new request with a previous product.
+  const productSource = !editRequestId && resolvedProduct?.id === productId ? resolvedProduct.item : null;
+  const loadingProductSource = Boolean(productId && !editRequestId && resolvedProduct?.id !== productId);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!productId || editRequestId) {
+      setResolvedProduct(null);
+      return;
+    }
+    void fetchCatalogProductById(productId)
+      .then(item => { if (!cancelled) setResolvedProduct({ id: productId, item }); })
+      .catch(() => { if (!cancelled) setResolvedProduct({ id: productId, item: null }); });
+    return () => { cancelled = true; };
+  }, [productId, editRequestId]);
   const isCatalogInspiredRequest = !editRequestId && (requestSource === "products" || Boolean(productId));
 
   useEffect(() => {
@@ -137,7 +151,7 @@ export default function RequestPage() {
               </div>
             </div>
 
-            {loadingEditRequest ? (
+            {loadingEditRequest || loadingProductSource ? (
               <div className="rounded-[2rem] border border-border/70 bg-card p-8 shadow-soft text-sm text-muted-foreground backdrop-blur-xl">
                 {t("common.loading") || "Loading..."}
               </div>
@@ -172,7 +186,9 @@ export default function RequestPage() {
                     mode={editRequestId ? "edit" : "create"}
                     requestId={editRequestId || undefined}
                     initialRequest={editRequest}
-                    sourceProductId={productId}
+                    key={editRequestId || productId || "freeform"}
+                    sourceProductId={productId || undefined}
+                    sourceProduct={productSource}
                     onEditSuccess={(request) => navigate(`/customer-portal/requests?request=${request.id}`)}
                   />
                 </RequestContactGate>
