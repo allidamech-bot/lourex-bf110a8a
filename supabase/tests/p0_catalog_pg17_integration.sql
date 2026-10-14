@@ -4,6 +4,17 @@ BEGIN;
 CREATE SCHEMA auth;
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
+CREATE SCHEMA storage;
+CREATE TABLE storage.objects (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, bucket_id text NOT NULL, name text NOT NULL);
+CREATE FUNCTION storage.foldername(p_name text) RETURNS text[] LANGUAGE sql IMMUTABLE
+AS $ SELECT string_to_array(p_name,'/') $;
+CREATE FUNCTION storage.extension(p_name text) RETURNS text LANGUAGE sql IMMUTABLE
+AS $ SELECT split_part(p_name,'.',array_length(string_to_array(p_name,'.'),1)) $;
+GRANT USAGE ON SCHEMA storage TO anon, authenticated;
+GRANT SELECT, INSERT ON storage.objects TO anon, authenticated;
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can read catalog images" ON storage.objects FOR SELECT TO anon,authenticated
+  USING (bucket_id='product-images');
 CREATE TABLE auth.users (id uuid PRIMARY KEY);
 INSERT INTO auth.users(id) VALUES
 ('00000000-0000-0000-0000-000000000001'),
@@ -54,6 +65,11 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN denied:=true;
   END;
   IF NOT denied THEN RAISE EXCEPTION 'Anonymous insert succeeded'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO storage.objects(bucket_id,name)
+    VALUES('product-images','catalog/anon/forbidden.jpg');
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Anonymous catalog image upload succeeded'; END IF;
 END $checks$;
 
 SET LOCAL ROLE authenticated;
@@ -68,6 +84,11 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN denied:=true;
   END;
   IF NOT denied THEN RAISE EXCEPTION 'Customer insert succeeded'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO storage.objects(bucket_id,name)
+    VALUES('product-images','catalog/customer/forbidden.jpg');
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Customer catalog image upload succeeded'; END IF;
 END $checks$;
 
 SELECT pg_catalog.set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
@@ -75,6 +96,9 @@ DO $checks$
 BEGIN
   IF (SELECT count(*) FROM public.product_catalog_products)<>1
     THEN RAISE EXCEPTION 'Partner can see unpublished drafts'; END IF;
+  -- Partners must not be able to manage catalog files.
+  IF EXISTS(SELECT 1 FROM storage.objects WHERE name='catalog/partner.jpg')
+    THEN RAISE EXCEPTION 'Unexpected catalog object'; END IF;
 END $checks$;
 
 SELECT pg_catalog.set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
@@ -94,6 +118,13 @@ BEGIN
     VALUES('owner-draft','Owner draft') RETURNING id INTO draft_id;
   IF (SELECT status FROM public.product_catalog_products WHERE id=draft_id)<>'draft'
     THEN RAISE EXCEPTION 'New item should be unpublished'; END IF;
+  INSERT INTO storage.objects(bucket_id,name)
+    VALUES('product-images','catalog/test/approved.jpg');
+  BEGIN
+    INSERT INTO storage.objects(bucket_id,name) VALUES('product-images','catalog/test/forbidden.svg');
+    RAISE EXCEPTION 'Owner SVG upload incorrectly allowed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   UPDATE public.product_catalog_products SET status='active' WHERE id=draft_id;
   DELETE FROM public.product_catalog_products WHERE id=draft_id;
 END $checks$;
