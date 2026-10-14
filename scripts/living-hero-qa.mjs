@@ -22,6 +22,11 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   if(await page.locator('.lrx-living-actions a[href="/products"]').count()!==1)errors.push('Catalog link missing');
   await page.waitForTimeout(200);
   if(width===430||width===1440)await page.screenshot({path:`${out}/${engine}-${lang}-${width}-hero.png`});
+  if(engine==='webkit'&&lang==='ar'&&width===430){
+   await writeFile(`${out}/webkit-paint-dom.json`,JSON.stringify(await page.evaluate(()=>document.elementsFromPoint(100,150).map(el=>({tag:el.tagName,cls:el.className,rect:el.getBoundingClientRect().toJSON(),style:{background:getComputedStyle(el).background,filter:getComputedStyle(el).filter,backdrop:getComputedStyle(el).backdropFilter}}))),null,2));
+   await page.evaluate(()=>window.scrollTo(0,1));await page.waitForTimeout(100);await page.evaluate(()=>window.scrollTo(0,0));await page.waitForTimeout(100);
+   await page.screenshot({path:`${out}/webkit-ar-430-repaint.png`});
+  }
   const steps=page.locator('.lrx-milestone');
   for(let i=0;i<5;i++){await steps.nth(i).click();if(await steps.nth(i).getAttribute('aria-pressed')!=='true'||!await page.locator('#lrx-journey-detail svg').count())errors.push(`Journey step ${i+1} broken`);}
   if(width===430&&lang==='ar')await page.locator('#explore').screenshot({path:`${out}/${engine}-ar-430-journey.png`});
