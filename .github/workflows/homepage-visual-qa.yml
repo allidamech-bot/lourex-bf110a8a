@@ -1,0 +1,41 @@
+name: Homepage visual QA
+on:
+  push:
+    branches: [feat/lourex-living-trade]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Compare full TypeScript diagnostics with unchanged main baseline
+        run: node scripts/check-homepage-types.mjs
+      - name: Build using existing public frontend configuration
+        run: node scripts/build-homepage-preview.mjs
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Capture desktop and iPhone sized browsers
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ && break || sleep 1; done
+          node scripts/homepage-visual-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homepage-screenshots-and-results
+          path: |
+            homepage-qa/
+            homepage-types-*.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: homepage-built-preview
+          path: dist/

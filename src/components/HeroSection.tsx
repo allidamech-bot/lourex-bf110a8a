@@ -1,144 +1,41 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown, ArrowUpRight, Globe2, PackageSearch } from "lucide-react";
-import SourcingIllustration from "@/components/home/SourcingIllustration";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 
-/** The X marks a connection, not a claim about routes or live suppliers. */
-const HeroSection = () => {
+export default function HeroSection() {
   const { lang } = useI18n();
   const ar = lang === "ar";
-  const reduceMotion = useReducedMotion();
-  const reveal = (delay: number) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 23 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0 : 0.65, delay: reduceMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] as const },
-  });
-
+  const reduced = useReducedMotion();
   return (
-    <section
-      id="lourex-hero"
-      aria-labelledby="lourex-hero-title"
-      className="relative isolate overflow-hidden bg-[#050B15] text-white"
-    >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_52%_66%,rgba(24,71,126,0.24),transparent_56%)]" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.13] [background-image:linear-gradient(rgba(126,166,210,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(126,166,210,0.12)_1px,transparent_1px)] [background-size:40px_40px]" />
-
-      <div className="relative mx-auto max-w-[1520px] px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:px-12 lg:pb-16 xl:px-16">
-        <div className="mx-auto max-w-[1000px] text-center">
-          <motion.p {...reveal(0)} className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-center text-[10px] font-extrabold uppercase tracking-[0.19em] text-[#AAC7EB] sm:text-[11px] rtl:tracking-normal">
-            <span className="hidden h-px w-7 bg-[#659BEA]/70 sm:block" aria-hidden="true" />
-            LOUREX — INTERNATIONAL TRADING & RESOURCES
-            <span className="hidden h-px w-7 bg-[#EC5263]/70 sm:block" aria-hidden="true" />
-          </motion.p>
-          <motion.h1 {...reveal(0.08)} id="lourex-hero-title" className="mx-auto mt-7 max-w-[19ch] text-[clamp(2.5rem,6.1vw,6.3rem)] font-extrabold leading-[1.12] tracking-[-0.055em] text-white rtl:max-w-[25ch] rtl:tracking-normal">
-            {ar ? (
-              <>كل شيء يبدأ بطلب. <span className="block bg-gradient-to-l from-[#83C9FF] via-[#F9F9FF] to-[#FF7585] bg-clip-text text-transparent">ونحن نربطه بالعالم.</span></>
-            ) : (
-              <>Every opportunity starts somewhere. <span className="block bg-gradient-to-r from-[#80BCFF] via-white to-[#FF7987] bg-clip-text text-transparent">We connect it to the world.</span></>
-            )}
-          </motion.h1>
-          <motion.p {...reveal(0.16)} className="mx-auto mt-6 max-w-[660px] text-[15px] leading-8 text-[#AABBCD] sm:text-[17px] sm:leading-9">
-            {ar
-              ? "تربط LOUREX المشترين التجاريين بمصادر التوريد، وتنسّق المتطلبات والطلبات ومراحل المتابعة — من الفكرة إلى الوجهة."
-              : "LOUREX connects business buyers with sourcing opportunities and coordinates the requirements, relationships and follow-through behind every order."}
-          </motion.p>
-          <motion.div {...reveal(0.24)} className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/request" className="group inline-flex min-h-[52px] min-w-[170px] items-center justify-center gap-3 rounded-xl bg-[#E83F51] px-6 py-3 text-sm font-bold text-white shadow-[0_15px_40px_-20px_rgba(235,53,79,0.7)] transition-all hover:-translate-y-0.5 hover:bg-[#F04F60] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF7A88]/40">
-              {ar ? "ابدأ طلب شراء" : "Start a sourcing request"}
-              <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
-            </Link>
-            <Link to="/products" className="group inline-flex min-h-[52px] min-w-[170px] items-center justify-center gap-3 rounded-xl border border-[#7996B4]/50 bg-[#14243B]/65 px-6 py-3 text-sm font-bold text-white transition-colors hover:border-[#88B7F1] hover:bg-[#1A3050] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#6CA6F4]/30">
-              {ar ? "اكتشف المنتجات" : "Explore products"}
-              <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
-            </Link>
-          </motion.div>
+    <section id="lourex-hero" className="lrx-hero" aria-labelledby="lourex-hero-title">
+      <div className="lrx-hero-grid" aria-hidden="true" />
+      <div className="lrx-hero-copy">
+        <motion.p initial={reduced ? false : {opacity:0,y:12}} animate={{opacity:1,y:0}} className="lrx-kicker">INTERNATIONAL TRADING & RESOURCES</motion.p>
+        <motion.h1 id="lourex-hero-title" initial={reduced ? false : {opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:reduced?0:.8}}>
+          {ar ? <>تجارتك،<br/><span>متصلة بالعالم.</span></> : <>Trade.<br/><span>Connected.</span></>}
+        </motion.h1>
+        <p className="lrx-hero-manifesto" dir="ltr">LOUREX — THE LIVING TRADE.</p>
+        <p className="lrx-hero-description">{ar ? "من احتياجك إلى مصادر التوريد. نربط المنتجات والأطراف والتفاصيل، لتأخذ تجارتك خطوتها التالية." : "From your brief to sourcing possibilities. We connect products, people and details to move your next opportunity forward."}</p>
+        <div className="lrx-hero-actions">
+          <Link to="/request" className="lrx-primary">{ar?"ابدأ طلب توريد":"Start your sourcing request"}<ArrowUpRight size={18} aria-hidden="true" className="rtl:-scale-x-100"/></Link>
+          <Link to="/products" className="lrx-text-link">{ar?"اكتشف المنتجات":"Explore the catalog"}<ArrowUpRight size={17} aria-hidden="true" className="rtl:-scale-x-100"/></Link>
         </div>
-
-        <motion.div {...reveal(0.28)} className="relative mx-auto mt-12 grid max-w-[1280px] gap-5 lg:mt-14 lg:min-h-[335px] lg:grid-cols-[0.95fr_1.05fr_1fr] lg:items-center">
-          {/* Product visual and customer brief tell a story without heavy media. */}
-          <div className="group relative z-10 mx-auto flex min-h-[345px] w-full max-w-[390px] flex-col justify-end overflow-hidden rounded-[24px] border border-[#7087AA]/35 bg-[#101C2E] shadow-[0_27px_75px_-43px_rgba(0,0,0,0.95)] sm:min-h-[390px]">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[73%] opacity-95 transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:transform-none" aria-hidden="true">
-              <SourcingIllustration variant="confectionery" className="h-full w-full" />
-            </div>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#091323] via-[#091323]/75 to-transparent" aria-hidden="true" />
-            <div className="relative z-10 p-5 sm:p-7">
-              <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#AECDF5] rtl:tracking-normal">
-                <PackageSearch className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-                {ar ? "الطلب يبدأ من المنتج" : "EVERY ORDER BEGINS WITH A PRODUCT"}
-              </div>
-              <h2 className="max-w-[18ch] text-[clamp(1.45rem,2vw,1.95rem)] font-extrabold leading-[1.2] text-white">
-                {ar ? "تبحث عن المنتج المناسب؟" : "The product you need. The connection we make."}
-              </h2>
-              <p className="mt-3 max-w-[31ch] text-[13px] leading-6 text-[#B9C9DF]">
-                {ar ? "شاركنا المواصفات والكمية والوجهة؛ ونبدأ من احتياجك." : "Share the specifications, quantity and destination. Your brief starts the journey."}
-              </p>
-              <Link to="/request" className="mt-5 inline-flex min-h-10 items-center gap-2 border-b border-[#91B5F4]/40 text-[12px] font-bold text-[#B6D6FF] transition-colors hover:border-[#B6D6FF]">
-                {ar ? "أنشئ طلبًا" : "Create your brief"}
-                <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Brand signature: two colored trade flows converge on X. Lightweight inline SVG. */}
-          <div className="pointer-events-none relative z-0 mx-auto flex min-h-[175px] w-full max-w-[420px] items-center justify-center lg:min-h-[330px]">
-            <div aria-hidden="true" className="absolute h-[235px] w-[235px] rounded-full bg-[#265BB6]/15 blur-[55px]" />
-            <svg viewBox="0 0 420 270" className="relative w-full max-w-[420px] overflow-visible" aria-hidden="true">
-              <defs>
-                <linearGradient id="lrx-blue" x1="0" x2="1"><stop offset="0%" stopColor="#327BE8" stopOpacity="0"/><stop offset="60%" stopColor="#4E9DFF"/><stop offset="100%" stopColor="#9ACBFF"/></linearGradient>
-                <linearGradient id="lrx-red" x1="0" x2="1"><stop offset="0%" stopColor="#FF5F76"/><stop offset="55%" stopColor="#ED455C"/><stop offset="100%" stopColor="#FF5D74" stopOpacity="0"/></linearGradient>
-                <filter id="lrx-glow" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="9" />
-                </filter>
-              </defs>
-              <ellipse cx="210" cy="137" rx="119" ry="114" fill="none" stroke="#5D86C8" strokeOpacity=".16"/>
-              <ellipse cx="210" cy="137" rx="92" ry="92" fill="none" stroke="#5D86C8" strokeOpacity=".13"/>
-              <path d="M0 159C100 159 130 93 210 136" stroke="url(#lrx-blue)" strokeWidth="7" strokeLinecap="round" fill="none" filter="url(#lrx-glow)" opacity=".7" />
-              <path d="M210 136C278 165 324 116 420 116" stroke="url(#lrx-red)" strokeWidth="7" strokeLinecap="round" fill="none" filter="url(#lrx-glow)" opacity=".7" />
-              <motion.path d="M0 159C100 159 130 93 210 136" stroke="url(#lrx-blue)" strokeWidth="2.5" strokeLinecap="round" fill="none" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.3, delay: .3 }} />
-              <motion.path d="M210 136C278 165 324 116 420 116" stroke="url(#lrx-red)" strokeWidth="2.5" strokeLinecap="round" fill="none" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.3, delay: 1.1 }} />
-              <g transform="translate(210 137)">
-                <path d="M-38 -38L-2 0L-38 38H-9L14 12L37 38H64L27 0L64 -38H36L14 -12L-10 -38Z" fill="#172B4D" opacity=".6" transform="translate(3 3)"/>
-                <path d="M-53 -52L0 0L-53 52H-15L26 11L-14 -52Z" fill="#368AF4" />
-                <path d="M53 -52L0 0L53 52H15L-26 11L14 -52Z" fill="#FF5264" />
-              </g>
-            </svg>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap text-center">
-              <div className="text-[30px] font-black tracking-[0.075em] text-white">LOURE<span className="text-[#F05769]">X</span></div>
-              <div className="text-[9px] font-extrabold uppercase tracking-[0.17em] text-[#9FB6D2]">CONNECTING OPPORTUNITIES</div>
-            </div>
-          </div>
-
-          {/* A conceptual network, not real-time supplier numbers or locations. */}
-          <div className="relative z-10 mx-auto w-full max-w-[380px]">
-            <div className="relative overflow-hidden rounded-[22px] border border-[#6D91BB]/25 bg-[#0A182B]/85 p-6 shadow-[0_28px_75px_-45px_rgba(0,0,0,0.85)]">
-              <div aria-hidden="true" className="pointer-events-none absolute -end-16 -top-20 h-48 w-48 rounded-full bg-[#2359B8]/20 blur-3xl" />
-              <div className="relative flex items-center justify-between gap-3">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#C0D1E6] rtl:tracking-normal">{ar ? "فرص التوريد" : "SOURCING CONNECTIONS"}</span>
-                <Globe2 className="h-5 w-5 text-[#84B8F6]" strokeWidth={1.6} aria-hidden="true" />
-              </div>
-              <div className="relative mx-auto mt-3 h-[158px] w-full max-w-[275px]">
-                <svg viewBox="0 0 260 158" className="h-full w-full" fill="none" aria-hidden="true">
-                  <circle cx="130" cy="79" r="67" stroke="#4A85DA" strokeOpacity=".35"/>
-                  <ellipse cx="130" cy="79" rx="33" ry="67" stroke="#4A85DA" strokeOpacity=".25"/>
-                  <path d="M63 79H197 M72 48Q130 73 188 48 M72 110Q130 85 188 110" stroke="#4A85DA" strokeOpacity=".25"/>
-                  <path d="M37 42Q106 -6 163 64T234 27 M35 129Q120 107 163 64T232 126" stroke="#E45A6A" strokeWidth="1.4" strokeOpacity=".75" strokeDasharray="3 5"/>
-                  <circle cx="37" cy="42" r="5" fill="#5E9EF8"/><circle cx="163" cy="64" r="6" fill="#E65A6D"/><circle cx="234" cy="27" r="5" fill="#5E9EF8"/>
-                  <circle cx="35" cy="129" r="4" fill="#5E9EF8"/><circle cx="232" cy="126" r="5" fill="#E65A6D"/>
-                </svg>
-              </div>
-              <p className="relative text-center text-[12px] leading-6 text-[#AAC4DC]">{ar ? "نحو المصدر المناسب، حسب احتياجك" : "Connecting needs with sourcing possibilities"}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <a href="#explore" className="mx-auto mt-8 flex w-fit min-h-11 items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#8BABCE] transition-colors hover:text-white rtl:tracking-normal">
-          {ar ? "اكتشف رحلة لوريكس" : "DISCOVER THE JOURNEY"}
-          <ArrowDown className="h-4 w-4" aria-hidden="true" />
-        </a>
       </div>
+      <motion.div className="lrx-brand-scene" initial={reduced?false:{opacity:0,scale:.94}} animate={{opacity:1,scale:1}} transition={{duration:reduced?0:1.1}}>
+        <div className="lrx-scene-coordinate" dir="ltr">THE ART OF CONNECTION / LOUREX</div>
+        <svg viewBox="0 0 640 640" className="lrx-flow" aria-hidden="true">
+          <path className="lrx-flow-red" d="M0 160 140 160 320 320 500 480 640 480"/>
+          <path className="lrx-flow-blue" d="M640 160 500 160 320 320 140 480 0 480"/>
+          <path className="lrx-flow-gold" d="M320 0V150L140 480 320 590 500 480 320 150"/>
+          <path className="lrx-facet" d="M320 40 565 180V460L320 600 75 460V180Z M75 180 320 320 565 180 M320 320V600 M75 460 320 320 565 460"/>
+        </svg>
+        <img src="/lourex-official.jpeg" alt={ar?"شعار LOUREX الرسمي بأسطحه الهندسية الحمراء والزرقاء والذهبية":"Official LOUREX red, blue and gold geometric emblem"} width="1290" height="1240" fetchPriority="high" className="lrx-official-emblem"/>
+        <div className="lrx-scene-label lrx-scene-label--buyer"><i/>{ar?"احتياجك التجاري":"YOUR BUSINESS BRIEF"}</div>
+        <div className="lrx-scene-label lrx-scene-label--source"><i/>{ar?"مصادر التوريد":"SOURCING POSSIBILITIES"}</div>
+        <div className="lrx-scene-caption">{ar?"الاحتياج. الاتصال. الفرصة.":"THE BRIEF. THE CONNECTION. THE OPPORTUNITY."}</div>
+      </motion.div>
+      <div className="lrx-hero-foot"><a href="#explore">{ar?"اكتشف رحلة تجارتك":"Explore the trade journey"}<ArrowDown size={16}/></a><span dir="ltr">RED / BLUE / GOLD — ONE CONNECTION.</span></div>
     </section>
   );
-};
-
-export default HeroSection;
+}

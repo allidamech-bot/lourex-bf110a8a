@@ -64,7 +64,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
           <div>
             <Link to="/" className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-footer-accent">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-footer-foreground/15 bg-footer-foreground/5">
-                <img src="/logo.png" alt="LOUREX official logo" className="h-9 w-9 object-contain" />
+                <img src="/lourex-official.jpeg" alt="LOUREX official logo" className="h-9 w-9 object-contain" />
               </span>
               <span className="text-2xl font-extrabold tracking-[0.06em]">LOUREX</span>
             </Link>
