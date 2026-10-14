@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, FileBadge2, Globe2, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ArrowUpRight, FileBadge, Globe2, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { publicContactInfo, getWhatsAppUrl } from "@/lib/contactInfo";
 
@@ -106,7 +106,7 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
                 <span>{ar ? publicContactInfo.location.ar : publicContactInfo.location.en}</span>
               </div>
               <div className="flex items-start gap-3 text-[12px] text-footer-muted">
-                <FileBadge2 className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
+                <FileBadge className="mt-0.5 h-4 w-4 shrink-0 text-footer-accent" aria-hidden="true" />
                 <span>{ar ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en}</span>
               </div>
               <a href={publicContactInfo.websiteUrl} target="_blank" rel="noreferrer" className="flex items-start gap-3 text-[13px] text-footer-foreground/85 transition-colors hover:text-footer-accent">
