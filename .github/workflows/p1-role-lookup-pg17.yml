@@ -1,0 +1,38 @@
+name: P1 Role Lookup PostgreSQL Security Test
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261015035000_p1_role_lookup_self_scope.sql'
+      - 'supabase/tests/p1_role_lookup_pg17_integration.sql'
+      - '.github/workflows/p1-role-lookup-pg17.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pg17-role-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ephemeral-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify SQL identity guard against cross-user role lookup
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD=ephemeral-ci-only \
+            -v "$PWD:/workspace:ro" \
+            postgres:17 \
+            psql -X -h 127.0.0.1 -U postgres -d postgres \
+              -v ON_ERROR_STOP=1 -f /workspace/supabase/tests/p1_role_lookup_pg17_integration.sql
