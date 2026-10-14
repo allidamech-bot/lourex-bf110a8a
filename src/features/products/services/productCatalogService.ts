@@ -166,7 +166,8 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
   try {
     const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
     if (!isAvailable) {
-      return includeInactive ? productCatalogItems : fallbackActiveProducts();
+      if (includeInactive) throw new Error("Catalog storage is not configured. Contact the administrator.");
+      return [];
     }
     let query = productDb.from("product_catalog_products").select(PRODUCT_SELECT).order("is_featured", { ascending: false }).order("updated_at", { ascending: false });
 
@@ -179,22 +180,20 @@ export const fetchCatalogProducts = async ({ includeInactive = false } = {}) => 
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
         markTableUnavailable("product_catalog_products");
-        return includeInactive ? productCatalogItems : fallbackActiveProducts();
+        if (includeInactive) throw error;
+        return [];
       }
       throw error;
     }
 
     const mapped = ((data || []) as ProductCatalogProductRow[]).map(mapProductRow);
 
-    if (mapped.length === 0 && !includeInactive) {
-      return fallbackActiveProducts();
-    }
-
     return mapped;
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       markTableUnavailable("product_catalog_products");
-      return includeInactive ? productCatalogItems : fallbackActiveProducts();
+      if (includeInactive) throw error;
+      return [];
     }
     throw error;
   }
@@ -204,7 +203,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
   try {
     const isAvailable = await checkOptionalTableAvailable("product_catalog_products");
     if (!isAvailable) {
-      return getProductBySlug(slug);
+      return import.meta.env.DEV ? getProductBySlug(slug) : null;
     }
     let query = productDb
       .from("product_catalog_products")
@@ -220,7 +219,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
     if (error) {
       if (isOptionalBackendUnavailable(error)) {
         markTableUnavailable("product_catalog_products");
-        return getProductBySlug(slug);
+        return import.meta.env.DEV ? getProductBySlug(slug) : null;
       }
       throw error;
     }
@@ -235,7 +234,7 @@ export const fetchCatalogProductBySlug = async (slug: string, activeOnly: boolea
   } catch (error) {
     if (isOptionalBackendUnavailable(error)) {
       markTableUnavailable("product_catalog_products");
-      return getProductBySlug(slug);
+      return import.meta.env.DEV ? getProductBySlug(slug) : null;
     }
     throw error;
   }
