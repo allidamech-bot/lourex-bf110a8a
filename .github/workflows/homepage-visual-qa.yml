@@ -20,7 +20,8 @@ jobs:
       - run: npm ci
       - name: Compare full TypeScript diagnostics with unchanged main baseline
         run: node scripts/check-homepage-types.mjs
-      - run: npm run build
+      - name: Build using existing public frontend configuration
+        run: node scripts/build-homepage-preview.mjs
       - run: npx playwright install --with-deps chromium webkit
       - name: Capture desktop and iPhone sized browsers
         run: |
