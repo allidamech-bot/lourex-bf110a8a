@@ -38,7 +38,7 @@ import type { OperationsRequest, PurchaseRequestImageUpload } from "@/domain/ope
 import { useI18n } from "@/lib/i18n";
 import { logOperationalError, trackEvent } from "@/lib/monitoring";
 import { getAiReplyText, invokeLourexAi } from "@/lib/aiClient";
-import { getProductById } from "@/features/products/services/productCatalogService";
+import { buildProductRequestPrefill } from "@/features/products/services/productCatalogService";
 import type { ProductCatalogItem } from "@/features/products/types";
 
 type PurchaseRequestFormState = {
@@ -399,6 +399,7 @@ type PurchaseRequestFormProps = {
   initialRequest?: OperationsRequest | null;
   onEditSuccess?: (request: OperationsRequest) => void;
   sourceProductId?: string;
+  sourceProduct?: ProductCatalogItem | null;
   onSourceProductDisplay?: (product: ProductCatalogItem | null) => void;
 };
 
@@ -407,7 +408,7 @@ export const PurchaseRequestForm = ({
   requestId,
   initialRequest,
   onEditSuccess,
-  sourceProductId,
+  sourceProduct,
   onSourceProductDisplay,
 }: PurchaseRequestFormProps) => {
   const { t, lang, locale } = useI18n();
@@ -420,7 +421,14 @@ export const PurchaseRequestForm = ({
       ? "يجب تسجيل الدخول حتى تتمكن من إرسال طلب الشراء."
       : "You must sign in before submitting a purchase request.";
 
-  const [form, setForm] = useState<PurchaseRequestFormState>(() => buildInitialStateFromRequest(initialRequest));
+  const initialLanguage = useRef(lang);
+  const [form, setForm] = useState<PurchaseRequestFormState>(() =>
+    initialRequest
+      ? buildInitialStateFromRequest(initialRequest)
+      : sourceProduct
+        ? { ...initialState, ...buildProductRequestPrefill(sourceProduct, initialLanguage.current) }
+        : initialState,
+  );
   const [uploads, setUploads] = useState<PurchaseRequestImageUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [analyzingRequest, setAnalyzingRequest] = useState(false);
@@ -467,17 +475,18 @@ export const PurchaseRequestForm = ({
   );
 
   useEffect(() => {
-    setForm(buildInitialStateFromRequest(initialRequest));
+    setForm(
+      initialRequest
+        ? buildInitialStateFromRequest(initialRequest)
+        : sourceProduct
+          ? { ...initialState, ...buildProductRequestPrefill(sourceProduct, initialLanguage.current) }
+          : initialState,
+    );
     setFieldErrors({});
     setErrorMessage("");
     setAnalysisResult(null);
     setAnalysisError("");
-  }, [initialRequest]);
-
-  const sourceProduct = useMemo(
-    () => (sourceProductId ? getProductById(sourceProductId) : null),
-    [sourceProductId],
-  );
+  }, [initialRequest, sourceProduct]);
 
   useEffect(() => {
     onSourceProductDisplay?.(sourceProduct);
