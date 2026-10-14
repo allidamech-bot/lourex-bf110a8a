@@ -106,9 +106,6 @@ html[dir=rtl] .lourex-faq article{padding:32px 64px 32px 0}
 @media(max-width:640px){
  .lourex-request main button[role=radio],.lourex-request main button[role=checkbox],.lourex-workspace main button[role=radio],.lourex-workspace main button[role=checkbox]{width:1rem;min-width:1rem;flex-shrink:0}
 }
-/* The existing intake sign-in/analyzer panels use literal black gradients.
-   Keep their semantic text readable when the visitor switches to light. */
-html.light .lourex-request main [class*="#111111"]{background:hsl(var(--card));border-color:hsl(var(--border))}
 /* Compact, priority-first footer shared by every route. */
 .lrx-footer-inner{width:min(100%,1280px);margin-inline:auto;padding:32px clamp(18px,4vw,40px) max(20px,env(safe-area-inset-bottom))}
 .lrx-footer-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:24px}
@@ -147,8 +144,7 @@ html.light .lourex-request main [class*="#111111"]{background:hsl(var(--card));b
 /* All radio/checkbox controls retain their intrinsic size, including authenticated intake. */
 main button[role=radio],main button[role=checkbox],main button[role=switch]{flex-shrink:0}
 a[href^="tel:"]{direction:ltr;unicode-bidi:isolate;white-space:nowrap}
-html{min-height:100%;background:hsl(var(--background));color-scheme:light}
-html.dark{color-scheme:dark}
+html{min-height:100%;background:hsl(var(--background));color-scheme:dark}
 html[data-lourex-surface=dark],html[data-lourex-surface=dark] body{background:#090909;color-scheme:dark!important}
 body{min-height:100vh;min-height:100dvh;margin:0}
 /* Final typography and neutral surfaces across public pages and workspaces. */
@@ -160,7 +156,6 @@ html[dir=rtl] :is(.lourex-public,.lourex-workspace,.lourex-auth) [class*="tracki
 .lourex-workspace :is([class*="bg-stone-9"],[class*="bg-stone-8"]){background-color:hsl(var(--secondary))}
 .lourex-workspace [class*="bg-stone-50/"]{background-color:hsl(var(--card))}
 .lourex-workspace [class*="border-stone-"]{border-color:hsl(var(--border))}
-html.light .lourex-workspace :is([class~="text-amber-200"],[class~="text-amber-300"]){color:hsl(var(--gold))}
 .lrx-contact-details{display:grid;align-content:start;gap:0;border-block:1px solid hsl(var(--border))}
 .lrx-contact-detail{padding:20px 0;border-bottom:1px solid hsl(var(--border))}
 .lrx-contact-detail:last-child{border:0}
