@@ -36,7 +36,7 @@ const emptyForm: ProductCatalogAdminInput = {
   descriptionAr: "",
   descriptionEn: "",
   categoryId: "food-fmcg",
-  originCountry: "Turkey",
+  originCountry: "",
   brand: "",
   moq: "",
   unit: "",
