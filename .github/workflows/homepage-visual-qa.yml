@@ -1,0 +1,35 @@
+name: Homepage visual QA
+on:
+  push:
+    branches: [feat/lourex-living-trade]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Capture desktop and iPhone sized browsers
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ && break || sleep 1; done
+          node scripts/homepage-visual-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homepage-screenshots-and-results
+          path: homepage-qa/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: homepage-built-preview
+          path: dist/

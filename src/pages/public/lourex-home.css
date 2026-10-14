@@ -177,3 +177,70 @@
     height: 79%;
   }
 }
+
+/* The Living Trade: charcoal, mineral red, deep blue, warm gold. */
+.lourex-home{--background:0 0% 4%;--card:0 0% 9%;--primary:8 64% 42%;--primary-soft:8 30% 13%;--secondary:0 0% 12%;--muted:0 0% 14%;--muted-foreground:30 8% 70%;--border:30 8% 22%;--accent:36 43% 20%;--footer-background:0 0% 4%;--footer-accent:37 58% 58%;background:#090909}
+.lourex-home .lrx-kicker{color:#d6ad6c;font-weight:600;letter-spacing:.18em}
+.lourex-home .lrx-kicker::before{background:#b68a47;width:24px}
+.lrx-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:1.05fr 1fr;align-items:center;max-width:1600px;margin:auto;padding:88px 64px 0;overflow:hidden;background:#090909;min-height:760px}
+.lrx-hero-grid{position:absolute;inset:0;z-index:-1;background:linear-gradient(120deg,transparent 45%,#a9302409 60%,transparent 80%);pointer-events:none}
+.lrx-hero-copy{position:relative;z-index:2;padding-bottom:50px}
+.lrx-hero h1{font-size:clamp(64px,7.7vw,116px);line-height:.98;letter-spacing:-.065em;font-weight:700;margin:35px 0 26px}
+.lrx-hero h1 span{color:#d6ad6c}
+[dir=rtl] .lrx-hero h1{font-size:clamp(52px,6.2vw,94px);line-height:1.3;letter-spacing:0}
+.lrx-hero-manifesto{font-size:11px;letter-spacing:.22em;color:#e2dfd8;margin:0 0 24px;text-align:start}
+[dir=rtl] .lrx-hero-manifesto{text-align:right}
+.lrx-hero-description{max-width:460px;font-size:16px;line-height:1.95;color:#aaa8a4}
+.lrx-hero-actions{display:flex;gap:26px;align-items:center;flex-wrap:wrap;margin-top:32px}
+.lrx-primary{display:inline-flex;align-items:center;justify-content:center;gap:18px;background:#a93024;border:1px solid #d06549;padding:16px 23px;min-height:54px;color:white;font-size:13px;font-weight:700;transition:background .2s,transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.lrx-primary:hover{background:#c04330;transform:translateY(-2px)}
+.lrx-text-link{display:inline-flex;align-items:center;gap:12px;font-size:13px;border-bottom:1px solid #66543b;min-height:48px}
+.lrx-brand-scene{position:relative;aspect-ratio:1;min-width:0;width:112%;margin-inline-start:-5%;direction:ltr}
+.lrx-flow{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke-width:1;overflow:visible}
+.lrx-flow-red{stroke:#b7402f;stroke-dasharray:900;animation:lrx-draw 2s ease both}
+.lrx-flow-blue{stroke:#436d94;stroke-dasharray:900;animation:lrx-draw 2s .2s ease both}
+.lrx-flow-gold{stroke:#a47938;stroke-dasharray:1600;animation:lrx-draw 2.3s .3s ease both;opacity:.4}
+.lrx-facet{stroke:#c2a474;opacity:.13}
+.lrx-official-emblem{position:absolute;inset:10%;width:80%;height:80%;object-fit:contain;mix-blend-mode:lighten;clip-path:polygon(50% 7%,85% 26%,85% 72%,50% 93%,15% 72%,15% 26%);animation:lrx-emerge 1.3s ease both;filter:drop-shadow(0 15px 30px #000)}
+.lrx-scene-coordinate{position:absolute;top:0;left:15%;font-size:9px;color:#777;letter-spacing:.16em}
+.lrx-scene-label{position:absolute;display:flex;gap:8px;align-items:center;font-size:9px;letter-spacing:.1em;color:#ccc;background:#0a0a0ae8;padding:11px 12px;border-block-end:1px solid #76502c;z-index:2}
+.lrx-scene-label i{width:5px;height:5px;background:#d6ad6c;transform:rotate(45deg)}
+.lrx-scene-label--buyer{top:25%;left:0}.lrx-scene-label--source{bottom:24%;right:0}.lrx-scene-label--source i{background:#6d93b4}
+.lrx-scene-caption{position:absolute;bottom:1%;width:100%;text-align:center;font-size:9px;letter-spacing:.16em;color:#9b8d77}
+.lrx-hero-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid #2d2923;padding:25px 0;margin-top:25px;color:#96918a;font-size:10px;letter-spacing:.1em}
+.lrx-hero-foot a{display:flex;gap:14px;align-items:center;min-height:44px}.lrx-hero-foot>span{font-size:9px}
+@keyframes lrx-draw{from{stroke-dashoffset:1600;opacity:0}to{stroke-dashoffset:0}}
+@keyframes lrx-emerge{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.lourex-home .lrx-journey{padding-block:65px;background:#101010;border-color:#302a23}
+.lrx-milestones{display:flex;position:relative;align-self:center;justify-content:space-between;gap:8px}
+.lrx-milestones>div{display:none!important}
+.lrx-milestones::before{content:"";position:absolute;inset-inline:25px;top:25px;height:1px;background:linear-gradient(90deg,#a93024,#355674,#bb8b43)}
+.lrx-milestone{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 2px 14px;text-align:center;min-width:0;color:#aaa;transition:color .25s}
+.lrx-milestone>span:first-child{background:#161616!important;border:1px solid #574b39!important;width:50px;height:50px;border-radius:0;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);color:#aa9d89!important;transition:background .25s}
+.lrx-milestone.is-active>span:first-child{background:#a93024!important;color:#fff!important}
+.lrx-milestone>span:nth-child(2){color:#ba965f;font-size:10px}
+.lrx-milestone>span:last-child{font-size:11px;line-height:1.6;font-weight:600;color:#b0aaa2}
+.lrx-milestone.is-active>span:last-child{color:white}
+.lrx-milestone:focus-visible{outline:2px solid #d6ad6c;outline-offset:4px}
+.lourex-home .lrx-journey-detail{border:0;border-inline-start:2px solid #bd8d46;border-radius:0;background:#181716;padding:28px;min-height:160px}
+.lrx-sector-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+.lourex-home .lrx-category{min-height:400px;border-radius:2px;border-color:#41382b;background:linear-gradient(145deg,#30231e,#121212)!important}
+.lourex-home .lrx-category--snacks{background:linear-gradient(145deg,#202a32,#111)!important}
+.lourex-home .lrx-category--food{background:linear-gradient(145deg,#383121,#111)!important}
+.lourex-home .lrx-category--other{background:linear-gradient(145deg,#272323,#111)!important}
+.lourex-home .lrx-category-art{width:75%;height:95%;inset:auto -5% 4% auto;opacity:.85}
+.lourex-home .lrx-category:after{background:linear-gradient(0deg,#0a0a0a 0%,#0a0a0a88 28%,transparent 80%)}
+.lourex-home .lrx-category h3{max-width:23ch;font-size:clamp(23px,2.8vw,36px)}
+.lourex-home .lrx-category:hover{border-color:#c09350}
+.lourex-home #featured-products{background:#101010}
+.lourex-home #featured-products .bg-\[\#102644\],.lourex-home #featured-products .bg-\[\#152845\]{background:#211c16}
+.lrx-closing-facets{position:absolute;inset:0;background:linear-gradient(145deg,transparent 50%,#ac7f341a 50%,transparent 80%),linear-gradient(35deg,transparent 55%,#a9302412 55%,transparent 90%);pointer-events:none}
+.lourex-home>header{background:#0c0c0cf5!important;border-color:#332c23!important}.lourex-home>header .bg-card,.lourex-home>header .bg-background{background:#181716}.lourex-home>header .text-primary{color:#d8b577}
+.lourex-home>header img,.lourex-home footer img{mix-blend-mode:lighten;object-fit:cover;transform:scale(1.35)}
+.lourex-home footer .bg-footer-accent{background:#ab3929}.lourex-home footer .meridian-line,.lourex-home>header .meridian-line{background-image:linear-gradient(90deg,#a93024,#345777,#c29450)}
+.lourex-home a:focus-visible{outline:2px solid #d6ad6c;outline-offset:5px}
+@media(min-width:1440px){.lrx-hero{min-height:820px}}
+@media(max-width:1023px){.lrx-hero{padding:64px 32px 0;min-height:650px}.lrx-hero h1{font-size:clamp(58px,8vw,90px)}.lrx-brand-scene{width:110%}.lrx-hero-actions{gap:12px}.lrx-scene-label{font-size:8px;padding:7px}.lrx-scene-coordinate{font-size:7px}}
+@media(max-width:767px){.lrx-hero{grid-template-columns:1fr;padding:45px 20px 0;min-height:0}.lrx-hero-copy{padding-bottom:0}.lrx-hero h1{font-size:clamp(66px,15vw,100px);margin:26px 0 23px}[dir=rtl] .lrx-hero h1{font-size:clamp(49px,11.5vw,72px)}.lrx-hero .lrx-kicker{font-size:8px;letter-spacing:.1em}.lrx-hero-manifesto{font-size:9px;letter-spacing:.16em}.lrx-hero-description{font-size:14px;line-height:1.9;max-width:95%}.lrx-hero-actions{margin-top:23px;gap:15px}.lrx-primary{font-size:12px;padding:13px 17px}.lrx-text-link{font-size:12px}.lrx-brand-scene{width:100%;max-width:520px;margin:36px auto 0}.lrx-scene-coordinate{font-size:8px}.lrx-scene-label{font-size:8px}.lrx-hero-foot{margin-top:15px;padding:10px 0}.lrx-hero-foot>span{display:none}.lrx-milestone>span:last-child{font-size:10px}.lrx-milestone>span:first-child{width:42px;height:42px}.lrx-milestones::before{top:21px}.lrx-milestones{gap:4px}.lourex-home .lrx-journey{padding-block:38px}.lourex-home .lrx-journey-detail{padding:22px;gap:16px}.lrx-sector-grid{gap:12px}.lourex-home .lrx-category{min-height:340px;padding:20px}.lourex-home .lrx-category h3{font-size:23px}.lourex-home .lrx-category-art{width:110%;height:80%;inset:0 -15% auto auto}.lourex-home .lrx-category p{font-size:12px;line-height:1.9}}
+@media(max-width:539px){.lrx-sector-grid{grid-template-columns:1fr}.lourex-home .lrx-category{min-height:310px}.lourex-home .lrx-category-art{width:75%;height:100%;inset:0 -5% auto auto}.lrx-hero-actions{gap:10px 18px}}
+@media(prefers-reduced-motion:reduce){.lourex-home *,.lourex-home *::before,.lourex-home *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.lrx-flow path{stroke-dashoffset:0}.lrx-official-emblem{transform:none}}

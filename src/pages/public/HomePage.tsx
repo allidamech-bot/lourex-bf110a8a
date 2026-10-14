@@ -18,7 +18,7 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import HomeProductSpotlight from "@/components/home/HomeProductSpotlight";
 import SourcingIllustration from "@/components/home/SourcingIllustration";
-import heroImg from "@/assets/hero-trade.jpg";
+
 import { useI18n } from "@/lib/i18n";
 import "./lourex-home.css";
 
@@ -131,7 +131,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#050B15] text-white" data-lourex-home>
+    <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#090909] text-white" data-lourex-home>
       <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX | International Trading & Resources"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
       <SiteHeader />
       <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#397AEF] to-[#F05265]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
@@ -139,7 +139,7 @@ export default function HomePage() {
         <HeroSection />
 
         {/* Five connected milestones, with a single active trade brief and working routes. */}
-        <section ref={journeyRef} id="explore" className="relative border-y border-[#24334A] bg-[#09111E] py-11 sm:py-14" aria-labelledby="journey-heading">
+        <section ref={journeyRef} id="explore" className="lrx-journey relative border-y border-[#303030] bg-[#101010] py-11 sm:py-14" aria-labelledby="journey-heading">
           <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="grid gap-8 lg:grid-cols-[270px_1fr] lg:gap-12">
               <motion.div {...reveal}>
@@ -149,7 +149,7 @@ export default function HomePage() {
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[#9EB2CD]">{ar ? "اختر مرحلة لاستكشاف دورنا." : "Select a stage to see how we connect the process."}</p>
               </motion.div>
-              <div className="relative grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-2">
+              <div className="lrx-milestones">
                 <div className="pointer-events-none absolute start-[10%] end-[10%] top-8 hidden h-[2px] bg-[#30415D] sm:block" aria-hidden="true">
                   <motion.div
                     className="h-full w-full bg-gradient-to-r from-[#4179E2] via-[#9863AA] to-[#E34B5F]"
@@ -162,9 +162,8 @@ export default function HomePage() {
                     type="button"
                     onClick={() => setActiveStep(index)}
                     aria-pressed={activeStep === index}
-                    className={"group relative flex min-h-[100px] flex-col items-start gap-2 rounded-xl border px-3 py-4 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#96BAFC] sm:min-h-[128px] sm:items-center sm:text-center " + (
-                      activeStep === index ? "border-[#7A93D4]/75 bg-[#1A2945]" : "border-[#273650] bg-[#101B2C] hover:border-[#5377B4] hover:bg-[#17243A]"
-                    )}
+                    className={"lrx-milestone " + (activeStep === index ? "is-active" : "")}
+                    aria-controls="lrx-journey-detail"
                   >
                     <span className={"relative z-10 flex h-9 w-9 items-center justify-center rounded-full border " + (activeStep === index ? "border-[#FA7383] bg-[#A42B48] text-white" : "border-[#4C6490] bg-[#162B4B] text-[#A0C0F2]")}>
                       <item.icon className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
@@ -175,7 +174,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div className="mt-6 grid min-h-[155px] gap-6 rounded-2xl border border-[#2E415A] bg-[#101F31] p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-7 lg:ms-[318px]">
+            <div id="lrx-journey-detail" className="lrx-journey-detail mt-6 grid min-h-[155px] gap-6 rounded-2xl border border-[#2E415A] bg-[#181818] p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-7 lg:ms-[318px]">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#A1BBE8]/20 bg-[#3265AD]/20 text-[#9BC5FF]"><ActiveIcon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" /></div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={activeStep} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: reducedMotion ? 0 : 0.2 }} aria-live="polite">
@@ -191,20 +190,20 @@ export default function HomePage() {
         </section>
 
         {/* Large editorial categories inspired by the approved moodboard, not stock card repetition. */}
-        <section id="sourcing" aria-labelledby="sourcing-heading" className="relative bg-[#060D19] py-20 sm:py-28">
+        <section id="sourcing" aria-labelledby="sourcing-heading" className="relative bg-[#0B0B0B] py-20 sm:py-28">
           <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <motion.div {...reveal} className="mb-10 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-[790px]">
                 <p className="lrx-kicker">LOUREX / SOURCING</p>
                 <h2 id="sourcing-heading" className="mt-5 text-[clamp(2.2rem,4.5vw,4.9rem)] font-extrabold leading-[1.15] tracking-tight text-white rtl:tracking-normal">
-                  {ar ? <>منتجات متعددة. <span className="text-[#91BFFC]">فرص أوسع.</span></> : <>Products are the beginning. <span className="text-[#91BFFC]">Connections create opportunity.</span></>}
+                  {ar ? <>منتجات متعددة. <span className="text-[#D6A653]">فرص أوسع.</span></> : <>Products are the beginning. <span className="text-[#D6A653]">Connections create opportunity.</span></>}
                 </h2>
               </div>
               <Link to="/products" className="group inline-flex min-h-12 w-fit items-center gap-3 rounded-xl border border-[#53739F] px-5 text-sm font-bold text-white hover:border-[#A4C5F5] hover:bg-[#16243B]">
                 {ar ? "عرض جميع التصنيفات" : "Browse the catalog"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/>
               </Link>
             </motion.div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="lrx-sector-grid">
               {categories.map((category, index) => (
                 <motion.div key={category.to} {...reveal} transition={{ duration: reducedMotion ? 0 : .5, delay: reducedMotion ? 0 : index * .07 }}>
                   <Link to={category.to} className={"lrx-category lrx-category--" + category.kind + " group relative flex min-h-[290px] flex-col justify-between overflow-hidden rounded-[22px] border border-[#344560] p-6 transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93BAFC] sm:min-h-[340px]"}>
@@ -229,13 +228,13 @@ export default function HomePage() {
         <HomeProductSpotlight />
 
         {/* Distinctive LOUREX connection network; deliberately abstract, not live supplier telemetry. */}
-        <section id="network" aria-labelledby="network-heading" className="relative isolate overflow-hidden border-y border-[#24314A] bg-[#091524] py-20 sm:py-28">
+        <section id="network" aria-labelledby="network-heading" className="relative isolate overflow-hidden border-y border-[#303030] bg-[#121212] py-20 sm:py-28">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_45%,rgba(40,86,153,.2),transparent_58%)]" aria-hidden="true"/>
           <div className="relative mx-auto grid max-w-[1520px] gap-9 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16 lg:px-12 xl:px-16">
             <motion.div {...reveal}>
               <p className="lrx-kicker">LOUREX / THE CONNECTION</p>
               <h2 id="network-heading" className="mt-5 max-w-[18ch] text-[clamp(2.35rem,4.7vw,5rem)] font-extrabold leading-[1.12] tracking-tight text-white rtl:tracking-normal">
-                {ar ? <>نحو مصادر جديدة. <span className="text-[#83B5FB]">بفكرة واحدة.</span></> : <>The right connection changes <span className="text-[#83B5FB]">everything.</span></>}
+                {ar ? <>نحو مصادر جديدة. <span className="text-[#D6A653]">بفكرة واحدة.</span></> : <>The right connection changes <span className="text-[#D6A653]">everything.</span></>}
               </h2>
               <p className="mt-6 max-w-[490px] text-[15px] leading-9 text-[#AEC0D7]">
                 {ar
@@ -244,14 +243,14 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-2.5">
                 {(ar ? ["تحديد الاحتياج", "تنسيق الموردين", "متابعة العمليات"] : ["Requirements", "Supplier coordination", "Operations follow-up"]).map(label=>(
-                  <span key={label} className="rounded-full border border-[#48618A] bg-[#152640] px-3.5 py-2 text-xs font-semibold text-[#C6D9F2]">{label}</span>
+                  <span key={label} className="rounded-full border border-[#48618A] bg-[#1C1C1C] px-3.5 py-2 text-xs font-semibold text-[#C6D9F2]">{label}</span>
                 ))}
               </div>
               <Link to="/why-lourex" className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-xl border border-[#6184B4] px-5 text-sm font-bold text-white transition-colors hover:border-[#A9CCFD] hover:bg-[#1C3050]">
                 {ar ? "لماذا LOUREX؟" : "Why LOUREX?"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/>
               </Link>
             </motion.div>
-            <motion.div {...reveal} className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[25px] border border-[#30425E] bg-[#080F1D] sm:min-h-[430px]">
+            <motion.div {...reveal} className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[25px] border border-[#38332C] bg-[#0B0B0B] sm:min-h-[430px]">
               <div className="absolute -top-40 start-1/3 h-80 w-80 rounded-full bg-[#376BC1]/20 blur-[90px]" aria-hidden="true"/>
               <svg viewBox="0 0 700 440" className="h-full w-full max-w-[740px]" role="img" aria-label={ar ? "رسم توضيحي لمسارات الاتصال التجاري حول LOUREX" : "Illustrative commercial network centered on LOUREX"}>
                 <defs><linearGradient id="lrx-map-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#4A98FF"/><stop offset="100%" stopColor="#F75A6F"/></linearGradient></defs>
@@ -270,18 +269,18 @@ export default function HomePage() {
                   <g key={i}><circle cx={p.x} cy={p.y} r="11" fill="#0D1A2C" stroke={i%2?"#EF5C74":"#649EF9"} strokeWidth="1.5"/><circle cx={p.x} cy={p.y} r="3.5" fill={i%2?"#EF5C74":"#649EF9"}/></g>
                 ))}
                 <circle cx="350" cy="220" r="57" fill="#071120" stroke="#89A6D4" strokeOpacity=".55" strokeWidth="1.5"/>
-                <text x="350" y="213" textAnchor="middle" fill="white" fontSize="25" fontWeight="800">LOUREX</text>
-                <text x="350" y="239" textAnchor="middle" fill="#A3BDDF" fontSize="11" letterSpacing="3">CONNECTION</text>
+                <image href="/lourex-official.jpeg" x="306" y="176" width="88" height="88"/>
+
               </svg>
               <span className="absolute bottom-5 start-6 text-[10px] font-bold uppercase tracking-[0.12em] text-[#88A2C5] rtl:tracking-normal">{ar ? "تصوّر توضيحي لمسار التوريد" : "ILLUSTRATIVE NETWORK — NOT LIVE DATA"}</span>
             </motion.div>
           </div>
         </section>
 
-        {/* Closing brand moment uses the project's existing photography, loaded only near viewport. */}
-        <section className="relative isolate overflow-hidden bg-[#060E1B]">
-          <img src={heroImg} alt={ar ? "مشهد تجاري للتوريد والنقل" : "International trade and transport scene"} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-45" width={1920} height={1080}/>
-          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#050B15]/95 via-[#050B15]/70 to-[#091528]/65 rtl:bg-gradient-to-l"/>
+        {/* Closing brand moment continues the official geometric identity. */}
+        <section className="relative isolate overflow-hidden bg-[#101010]">
+          <div className="lrx-closing-facets" aria-hidden="true" />
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#090909]/95 via-[#090909]/70 to-[#091528]/65 rtl:bg-gradient-to-l"/>
           <div className="relative mx-auto grid max-w-[1520px] items-end gap-10 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.2fr_0.8fr] lg:px-12 xl:px-16">
             <motion.div {...reveal}>
               <p className="lrx-kicker">LOUREX / YOUR NEXT CONNECTION</p>
@@ -290,13 +289,13 @@ export default function HomePage() {
               </h2>
               <p className="mt-6 max-w-[600px] text-[16px] leading-9 text-[#C4D1E4]">{ar ? "أرسل طلبك التجاري ودعنا نتناقش في خيارات التوريد المناسبة." : "Tell us what your business needs and start a sourcing conversation."}</p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Link to="/request" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl bg-[#E83F51] px-6 text-sm font-bold text-white transition-colors hover:bg-[#FA6273]">{ar?"ابدأ الآن":"Start a request"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/></Link>
-                <Link to="/contact" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl border border-[#A5BDE1]/50 bg-[#0D1C30]/55 px-6 text-sm font-bold text-white transition-colors hover:bg-[#1A2D4A]">{ar?"تواصل معنا":"Talk to our team"}<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true"/></Link>
+                <Link to="/request" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl bg-[#A93024] px-6 text-sm font-bold text-white transition-colors hover:bg-[#C44535]">{ar?"ابدأ الآن":"Start a request"}<ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true"/></Link>
+                <Link to="/contact" className="inline-flex min-h-[54px] items-center gap-3 rounded-xl border border-[#A5BDE1]/50 bg-[#161616]/55 px-6 text-sm font-bold text-white transition-colors hover:bg-[#1A2D4A]">{ar?"تواصل معنا":"Talk to our team"}<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true"/></Link>
               </div>
             </motion.div>
             <div className="hidden justify-end lg:flex" aria-hidden="true">
               <div className="border-s border-[#CF5472]/70 ps-8 text-end">
-                <span className="block text-[clamp(3rem,6vw,5rem)] font-black tracking-[0.08em] text-white">LOURE<span className="text-[#F04D62]">X</span></span>
+                <span className="block text-[clamp(3rem,6vw,5rem)] font-black tracking-[0.08em] text-white">LOURE<span className="text-[#D6A653]">X</span></span>
                 <span className="block text-[11px] font-bold uppercase tracking-[0.24em] text-[#C1CDE2]">INTERNATIONAL TRADING & RESOURCES</span>
               </div>
             </div>
