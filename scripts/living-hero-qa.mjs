@@ -27,6 +27,18 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    const pixels=await page.evaluate(async png=>{const image=new Image();image.src=`data:image/png;base64,${png}`;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return [[10,100],[100,150],[230,240]].map(([x,y])=>Array.from(ctx.getImageData(x,y,1,1).data).slice(0,3));},shot.toString('base64'));
    if(pixels.every(pixel=>pixel.every(channel=>channel===0)))errors.push('WebKit offscreen paint block returned');
    metrics.paintSamples=pixels;
+   if(pixels.every(pixel=>pixel.every(channel=>channel===0))){
+    metrics.isolation=[];
+    for(const [label,css] of [
+     ['journey','#explore{display:none!important}'],['sourcing','#sourcing{display:none!important}'],['featured','#featured-products{display:none!important}'],['network','#network{display:none!important}'],['closing','.lourex-home main>section:last-child{display:none!important}'],
+     ['all-blur','.lourex-home *{filter:none!important;backdrop-filter:none!important}'],['all-transform','.lourex-home *{transform:none!important}'],['all-opacity','.lourex-home *{opacity:1!important}'],
+    ]){
+     const style=await page.addStyleTag({content:css});await page.waitForTimeout(50);const png=await page.screenshot({path:`${out}/isolate-${label}.png`});
+     const rgb=await page.evaluate(async data=>{const img=new Image();img.src=`data:image/png;base64,${data}`;await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);return Array.from(ctx.getImageData(100,150,1,1).data).slice(0,3);},png.toString('base64'));
+     metrics.isolation.push({label,rgb});await style.evaluate(el=>el.remove());
+    }
+   }
+
   }
   const steps=page.locator('.lrx-milestone');
   for(let i=0;i<5;i++){await steps.nth(i).click();if(await steps.nth(i).getAttribute('aria-pressed')!=='true'||!await page.locator('#lrx-journey-detail svg').count())errors.push(`Journey step ${i+1} broken`);}
