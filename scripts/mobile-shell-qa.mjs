@@ -39,8 +39,8 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    if(!await page.locator('html').evaluate(el=>el.classList.contains('light')))errors.push('Explicit light choice not preserved');
    await page.goto(base,{waitUntil:'domcontentloaded'});await page.locator('footer').waitFor();
    if(await page.locator('html').evaluate(el=>getComputedStyle(el).colorScheme)!=='dark')errors.push('Light choice makes homepage chrome light');
-   await page.goto(`${base}/contact`,{waitUntil:'domcontentloaded'});await page.locator('main a[href="tel:+905392411642"]').waitFor();
-   const phone=page.locator('main a[href="tel:+905392411642"]');
+   await page.goto(`${base}/contact`,{waitUntil:'domcontentloaded'});await page.locator('main a[href="tel:+905392411642"]').first().waitFor();
+   const phone=page.locator('main a[href="tel:+905392411642"]').first();
    if(await phone.innerText()!=='00905392411642'||await phone.evaluate(el=>getComputedStyle(el).direction)!=='ltr')errors.push('Contact phone bidi incorrect');
   }
   results.push({engine,lang,width,metrics,errors});console.log(JSON.stringify(results.at(-1)));await context.close();
