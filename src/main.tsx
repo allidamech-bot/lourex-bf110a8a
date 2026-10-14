@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import "./styles/purchase-requests-hardening.css";
 import "./styles/lourex-brand.css";
+import "./styles/lourex-interior.css";
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
