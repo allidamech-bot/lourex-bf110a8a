@@ -156,7 +156,7 @@ export const DashboardLayout = () => {
           </aside>
 
           <main className="w-full max-w-full min-w-0 overflow-x-hidden pb-24 lg:pb-12">
-            <div className="mb-6 w-full max-w-full min-w-0 rounded-[1.75rem] border border-border/70 bg-card/90 px-5 py-6 shadow-soft sm:px-7">
+            <div className="lrx-workspace-heading mb-6 w-full max-w-full min-w-0 rounded-[1.75rem] border border-border/70 bg-card/90 px-5 py-6 shadow-soft sm:px-7">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
