@@ -98,3 +98,11 @@ html[dir=rtl] .lourex-faq article{padding:32px 64px 32px 0}
 .lourex-workspace :is(h1,h2){font-family:inherit;text-wrap:balance}
 .lourex-workspace main>div:first-child{border-color:hsl(var(--border))}
 .lourex-workspace [class*="rounded-[1.75rem]"]{border-radius:12px}
+.lrx-request-start{display:inline-flex;align-items:center;gap:16px;margin-top:24px;min-height:48px;border-bottom:1px solid hsl(var(--gold)/.6);color:hsl(var(--gold));font-size:13px;font-weight:700}
+#purchase-request-form{scroll-margin-top:100px}
+.lourex-privacy main h1,.lourex-terms main h1{font-size:clamp(2rem,4vw,3.8rem)}
+.lourex-privacy main h1::after,.lourex-terms main h1::after{margin-top:18px}
+.lourex-privacy main h1+div,.lourex-terms main h1+div{flex-shrink:0}
+@media(max-width:640px){
+ .lourex-request main button[role=radio],.lourex-request main button[role=checkbox],.lourex-workspace main button[role=radio],.lourex-workspace main button[role=checkbox]{width:1rem;min-width:1rem;flex-shrink:0}
+}

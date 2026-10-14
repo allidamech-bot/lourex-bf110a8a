@@ -54,7 +54,8 @@ describe("Request page presentation preserves the operational form boundary", ()
     vi.mocked(fetchRequests).mockResolvedValue([]);
     mount("/request?edit=missing");
     await waitFor(() => expect(fetchRequests).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(screen.queryByText("Existing request form")).not.toBeInTheDocument());
+    expect(await screen.findByText("The request could not be found.")).toBeInTheDocument();
+    expect(screen.queryByText("Existing request form")).not.toBeInTheDocument();
     expect(capture.form).not.toHaveBeenCalled();
   });
 });

@@ -1,3 +1,4 @@
+import { boundFontRequests } from "./visual-qa-browser.mjs";
 import { chromium, webkit } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 const output='site-qa';
@@ -11,13 +12,29 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   const cases=[...core.flatMap(route=>[320,390,430,768,1024,1440].map(width=>({route,width,theme:'dark'}))),...other.flatMap(route=>[390,1440].map(width=>({route,width,theme:'dark'}))),...core.map(route=>({route,width:390,theme:'light'}))];
   for(const {route,width,theme} of cases){
    const context=await browser.newContext({viewport:{width,height:width<768?844:1000},deviceScaleFactor:1,isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
+   await boundFontRequests(context);
    await context.addInitScript(({lang,theme})=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme',theme);},{lang,theme});
    const page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
-   await page.goto(`http://127.0.0.1:4173${route}`,{waitUntil:'networkidle'});
+   await page.goto(`http://127.0.0.1:4173${route}`,{waitUntil:'domcontentloaded'});
    await page.locator('h1').first().waitFor();
    await page.evaluate(()=>document.fonts.ready);
    if(await page.locator('html').getAttribute('dir')!==(lang==='ar'?'rtl':'ltr'))errors.push('Wrong page direction');
+   if(route==='/request'&&width===1440){
+    const toggle=page.getByRole('button',{name:lang==='ar'?'تبديل المظهر':'Toggle theme'}).first();
+    await toggle.click();
+    if(!await page.locator('html').evaluate(e=>e.classList.contains('light')))errors.push('Light theme did not activate');
+    await toggle.click();
+    if(!await page.locator('html').evaluate(e=>e.classList.contains('dark')))errors.push('Dark theme did not restore');
+   }
+   if(route==='/request'&&width===320){
+    const menu=page.locator('header button[aria-expanded]').first();
+    await menu.click();
+    await page.getByRole('dialog').waitFor();
+    // Menu content remains keyboard reachable and closes through its own control.
+    await page.getByRole('dialog').getByRole('button',{name:lang==='ar'?'إغلاق':'Close'}).last().click();
+    if(await menu.getAttribute('aria-expanded')!=='false')errors.push('Mobile navigation did not close');
+   }
    if(route==='/request'){
     for(const detail of await page.locator('.lrx-request-aside details').all()){
      await detail.locator('summary').click();
@@ -26,7 +43,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
     if(!await page.locator('a[href*="/auth"]').count())errors.push('Anonymous request lost sign-in entry');
    }
    if(route==='/track'){
-    await page.locator('main input').fill('invalid');
+    await page.locator('main input').fill('@@ invalid @@');
     await page.locator('main button').first().click();
     await page.locator('#tracking-error[role="alert"]').waitFor();
     await page.locator('main input').fill('');

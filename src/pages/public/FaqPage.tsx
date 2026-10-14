@@ -84,7 +84,7 @@ export default function FaqPage() {
     script.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: localizedFaqs.map((faq, index) => ({
+      mainEntity: localizedFaqs.map((faq) => ({
         "@type": "Question",
         name: faq.q,
         acceptedAnswer: {

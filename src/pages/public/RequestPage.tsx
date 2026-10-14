@@ -106,6 +106,7 @@ export default function RequestPage() {
               <p className="lrx-brand-kicker">LOUREX / SOURCING DESK</p>
               <h1>{t("requestPage.title")}</h1>
               <p>{t("requestPage.description")}</p>
+              <a className="lrx-request-start" href="#purchase-request-form">{lang === "ar" ? "ابدأ تفاصيل الطلب" : "Start your request"}<ClipboardList size={17} aria-hidden="true" /></a>
             </div>
             <TradeEmblem lang={lang} compact />
           </header>
@@ -145,7 +146,7 @@ export default function RequestPage() {
                 {editRequestError}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div id="purchase-request-form" className="space-y-4">
                 {isCatalogInspiredRequest ? (
                   <div className="rounded-[1.6rem] border border-primary/20 bg-primary-soft p-4 text-sm leading-7 text-muted-foreground">
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">

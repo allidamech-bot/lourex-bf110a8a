@@ -1,3 +1,4 @@
+import { boundFontRequests } from "./visual-qa-browser.mjs";
 import { chromium, webkit } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 const output='products-qa';
@@ -7,10 +8,11 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
  const browser=await launcher.launch();
  for(const lang of ['en','ar']) for(const width of [320,390,430,768,1024,1440]){
   const context=await browser.newContext({viewport:{width,height:width<768?844:1000},deviceScaleFactor:1,isMobile:width<768,hasTouch:width<768,reducedMotion:'reduce'});
-  await context.addInitScript(l=>localStorage.setItem('lourex-lang',l),lang);
+  await boundFontRequests(context);
+   await context.addInitScript(l=>localStorage.setItem('lourex-lang',l),lang);
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:4173/products',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:4173/products',{waitUntil:'domcontentloaded'});
   await page.locator('.lrx-catalog-results[aria-busy="false"]').waitFor();
   await page.evaluate(()=>document.fonts.ready);
   if(await page.locator('[role="alert"]').count())errors.push('Catalog load failed');
@@ -46,6 +48,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   await page.screenshot({path:`${output}/${engine}-${lang}-${width}.png`,fullPage:true});
   await page.locator('#catalog-browser').screenshot({path:`${output}/${engine}-${lang}-${width}-catalog.png`});
   results.push({engine,lang,width,productCount:initialCount,errors});
+  console.log(JSON.stringify(results.at(-1)));
   await context.close();
  }
  await browser.close();
