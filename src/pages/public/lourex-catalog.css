@@ -33,7 +33,7 @@
 .lrx-catalog-controls { display: grid; grid-template-columns: 1fr 285px; gap: 12px; padding: 15px; background: #141414; border: 1px solid #343029; margin-block-end: 30px; }
 .lrx-catalog-search, .lrx-catalog-select { position: relative; display: flex; align-items: center; min-width: 0; gap: 12px; color: #bc9c6c; }
 .lrx-catalog-search > svg, .lrx-catalog-select > svg:first-of-type { position: absolute; inset-inline-start: 16px; z-index: 1; pointer-events: none; }
-.lourex-catalog .lrx-catalog-input, .lrx-catalog-select select { width: 100%; height: 52px; border: 1px solid #39352e; border-radius: 2px; background: #0c0c0c; color: #eee8de; padding-inline: 46px 45px; font-size: 13px; box-shadow: none; }
+.lourex-catalog .lrx-catalog-input, .lrx-catalog-select select { width: 100%; height: 52px; border: 1px solid #39352e; border-radius: 2px; background: #0c0c0c; color: #eee8de; padding-inline: 46px 45px; font-size: 16px; box-shadow: none; }
 .lourex-catalog .lrx-catalog-input::placeholder { color: #8c8780; }
 .lrx-catalog-input:focus-visible, .lrx-catalog-select select:focus-visible { outline: 2px solid #c79c59; outline-offset: 2px; }
 .lrx-catalog-search button { position: absolute; inset-inline-end: 4px; display: flex; align-items: center; justify-content: center; height: 44px; width: 40px; }
