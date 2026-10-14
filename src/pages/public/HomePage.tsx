@@ -6,10 +6,7 @@ import {
   ArrowUpRight,
   Boxes,
   ClipboardCheck,
-  Globe2,
   Handshake,
-  PackageCheck,
-  PackageSearch,
   Plane,
   SearchCheck,
 } from "lucide-react";
@@ -66,7 +63,6 @@ export default function HomePage() {
       cta: ar ? "تعرف على LOUREX" : "Discover our approach",
     },
     {
-      icon: Boxes,
       name: ar ? "التجهيز" : "PREPARATION",
       short: ar ? "متابعة الطلب" : "Follow the operation",
       title: ar ? "من الموافقة إلى المتابعة." : "A clearer path from agreement to progress.",
@@ -91,7 +87,6 @@ export default function HomePage() {
       name: ar ? "الشوكولاتة والحلويات" : "Confectionery & sweets",
       note: ar ? "تنسيق توريد العلامات التجارية والمنتجات المعبأة" : "Commercial sourcing for confectionery products",
       kind: "confectionery" as const,
-      icon: PackageSearch,
     },
     {
       code: "02", to: "/biscuits-sourcing",
@@ -105,14 +100,12 @@ export default function HomePage() {
       name: ar ? "المواد والمنتجات الغذائية" : "Food & FMCG",
       note: ar ? "احتياجات متنوعة للتجار والموزعين" : "Sourcing needs for trade and distribution",
       kind: "food" as const,
-      icon: Globe2,
     },
     {
       code: "04", to: "/products",
       name: ar ? "المزيد من المنتجات" : "More sourcing categories",
       note: ar ? "التصنيفات المتاحة في كتالوج LOUREX" : "Explore the existing LOUREX catalog",
       kind: "other" as const,
-      icon: PackageCheck,
     },
   ];
 
