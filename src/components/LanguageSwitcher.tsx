@@ -14,9 +14,11 @@ const LanguageSwitcher = () => {
         <button
           key={l.code}
           onClick={() => setLang(l.code)}
-          className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-all ${
+          aria-pressed={lang === l.code}
+          aria-label={l.code === "ar" ? "العربية" : "English"}
+          className={`min-h-9 min-w-9 rounded-full px-2.5 py-1 text-xs font-semibold transition-all ${
             lang === l.code
-              ? "bg-gold text-primary-foreground"
+              ? "bg-gold text-[#15120d]"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >

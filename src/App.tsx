@@ -1,3 +1,4 @@
+import { FLOATING_AI_ENABLED } from "@/lib/siteExperience";
 import { lazy, Suspense } from "react";
 import { BrowserTheme } from "@/components/BrowserTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -127,7 +128,7 @@ const PageWithAI = ({ component }: { component: React.ReactNode }) => {
   return (
     <>
       {component}
-      {!loading && user ? (
+      {FLOATING_AI_ENABLED && !loading && user ? (
         <Suspense fallback={null}>
           <AICommandBar />
         </Suspense>

@@ -151,3 +151,29 @@ html{min-height:100%;background:hsl(var(--background));color-scheme:light}
 html.dark{color-scheme:dark}
 html[data-lourex-surface=dark],html[data-lourex-surface=dark] body{background:#090909;color-scheme:dark!important}
 body{min-height:100vh;min-height:100dvh;margin:0}
+/* Final typography and neutral surfaces across public pages and workspaces. */
+:is(.lourex-public,.lourex-workspace,.lourex-auth) .font-serif{font-family:inherit}
+html[dir=rtl] :is(.lourex-public,.lourex-workspace,.lourex-auth) [class*="tracking-"]{letter-spacing:0}
+:is(.lourex-public,.lourex-workspace,.lourex-auth) :is(input,textarea){font-size:max(16px,1em)}
+.lourex-workspace :is([class~="text-stone-100"],[class~="text-stone-200"]){color:hsl(var(--foreground))}
+.lourex-workspace :is([class~="text-stone-300"],[class~="text-stone-400"],[class~="text-stone-500"],[class~="text-stone-600"]){color:hsl(var(--muted-foreground))}
+.lourex-workspace :is([class*="bg-stone-9"],[class*="bg-stone-8"]){background-color:hsl(var(--secondary))}
+.lourex-workspace [class*="bg-stone-50/"]{background-color:hsl(var(--card))}
+.lourex-workspace [class*="border-stone-"]{border-color:hsl(var(--border))}
+html.light .lourex-workspace :is([class~="text-amber-200"],[class~="text-amber-300"]){color:hsl(var(--gold))}
+.lrx-contact-details{display:grid;align-content:start;gap:0;border-block:1px solid hsl(var(--border))}
+.lrx-contact-detail{padding:20px 0;border-bottom:1px solid hsl(var(--border))}
+.lrx-contact-detail:last-child{border:0}
+.lourex-contact main .lrx-contact-details{border-radius:0!important;border-top:1px solid hsl(var(--border))!important}
+.lrx-contact-support{padding:20px;border:1px solid hsl(var(--border));border-radius:8px;background:hsl(var(--card))}
+.lrx-contact-support>summary{cursor:pointer;min-height:32px;line-height:2;font-size:14px;font-weight:700;color:hsl(var(--gold))}
+@media(max-width:767px){
+ .lourex-public>main{padding-inline:18px!important}
+ .lourex-workspace>div>div>aside{padding:8px;border-radius:8px}
+ .lourex-workspace main>div:first-child{padding-block:20px}
+ .lrx-contact-detail{padding-block:16px}
+ .lrx-contact-detail>div{gap:12px}
+ .lrx-contact-detail>div>div:first-child{width:36px;height:36px;border-radius:6px}
+ .lrx-contact-detail p,.lrx-contact-detail a{font-size:13px;line-height:1.8}
+}
+.dark .lrx-contact-detail a{color:hsl(var(--gold))}

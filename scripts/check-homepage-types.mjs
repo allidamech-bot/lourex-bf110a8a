@@ -18,8 +18,13 @@ try {
  writeFileSync('homepage-types-baseline.txt',baseline);
  writeFileSync('homepage-types-current.txt',current);
  const diagnostics=s=>s.split('\n').filter(l=>/error TS\d+/.test(l));
- const before=new Set(diagnostics(baseline));
- const added=diagnostics(current).filter(l=>!before.has(l));
- console.log(`Baseline: ${before.size} existing TypeScript diagnostics; branch: ${diagnostics(current).length}; new: ${added.length}`);
+ // UI edits move existing diagnostics. Compare file/code/message with occurrence
+ // counts, retaining extra repeated errors while ignoring line-number drift.
+ const normalize=line=>line.replace(/\(\d+,\d+\)(?=: error TS)/,'');
+ const baselineLines=diagnostics(baseline),remaining=new Map();
+ for(const line of baselineLines){const key=normalize(line);remaining.set(key,(remaining.get(key)||0)+1);}
+ const added=[];
+ for(const line of diagnostics(current)){const key=normalize(line),count=remaining.get(key)||0;if(count)remaining.set(key,count-1);else added.push(line);}
+ console.log(`Baseline: ${baselineLines.length} existing TypeScript diagnostics; branch: ${diagnostics(current).length}; new: ${added.length}`);
  if(added.length){console.error(added.join('\n'));process.exitCode=1;}
 } finally {rmSync(dir,{recursive:true,force:true});}

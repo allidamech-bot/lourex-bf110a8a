@@ -1,3 +1,4 @@
+import { FLOATING_AI_ENABLED } from "@/lib/siteExperience";
 import { BellRing, ClipboardList, LayoutDashboard, Radar, Route } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -44,6 +45,7 @@ export const CustomerLayout = () => {
   const [deals, setDeals] = useState<OperationsDeal[]>([]);
 
   useEffect(() => {
+    if (!FLOATING_AI_ENABLED) return;
     fetchRequests().then(setRequests).catch(() => {});
     fetchDeals().then(setDeals).catch(() => {});
   }, []);
@@ -86,7 +88,7 @@ export const CustomerLayout = () => {
           <Outlet />
         </div>
       </main>
-      <CustomerAIAssistantStub requests={requests} deals={deals} />
+      {FLOATING_AI_ENABLED && <CustomerAIAssistantStub requests={requests} deals={deals} />}
     </div>
   );
 };

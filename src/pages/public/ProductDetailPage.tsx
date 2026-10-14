@@ -102,8 +102,8 @@ export default function ProductDetailPage() {
 
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)] lg:items-start xl:gap-16">
             <div className="min-w-0 lg:sticky lg:top-28">
-              <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_28px_65px_-42px_rgba(8,127,120,0.3)]">
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-[#EAF3F0] p-8 dark:bg-[#152323] sm:p-12">
+              <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_28px_65px_-42px_rgba(214,173,108,0.12)]">
+                <div className="relative flex aspect-[4/3] items-center justify-center bg-secondary p-8 sm:p-12">
                   <div aria-hidden="true" className="pointer-events-none absolute inset-6 rounded-[1.5rem] border border-primary/10" />
                   {hasProductImage ? <img
                     src={image.url}
