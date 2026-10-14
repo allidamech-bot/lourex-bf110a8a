@@ -19,6 +19,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import HomeProductSpotlight from "@/components/home/HomeProductSpotlight";
+import SourcingIllustration from "@/components/home/SourcingIllustration";
 import heroImg from "@/assets/hero-trade.jpg";
 import { useI18n } from "@/lib/i18n";
 import "./lourex-home.css";
@@ -89,28 +90,28 @@ export default function HomePage() {
       code: "01", to: "/chocolate-sourcing",
       name: ar ? "الشوكولاتة والحلويات" : "Confectionery & sweets",
       note: ar ? "تنسيق توريد العلامات التجارية والمنتجات المعبأة" : "Commercial sourcing for confectionery products",
-      kind: "confectionery",
+      kind: "confectionery" as const,
       icon: PackageSearch,
     },
     {
       code: "02", to: "/biscuits-sourcing",
       name: ar ? "البسكويت والوجبات الخفيفة" : "Biscuits & snacks",
       note: ar ? "التعبئة والكميات وطلبات التوريد" : "Packaging, quantities and purchase inquiries",
-      kind: "snacks",
+      kind: "snacks" as const,
       icon: Boxes,
     },
     {
       code: "03", to: "/food-products-sourcing",
       name: ar ? "المواد والمنتجات الغذائية" : "Food & FMCG",
       note: ar ? "احتياجات متنوعة للتجار والموزعين" : "Sourcing needs for trade and distribution",
-      kind: "food",
+      kind: "food" as const,
       icon: Globe2,
     },
     {
       code: "04", to: "/products",
       name: ar ? "المزيد من المنتجات" : "More sourcing categories",
       note: ar ? "التصنيفات المتاحة في كتالوج LOUREX" : "Explore the existing LOUREX catalog",
-      kind: "other",
+      kind: "other" as const,
       icon: PackageCheck,
     },
   ];
@@ -198,8 +199,7 @@ export default function HomePage() {
                 <motion.div key={category.to} {...reveal} transition={{ duration: reducedMotion ? 0 : .5, delay: reducedMotion ? 0 : index * .07 }}>
                   <Link to={category.to} className={"lrx-category lrx-category--" + category.kind + " group relative flex min-h-[290px] flex-col justify-between overflow-hidden rounded-[22px] border border-[#344560] p-6 transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93BAFC] sm:min-h-[340px]"}>
                     <div className="lrx-category-art" aria-hidden="true">
-                      <category.icon className="h-24 w-24 stroke-[0.65] sm:h-28 sm:w-28" />
-                      <span className="lrx-category-halo" />
+                      <SourcingIllustration variant={category.kind} className="h-full w-full" />
                     </div>
                     <div className="relative z-10 flex items-center justify-between text-[11px] font-bold tracking-[0.12em] text-[#A9C6EA]">
                       <span>LOUREX / {category.code}</span><ArrowDownRight className="h-5 w-5 -rotate-90 transition-transform group-hover:-rotate-45 rtl:rotate-180" aria-hidden="true"/>
