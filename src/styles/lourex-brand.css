@@ -106,3 +106,6 @@ html[dir=rtl] .lourex-faq article{padding:32px 64px 32px 0}
 @media(max-width:640px){
  .lourex-request main button[role=radio],.lourex-request main button[role=checkbox],.lourex-workspace main button[role=radio],.lourex-workspace main button[role=checkbox]{width:1rem;min-width:1rem;flex-shrink:0}
 }
+/* The existing intake sign-in/analyzer panels use literal black gradients.
+   Keep their semantic text readable when the visitor switches to light. */
+html.light .lourex-request main [class*="#111111"]{background:hsl(var(--card));border-color:hsl(var(--border))}

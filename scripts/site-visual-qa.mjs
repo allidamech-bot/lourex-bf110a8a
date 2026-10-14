@@ -42,6 +42,16 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
     }
     if(!await page.locator('a[href*="/auth"]').count())errors.push('Anonymous request lost sign-in entry');
    }
+   if(route==='/request'&&theme==='light'){
+    const panel=page.locator('.lourex-request main [class*="#111111"]').first();
+    const contrast=await panel.evaluate(el=>{
+     const style=getComputedStyle(el),text=getComputedStyle(el.querySelector('p'));
+     const luminance=css=>css.match(/[\d.]+/g).slice(0,3).map(Number).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+     const a=luminance(style.backgroundColor),b=luminance(text.color);
+     return {ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),backgroundImage:style.backgroundImage};
+    });
+    if(contrast.ratio<4.5||contrast.backgroundImage!=='none')errors.push('Light sign-in notice does not have a readable semantic surface');
+   }
    if(route==='/track'){
     await page.locator('main input').fill('@@ invalid @@');
     await page.locator('main button').first().click();
