@@ -135,12 +135,13 @@ export default function ProductDetailPage() {
                         activeImageIndex === index ? "border-primary shadow-soft" : "border-border/70 hover:border-primary/40"
                       }`}
                     >
-                      <img
-                        src={photo.url || "/logo.png"}
+                      {photo.url && !/\/?logo\.png(?:[?#].*)?$/.test(photo.url) ? <img
+                        src={photo.url}
                         alt={isArabic ? photo.altAr || product.nameAr : photo.altEn || product.nameEn}
                         className="h-full w-full object-contain"
                         loading="lazy"
-                      />
+                        decoding="async"
+                      /> : <PackageSearch className="mx-auto h-6 w-6 text-muted-foreground" aria-hidden="true" />}
                     </button>
                   ))}
                 </div>

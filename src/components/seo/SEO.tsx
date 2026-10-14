@@ -12,7 +12,7 @@ interface SEOProps {
 export function SEO({ 
   title, 
   description, 
-  image = "/logo.png", 
+  image = "/lourex-official.jpeg", 
   url = window.location.href, 
   type = "website" 
 }: SEOProps) {
