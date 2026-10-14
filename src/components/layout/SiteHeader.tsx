@@ -111,7 +111,7 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
 
   return (
       <header
-          className={`top-0 z-[1000] h-[72px] w-full max-w-full overflow-visible transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${overlayOnHome ? "fixed inset-x-0" : "sticky"} ${transparentAtTop ? "border-b border-transparent bg-transparent shadow-none backdrop-blur-none" : "border-b border-border/70 bg-background/95 shadow-[0_12px_28px_-25px_rgba(214,173,108,0.2)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85"}`}
+          className={`top-0 z-[1000] h-[72px] w-full max-w-full overflow-visible transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${overlayOnHome ? "fixed inset-x-0" : "sticky"} ${transparentAtTop ? "border-b border-transparent bg-transparent shadow-none backdrop-blur-none" : isOpen ? "border-b border-border/70 bg-background shadow-lg" : "border-b border-border/70 bg-background/95 shadow-[0_12px_28px_-25px_rgba(214,173,108,0.2)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85"}`}
           dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Mobile header */}
