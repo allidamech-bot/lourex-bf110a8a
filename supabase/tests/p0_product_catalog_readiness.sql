@@ -35,5 +35,5 @@ BEGIN
     RAISE EXCEPTION 'Anonymous users cannot mutate products';
   END IF;
   SELECT count(*) INTO product_count FROM public.product_catalog_products;
-  RAISE NOTICE 'P0 catalog schema OK; %% products', product_count;
+  RAISE NOTICE 'P0 catalog schema OK; % products', product_count;
 END $$;
