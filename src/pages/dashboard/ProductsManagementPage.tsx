@@ -47,7 +47,7 @@ const emptyForm: ProductCatalogAdminInput = {
   technicalSpecs: "",
   priceNoteAr: "هذا المنتج للعرض كنموذج خدمة توريد. الطلب النهائي حسب المواصفات والكمية والوجهة.",
   priceNoteEn: "This product is displayed as a sourcing service example. Final requests depend on specifications, quantity, and destination.",
-  status: "active",
+  status: "draft",
   isFeatured: false,
   imageUrl: "",
   imageAltAr: "",
