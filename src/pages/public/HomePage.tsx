@@ -134,7 +134,7 @@ export default function HomePage() {
     <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#090909] text-white" data-lourex-home>
       <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX | International Trading & Resources"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
       <SiteHeader />
-      <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#397AEF] to-[#F05265]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
+      <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#A93024] via-[#345777] to-[#D6A653]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
       <main>
         <HeroSection />
 
@@ -175,7 +175,7 @@ export default function HomePage() {
               </div>
             </div>
             <div id="lrx-journey-detail" className="lrx-journey-detail mt-6 grid min-h-[155px] gap-6 rounded-2xl border border-[#2E415A] bg-[#181818] p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-7 lg:ms-[318px]">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#A1BBE8]/20 bg-[#3265AD]/20 text-[#9BC5FF]"><ActiveIcon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" /></div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#A1BBE8]/20 bg-[#A47938]/15 text-[#D6AD6C]"><ActiveIcon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" /></div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={activeStep} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: reducedMotion ? 0 : 0.2 }} aria-live="polite">
                   <h3 className="text-xl font-bold text-white">{active.title}</h3>
