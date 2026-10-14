@@ -7,7 +7,7 @@ import "./styles/purchase-requests-hardening.css";
 import "./styles/lourex-brand.css";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+  <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
     <MotionConfig reducedMotion="user"><App /></MotionConfig>
   </ThemeProvider>
 );
