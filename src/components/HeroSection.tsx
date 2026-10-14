@@ -1,130 +1,168 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Route, ShieldCheck } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Compass, Route } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-trade.jpg";
 import { useI18n } from "@/lib/i18n";
 
 const HeroSection = () => {
   const { lang } = useI18n();
-  const reduceMotion = useReducedMotion();
-  const isArabic = lang === "ar";
+  const reducedMotion = useReducedMotion();
+  const ar = lang === "ar";
 
-  const entrance = (delay: number) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 20 },
+  const reveal = (delay: number) => ({
+    initial: reducedMotion ? false : { opacity: 0, y: 26 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0 : 0.6, delay: reduceMotion ? 0 : delay, ease: "easeOut" as const },
+    transition: { duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] as const },
   });
 
   return (
     <section
       aria-labelledby="lourex-hero-title"
-      className="relative isolate overflow-hidden bg-[#F6FAF9] text-[#182A30] dark:bg-[#070B0D] dark:text-[#F5F8F7]"
+      className="relative isolate overflow-hidden bg-[#F7FAF8] text-[#143432] dark:bg-[#080E10] dark:text-[#F4F8F6]"
     >
-      {/* A quiet navigation-route signature, not a decorative card grid. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -start-48 -top-56 h-[34rem] w-[34rem] rounded-full border border-[#087F78]/10 dark:border-[#36D3C0]/10" />
-        <div className="absolute -start-24 -top-32 h-[22rem] w-[22rem] rounded-full border border-[#087F78]/10 dark:border-[#36D3C0]/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_18%,rgba(8,127,120,0.07),transparent_42%)] dark:bg-[radial-gradient(ellipse_at_70%_18%,rgba(54,211,192,0.075),transparent_40%)]" />
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute -start-64 -top-64 h-[42rem] w-[42rem] rounded-full bg-[#6BC5B9]/[0.075] blur-3xl dark:bg-[#36D3C0]/[0.06]" />
+        <div className="absolute -end-48 bottom-[-20rem] h-[42rem] w-[42rem] rounded-full border border-[#087F78]/10 dark:border-[#36D3C0]/10" />
+        <div className="absolute -end-20 bottom-[-12rem] h-[29rem] w-[29rem] rounded-full border border-[#087F78]/10 dark:border-[#36D3C0]/10" />
       </div>
 
-      <div className="container relative mx-auto px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-16 lg:px-8 lg:pb-20 lg:pt-20">
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 xl:gap-20">
-          <div className="relative z-10 max-w-[38rem]">
-            <motion.div {...entrance(0)}>
-              <div className="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.15em] text-[#087F78] dark:text-[#36D3C0] sm:text-xs">
-                <span className="h-px w-8 bg-current" aria-hidden="true" />
-                {isArabic ? "لوريكس • وساطة وتنسيق توريد" : "LOUREX / SOURCING & TRADE"}
-              </div>
-            </motion.div>
+      <div className="relative mx-auto grid max-w-[1500px] items-center gap-11 px-5 pb-14 pt-14 sm:px-8 sm:pb-20 sm:pt-20 lg:min-h-[710px] lg:grid-cols-[minmax(0,0.87fr)_minmax(0,1.13fr)] lg:gap-9 lg:px-10 lg:pb-24 lg:pt-20 xl:min-h-[795px] xl:gap-16 xl:px-14">
+        <div className="relative z-10 max-w-[660px]">
+          <motion.div {...reveal(0)} className="flex items-center gap-3">
+            <span className="relative flex h-2 w-2 shrink-0 items-center justify-center">
+              <span className="absolute h-2 w-2 rounded-full bg-[#087F78] dark:bg-[#36D3C0]" />
+              {!reducedMotion && <span className="absolute h-4 w-4 animate-ping rounded-full border border-[#087F78]/30 dark:border-[#36D3C0]/35" />}
+            </span>
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#087F78] dark:text-[#6DE6D8] sm:text-xs rtl:tracking-normal">
+              {ar ? "لوريكس · للتوريد والتجارة الدولية" : "LOUREX  /  INTERNATIONAL SOURCING"}
+            </span>
+            <span className="h-px w-10 bg-[#087F78]/25 dark:bg-[#36D3C0]/30" />
+          </motion.div>
 
-            <motion.h1
-              id="lourex-hero-title"
-              {...entrance(0.08)}
-              className="mt-7 max-w-[12ch] text-[clamp(2.6rem,5.6vw,5rem)] font-extrabold leading-[1.12] tracking-[-0.045em] text-[#123B39] dark:text-[#F5F8F7] sm:mt-8"
+          <motion.h1
+            id="lourex-hero-title"
+            {...reveal(0.12)}
+            className="mt-8 max-w-[14ch] text-[clamp(2.8rem,5.4vw,5.8rem)] font-extrabold leading-[1.12] tracking-[-0.052em] text-[#143432] dark:text-[#F4F8F6] sm:mt-9 rtl:tracking-normal"
+          >
+            {ar ? (
+              <>شريكك الموثوق <span className="relative inline-block text-[#087F78] dark:text-[#56DCCA]">في التجارة الدولية<span aria-hidden="true" className="absolute -bottom-1 start-0 h-[3px] w-[42%] rounded-full bg-[#E4B458]" /></span></>
+            ) : (
+              <>Your partner in <span className="relative inline-block text-[#087F78] dark:text-[#56DCCA]">global trade.<span aria-hidden="true" className="absolute -bottom-1 start-0 h-[3px] w-[42%] rounded-full bg-[#E4B458]" /></span></>
+            )}
+          </motion.h1>
+
+          <motion.p
+            {...reveal(0.22)}
+            className="mt-8 max-w-[32rem] text-[16px] leading-[1.95] text-[#576B69] dark:text-[#B4C6C5] sm:text-[18px]"
+          >
+            {ar
+              ? "نربط أعمالك بمصادر التوريد، وننسّق الطلبات والشحنات بثقة ووضوح — من أول تواصل حتى التسليم."
+              : "Connecting your business with sourcing opportunities, coordinating trade and logistics from the first conversation to delivery."}
+          </motion.p>
+
+          <motion.div {...reveal(0.32)} className="mt-9 flex flex-wrap items-center gap-3 sm:mt-11">
+            <Link
+              to="/request"
+              className="group inline-flex min-h-[54px] items-center justify-center gap-4 rounded-[15px] bg-[#087F78] px-6 py-3 text-[14px] font-bold text-white shadow-[0_20px_45px_-24px_rgba(8,127,120,0.9)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#086D67] hover:shadow-[0_22px_48px_-20px_rgba(8,127,120,0.5)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#087F78]/25 dark:bg-[#4AD7C4] dark:text-[#071716] dark:hover:bg-[#81EBDF]"
             >
-              <span className="block">
-                {isArabic ? "شريكك الموثوق في" : "A trusted partner in"}
+              {ar ? "اطلب عرض توريد" : "Start sourcing"}
+              <ArrowUpRight className="h-[18px] w-[18px] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden="true" />
+            </Link>
+            <Link
+              to="/products"
+              className="group inline-flex min-h-[54px] items-center justify-center gap-3 rounded-[15px] border border-[#BCD1CB] bg-white/70 px-6 py-3 text-[14px] font-bold text-[#143432] transition-all duration-300 hover:-translate-y-1 hover:border-[#087F78]/50 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#087F78]/15 dark:border-[#2A3A3B] dark:bg-[#172123] dark:text-[#F4F8F6] dark:hover:border-[#4AD7C4]/50 dark:hover:bg-[#1A2A2C]"
+            >
+              {ar ? "استكشف المنتجات" : "Explore products"}
+              <ArrowUpRight className="h-4 w-4 text-[#087F78] transition-transform group-hover:-translate-y-0.5 rtl:-scale-x-100 dark:text-[#4AD7C4]" aria-hidden="true" />
+            </Link>
+          </motion.div>
+
+          <motion.div {...reveal(0.4)} className="mt-12 flex flex-wrap gap-x-7 gap-y-3 border-t border-[#C9DAD5]/70 pt-6 dark:border-[#2A3738]">
+            {[
+              ar ? "تنسيق التوريد" : "Sourcing",
+              ar ? "إدارة الطلبات" : "Trade operations",
+              ar ? "متابعة الشحن" : "Shipment visibility",
+            ].map((label) => (
+              <span key={label} className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#536A68] dark:text-[#AFC3C1]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#087F78] dark:bg-[#56DCCA]" />
+                {label}
               </span>
-              <span className="block text-[#087F78] dark:text-[#36D3C0]">
-                {isArabic ? "التجارة الدولية." : "international trade."}
-              </span>
-            </motion.h1>
-
-            <motion.p
-              {...entrance(0.16)}
-              className="mt-6 max-w-[29rem] text-[16px] leading-[1.9] text-[#50666A] dark:text-[#A1B2B4] sm:text-[17px]"
-            >
-              {isArabic
-                ? "ننسّق التوريد وطلبات الشراء ومتابعة الشحنات، من المصدر حتى التسليم."
-                : "Sourcing, purchase requests and shipment follow-up. Coordinated from origin to delivery."}
-            </motion.p>
-
-            <motion.div {...entrance(0.24)} className="mt-9 flex flex-wrap items-center gap-3">
-              <Link
-                to="/request"
-                className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-[#087F78] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_30px_-15px_rgba(8,127,120,0.58)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#076E69] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#087F78]/25 dark:bg-[#36D3C0] dark:text-[#070B0D] dark:hover:bg-[#62E4D5] dark:focus-visible:ring-[#36D3C0]/25"
-              >
-                {isArabic ? "قدّم طلب شراء" : "Submit a request"}
-                <ArrowUpRight className="h-4 w-4 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
-              </Link>
-              <Link
-                to="/products"
-                className="inline-flex min-h-12 items-center justify-center gap-3 rounded-2xl border border-[#CADDD9] bg-white/70 px-6 py-3 text-sm font-semibold text-[#123B39] transition duration-200 hover:border-[#087F78]/40 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#087F78]/15 dark:border-[#293638] dark:bg-[#11191B] dark:text-[#F5F8F7] dark:hover:border-[#36D3C0]/50 dark:hover:bg-[#172124]"
-              >
-                {isArabic ? "استكشف المنتجات" : "Explore products"}
-                <ArrowRight className="h-4 w-4 shrink-0 rtl:rotate-180" aria-hidden="true" />
-              </Link>
-            </motion.div>
-
-            {/* Existing tracking and workspace routes remain directly accessible. */}
-            <motion.div
-              {...entrance(0.32)}
-              className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-[#DCE9E5] pt-5 text-[13px] text-[#50666A] dark:border-[#293638] dark:text-[#A1B2B4]"
-            >
-              <Link
-                to="/track"
-                className="inline-flex min-h-10 items-center gap-2 transition-colors hover:text-[#087F78] focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#087F78] dark:hover:text-[#36D3C0]"
-              >
-                <Route className="h-4 w-4 text-[#087F78] dark:text-[#36D3C0]" aria-hidden="true" />
-                {isArabic ? "تتبع شحنة" : "Track a shipment"}
-              </Link>
-              <Link
-                to="/auth"
-                className="inline-flex min-h-10 items-center gap-2 transition-colors hover:text-[#087F78] focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#087F78] dark:hover:text-[#36D3C0]"
-              >
-                <ShieldCheck className="h-4 w-4 text-[#087F78] dark:text-[#36D3C0]" aria-hidden="true" />
-                {isArabic ? "بوابة الأعمال" : "Business portal"}
-              </Link>
-            </motion.div>
-          </div>
-
-          <motion.div {...entrance(0.14)} className="relative min-w-0">
-            <div aria-hidden="true" className="absolute -end-4 -top-4 h-24 w-24 rounded-tr-[3rem] border-e border-t border-[#087F78]/30 dark:border-[#36D3C0]/30 sm:-end-6 sm:-top-6" />
-            <div className="relative h-[330px] overflow-hidden rounded-[1.75rem] border border-[#D9E8E5] bg-[#123B39] shadow-[0_28px_70px_-35px_rgba(18,59,57,0.3)] dark:border-[#293638] dark:bg-[#11191B] dark:shadow-[0_35px_90px_-40px_rgba(0,0,0,0.75)] sm:h-[450px] sm:rounded-[2.25rem] lg:h-[590px]">
-              <img
-                src={heroImg}
-                alt={isArabic ? "عمليات التوريد والشحن التجاري الدولي" : "International trade sourcing and shipping operations"}
-                className="h-full w-full object-cover object-center"
-                width={1920}
-                height={1080}
-                fetchPriority="high"
-                decoding="async"
-              />
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071C1D]/85 via-[#071C1D]/10 to-transparent" />
-              <div className="absolute bottom-0 start-0 end-0 p-6 text-white sm:p-9">
-                <div className="mb-4 h-px w-12 bg-[#80E7DB]" aria-hidden="true" />
-                <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[#C6F5EF]">
-                  {isArabic ? "من المصدر إلى التسليم" : "FROM ORIGIN TO DELIVERY"}
-                </p>
-                <p className="mt-2 max-w-[21rem] text-xl font-bold leading-snug sm:text-2xl">
-                  {isArabic ? "تجارة واضحة. علاقات أقوى." : "Trade made clear. Partnerships made stronger."}
-                </p>
-              </div>
-            </div>
-            <div aria-hidden="true" className="absolute -bottom-3 -start-3 h-20 w-20 rounded-bl-[2rem] border-b border-s border-[#087F78]/30 dark:border-[#36D3C0]/30 sm:-bottom-5 sm:-start-5" />
+            ))}
           </motion.div>
         </div>
+
+        <motion.div {...reveal(0.16)} className="relative min-w-0 lg:ps-5">
+          <div className="pointer-events-none absolute -start-2 -top-5 z-10 hidden h-32 w-32 rounded-tl-[4rem] border-s border-t border-[#087F78]/40 dark:border-[#56DCCA]/40 sm:block" aria-hidden="true" />
+          <div className="group relative min-h-[385px] overflow-hidden rounded-[26px] border border-[#CADBD6]/55 bg-[#092928] shadow-[0_40px_95px_-45px_rgba(9,63,58,0.55)] dark:border-[#324548]/60 dark:shadow-[0_40px_105px_-48px_rgba(0,0,0,0.9)] sm:min-h-[535px] lg:min-h-[600px] xl:min-h-[645px]">
+            <img
+              src={heroImg}
+              alt={ar ? "الشحن والتوريد الدولي للبضائع" : "International sourcing and freight operations"}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.045] motion-reduce:transform-none"
+              width={1920}
+              height={1080}
+              fetchPriority="high"
+              decoding="async"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#031A1A]/95 via-[#041E1F]/25 to-[#05191A]/25" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#10312C]/10 to-transparent" aria-hidden="true" />
+
+            <div className="absolute start-5 top-5 z-10 flex items-center gap-2 rounded-full border border-white/20 bg-[#051D1C]/55 px-4 py-2.5 backdrop-blur-xl sm:start-7 sm:top-7">
+              <Compass className="h-4 w-4 text-[#6DE6D8]" strokeWidth={1.6} aria-hidden="true" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-white sm:text-[11px]">
+                {ar ? "من المصدر إلى وجهتك" : "FROM ORIGIN TO DESTINATION"}
+              </span>
+            </div>
+
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 520 340"
+              preserveAspectRatio="xMidYMid meet"
+              className="pointer-events-none absolute end-[-6%] top-[18%] w-[103%] max-w-none opacity-70"
+            >
+              <path d="M15 280 C 135 218 150 308 254 166 S 420 115 500 45" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="1.2" strokeDasharray="4 7" />
+              <motion.path
+                d="M15 280 C 135 218 150 308 254 166 S 420 115 500 45"
+                fill="none"
+                stroke="#81EDDF"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={reducedMotion ? false : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: reducedMotion ? 0 : 2.2, delay: reducedMotion ? 0 : 0.8, ease: "easeOut" }}
+              />
+              <circle cx="15" cy="280" r="5" fill="#81EDDF" />
+              <circle cx="254" cy="166" r="5" fill="#81EDDF" stroke="#0B3432" strokeWidth="3" />
+              <circle cx="500" cy="45" r="7" fill="#E7BB6A" stroke="#0B3432" strokeWidth="3" />
+            </svg>
+
+            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9 xl:p-10">
+              <div className="mb-5 h-[2px] w-12 rounded-full bg-[#81EDDF]" aria-hidden="true" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-[#A7EDE4] rtl:tracking-normal">
+                {ar ? "تجارة أوضح. شراكات أقوى." : "BETTER CONNECTIONS. CLEARER TRADE."}
+              </p>
+              <p className="mt-3 max-w-[29rem] text-[clamp(1.45rem,2.6vw,2.3rem)] font-bold leading-[1.25] tracking-tight text-white rtl:tracking-normal">
+                {ar ? "حلول توريد تجمع الأطراف والخطوات في مسار واحد." : "One connected journey from sourcing to delivery."}
+              </p>
+              <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-white/20 pt-5">
+                <div className="flex items-center gap-2.5 text-xs text-white/85">
+                  <Route className="h-4 w-4 text-[#81EDDF]" aria-hidden="true" />
+                  {ar ? "سلسلة توريد مترابطة" : "Connected sourcing"}
+                </div>
+                <span className="text-[10px] font-bold tracking-[0.18em] text-[#C7EEE8]">LOUREX / 01</span>
+              </div>
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -bottom-5 -end-5 hidden h-24 w-24 rounded-br-[3rem] border-b border-e border-[#087F78]/40 dark:border-[#56DCCA]/40 sm:block" aria-hidden="true" />
+        </motion.div>
       </div>
+
+      <a
+        href="#explore"
+        className="group absolute bottom-4 start-5 hidden min-h-10 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.17em] text-[#087F78] transition-colors hover:text-[#145A55] dark:text-[#56DCCA] lg:inline-flex xl:start-14"
+      >
+        <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-1" aria-hidden="true" />
+        {ar ? "اكتشف لوريكس" : "SCROLL TO EXPLORE"}
+      </a>
     </section>
   );
 };
