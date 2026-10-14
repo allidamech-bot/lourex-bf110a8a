@@ -17,7 +17,7 @@ for(const [engine,launcher,lang,width] of [['webkit',webkit,'ar',430],['chromium
   if(!appearance.dark||appearance.light||appearance.surface!=='dark'||appearance.scheme!=='dark'||appearance.meta!=='#090909'||appearance.stored!=='dark')errors.push('Legacy daytime preference reactivated: '+JSON.stringify(appearance));
   if(await page.getByRole('button',{name:lang==='ar'?'تبديل المظهر':'Toggle theme'}).count())errors.push('Day/night toggle remains visible');
   if(route==='/request' && await page.locator('.lourex-request').evaluate(el=>{
-    const rgb=getComputedStyle(el).backgroundColor.match(/[\\d.]+/g)?.slice(0,3).map(Number)||[];
+    const rgb=getComputedStyle(el).backgroundColor.match(/[\d.]+/g)?.slice(0,3).map(Number)||[];
     return rgb.length!==3||Math.max(...rgb)>80;
   }))errors.push('Request page surface is not dark');
   if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))errors.push('Horizontal page overflow');
