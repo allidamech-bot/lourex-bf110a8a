@@ -251,7 +251,7 @@ export default function HomePage() {
               </Link>
             </motion.div>
             <motion.div {...reveal} className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[25px] border border-[#38332C] bg-[#0B0B0B] sm:min-h-[430px]">
-              <div className="absolute -top-40 start-1/3 h-80 w-80 rounded-full bg-[#477193]/20 blur-[90px]" aria-hidden="true"/>
+              <div className="pointer-events-none absolute -top-40 start-1/3 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(71,113,147,0.24),transparent_72%)]" aria-hidden="true"/>
               <svg viewBox="0 0 700 440" className="h-full w-full max-w-[740px]" role="img" aria-label={ar ? "رسم توضيحي لمسارات الاتصال التجاري حول LOUREX" : "Illustrative commercial network centered on LOUREX"}>
                 <defs><linearGradient id="lrx-map-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#477193"/><stop offset="100%" stopColor="#b84630"/></linearGradient></defs>
                 <g fill="none" stroke="#477193" strokeOpacity=".34" strokeWidth="1">
