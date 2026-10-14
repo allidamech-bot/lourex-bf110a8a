@@ -38,26 +38,25 @@ export const DashboardLayout = () => {
 
   useEffect(() => {
     const nav = navRef.current;
-    if (!nav) return;
+    if (!nav || window.matchMedia("(min-width: 1280px)").matches) return;
 
-    const timer = setTimeout(() => {
-      const activeItem = nav.querySelector('.active-nav-item');
-      const badgedItems = nav.querySelectorAll('.badged-nav-item');
-      
-      let targetEl = activeItem;
-      if (activeItem && activeItem.classList.contains('badged-nav-item')) {
-        targetEl = activeItem;
-      } else if (badgedItems.length > 0) {
-        targetEl = badgedItems[0];
+    // Reveal only the active destination; alert badges should never drag the
+    // mobile strip to a different page and cut off the first navigation items.
+    const frame = requestAnimationFrame(() => {
+      const active = nav.querySelector<HTMLElement>(".active-nav-item");
+      if (!active) return;
+      const navRect = nav.getBoundingClientRect();
+      const itemRect = active.getBoundingClientRect();
+      const margin = 12;
+      if (itemRect.left < navRect.left + margin) {
+        nav.scrollBy({ left: itemRect.left - navRect.left - margin, behavior: "instant" });
+      } else if (itemRect.right > navRect.right - margin) {
+        nav.scrollBy({ left: itemRect.right - navRect.right + margin, behavior: "instant" });
       }
+    });
 
-      if (targetEl) {
-        targetEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [location.pathname, alertSummary]);
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   const dashboardLinks = [
     { to: "/dashboard", label: t("dashboardNav.overview"), icon: LayoutDashboard, end: true, roles: dashboardRoutePermissions.overview },
@@ -96,8 +95,8 @@ export const DashboardLayout = () => {
         <SiteHeader />
         <div className="mx-auto grid w-full max-w-[1700px] gap-6 overflow-x-hidden px-4 pb-6 pt-7 sm:px-6 lg:px-8 xl:grid-cols-[258px_minmax(0,1fr)]">
           <aside
-            className="w-full max-w-full min-w-0 rounded-[1.75rem] border border-border/70 bg-card/90 p-3 shadow-soft backdrop-blur-xl xl:sticky xl:top-[5.5rem] xl:self-start"
-            aria-label="Sidebar"
+            className="lrx-dashboard-side w-full max-w-full min-w-0 rounded-[1.75rem] border border-border/70 bg-card/90 p-3 shadow-soft backdrop-blur-xl xl:sticky xl:top-[5.5rem] xl:self-start"
+            aria-label={lang === "ar" ? "التنقل في لوحة الإدارة" : "Dashboard navigation panel"}
           >
             <div className="mb-5 ms-3 hidden xl:block h-0.5 w-10 rounded-full bg-primary" />
 
@@ -118,7 +117,7 @@ export const DashboardLayout = () => {
                   {t("identity.labels.role")}: {roleLabel}
                 </span>
                 <span className="max-w-full break-words rounded-full border border-border/70 bg-card px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
-                  Executive workspace
+                  {lang === "ar" ? "مساحة الإدارة" : "Executive workspace"}
                 </span>
                 {entityLabel ? (
                   <span className="max-w-full break-words rounded-full border border-border/70 bg-card px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
@@ -128,7 +127,7 @@ export const DashboardLayout = () => {
               </div>
             </div>
 
-            <nav ref={navRef} className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1 xl:overflow-visible xl:pb-0 scroll-smooth" aria-label={t("nav.dashboardNavigation")}>
+            <nav ref={navRef} className="lrx-dashboard-nav flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1 xl:overflow-visible xl:pb-0" aria-label={t("nav.dashboardNavigation")}>
               {visibleLinks.map((link) => (
                 <NavLink
                   key={link.to}
