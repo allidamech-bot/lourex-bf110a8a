@@ -1,0 +1,124 @@
+/*
+ * LOUREX — The Living Trade.
+ * Homepage-scoped tokens and signature visuals only.
+ * All internal/public routes outside the homepage retain their original theme.
+ */
+.lourex-home {
+  color-scheme: dark;
+  --background: 218 50% 5%;
+  --foreground: 213 52% 96%;
+  --heading: 0 0% 100%;
+  --card: 217 42% 10%;
+  --card-foreground: 216 47% 95%;
+  --popover: 219 40% 10%;
+  --popover-foreground: 216 47% 96%;
+  --primary: 353 78% 57%;
+  --primary-foreground: 0 0% 100%;
+  --primary-soft: 223 43% 18%;
+  --secondary: 216 43% 14%;
+  --secondary-foreground: 214 50% 92%;
+  --muted: 218 34% 17%;
+  --muted-foreground: 216 24% 73%;
+  --accent: 219 42% 18%;
+  --accent-foreground: 213 55% 95%;
+  --border: 217 34% 24%;
+  --input: 218 34% 25%;
+  --ring: 353 78% 57%;
+  --footer-background: 219 56% 5%;
+  --footer-foreground: 215 50% 95%;
+  --footer-muted: 216 25% 74%;
+  --footer-accent: 353 81% 71%;
+}
+
+.lourex-home .lrx-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  color: #a3bfea;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.lourex-home .lrx-kicker::before {
+  content: "";
+  width: 2.15rem;
+  height: 1px;
+  background: linear-gradient(90deg, #5596f4, #e95066);
+}
+
+.lourex-home .lrx-category {
+  isolation: isolate;
+  background: linear-gradient(145deg, #152640, #091321 85%);
+}
+
+.lourex-home .lrx-category--confectionery {
+  background: radial-gradient(circle at 60% 30%, #543248 0, transparent 53%), linear-gradient(140deg,#202137,#101523);
+}
+
+.lourex-home .lrx-category--snacks {
+  background: radial-gradient(circle at 67% 33%, #3b477b 0, transparent 57%),linear-gradient(140deg,#172744,#0b1527);
+}
+
+.lourex-home .lrx-category--food {
+  background: radial-gradient(circle at 66% 31%, #245b78 0, transparent 52%),linear-gradient(140deg,#132c42,#0a1929);
+}
+
+.lourex-home .lrx-category--other {
+  background: radial-gradient(circle at 67% 30%, #6a2e53 0, transparent 56%),linear-gradient(140deg,#251c37,#121524);
+}
+
+.lourex-home .lrx-category::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, rgba(4,10,21,.82), rgba(4,10,21,0) 80%);
+}
+
+.lourex-home .lrx-category-art {
+  position: absolute;
+  inset: 9% 0 auto 0;
+  display: flex;
+  height: 61%;
+  align-items: center;
+  justify-content: center;
+  color: rgba(171,205,253,.73);
+  opacity: .87;
+  transition: transform .45s cubic-bezier(.2,.8,.2,1);
+}
+
+.lourex-home .lrx-category:hover .lrx-category-art {
+  transform: translateY(-8px) scale(1.04);
+}
+
+.lourex-home .lrx-category--confectionery .lrx-category-art,
+.lourex-home .lrx-category--other .lrx-category-art {
+  color: rgba(255,157,180,.79);
+}
+
+.lourex-home .lrx-category-halo {
+  position: absolute;
+  width: 11rem;
+  height: 11rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: .17;
+  box-shadow: 0 0 0 33px rgba(152,182,242,.025), 0 0 0 71px rgba(152,182,242,.02);
+}
+
+.lourex-home #featured-products {
+  background: #080f1d;
+}
+
+.lourex-home #featured-products .group:hover {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lourex-home .lrx-category-art,
+  .lourex-home .lrx-category {
+    transition: none !important;
+    transform: none !important;
+  }
+}
