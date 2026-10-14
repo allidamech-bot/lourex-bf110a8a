@@ -100,7 +100,7 @@ html[dir=rtl] .lrx-interior-kicker{letter-spacing:0}
 .lourex-workspace .lrx-dashboard-nav{scrollbar-width:thin;scrollbar-color:#b99b6b55 transparent;overscroll-behavior-inline:contain}
 .lourex-workspace .lrx-dashboard-nav a{scroll-snap-align:start}
 .lourex-workspace .lrx-dashboard-nav a.active-nav-item{box-shadow:inset 0 -2px 0 #d6ad6c}
-.lourex-workspace main>div:first-child{background:linear-gradient(110deg,#1b1816,#111 80%)!important;border-top:2px solid #d6ad6c63}
+.lourex-workspace .lrx-workspace-heading{background:linear-gradient(110deg,#1b1816,#111 80%)!important;border-top:2px solid #d6ad6c63}
 
 /* Safe widths, breathing space and readable content across iPhone sizes. */
 @media(max-width:767px){
