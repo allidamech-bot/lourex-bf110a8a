@@ -25,21 +25,21 @@ export default function RequestPage() {
   const [loadingEditRequest, setLoadingEditRequest] = useState(Boolean(editRequestId));
   const [editRequestError, setEditRequestError] = useState("");
 
-  const [productSource, setProductSource] = useState<ProductCatalogItem | null>(null);
-  const [loadingProductSource, setLoadingProductSource] = useState(Boolean(productId && !editRequestId));
+  const [resolvedProduct, setResolvedProduct] = useState<{ id: string; item: ProductCatalogItem | null } | null>(null);
+  // The ID travels with the result so that navigating between two products can
+  // never temporarily prefill the new request with a previous product.
+  const productSource = !editRequestId && resolvedProduct?.id === productId ? resolvedProduct.item : null;
+  const loadingProductSource = Boolean(productId && !editRequestId && resolvedProduct?.id !== productId);
 
   useEffect(() => {
     let cancelled = false;
-    setProductSource(null);
     if (!productId || editRequestId) {
-      setLoadingProductSource(false);
+      setResolvedProduct(null);
       return;
     }
-    setLoadingProductSource(true);
     void fetchCatalogProductById(productId)
-      .then(product => { if (!cancelled) setProductSource(product); })
-      .catch(() => { if (!cancelled) setProductSource(null); })
-      .finally(() => { if (!cancelled) setLoadingProductSource(false); });
+      .then(item => { if (!cancelled) setResolvedProduct({ id: productId, item }); })
+      .catch(() => { if (!cancelled) setResolvedProduct({ id: productId, item: null }); });
     return () => { cancelled = true; };
   }, [productId, editRequestId]);
   const isCatalogInspiredRequest = !editRequestId && (requestSource === "products" || Boolean(productId));
