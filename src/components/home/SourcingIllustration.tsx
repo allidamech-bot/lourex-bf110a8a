@@ -43,13 +43,11 @@ export default function SourcingIllustration({ variant, ...props }: Props) {
           <stop stopColor={variant === "confectionery" ? "#D55766" : variant === "snacks" ? "#668FEF" : variant === "food" ? "#60AAC8" : "#9B679C"} stopOpacity=".45" />
           <stop offset="1" stopColor="#07121F" stopOpacity="0" />
         </radialGradient>
-        <filter id={id + "-shadow"} x="-35%" y="-45%" width="170%" height="190%">
-          <feGaussianBlur stdDeviation="17" />
-        </filter>
       </defs>
 
       <ellipse cx="282" cy="160" rx="200" ry="165" fill={grad("halo")} />
-      <ellipse cx="288" cy="326" rx="183" ry="23" fill="#000000" opacity=".6" filter={grad("shadow")} />
+      <ellipse cx="288" cy="326" rx="196" ry="32" fill="#000000" opacity=".12" />
+      <ellipse cx="288" cy="326" rx="178" ry="20" fill="#000000" opacity=".22" />
       <path d="M48 336Q271 322 492 336" stroke="#F2E5D3" strokeOpacity=".18" strokeWidth="2" />
       <path d="M61 351H484" stroke="#99A3B5" strokeOpacity=".07" />
 

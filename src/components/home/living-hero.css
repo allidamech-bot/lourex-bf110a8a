@@ -74,4 +74,3 @@
 }
 @media(max-width:359px){.lrx-living-stage{padding-top:160px}.lrx-living-visual{width:320px;inset-inline-end:-55px}.lrx-living-copy h1{font-size:48px}[dir=rtl] .lrx-living-copy h1{font-size:46px}.lrx-living-actions{gap:8px 16px}.lrx-living-mast{font-size:6px}.lrx-motion-toggle{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.lrx-living-hero *{animation:none!important;transition:none!important;will-change:auto!important}.lrx-living-copy,.lrx-living-visual{opacity:1!important;transform:none!important}}
-
