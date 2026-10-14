@@ -20,6 +20,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   if(metrics.motion!=='paused'||metrics.packetAnimation!=='none')errors.push('Reduced motion ignored');
   if(metrics.direction!==(lang==='ar'?'rtl':'ltr'))errors.push('Wrong direction');
   if(await page.locator('.lrx-living-actions a[href="/products"]').count()!==1)errors.push('Catalog link missing');
+  await page.waitForTimeout(200);
   if(width===430||width===1440)await page.screenshot({path:`${out}/${engine}-${lang}-${width}-hero.png`});
   const steps=page.locator('.lrx-milestone');
   for(let i=0;i<5;i++){await steps.nth(i).click();if(await steps.nth(i).getAttribute('aria-pressed')!=='true'||!await page.locator('#lrx-journey-detail svg').count())errors.push(`Journey step ${i+1} broken`);}
@@ -37,13 +38,15 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
  await page.waitForFunction(()=>document.querySelector('#lourex-hero')?.dataset.motion==='running');
  const before=await offset();await page.waitForTimeout(1200);const after=await offset();if(before===after)errors.push('No actual route animation');
  await page.getByRole('button',{name:lang==='ar'?'إيقاف الحركة':'Pause motion',exact:true}).click();
- const frozen=await offset();await page.waitForTimeout(500);if(await offset()!==frozen||await hero.getAttribute('data-motion')!=='paused')errors.push('Pause does not freeze routes');
+ await page.waitForFunction(()=>document.querySelector('#lourex-hero')?.dataset.motion==='paused'&&getComputedStyle(document.querySelector('.lrx-field-packet')).animationPlayState==='paused');
+ // WebKit commits the CSS pause on the next render frame. Sample after it settles.
+ await page.waitForTimeout(100);const frozen=await offset();await page.waitForTimeout(500);const frozenAfter=await offset();if(frozenAfter!==frozen)errors.push(`Pause does not freeze routes: ${frozen} -> ${frozenAfter}`);
  await page.getByRole('button',{name:lang==='ar'?'تشغيل الحركة':'Play motion',exact:true}).click();await page.waitForTimeout(600);
  if(await offset()===frozen)errors.push('Resume does not animate');
  await page.locator('#network').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('#lourex-hero')?.dataset.motion==='paused');
  await hero.scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('#lourex-hero')?.dataset.motion==='running');await page.waitForTimeout(2200);
  await page.screenshot({path:`${out}/${engine}-${lang}-motion.png`});
  const video=page.video();await context.close();await rename(await video.path(),`${out}/${engine}-hero-motion.webm`);
- results.push({engine,width,lang,motionVerified:before!==after,errors});console.log(JSON.stringify(results.at(-1)));await browser.close();
+ results.push({engine,width,lang,motionVerified:before!==after,freeze:{frozen,frozenAfter},errors});console.log(JSON.stringify(results.at(-1)));await browser.close();
 }
 await writeFile(`${out}/results.json`,JSON.stringify(results,null,2));if(results.some(r=>r.errors.length))throw Error(JSON.stringify(results.filter(r=>r.errors.length)));
