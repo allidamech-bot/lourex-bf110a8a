@@ -50,7 +50,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="lourex-public lourex-productdetail min-h-screen bg-background text-foreground">
         <SiteHeader />
         <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
           <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-card px-5 py-4 text-sm text-muted-foreground backdrop-blur-xl">
@@ -68,6 +68,7 @@ export default function ProductDetailPage() {
 
   const category = getCategoryById(product.categoryId);
   const image = product.images[activeImageIndex] ?? product.images[0];
+  const hasProductImage = Boolean(image?.url && !/\/?logo\.png(?:[?#].*)?$/.test(image.url));
   const specs = [
     { label: t("products.detail.category"), value: category ? (isArabic ? category.labelAr : category.labelEn) : product.categoryId },
     { label: t("products.detail.origin"), value: product.originCountry },
@@ -81,7 +82,7 @@ export default function ProductDetailPage() {
   ].filter((item) => Boolean(item.value));
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-productdetail min-h-screen bg-background text-foreground">
       <SEO
         title={isArabic ? product.nameAr : product.nameEn}
         description={isArabic ? product.shortDescriptionAr : product.shortDescriptionEn}
@@ -104,8 +105,8 @@ export default function ProductDetailPage() {
               <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_28px_65px_-42px_rgba(8,127,120,0.3)]">
                 <div className="relative flex aspect-[4/3] items-center justify-center bg-[#EAF3F0] p-8 dark:bg-[#152323] sm:p-12">
                   <div aria-hidden="true" className="pointer-events-none absolute inset-6 rounded-[1.5rem] border border-primary/10" />
-                  <img
-                    src={image?.url || "/logo.png"}
+                  {hasProductImage ? <img
+                    src={image.url}
                     alt={
                       image
                         ? isArabic
@@ -114,7 +115,11 @@ export default function ProductDetailPage() {
                         : "LOUREX product sourcing"
                     }
                     className="relative h-full w-full object-contain"
-                  />
+                    decoding="async"
+                  /> : <div className="lrx-detail-placeholder">
+                    <svg viewBox="0 0 180 180" fill="none" aria-hidden="true"><path d="m90 15 65 38v74l-65 38-65-38V53Z M25 53l65 37 65-37M90 90v75M90 15v75" stroke="currentColor" /><path d="m25 127 65-37 65 37" stroke="currentColor" opacity=".35" /></svg>
+                    <p>{isArabic ? "صورة المنتج غير متاحة" : "Product image unavailable"}</p>
+                  </div>}
                 </div>
               </div>
               {product.images.length > 1 ? (
@@ -130,12 +135,13 @@ export default function ProductDetailPage() {
                         activeImageIndex === index ? "border-primary shadow-soft" : "border-border/70 hover:border-primary/40"
                       }`}
                     >
-                      <img
-                        src={photo.url || "/logo.png"}
+                      {photo.url && !/\/?logo\.png(?:[?#].*)?$/.test(photo.url) ? <img
+                        src={photo.url}
                         alt={isArabic ? photo.altAr || product.nameAr : photo.altEn || product.nameEn}
                         className="h-full w-full object-contain"
                         loading="lazy"
-                      />
+                        decoding="async"
+                      /> : <PackageSearch className="mx-auto h-6 w-6 text-muted-foreground" aria-hidden="true" />}
                     </button>
                   ))}
                 </div>

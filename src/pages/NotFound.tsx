@@ -11,9 +11,10 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-950 text-stone-100">
+    <div className="lourex-auth flex min-h-screen items-center justify-center bg-background text-foreground px-5">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.02),transparent_50%)] pointer-events-none" />
       <div className="text-center relative z-10">
+        <img src="/lourex-official.jpeg" width="96" height="96" alt="LOUREX" className="mx-auto mb-6 h-24 w-24 object-contain" />
         <h1 className="mb-4 text-6xl font-serif font-bold text-amber-500">404</h1>
         <p className="mb-8 text-xl text-stone-400 font-medium uppercase tracking-widest">{t("notFound.title")}</p>
         <a href="/" className="inline-flex items-center justify-center rounded-xl px-8 py-3 bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110 transition-all">

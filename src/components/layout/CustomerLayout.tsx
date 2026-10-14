@@ -49,8 +49,8 @@ export const CustomerLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground selection:bg-primary-soft selection:text-primary">
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_5%_3%,rgba(8,127,120,0.055),transparent_40%)] dark:bg-[radial-gradient(ellipse_at_5%_3%,rgba(54,211,192,0.04),transparent_40%)]" />
+    <div className="lourex-workspace min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground selection:bg-primary-soft selection:text-primary">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_5%_3%,rgba(170,54,36,0.055),transparent_40%)] dark:bg-[radial-gradient(ellipse_at_5%_3%,rgba(214,173,108,0.04),transparent_40%)]" />
       <SiteHeader />
       <main className="relative w-full max-w-full overflow-x-hidden pb-24 pt-8">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">

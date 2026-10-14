@@ -37,7 +37,7 @@ const Profile = () => {
   const workspaceTitle = getWorkspaceTitle(profile, t);
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="lourex-workspace min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="pb-16 pt-24 relative">
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.02),transparent_40%)] pointer-events-none" />

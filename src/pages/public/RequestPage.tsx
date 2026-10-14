@@ -2,7 +2,7 @@ import { SEO } from "@/components/seo/SEO";
 import { ClipboardList, PackageSearch, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
-import { SectionHeading } from "@/components/shared/SectionHeading";
+import { TradeEmblem } from "@/components/shared/TradeEmblem";
 import { PurchaseRequestForm } from "@/features/purchase-requests/components/PurchaseRequestForm";
 import { RequestContactGate } from "@/features/purchase-requests/components/RequestContactGate";
 import { fetchRequests } from "@/domain/operations/service";
@@ -91,7 +91,7 @@ export default function RequestPage() {
   const productDisplayName = productSource ? (lang === "ar" ? productSource.nameAr : productSource.nameEn) : "";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-request min-h-screen bg-background text-foreground">
       <SEO
         title={t("requestPage.seoTitle")}
         description={t("requestPage.seoDescription")}
@@ -99,16 +99,24 @@ export default function RequestPage() {
       />
       <SiteHeader />
       <main className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_5%,rgba(8,127,120,0.06),transparent_32%)] dark:bg-[radial-gradient(ellipse_at_10%_5%,rgba(54,211,192,0.04),transparent_32%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_5%,rgba(170,54,36,0.06),transparent_32%)] dark:bg-[radial-gradient(ellipse_at_10%_5%,rgba(214,173,108,0.04),transparent_32%)]" />
         <div className="container relative mx-auto px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+          <header className="lrx-request-intro">
+            <div>
+              <p className="lrx-brand-kicker">LOUREX / SOURCING DESK</p>
+              <h1>{t("requestPage.title")}</h1>
+              <p>{t("requestPage.description")}</p>
+              <a className="lrx-request-start" href="#purchase-request-form">{lang === "ar" ? "ابدأ تفاصيل الطلب" : "Start your request"}<ClipboardList size={17} aria-hidden="true" /></a>
+            </div>
+            <TradeEmblem lang={lang} compact />
+          </header>
           <PageHelpBox pageKey="request" className="mb-7" />
           <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] xl:gap-16">
-            <div className="space-y-7 xl:sticky xl:top-28">
-              <SectionHeading
-                eyebrow={t("requestPage.eyebrow")}
-                title={t("requestPage.title")}
-                description={t("requestPage.description")}
-              />
+            <div className="lrx-request-aside space-y-7 xl:sticky xl:top-28">
+              <div className="lrx-request-guide">
+                <p className="lrx-brand-kicker">{lang === "ar" ? "قبل أن تبدأ" : "BEFORE YOU BEGIN"}</p>
+                <h2>{lang === "ar" ? "كل تفصيل يقربنا من المصدر المناسب." : "Every detail brings the right source closer."}</h2>
+              </div>
               <div className="overflow-hidden rounded-[1.65rem] border border-border/70 bg-card shadow-soft">
                 {cards.map((item, index) => (
                   <details key={item.title} className="group border-b border-border/70 last:border-b-0">
@@ -138,7 +146,7 @@ export default function RequestPage() {
                 {editRequestError}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div id="purchase-request-form" className="space-y-4">
                 {isCatalogInspiredRequest ? (
                   <div className="rounded-[1.6rem] border border-primary/20 bg-primary-soft p-4 text-sm leading-7 text-muted-foreground">
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">

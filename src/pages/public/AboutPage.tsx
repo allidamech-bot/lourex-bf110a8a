@@ -3,7 +3,7 @@ import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { SEO } from "@/components/seo/SEO";
 import Footer from "@/components/Footer";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import heroImg from "@/assets/hero-trade.jpg";
+import { TradeEmblem } from "@/components/shared/TradeEmblem";
 import { useI18n } from "@/lib/i18n";
 
 const EN_DESCRIPTION =
@@ -39,7 +39,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lourex-public lourex-about min-h-screen bg-background text-foreground">
       <SEO
         title={isArabic ? "عن لوريكس" : "About LOUREX"}
         description={isArabic ? AR_DESCRIPTION : EN_DESCRIPTION}
@@ -62,16 +62,9 @@ export default function AboutPage() {
               {isArabic ? "قدّم طلب شراء" : "Submit a request"} <ArrowUpRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
             </Link>
           </div>
-          <div className="relative">
-            <div aria-hidden="true" className="pointer-events-none absolute -end-4 -top-4 h-24 w-24 rounded-tr-[3rem] border-e border-t border-primary/30" />
-            <img
-              src={heroImg}
-              alt={isArabic ? "عمليات التجارة الدولية والتوريد" : "International sourcing and trading operations"}
-              className="h-[310px] w-full rounded-[1.8rem] object-cover shadow-[0_24px_65px_-40px_rgba(8,127,120,0.45)] sm:h-[420px] lg:h-[520px]"
-            />
-          </div>
+          <TradeEmblem lang={lang} />
         </section>
-        <section className="border-y border-border/70 bg-[#E9F3F0] py-16 dark:bg-[#11191B] sm:py-24">
+        <section className="border-y border-border/70 bg-secondary py-16 dark:bg-secondary sm:py-24">
           <div className="container mx-auto grid gap-10 px-4 sm:px-6 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20 lg:px-8">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-primary">{isArabic ? "طبيعة عملنا" : "OUR APPROACH"}</p>
