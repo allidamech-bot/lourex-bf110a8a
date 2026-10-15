@@ -3,6 +3,7 @@ import { FileText, Loader2, LockKeyhole, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommercialQuotePricingEditor } from "@/features/commercial-quotes/components/CommercialQuotePricingEditor";
 import { CommercialQuoteActions } from "@/features/commercial-quotes/components/CommercialQuoteActions";
+import { CommercialQuoteEventHistory } from "@/features/commercial-quotes/components/CommercialQuoteEventHistory";
 import {
   createCommercialQuoteDraft,
   fetchCommercialQuoteDraft,
@@ -125,6 +126,13 @@ export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canM
             canApprove={canApprove}
             onUpdate={draft => setState({ requestId, draft, loading: false, error: "" })}
           />
+          {view.draft.customerResponseNote && (
+            <p className="rounded-xl border border-primary/20 bg-background/70 p-4 text-sm">
+              <strong>{ar ? "ملاحظات العميل: " : "Customer response note: "}</strong>
+              <span className="whitespace-pre-wrap break-words">{view.draft.customerResponseNote}</span>
+            </p>
+          )}
+          <CommercialQuoteEventHistory quoteId={view.draft.id} status={view.draft.status} lang={lang} />
           <p className="text-xs text-muted-foreground">{ar ? "لا يتم إرسال العرض بالبريد إلا بعد اعتماده وإصداره للعميل." : "Email notification is enabled only after owner approval and issuance."}</p>
         </div>
       ) : (
