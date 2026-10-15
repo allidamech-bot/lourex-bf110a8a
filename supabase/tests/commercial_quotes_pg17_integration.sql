@@ -13,7 +13,13 @@ GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated,anon;
 GRANT USAGE ON SCHEMA public TO authenticated,anon;
 
 CREATE TABLE public.profiles (id uuid PRIMARY KEY, role text NOT NULL, status text NOT NULL);
-CREATE TABLE public.lourex_customers (id uuid PRIMARY KEY);
+CREATE TABLE public.lourex_customers (id uuid PRIMARY KEY, auth_user_id uuid REFERENCES auth.users(id));
+CREATE TABLE public.notifications (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ user_id uuid NOT NULL REFERENCES auth.users(id),
+ type text NOT NULL, title text NOT NULL, message text NOT NULL,
+ is_read boolean NOT NULL DEFAULT false, link text, created_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE public.purchase_requests (
  id uuid PRIMARY KEY,
  request_number text NOT NULL,
@@ -44,7 +50,7 @@ INSERT INTO public.profiles VALUES
  ('00000000-0000-4000-8000-000000000001','owner','active'),
  ('00000000-0000-4000-8000-000000000002','customer','active'),
  ('00000000-0000-4000-8000-000000000003','operations_employee','active');
-INSERT INTO public.lourex_customers VALUES ('00000000-0000-4000-8000-000000000010');
+INSERT INTO public.lourex_customers VALUES ('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000002');
 INSERT INTO public.purchase_requests VALUES
  ('00000000-0000-4000-8000-000000000100','RFQ-2026-ABC','00000000-0000-4000-8000-000000000010'),
  ('00000000-0000-4000-8000-000000000101','REQ-2026-DEF','00000000-0000-4000-8000-000000000010'),
@@ -57,6 +63,7 @@ VALUES
 
 \ir ../migrations/20261015113000_commercial_quote_drafts.sql
 \ir ../migrations/20261015143000_commercial_quote_pricing_terms.sql
+\ir ../migrations/20261015160000_commercial_quote_issuance.sql
 
 DO $check$
 BEGIN
@@ -271,4 +278,102 @@ BEGIN
    RAISE EXCEPTION 'Rejected operations left partial quote records';
  END IF;
 END $check$;
+-- No customer can see private draft rows even with a known request id.
+DO $approval$
+DECLARE q uuid; owner_attempt jsonb; sub numeric; grand numeric; complete boolean;
+BEGIN
+ SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ IF (SELECT public.get_customer_commercial_quote('00000000-0000-4000-8000-000000000100')) IS NOT NULL
+ THEN RAISE EXCEPTION 'Unissued quotation leaked to customer'; END IF;
+ BEGIN
+   PERFORM 1 FROM public.approve_commercial_quote(q);
+   RAISE EXCEPTION 'CUSTOMER APPROVED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='CUSTOMER APPROVED' OR SQLSTATE<>'42501' THEN RAISE; END IF;
+ END;
+ BEGIN
+   PERFORM 1 FROM public.issue_commercial_quote(q);
+   RAISE EXCEPTION 'CUSTOMER ISSUED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='CUSTOMER ISSUED' OR SQLSTATE<>'42501' THEN RAISE; END IF;
+ END;
+END $approval$;
+-- Approvals require an active owner (operations employees can still price).
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
+DO $approvals$
+DECLARE q uuid;
+BEGIN
+ SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ BEGIN
+   PERFORM 1 FROM public.approve_commercial_quote(q);
+   RAISE EXCEPTION 'OPERATIONS APPROVED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='OPERATIONS APPROVED' OR SQLSTATE<>'42501' THEN RAISE; END IF;
+ END;
+END $approvals$;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+DO $approvals$
+DECLARE q uuid; l1 uuid; l2 uuid; subtotal numeric; total numeric; complete boolean;
+BEGIN
+ SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ SELECT id INTO l1 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=1;
+ SELECT id INTO l2 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=2;
+ -- Incomplete pricing cannot be approved.
+ PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','30 days','CIF','CIF','2 weeks',30,10,0,'',
+   jsonb_build_array(jsonb_build_object('item_id',l1,'unit_price',null),jsonb_build_object('item_id',l2,'unit_price',2)));
+ BEGIN
+   PERFORM 1 FROM public.approve_commercial_quote(q);
+   RAISE EXCEPTION 'INCOMPLETE APPROVED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='INCOMPLETE APPROVED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+ END;
+ -- Valid commercial terms and full pricing.
+ PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','Net 30','CIF Jeddah','CIF','2 weeks',30,50,0,'Internal secret',
+   jsonb_build_array(jsonb_build_object('item_id',l1,'unit_price',10),jsonb_build_object('item_id',l2,'unit_price',2)));
+ PERFORM 1 FROM public.approve_commercial_quote(q);
+ IF (SELECT status FROM public.commercial_quote_drafts WHERE id=q)<>'approved'
+ THEN RAISE EXCEPTION 'Approved state not persisted'; END IF;
+ BEGIN
+   PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,0,'',
+     jsonb_build_array(jsonb_build_object('item_id',l1,'unit_price',12),jsonb_build_object('item_id',l2,'unit_price',5)));
+   RAISE EXCEPTION 'APPROVED QUOTE REPRICED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='APPROVED QUOTE REPRICED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+ END;
+ PERFORM 1 FROM public.issue_commercial_quote(q);
+ IF (SELECT status FROM public.commercial_quote_drafts WHERE id=q)<>'issued'
+ OR (SELECT count(*) FROM public.commercial_quote_events WHERE quote_id=q)<>2
+ OR (SELECT count(*) FROM public.notifications WHERE user_id='00000000-0000-4000-8000-000000000002'::uuid)<>1
+ THEN RAISE EXCEPTION 'Issuance notification/audit not persisted'; END IF;
+ BEGIN
+   PERFORM 1 FROM public.issue_commercial_quote(q);
+   RAISE EXCEPTION 'DUPLICATE ISSUANCE ACCEPTED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='DUPLICATE ISSUANCE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+ END;
+END $approvals$;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
+DO $customer$
+DECLARE q uuid; safe jsonb;
+BEGIN
+ SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ -- Raw internal tables remain inaccessible.
+ IF EXISTS(SELECT 1 FROM public.commercial_quote_drafts) OR
+    EXISTS(SELECT 1 FROM public.commercial_quote_items) OR
+    EXISTS(SELECT 1 FROM public.commercial_quote_events)
+ THEN RAISE EXCEPTION 'Internal quotation tables leaked'; END IF;
+ safe:=public.get_customer_commercial_quote('00000000-0000-4000-8000-000000000100');
+ IF safe->>'status'<>'issued' OR jsonb_array_length(safe->'items')<>2 OR
+    (safe ? 'internalNotes') OR (safe ? 'lastPricedBy') OR (safe ? 'createdBy')
+ THEN RAISE EXCEPTION 'Customer-safe projection incomplete or contains secrets'; END IF;
+ PERFORM 1 FROM public.respond_commercial_quote(q,'changes_requested','Please change delivery terms.');
+ IF (SELECT status FROM public.commercial_quote_drafts WHERE id=q)<>'changes_requested'
+ THEN RAISE EXCEPTION 'Customer response not persisted'; END IF;
+ BEGIN
+   PERFORM 1 FROM public.respond_commercial_quote(q,'accepted','');
+   RAISE EXCEPTION 'DUPLICATE RESPONSE ACCEPTED';
+ EXCEPTION WHEN OTHERS THEN
+   IF SQLERRM='DUPLICATE RESPONSE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+ END;
+END $customer$;
 ROLLBACK;
