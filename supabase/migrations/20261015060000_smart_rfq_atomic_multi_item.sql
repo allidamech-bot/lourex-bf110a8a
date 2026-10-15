@@ -48,6 +48,7 @@ DECLARE
   v_user uuid := (SELECT auth.uid());
   v_profile record;
   v_customer_id uuid;
+  v_customer record;
   v_items_count integer;
   v_item jsonb;
   v_catalog record;
@@ -170,6 +171,13 @@ BEGIN
     RAISE EXCEPTION 'Unable to resolve the authenticated customer';
   END IF;
 
+  -- Use the server-owned customer record, not mutable profile email fields.
+  SELECT c.full_name,c.phone,c.email,c.country,c.city INTO v_customer
+  FROM public.lourex_customers c WHERE c.id=v_customer_id AND c.auth_user_id=v_user;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Customer ownership verification failed';
+  END IF;
+
   INSERT INTO public.purchase_requests (
     id,request_number,customer_id,status,full_name,phone,email,country,city,
     product_name,product_description,quantity,technical_specs,destination,
@@ -177,7 +185,7 @@ BEGIN
     tracking_code,is_full_sourcing
   ) VALUES (
     v_request_id,v_request_number,v_customer_id,'intake_submitted',
-    v_profile.full_name,v_profile.phone,v_profile.email,v_profile.country,coalesce(v_profile.city,''),
+    v_customer.full_name,v_customer.phone,v_customer.email,v_customer.country,coalesce(v_customer.city,''),
     CASE WHEN v_items_count=1 THEN v_names[1] ELSE 'Multi-product RFQ (' || v_items_count::text || ' items)' END,
     left(array_to_string(v_lines,E'\n'),8000),
     v_total::integer,left(array_to_string(v_lines,E'\n'),8000),v_destination,
