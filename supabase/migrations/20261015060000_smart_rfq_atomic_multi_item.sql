@@ -101,6 +101,23 @@ BEGIN
       OR length(coalesce(p_delivery_address,'')) > 500 THEN
     RAISE EXCEPTION 'Request notes exceed allowed length';
   END IF;
+  -- A stable, unguessable client UUID makes network retries idempotent.
+  IF p_client_submission_id IS NOT NULL THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(p_client_submission_id::text,0));
+    SELECT pr.id,pr.request_number,pr.tracking_code,c.auth_user_id
+      INTO v_existing
+      FROM public.purchase_requests pr
+      LEFT JOIN public.lourex_customers c ON c.id=pr.customer_id
+      WHERE pr.smart_rfq_submission_id=p_client_submission_id;
+    IF FOUND THEN
+      IF v_existing.auth_user_id IS DISTINCT FROM v_user THEN
+        RAISE EXCEPTION 'Submission receipt is not owned by this account' USING ERRCODE='42501';
+      END IF;
+      RETURN QUERY SELECT v_existing.id,v_existing.request_number,v_existing.tracking_code;
+      RETURN;
+    END IF;
+  END IF;
+
   -- A validated catalog name always comes from the active published row.
   -- Reject duplicates to prevent accidental inflated commercial quantities.
   IF EXISTS (
@@ -182,23 +199,6 @@ BEGIN
   FROM public.lourex_customers c WHERE c.id=v_customer_id AND c.auth_user_id=v_user;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Customer ownership verification failed';
-  END IF;
-
-  -- A stable, unguessable client UUID makes network retries idempotent.
-  IF p_client_submission_id IS NOT NULL THEN
-    PERFORM pg_advisory_xact_lock(hashtextextended(p_client_submission_id::text,0));
-    SELECT pr.id,pr.request_number,pr.tracking_code,c.auth_user_id
-      INTO v_existing
-      FROM public.purchase_requests pr
-      LEFT JOIN public.lourex_customers c ON c.id=pr.customer_id
-      WHERE pr.smart_rfq_submission_id=p_client_submission_id;
-    IF FOUND THEN
-      IF v_existing.auth_user_id IS DISTINCT FROM v_user THEN
-        RAISE EXCEPTION 'Submission receipt is not owned by this account' USING ERRCODE='42501';
-      END IF;
-      RETURN QUERY SELECT v_existing.id,v_existing.request_number,v_existing.tracking_code;
-      RETURN;
-    END IF;
   END IF;
 
   INSERT INTO public.purchase_requests (
