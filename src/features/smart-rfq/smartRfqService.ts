@@ -57,12 +57,13 @@ const tableClient = supabase as unknown as {
   };
 };
 
-const getOrCreateSubmissionId = (): string => {
+const getOrCreateSubmissionId = (userId: string): string => {
   if (typeof window === "undefined") throw new Error("Request submission requires the browser.");
-  const previous = window.localStorage.getItem(SMART_RFQ_RECEIPT_KEY);
+  const key = SMART_RFQ_RECEIPT_KEY + ":" + userId;
+  const previous = window.localStorage.getItem(key);
   if (previous && RFQ_UUID.test(previous)) return previous;
   const next = crypto.randomUUID();
-  window.localStorage.setItem(SMART_RFQ_RECEIPT_KEY, next);
+  window.localStorage.setItem(key, next);
   return next;
 };
 
@@ -115,11 +116,11 @@ export const saveSmartRfqDraft = (items: SmartRfqDraftItem[]): void => {
   }
 };
 
-export const clearSmartRfqDraft = (): void => {
+export const clearSmartRfqDraft = (userId?: string): void => {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(SMART_RFQ_KEY);
-    window.localStorage.removeItem(SMART_RFQ_RECEIPT_KEY);
+    if (userId) window.localStorage.removeItem(SMART_RFQ_RECEIPT_KEY + ":" + userId);
     window.localStorage.removeItem(SMART_RFQ_BRIEF_KEY);
   } catch {
     // The server-side request has already committed successfully.
@@ -167,7 +168,7 @@ export const submitSmartRfq = async (
     p_shipping_method: shippingMethod.trim(),
     p_delivery_notes: deliveryNotes.trim(),
     p_delivery_address: deliveryAddress.trim(),
-    p_client_submission_id: getOrCreateSubmissionId(),
+    p_client_submission_id: getOrCreateSubmissionId(customer.id),
   });
   if (error) throw new Error(error.message);
   const result = data?.[0];
