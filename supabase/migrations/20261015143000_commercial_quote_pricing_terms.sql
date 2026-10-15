@@ -55,6 +55,8 @@ BEGIN
      OR p_validity_days IS NULL OR p_validity_days NOT BETWEEN 1 AND 365
      OR p_shipping_cost IS NULL OR p_shipping_cost < 0 OR p_shipping_cost > 10000000000
      OR p_discount_amount IS NULL OR p_discount_amount < 0 OR p_discount_amount > 10000000000
+     OR p_shipping_cost <> round(p_shipping_cost,2)
+     OR p_discount_amount <> round(p_discount_amount,2)
   THEN
     RAISE EXCEPTION 'Invalid quotation terms or amounts' USING ERRCODE='22023';
   END IF;
@@ -77,7 +79,7 @@ BEGIN
     SELECT 1 FROM jsonb_array_elements(p_line_prices) AS p(value)
     WHERE jsonb_typeof(p.value) IS DISTINCT FROM 'object'
       OR coalesce(p.value->>'item_id','') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-      OR jsonb_typeof(p.value->'unit_price') NOT IN ('number','null')
+      OR coalesce(jsonb_typeof(p.value->'unit_price'),'missing') NOT IN ('number','null')
       OR (jsonb_typeof(p.value->'unit_price') = 'number'
           AND (p.value->>'unit_price') !~ '^[0-9]{1,10}(\.[0-9]{1,4})?$')
   ) THEN
