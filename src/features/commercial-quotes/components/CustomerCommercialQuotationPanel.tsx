@@ -69,11 +69,11 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
     finally{setWorking(false);}
   };
   return <section data-testid="customer-commercial-quotation" className="my-5 space-y-4 rounded-[1.5rem] border border-primary/30 bg-card p-5 shadow-xl">
-    <header className="flex flex-wrap items-center justify-between gap-3">
+    <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p className="text-xs font-bold text-primary">LOUREX · QUOTATION</p>
-        <h3 className="mt-1 text-xl font-semibold">{ar?"عرض السعر التجاري":"Your commercial quotation"}</h3>
-        {quote&&<p className="mt-1 font-mono text-sm text-muted-foreground">{quote.number} · {ar?"الإصدار":"Version"} {quote.versionNo}</p>}
+        <h3 className="mt-1 break-words text-xl font-semibold leading-relaxed sm:text-2xl">{ar?"عرض السعر التجاري":"Your commercial quotation"}</h3>
+        {quote&&<p className="mt-1 break-all font-mono text-xs text-muted-foreground sm:text-sm">{quote.number} · {ar?"الإصدار":"Version"} {quote.versionNo}</p>}
       </div>
       {quote&&<span className="rounded-xl border border-primary/20 px-3 py-1 text-xs font-semibold">{quote.status}</span>}
       <Button type="button" variant="outline" size="sm" disabled={loading||working} onClick={()=>void reload()}>
@@ -87,7 +87,7 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
         <p className="mb-2 flex items-center gap-2 text-sm font-semibold"><GitBranch className="h-4 w-4 text-primary"/>
           {ar?"تاريخ الإصدارات السابقة":"Previous issued versions"}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           {versions.map(v=><Button type="button" key={v.id} size="sm" disabled={loading||working}
             variant={v.id===quote.id?"default":"outline"} onClick={()=>void viewVersion(v.id)}>
             {ar?"الإصدار":"Version"} {v.versionNo} · {v.status}
@@ -108,8 +108,8 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
         <Textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} maxLength={2000} disabled={working}
           placeholder={ar?"اذكر تفاصيل التعديل المطلوب أو ملاحظاتك…":"Describe requested changes or add optional notes…"}
           className="bg-background/80"/>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={working} onClick={()=>void respond("accepted")} className="gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+          <Button type="button" disabled={working} onClick={()=>void respond("accepted")} className="w-full justify-center gap-2 sm:w-auto">
             <CheckCircle2 className="h-4 w-4"/>{ar?"قبول العرض":"Accept quotation"}</Button>
           <Button type="button" variant="outline" disabled={working||note.trim().length<5}
             onClick={()=>void respond("changes_requested")} className="gap-2">
