@@ -36,6 +36,7 @@ export type SmartRfqSubmission = {
   requestNumber: string;
   trackingCode: string;
   attachmentWarning?: string;
+  notificationWarning?: string;
 };
 
 const rpcClient = supabase as unknown as {
@@ -201,8 +202,9 @@ export const submitSmartRfq = async (
 
   // Fire only AFTER the atomic database transaction succeeds.
   // Notification failures must never cause a duplicate commercial request.
+  let notificationWarning: string | undefined;
   try {
-    await runAutomation("purchase_request.created", {
+    const automation = await runAutomation("purchase_request.created", {
       requestId: result.request_id,
       requestNumber: result.request_number,
       userId: customer.id,
@@ -210,7 +212,12 @@ export const submitSmartRfq = async (
       productName: items.length > 1 ? "Multi-product RFQ (" + items.length + " items)" : items[0].productName,
       summary: "A sourcing request with " + items.length + " product lines was submitted.",
     });
+    const email = automation.actions.find(action => action.action === "send_purchase_request_email");
+    if (!email || email.status !== "sent") {
+      notificationWarning = "Your RFQ is saved, but its email notification could not be confirmed. LOUREX staff can still view your request.";
+    }
   } catch (notificationError) {
+    notificationWarning = "Your RFQ is saved, but its email notification could not be confirmed. LOUREX staff can still view your request.";
     logOperationalError("smart_rfq_notification", notificationError, { requestId: result.request_id });
   }
   return {
@@ -218,6 +225,7 @@ export const submitSmartRfq = async (
     requestNumber: result.request_number,
     trackingCode: result.tracking_code,
     attachmentWarning,
+    notificationWarning,
   };
 };
 
