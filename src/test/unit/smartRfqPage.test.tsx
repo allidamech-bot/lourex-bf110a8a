@@ -78,6 +78,18 @@ describe("Smart RFQ end-user interface", () => {
     expect(screen.getByText(/No public prices: our team prepares a tailored quotation/i)).toBeInTheDocument();
   });
 
+  it("adds an available catalog item using the in-page picker with the right MOQ", async () => {
+    mount("/smart-rfq");
+    const picker = await screen.findByLabelText("Add a catalog product directly");
+    fireEvent.change(picker, { target: { value: productId } });
+    expect(await screen.findByText("Published MOQ: 100 cartons")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Quantity/i)).toHaveValue(100);
+    await waitFor(() => expect(readSmartRfqDraft()).toEqual([
+      expect.objectContaining({ catalogProductId: productId, quantity: "100" }),
+    ]));
+    expect(picker.querySelector('option[value="' + productId + '"]')).toBeDisabled();
+  });
+
   it("collects a custom item with quantities, shipping terms and submits one canonical RFQ", async () => {
     mount("/smart-rfq");
     await screen.findByRole("button", { name: /Custom product/i });
