@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/20261015113000_commercial_quote_drafts.sql'
+      - 'supabase/migrations/20261015143000_commercial_quote_pricing_terms.sql'
       - 'supabase/tests/commercial_quotes_pg17_integration.sql'
       - '.github/workflows/commercial-quotes-pg17.yml'
   workflow_dispatch:
