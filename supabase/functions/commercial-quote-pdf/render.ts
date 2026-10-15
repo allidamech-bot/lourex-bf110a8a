@@ -3,7 +3,7 @@ import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
 import { drawArabicText } from "npm:naqqash@0.2.0/pdf-lib";
 import { shapeArabicText } from "npm:naqqash@0.2.0";
 
-const arabic = /[\\u0600-\\u06ff\\u0750-\\u077f]/;
+const arabic = /[\u0600-\u06ff\u0750-\u077f]/;
 const fontUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/amiri/Amiri-Regular.ttf";
 let fontBytes: Uint8Array | undefined;
 async function loadFont(): Promise<Uint8Array> {
