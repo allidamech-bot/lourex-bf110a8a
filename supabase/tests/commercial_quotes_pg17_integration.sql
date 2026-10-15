@@ -278,11 +278,15 @@ BEGIN
    RAISE EXCEPTION 'Rejected operations left partial quote records';
  END IF;
 END $check$;
+-- Persist fixture UUID for deliberate RLS checks from the customer role.
+SELECT set_config('quote.fixture.id',(SELECT id::text FROM public.commercial_quote_drafts LIMIT 1),true);
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
 -- No customer can see private draft rows even with a known request id.
 DO $approval$
 DECLARE q uuid; owner_attempt jsonb; sub numeric; grand numeric; complete boolean;
 BEGIN
- SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ q := current_setting('quote.fixture.id')::uuid;
  IF (SELECT public.get_customer_commercial_quote('00000000-0000-4000-8000-000000000100')) IS NOT NULL
  THEN RAISE EXCEPTION 'Unissued quotation leaked to customer'; END IF;
  BEGIN
@@ -303,7 +307,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003'
 DO $approvals$
 DECLARE q uuid;
 BEGIN
- SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ q := current_setting('quote.fixture.id')::uuid;
  BEGIN
    PERFORM 1 FROM public.approve_commercial_quote(q);
    RAISE EXCEPTION 'OPERATIONS APPROVED';
@@ -315,7 +319,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001'
 DO $approvals$
 DECLARE q uuid; l1 uuid; l2 uuid; subtotal numeric; total numeric; complete boolean;
 BEGIN
- SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ q := current_setting('quote.fixture.id')::uuid;
  SELECT id INTO l1 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=1;
  SELECT id INTO l2 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=2;
  -- Incomplete pricing cannot be approved.
@@ -356,7 +360,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002'
 DO $customer$
 DECLARE q uuid; safe jsonb;
 BEGIN
- SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+ q := current_setting('quote.fixture.id')::uuid;
  -- Raw internal tables remain inaccessible.
  IF EXISTS(SELECT 1 FROM public.commercial_quote_drafts) OR
     EXISTS(SELECT 1 FROM public.commercial_quote_items) OR
