@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="min-h-12 flex-1 rounded-xl border-border text-heading transition hover:bg-accent hover:text-heading">
-                  <Link to="/contact">{t("products.detail.contactInquiry")}</Link>
+                  <Link to={`/smart-rfq?add=${encodeURIComponent(product.id)}`}>{isArabic ? "أضف إلى طلب عرض سعر متعدد" : "Add to Smart RFQ"}</Link>
                 </Button>
               </div>
             </div>
