@@ -67,7 +67,7 @@ export default async function handler(req: Request, res: Response) {
     // The server-side Edge Function authenticates this staff JWT again, reads
     // issued prices itself, and returns bytes only (never a client-provided PDF).
     // Failure leaves the quotation issued and allows email-only retry.
-    const render=await fetch(`${url.replace(/\\/$/,"")}/functions/v1/commercial-quote-pdf`,{
+    const render=await fetch(`${(url.endsWith("/") ? url.slice(0,-1) : url)}/functions/v1/commercial-quote-pdf`,{
       method:"POST",
       headers:{"Authorization":`Bearer ${match[1]}`,"apikey":publicKey,"Content-Type":"application/json"},
       body:JSON.stringify({quoteId:quote.id}),
