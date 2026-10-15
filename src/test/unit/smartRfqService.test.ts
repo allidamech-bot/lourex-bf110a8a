@@ -101,6 +101,34 @@ describe("Smart RFQ customer adapter: persistence, validation, and safe delivery
     expect(updatePurchaseRequestWithAttachmentsSent()).toBe(false);
   });
 
+  it("confirms email independently of a committed RFQ and surfaces transport failures", async () => {
+    notify.mockResolvedValueOnce({
+      event: "purchase_request.created", matchedRules: ["notification"], actions: [
+        { action: "send_purchase_request_email", status: "sent" },
+      ],
+    });
+    const sent = await submit();
+    expect(sent.notificationWarning).toBeUndefined();
+    notify.mockResolvedValueOnce({
+      event: "purchase_request.created", matchedRules: ["notification"], actions: [
+        { action: "send_purchase_request_email", status: "skipped", reason: "Provider unavailable" },
+      ],
+    });
+    const savedWithoutEmail = await submit();
+    expect(savedWithoutEmail.requestId).toBe(requestId);
+    expect(savedWithoutEmail.notificationWarning).toMatch(/email notification could not be confirmed/);
+  });
+
+  it("updates saved request images through the existing protected operations path", async () => {
+    vi.mocked(uploadPurchaseRequestImages).mockResolvedValueOnce({ data: ["https://example.test/product.png"], error: null } as never);
+    vi.mocked(updateRequestWithImages).mockResolvedValueOnce({ data: { id: requestId }, error: null } as never);
+    const picture = new File(["sample"], "product.png", { type: "image/png" });
+    const saved = await submitSmartRfq(draft, "Jeddah", "sea", "", "", customer, [picture]);
+    expect(uploadPurchaseRequestImages).toHaveBeenCalledWith(requestId, [expect.objectContaining({ file: picture })]);
+    expect(updateRequestWithImages).toHaveBeenCalledWith(requestId, ["https://example.test/product.png"]);
+    expect(saved.attachmentWarning).toBeUndefined();
+  });
+
   it("only reads line items through the authorised request-id query", async () => {
     const order = vi.fn().mockResolvedValue({ data: [{ id: requestId, product_name: "Oil", quantity: 100, unit: "cartons", specifications: "Premium", moq_snapshot: "50 cartons" }], error: null });
     const eq = vi.fn(() => ({ order }));
