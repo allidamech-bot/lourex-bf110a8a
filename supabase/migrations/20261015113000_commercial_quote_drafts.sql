@@ -81,7 +81,10 @@ BEGIN
   SELECT r.id,r.customer_id,r.request_number INTO v_request
   FROM public.purchase_requests AS r
   WHERE r.id=p_request_id FOR SHARE;
-  IF NOT FOUND OR v_request.request_number NOT LIKE 'RFQ-%' OR v_request.customer_id IS NULL THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Smart RFQ not found' USING ERRCODE='22023';
+  END IF;
+  IF v_request.request_number NOT LIKE 'RFQ-%' OR v_request.customer_id IS NULL THEN
     RAISE EXCEPTION 'A saved Smart RFQ with customer identity is required' USING ERRCODE='22023';
   END IF;
   SELECT count(*) INTO v_item_count FROM public.purchase_request_items i WHERE i.request_id=p_request_id;
