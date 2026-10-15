@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS public.purchase_request_items (
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(request_id, line_number)
 );
+-- Idempotency protects customers against duplicate commercial requests after network retries.
+ALTER TABLE public.purchase_requests ADD COLUMN IF NOT EXISTS smart_rfq_submission_id uuid;
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_requests_smart_rfq_submission_uidx
+ON public.purchase_requests(smart_rfq_submission_id) WHERE smart_rfq_submission_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS purchase_request_items_request_idx ON public.purchase_request_items(request_id);
 CREATE INDEX IF NOT EXISTS purchase_request_items_catalog_idx ON public.purchase_request_items(catalog_product_id);
 ALTER TABLE public.purchase_request_items ENABLE ROW LEVEL SECURITY;
@@ -37,7 +41,8 @@ CREATE OR REPLACE FUNCTION public.submit_smart_rfq(
   p_destination text,
   p_shipping_method text DEFAULT '',
   p_delivery_notes text DEFAULT '',
-  p_delivery_address text DEFAULT ''
+  p_delivery_address text DEFAULT '',
+  p_client_submission_id uuid DEFAULT NULL
 ) RETURNS TABLE(request_id uuid, request_number text, tracking_code text)
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -49,6 +54,7 @@ DECLARE
   v_profile record;
   v_customer_id uuid;
   v_customer record;
+  v_existing record;
   v_items_count integer;
   v_item jsonb;
   v_catalog record;
@@ -178,11 +184,28 @@ BEGIN
     RAISE EXCEPTION 'Customer ownership verification failed';
   END IF;
 
+  -- A stable, unguessable client UUID makes network retries idempotent.
+  IF p_client_submission_id IS NOT NULL THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(p_client_submission_id::text,0));
+    SELECT pr.id,pr.request_number,pr.tracking_code,c.auth_user_id
+      INTO v_existing
+      FROM public.purchase_requests pr
+      LEFT JOIN public.lourex_customers c ON c.id=pr.customer_id
+      WHERE pr.smart_rfq_submission_id=p_client_submission_id;
+    IF FOUND THEN
+      IF v_existing.auth_user_id IS DISTINCT FROM v_user THEN
+        RAISE EXCEPTION 'Submission receipt is not owned by this account' USING ERRCODE='42501';
+      END IF;
+      RETURN QUERY SELECT v_existing.id,v_existing.request_number,v_existing.tracking_code;
+      RETURN;
+    END IF;
+  END IF;
+
   INSERT INTO public.purchase_requests (
     id,request_number,customer_id,status,full_name,phone,email,country,city,
     product_name,product_description,quantity,technical_specs,destination,
     preferred_shipping_method,delivery_notes,delivery_address,image_urls,
-    tracking_code,is_full_sourcing
+    tracking_code,is_full_sourcing,smart_rfq_submission_id
   ) VALUES (
     v_request_id,v_request_number,v_customer_id,'intake_submitted',
     v_customer.full_name,v_customer.phone,v_customer.email,v_customer.country,coalesce(v_customer.city,''),
@@ -191,7 +214,7 @@ BEGIN
     v_total::integer,left(array_to_string(v_lines,E'\n'),8000),v_destination,
     btrim(coalesce(p_shipping_method,'')),btrim(coalesce(p_delivery_notes,'')),
     btrim(coalesce(p_delivery_address,'')),ARRAY[]::text[],
-    v_tracking_code,true
+    v_tracking_code,true,p_client_submission_id
   );
   v_pos := 0;
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
@@ -221,5 +244,5 @@ BEGIN
   RETURN QUERY SELECT v_request_id,v_request_number,v_tracking_code;
 END;
 $rfq$;
-REVOKE ALL ON FUNCTION public.submit_smart_rfq(jsonb,text,text,text,text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.submit_smart_rfq(jsonb,text,text,text,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.submit_smart_rfq(jsonb,text,text,text,text,uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.submit_smart_rfq(jsonb,text,text,text,text,uuid) TO authenticated;
