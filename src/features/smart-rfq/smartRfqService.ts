@@ -5,6 +5,7 @@ import { logOperationalError } from "@/lib/monitoring";
 
 export const SMART_RFQ_KEY = "lourex:smart-rfq:catalog-ids:v1";
 const SMART_RFQ_RECEIPT_KEY = "lourex:smart-rfq:submission-id:v1";
+const SMART_RFQ_BRIEF_KEY = "lourex:smart-rfq:delivery-brief:v1";
 export const MAX_SMART_RFQ_ITEMS = 20;
 export const RFQ_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -65,6 +66,27 @@ const getOrCreateSubmissionId = (): string => {
   return next;
 };
 
+export type SmartRfqBrief = { destination: string; shippingMethod: string; deliveryNotes: string; deliveryAddress: string };
+export const readSmartRfqBrief = (): SmartRfqBrief => {
+  const empty = { destination: "", shippingMethod: "", deliveryNotes: "", deliveryAddress: "" };
+  if (typeof window === "undefined") return empty;
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(SMART_RFQ_BRIEF_KEY) || "null");
+    if (!value || typeof value !== "object") return empty;
+    const draft = value as Record<string, unknown>;
+    return {
+      destination: typeof draft.destination === "string" ? draft.destination.slice(0,240) : "",
+      shippingMethod: typeof draft.shippingMethod === "string" ? draft.shippingMethod.slice(0,100) : "",
+      deliveryNotes: typeof draft.deliveryNotes === "string" ? draft.deliveryNotes.slice(0,3000) : "",
+      deliveryAddress: typeof draft.deliveryAddress === "string" ? draft.deliveryAddress.slice(0,500) : "",
+    };
+  } catch { return empty; }
+};
+export const saveSmartRfqBrief = (brief: SmartRfqBrief): void => {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(SMART_RFQ_BRIEF_KEY, JSON.stringify(brief)); } catch { /* Optional draft persistence. */ }
+};
+
 export const readSmartRfqDraft = (): SmartRfqDraftItem[] => {
   if (typeof window === "undefined") return [];
   try {
@@ -98,6 +120,7 @@ export const clearSmartRfqDraft = (): void => {
   try {
     window.localStorage.removeItem(SMART_RFQ_KEY);
     window.localStorage.removeItem(SMART_RFQ_RECEIPT_KEY);
+    window.localStorage.removeItem(SMART_RFQ_BRIEF_KEY);
   } catch {
     // The server-side request has already committed successfully.
   }
