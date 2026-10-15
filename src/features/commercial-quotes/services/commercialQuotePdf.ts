@@ -168,7 +168,7 @@ function toPdf(canvases:HTMLCanvasElement[]):Blob {
 
 export async function downloadCommercialQuotePdf(quote:Quote,lang:"ar"|"en"):Promise<void>{
   if (quote.status==="draft") throw new Error("Save pricing before generating the official PDF");
-  await document.fonts.ready;
+  // Keep the export inside the user's click activation, especially on iOS Safari.
   const ar=lang==="ar";
   const sheets:Sheet[]=[newSheet(quote,ar)];
   let page=sheets[0];
@@ -185,7 +185,8 @@ export async function downloadCommercialQuotePdf(quote:Quote,lang:"ar"|"en"):Pro
     if(page.y+height>BOTTOM){next();drawTableHeader(page,ar);}
     drawRow(page,quote,item,ar);
   }
-  const subtotal=quote.items.reduce((s,i)=>s+i.quantity*Number(i.unitPrice??0),0);
+  let subtotal=0;
+  for (const item of quote.items) subtotal+=item.quantity*Number(item.unitPrice??0);
   const total=subtotal+quote.shippingCost-quote.discountAmount;
   const totals=[
     [label(ar,"المجموع الفرعي","Subtotal"),formatMoney(subtotal,quote.currency)],
