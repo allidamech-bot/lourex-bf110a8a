@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
 import CustomerRequestDetailProView from "@/features/customer/CustomerRequestDetailProView";
 import { SmartRfqItems } from "@/features/smart-rfq/SmartRfqItems";
+import { CustomerCommercialQuotationPanel } from "@/features/commercial-quotes/components/CustomerCommercialQuotationPanel";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,6 +151,7 @@ const CustomerRequestDetailProPage = () => {
       {selectedRequest ? (
         <>
           <SmartRfqItems requestId={selectedRequest.id} requestNumber={selectedRequest.requestNumber} lang={lang} />
+          <CustomerCommercialQuotationPanel requestId={selectedRequest.id} requestNumber={selectedRequest.requestNumber} lang={lang} />
           <CustomerRequestDetailProView
             request={selectedRequest}
             shipment={selectedShipment}
