@@ -141,6 +141,10 @@ export function AIProductStudio({ form, language, disabled = false, onApply, onA
               <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{suggestion.descriptionEn}</p>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            {suggestion.categoryId ? <span className="rounded-full border border-primary/20 px-3 py-1">{ar ? "التصنيف" : "Category"}: {suggestion.categoryId}</span> : null}
+            {(ar ? suggestion.tagsAr : suggestion.tagsEn).map((tag, index) => <span key={`${tag}-${index}`} className="rounded-full border border-primary/20 px-3 py-1">{tag}</span>)}
+          </div>
           <p className="text-xs text-muted-foreground">
             {ar ? "التصنيف والكلمات المفتاحية المقترحة تُطبّق فقط عند الضغط على الزر. MOQ والمنشأ وباقي البيانات التجارية تبقى كما أدخلتها." : "Category and suggested tags apply only on approval. Commercial fields remain unchanged."}
           </p>
