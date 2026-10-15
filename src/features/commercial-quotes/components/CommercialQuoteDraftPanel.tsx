@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FileText, Loader2, LockKeyhole, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CommercialQuotePricingEditor } from "@/features/commercial-quotes/components/CommercialQuotePricingEditor";
 import {
   createCommercialQuoteDraft,
   fetchCommercialQuoteDraft,
@@ -71,7 +72,7 @@ export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canM
           <p className="flex items-center gap-2 text-xs font-bold tracking-widest text-amber-500"><FileText className="h-4 w-4" /> LOUREX · QUOTATIONS</p>
           <h3 className="mt-2 text-xl font-semibold text-foreground">{ar ? "مسودة عرض السعر التجاري" : "Commercial quotation draft"}</h3>
           <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-            {ar ? "أنشئ مسودة داخلية من أصناف الطلب المحفوظة. لا تتضمن أسعارًا بعد، ولا تُرسل للعميل." : "Create an internal draft from saved Smart RFQ lines. No pricing or customer delivery is enabled yet."}
+            {ar ? "أنشئ مسودة داخلية من أصناف الطلب المحفوظة، ثم أدخل التسعير والشروط دون إرسالها للعميل." : "Create an internal quote from saved Smart RFQ lines, then edit private pricing and trade terms."}
           </p>
         </div>
         <span className="inline-flex items-center gap-2 rounded-full border border-amber-600/25 bg-amber-600/10 px-3 py-2 text-xs font-semibold text-amber-400">
@@ -107,11 +108,17 @@ export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canM
                 {item.specifications ? <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{item.specifications}</p> : null}
                 {item.moq ? <p className="mt-1 text-xs text-muted-foreground">MOQ: {item.moq}</p> : null}
                 {item.packaging ? <p className="mt-1 text-xs text-muted-foreground">{ar ? "التعبئة" : "Packaging"}: {item.packaging}</p> : null}
-                <p className="mt-2 text-xs text-amber-400">{ar ? "السعر: لم يُحدّد" : "Price: not set"}</p>
+                <p className="mt-2 text-xs text-amber-400">{ar ? "سعر الوحدة" : "Unit price"}: {item.unitPrice === null ? (ar ? "لم يُحدّد" : "Not set") : `${item.unitPrice} ${view.draft.currency}`}</p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">{ar ? "الدفعة التالية: التسعير، الشروط التجارية، الاعتماد وإصدار PDF. لا يمكن إرسال هذه المسودة حاليًا." : "Next phase: pricing, terms, approvals and PDF. This draft cannot be sent yet."}</p>
+          <CommercialQuotePricingEditor
+            key={view.draft.id}
+            quote={view.draft}
+            lang={lang}
+            onSaved={draft => setState({ requestId, draft, loading: false, error: "" })}
+          />
+          <p className="text-xs text-muted-foreground">{ar ? "هذه الأسعار للاستخدام الداخلي فقط. الاعتماد والإرسال وإصدار PDF خطوات لاحقة." : "Internal pricing only. Approval, customer delivery and PDF are not yet enabled."}</p>
         </div>
       ) : (
         <div className="mt-5">
