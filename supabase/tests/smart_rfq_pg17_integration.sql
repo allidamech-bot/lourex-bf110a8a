@@ -141,13 +141,25 @@ BEGIN
 
   -- Retrying the same signed customer receipt must not create a second RFQ.
   SELECT request_id INTO v_retry_id FROM public.submit_smart_rfq(
-    '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","quantity":100},{"catalog_product_id":null,"product_name":"Custom biscuits","quantity":250,"unit":"cartons"}]'::jsonb,
+    '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","product_name":"SPOOFED NAME","quantity":100,"unit":"forged","specifications":"Arabic label"},{"catalog_product_id":null,"product_name":"Custom biscuits","quantity":250,"unit":"cartons","specifications":"Private-label box"}]'::jsonb,
     'Jeddah','sea','CIF destination','Saudi Arabia',
     '00000000-0000-4000-8000-000000000055'::uuid
   );
   IF v_retry_id IS DISTINCT FROM v_id OR (SELECT count(*) FROM public.purchase_requests) <> 1 THEN
     RAISE EXCEPTION 'Idempotent network retry created a second request';
   END IF;
+
+  BEGIN
+    PERFORM 1 FROM public.submit_smart_rfq(
+      '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","quantity":101}]'::jsonb,
+      'Jeddah','sea','CIF destination','Saudi Arabia',
+      '00000000-0000-4000-8000-000000000055'::uuid
+    );
+    RAISE EXCEPTION 'CHANGED BASKET REPLAY ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM = 'CHANGED BASKET REPLAY ACCEPTED' THEN RAISE; END IF;
+    IF position('RFQ_SUBMISSION_CHANGED' in SQLERRM) <> 1 THEN RAISE; END IF;
+  END;
 
   -- All-or-nothing when a draft product, duplicate, or bad quantity is supplied.
   BEGIN
