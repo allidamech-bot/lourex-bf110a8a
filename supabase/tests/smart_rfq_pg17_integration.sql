@@ -174,6 +174,14 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM='ZERO QUANTITY ACCEPTED' THEN RAISE; END IF;
   END;
+  BEGIN
+    PERFORM 1 FROM public.submit_smart_rfq(
+      '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","quantity":50}]'::jsonb,
+      'Jeddah');
+    RAISE EXCEPTION 'BELOW MOQ ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='BELOW MOQ ACCEPTED' THEN RAISE; END IF;
+  END;
   IF (SELECT count(*) FROM public.purchase_requests)<>1 THEN
     RAISE EXCEPTION 'Rejected request left an orphan parent';
   END IF;
