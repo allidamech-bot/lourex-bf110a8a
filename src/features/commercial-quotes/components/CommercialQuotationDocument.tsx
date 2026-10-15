@@ -9,7 +9,7 @@ const money = (value: number, currency: string) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
 const grandTotal = (quote: Quote) => {
   if (quote.items.some(i => i.unitPrice === null || !Number.isFinite(Number(i.unitPrice)))) return null;
-  return quote.items.reduce((sum, i) => sum + i.quantity * Number(i.unitPrice), 0)
+  return quote.items.map(i => i.quantity * Number(i.unitPrice)).reduce((sum, amount) => sum + amount, 0)
     + quote.shippingCost - quote.discountAmount;
 };
 
