@@ -108,7 +108,7 @@ BEGIN
   FROM public.purchase_request_items i
   WHERE i.request_id=p_request_id ORDER BY i.line_number;
 
-  IF (SELECT count(*) FROM public.commercial_quote_items WHERE quote_id=v_draft_id) <> v_item_count THEN
+  IF (SELECT count(*) FROM public.commercial_quote_items AS ci WHERE ci.quote_id=v_draft_id) <> v_item_count THEN
     RAISE EXCEPTION 'Incomplete quote lines, transaction rolled back';
   END IF;
   RETURN QUERY SELECT v_draft_id,v_draft_number;
