@@ -4,7 +4,7 @@ import { logOperationalError } from "@/lib/monitoring";
 
 export const SMART_RFQ_KEY = "lourex:smart-rfq:catalog-ids:v1";
 export const MAX_SMART_RFQ_ITEMS = 20;
-export const RFQ_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const RFQ_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type SmartRfqDraftItem = {
   key: string;
@@ -143,7 +143,7 @@ export const submitSmartRfq = async (
     await runAutomation("purchase_request.created", {
       requestId: result.request_id,
       requestNumber: result.request_number,
-      customerId: customer.id,
+      userId: customer.id,
       customerName: customer.name,
       productName: items.length > 1 ? "Multi-product RFQ (" + items.length + " items)" : items[0].productName,
       summary: "A sourcing request with " + items.length + " product lines was submitted.",
