@@ -17,6 +17,8 @@ import {
   clearSmartRfqDraft,
   MAX_SMART_RFQ_ITEMS,
   readSmartRfqDraft,
+  readSmartRfqBrief,
+  saveSmartRfqBrief,
   saveSmartRfqDraft,
   submitSmartRfq,
   type SmartRfqDraftItem,
@@ -42,10 +44,10 @@ export default function SmartRfqPage() {
   const [items, setItems] = useState<SmartRfqDraftItem[]>(readSmartRfqDraft);
   const [catalog, setCatalog] = useState<ProductCatalogItem[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
-  const [destination, setDestination] = useState("");
-  const [shippingMethod, setShippingMethod] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [destination, setDestination] = useState(() => readSmartRfqBrief().destination);
+  const [shippingMethod, setShippingMethod] = useState(() => readSmartRfqBrief().shippingMethod);
+  const [deliveryAddress, setDeliveryAddress] = useState(() => readSmartRfqBrief().deliveryAddress);
+  const [deliveryNotes, setDeliveryNotes] = useState(() => readSmartRfqBrief().deliveryNotes);
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,7 @@ export default function SmartRfqPage() {
 
   const label = (ar: string, en: string) => isAr ? ar : en;
   useEffect(() => { saveSmartRfqDraft(items); }, [items]);
+  useEffect(() => { if (!submission) saveSmartRfqBrief({ destination, shippingMethod, deliveryNotes, deliveryAddress }); }, [destination, shippingMethod, deliveryNotes, deliveryAddress, submission]);
   useEffect(() => {
     let live = true;
     fetchCatalogProducts().then(data => { if (live) setCatalog(data); })
