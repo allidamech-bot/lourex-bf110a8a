@@ -17,7 +17,10 @@ type VercelLikeResponse = {
   };
 };
 
+type SmartRfqEmailItem = { product_name: string; quantity: number; unit: string; specifications: string; packaging_snapshot: string; moq_snapshot: string };
+
 type PurchaseRequestEmailPayload = {
+  smartRfqItems?: SmartRfqEmailItem[];
   requestId?: string;
   requestNumber?: string;
   customerName?: string;
@@ -101,6 +104,8 @@ const buildEmailHtml = (payload: PurchaseRequestEmailPayload) => {
           ${row("إيميل العميل", payload.customerEmail)}
           ${row("هاتف العميل", payload.customerPhone)}
           ${row("الدولة / المدينة", `${text(payload.customerCountry)} / ${text(payload.customerCity)}`)}
+          ${payload.smartRfqItems?.length ? row("عدد الأصناف", payload.smartRfqItems.length) : ""}
+          ${payload.smartRfqItems?.length ? row("الأصناف (كل صنف وكميته)", payload.smartRfqItems.map((item, index) => `${index + 1}. ${item.product_name} — ${item.quantity} ${item.unit}\n${item.specifications}${item.packaging_snapshot ? "\nالتعبئة: " + item.packaging_snapshot : ""}${item.moq_snapshot ? "\nMOQ: " + item.moq_snapshot : ""}`).join("\n\n")) : ""}
           ${row("المنتج", payload.productName)}
           ${row("الوصف", payload.productDescription)}
           ${row("الكمية", payload.quantity)}
@@ -130,6 +135,7 @@ const buildPlainText = (payload: PurchaseRequestEmailPayload) => [
   `الهاتف: ${text(payload.customerPhone)}`,
   `الدولة/المدينة: ${text(payload.customerCountry)} / ${text(payload.customerCity)}`,
   `المنتج: ${text(payload.productName)}`,
+  ...(payload.smartRfqItems?.map((item, index) => `${index + 1}. ${item.product_name} | ${item.quantity} ${item.unit} | ${item.specifications} ${item.moq_snapshot ? "MOQ: " + item.moq_snapshot : ""}`) || []),
   `الوصف: ${text(payload.productDescription)}`,
   `الكمية: ${text(payload.quantity)}`,
   `الوجهة: ${text(payload.destination)}`,
@@ -208,8 +214,34 @@ export default async function handler(req: VercelLikeRequest, res: VercelLikeRes
     const resendApiKey = process.env.RESEND_API_KEY?.trim();
     if (!resendApiKey) return res.status(503).json({ error: "Email provider is not configured" });
 
+    // Multi-item RFQs are read only from canonical, caller-authorized Supabase rows.
+    // A malformed or unauthorized item lookup must NOT produce an incomplete email.
+    let smartRfqItems: SmartRfqEmailItem[] | undefined;
+    if (saved.request_number.startsWith("RFQ-")) {
+      const rfqDb = db as unknown as {
+        from: (table: string) => {
+          select: (columns: string) => {
+            eq: (column: string, value: string) => {
+              order: (column: string, opts: { ascending: boolean }) => PromiseLike<{
+                data: SmartRfqEmailItem[] | null;
+                error: { message: string } | null;
+              }>;
+            };
+          };
+        };
+      };
+      const { data: lines, error: itemsError } = await rfqDb
+        .from("purchase_request_items")
+        .select("product_name, quantity, unit, specifications, packaging_snapshot, moq_snapshot")
+        .eq("request_id", saved.id)
+        .order("line_number", { ascending: true });
+      if (itemsError || !lines?.length) return res.status(503).json({ error: "RFQ item verification unavailable" });
+      smartRfqItems = lines;
+    }
+
     const payload: PurchaseRequestEmailPayload = {
       requestId: saved.id,
+      smartRfqItems,
       requestNumber: saved.request_number,
       customerName: saved.full_name,
       customerEmail: saved.email,
