@@ -18,6 +18,7 @@ import {
   MAX_SMART_RFQ_ITEMS,
   readSmartRfqDraft,
   readSmartRfqBrief,
+  resetSmartRfqSubmissionId,
   saveSmartRfqBrief,
   saveSmartRfqDraft,
   submitSmartRfq,
@@ -51,6 +52,7 @@ export default function SmartRfqPage() {
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [changedReceipt, setChangedReceipt] = useState(false);
   const [submission, setSubmission] = useState<SmartRfqSubmission | null>(null);
 
   const label = (ar: string, en: string) => isAr ? ar : en;
@@ -109,6 +111,7 @@ export default function SmartRfqPage() {
   const handleSubmit = async () => {
     if (busy) return;
     setError("");
+    setChangedReceipt(false);
     if (!user || profile?.role !== "customer" || profile.status !== "active") {
       setError(label("يجب تسجيل الدخول بحساب عميل نشط.", "Sign in with an active customer account."));
       return;
@@ -132,7 +135,16 @@ export default function SmartRfqPage() {
       setReferenceFiles([]);
       clearSmartRfqDraft(user.id);
     } catch (issue) {
-      setError(issue instanceof Error ? issue.message : label("تعذر إرسال الطلب.", "Unable to submit the request."));
+      const message = issue instanceof Error ? issue.message : "";
+      if (message.includes("RFQ_SUBMISSION_CHANGED")) {
+        setChangedReceipt(true);
+        setError(label(
+          "تغيّرت تفاصيل السلة بعد إرسال سابق. قد يكون طلبك الأول محفوظًا بالفعل؛ تحقق من طلباتك قبل إنشاء طلب جديد.",
+          "Your basket changed after a previous submission. The original RFQ may already be saved; check your requests before starting a new one.",
+        ));
+      } else {
+        setError(message || label("تعذر إرسال الطلب.", "Unable to submit the request."));
+      }
     } finally {
       setBusy(false);
     }
@@ -312,6 +324,18 @@ export default function SmartRfqPage() {
                 <RequestContactGate lang={lang}>
                   <div className="rounded-[1.7rem] border border-border/70 bg-card p-5">
                     {error && <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}
+                    {changedReceipt && user && (
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link to="/customer-portal/requests">{label("تحقق من طلباتي", "Check existing requests")}</Link>
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => {
+                          resetSmartRfqSubmissionId(user.id);
+                          setChangedReceipt(false);
+                          setError("");
+                        }}>{label("إنشاء طلب جديد بهذه السلة", "Start a new RFQ with this basket")}</Button>
+                      </div>
+                    )}
                     {!authLoading && !user && <Button asChild variant="outline" className="mb-4 w-full"><Link to="/auth">{label("تسجيل الدخول أولًا", "Sign in first")}</Link></Button>}
                     <Button className="w-full" size="lg" disabled={busy || authLoading || !user || profile?.role !== "customer" || items.length === 0}
                       onClick={() => { void handleSubmit(); }}>
