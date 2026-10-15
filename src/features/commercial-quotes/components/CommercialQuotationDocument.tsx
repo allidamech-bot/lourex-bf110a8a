@@ -1,5 +1,7 @@
-import { Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { downloadCommercialQuotePdf } from "@/features/commercial-quotes/services/commercialQuotePdf";
 import type { CommercialQuoteDraft } from "@/features/commercial-quotes/services/commercialQuoteDraftService";
 import type { CustomerQuotation } from "@/features/commercial-quotes/services/commercialQuoteLifecycleService";
 
@@ -13,21 +15,32 @@ const grandTotal = (quote: Quote) => {
     + quote.shippingCost - quote.discountAmount;
 };
 
-/** Print / Save as PDF uses the browser's Arabic-capable PDF rendering engine. */
+/** Downloadable PDF and accessible browser Print/Save as PDF use Arabic-capable rendering. */
 export function CommercialQuotationDocument({ quote, lang }: { quote: Quote; lang: "ar" | "en" }) {
   const ar = lang === "ar";
+  const [pdfError,setPdfError]=useState("");
   const total = grandTotal(quote);
   const issuedDate = quote.issuedAt || quote.approvedAt || null;
   return (
     <>
       <div className="my-3 flex items-center justify-between gap-3 print:hidden">
         <p className="text-xs text-muted-foreground">
-          {label(ar,"المستند الرسمي — افتح الطباعة واختر حفظ كملف PDF.","Official quotation — select Save as PDF from the print dialog.")}
+          {label(ar,"مستند رسمي قابل للتنزيل والطباعة.","Official quotation available to download or print.")}
         </p>
-        <Button type="button" variant="outline" onClick={() => window.print()} className="gap-2">
-          <Printer className="h-4 w-4" />{label(ar,"طباعة / حفظ PDF","Print / Save PDF")}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={() => {
+            setPdfError("");
+            void downloadCommercialQuotePdf(quote,lang).catch(error =>
+              setPdfError(error instanceof Error?error.message:"PDF export failed"));
+          }} className="gap-2">
+            <Download className="h-4 w-4"/>{label(ar,"تنزيل PDF","Download PDF")}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => window.print()} className="gap-2">
+            <Printer className="h-4 w-4" />{label(ar,"طباعة / حفظ PDF","Print / Save PDF")}
+          </Button>
+        </div>
       </div>
+      {pdfError&&<p role="alert" className="print:hidden text-sm text-destructive">{pdfError}</p>}
       <section className="quote-document-printable rounded-2xl border border-amber-700/30 bg-white p-6 text-slate-900 shadow-lg sm:p-8" dir={ar ? "rtl" : "ltr"} data-testid="quotation-print-document">
         <header className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-amber-600 pb-5">
           <div>
