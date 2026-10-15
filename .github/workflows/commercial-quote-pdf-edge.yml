@@ -22,3 +22,5 @@ jobs:
           deno-version: v2.x
       - name: Typecheck pinned PDF dependencies
         run: deno check --node-modules-dir=auto supabase/functions/commercial-quote-pdf/index.ts
+      - name: Render real bilingual multi-page test PDF
+        run: deno test --node-modules-dir=auto --allow-net=raw.githubusercontent.com supabase/functions/commercial-quote-pdf/render.test.ts
