@@ -6,6 +6,7 @@ const db = supabase as unknown as LooseDomainClient;
 type DraftRow = {
   id: string;
   quote_number: string;
+  version_no: number;
   source_request_id: string;
   status: "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
   currency: string;
@@ -40,6 +41,7 @@ type ItemRow = {
 export type CommercialQuoteDraft = {
   id: string;
   number: string;
+  versionNo: number;
   requestId: string;
   status: "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
   currency: string;
@@ -73,11 +75,13 @@ export type CommercialQuoteDraft = {
 export const isSmartRfqForCommercialQuote = (requestNumber?: string | null) =>
   Boolean(requestNumber?.startsWith("RFQ-"));
 
-export const fetchCommercialQuoteDraft = async (requestId: string): Promise<CommercialQuoteDraft | null> => {
-  const { data: header, error } = await db.from<DraftRow>("commercial_quote_drafts")
-    .select("id,quote_number,source_request_id,status,currency,created_at,customer_id,payment_terms,delivery_terms,incoterm,lead_time,validity_days,shipping_cost,discount_amount,internal_notes,approved_at,issued_at,customer_response_note")
-    .eq("source_request_id", requestId)
-    .maybeSingle();
+export const fetchCommercialQuoteDraft = async (requestId: string, quoteId?: string): Promise<CommercialQuoteDraft | null> => {
+  const query = db.from<DraftRow>("commercial_quote_drafts")
+    .select("id,quote_number,version_no,source_request_id,status,currency,created_at,customer_id,payment_terms,delivery_terms,incoterm,lead_time,validity_days,shipping_cost,discount_amount,internal_notes,approved_at,issued_at,customer_response_note")
+    .eq("source_request_id", requestId);
+  const { data: header, error } = quoteId
+    ? await query.eq("id", quoteId).maybeSingle()
+    : await query.order("version_no", { ascending: false }).limit(1).maybeSingle();
   if (error) throw new Error(error.message);
   if (!header) return null;
 
@@ -91,6 +95,7 @@ export const fetchCommercialQuoteDraft = async (requestId: string): Promise<Comm
   return {
     id: header.id,
     number: header.quote_number,
+    versionNo: header.version_no,
     requestId: header.source_request_id,
     status: header.status,
     currency: header.currency,
@@ -120,6 +125,31 @@ export const fetchCommercialQuoteDraft = async (requestId: string): Promise<Comm
       unitPrice: item.unit_price,
     })),
   };
+};
+
+export type CommercialQuoteVersion = {
+  id: string; quote_number: string; version_no: number; status: CommercialQuoteDraft["status"];
+  created_at: string; issued_at: string | null; customer_response_note: string;
+};
+
+export const fetchCommercialQuoteVersions = async (requestId: string): Promise<CommercialQuoteVersion[]> => {
+  const { data, error } = await db.from<CommercialQuoteVersion>("commercial_quote_drafts")
+    .select("id,quote_number,version_no,status,created_at,issued_at,customer_response_note")
+    .eq("source_request_id", requestId).order("version_no", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createCommercialQuoteRevision = async (previous: CommercialQuoteDraft): Promise<CommercialQuoteDraft> => {
+  if (previous.status !== "changes_requested") throw new Error("Customer change request required");
+  const { data, error } = await db.rpc<Array<{quote_id:string;quote_number:string}>>(
+    "create_commercial_quote_revision", { p_previous_quote_id: previous.id },
+  );
+  if (error) throw new Error(error.message);
+  if (!data?.[0]?.quote_id) throw new Error("Revision receipt was not returned");
+  const newest = await fetchCommercialQuoteDraft(previous.requestId);
+  if (!newest || newest.id !== data[0].quote_id) throw new Error("Revision created; refresh to review it");
+  return newest;
 };
 
 export const createCommercialQuoteDraft = async (requestId: string): Promise<CommercialQuoteDraft> => {
