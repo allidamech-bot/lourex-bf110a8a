@@ -5,6 +5,7 @@ on:
       - 'supabase/migrations/20261015113000_commercial_quote_drafts.sql'
       - 'supabase/migrations/20261015143000_commercial_quote_pricing_terms.sql'
       - 'supabase/migrations/20261015160000_commercial_quote_issuance.sql'
+      - 'supabase/migrations/20261015180000_commercial_quote_revisions.sql'
       - 'supabase/tests/commercial_quotes_pg17_integration.sql'
       - '.github/workflows/commercial-quotes-pg17.yml'
   workflow_dispatch:
