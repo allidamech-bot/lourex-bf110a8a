@@ -40,7 +40,7 @@ describe("Customer mobile quotation presentation", () => {
     expect(within(list).getByText("المنتجات المطلوبة")).toBeInTheDocument();
     expect(within(list).getByText("زيت دوار الشمس")).toBeInTheDocument();
     expect(within(list).getByText("بسكويت")).toBeInTheDocument();
-    expect(within(list).getByText("الكمية المطلوبة", { exact: true })).toBeInTheDocument();
+    expect(within(list).getAllByText("الكمية المطلوبة", { exact: true })).toHaveLength(2);
     expect(within(list).getByText("الحد الأدنى وقت الطلب")).toBeInTheDocument();
     expect(within(list).getByText("عبوة 1 لتر")).toBeInTheDocument();
     expect(within(list).getAllByRole("article")).toHaveLength(2);
