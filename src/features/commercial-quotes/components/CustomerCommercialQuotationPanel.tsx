@@ -11,6 +11,12 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
   requestId: string; requestNumber?: string; lang: "ar" | "en";
 }) {
   const ar=lang==="ar";
+  const statusLabel=(status:CustomerQuotation["status"])=>({
+    issued:ar?"بانتظار ردك":"Awaiting your response",
+    accepted:ar?"تم قبول العرض":"Accepted",
+    changes_requested:ar?"تم طلب تعديل":"Changes requested",
+    declined:ar?"تم رفض العرض":"Declined",
+  } as Record<CustomerQuotation["status"],string>)[status] || status;
   const [quote,setQuote]=useState<CustomerQuotation|null>(null);
   const [versions,setVersions]=useState<CustomerQuoteVersion[]>([]);
   const [loading,setLoading]=useState(false);
@@ -68,29 +74,29 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
     }catch(e){setError(e instanceof Error?e.message:"Could not save response");}
     finally{setWorking(false);}
   };
-  return <section data-testid="customer-commercial-quotation" className="my-5 space-y-4 rounded-[1.5rem] border border-primary/30 bg-card p-5 shadow-xl">
-    <header className="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p className="text-xs font-bold text-primary">LOUREX · QUOTATION</p>
-        <h3 className="mt-1 text-xl font-semibold">{ar?"عرض السعر التجاري":"Your commercial quotation"}</h3>
-        {quote&&<p className="mt-1 font-mono text-sm text-muted-foreground">{quote.number} · {ar?"الإصدار":"Version"} {quote.versionNo}</p>}
+  return <section data-testid="customer-commercial-quotation" className="my-5 min-w-0 space-y-5 overflow-hidden rounded-[1.5rem] border border-amber-300/20 bg-gradient-to-br from-stone-900 via-stone-950 to-blue-950/30 p-4 text-stone-100 shadow-xl sm:p-6">
+    <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-300">LOUREX / COMMERCIAL QUOTATION</p>
+        <h3 className="mt-2 break-words text-xl font-bold leading-tight text-white sm:text-2xl">{ar?"عرض السعر التجاري":"Your commercial quotation"}</h3>
+        {quote&&<p className="mt-2 break-all font-mono text-xs text-stone-300 sm:text-sm">{quote.number} · {ar?"الإصدار":"Version"} {quote.versionNo}</p>}
       </div>
-      {quote&&<span className="rounded-xl border border-primary/20 px-3 py-1 text-xs font-semibold">{quote.status}</span>}
-      <Button type="button" variant="outline" size="sm" disabled={loading||working} onClick={()=>void reload()}>
+      {quote&&<span className="w-fit max-w-full rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-100">{statusLabel(quote.status)}</span>}
+      <Button type="button" variant="outline" size="sm" disabled={loading||working} onClick={()=>void reload()} className="min-h-11 w-full rounded-xl border-amber-200/20 bg-stone-800/70 text-stone-100 sm:w-auto">
         {loading?<Loader2 className="h-4 w-4 animate-spin"/>:<RefreshCw className="h-4 w-4"/>}
         {ar?"تحديث":"Refresh"}
       </Button>
     </header>
     {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     {quote&&<>
-      {versions.length>1&&<div className="rounded-xl border border-border/70 bg-background/70 p-3">
-        <p className="mb-2 flex items-center gap-2 text-sm font-semibold"><GitBranch className="h-4 w-4 text-primary"/>
+      {versions.length>1&&<div className="min-w-0 rounded-2xl border border-amber-200/15 bg-stone-900/60 p-4">
+        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-amber-100"><GitBranch className="h-4 w-4 text-primary"/>
           {ar?"تاريخ الإصدارات السابقة":"Previous issued versions"}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           {versions.map(v=><Button type="button" key={v.id} size="sm" disabled={loading||working}
-            variant={v.id===quote.id?"default":"outline"} onClick={()=>void viewVersion(v.id)}>
-            {ar?"الإصدار":"Version"} {v.versionNo} · {v.status}
+            variant={v.id===quote.id?"default":"outline"} onClick={()=>void viewVersion(v.id)} className="min-h-11 w-full rounded-xl sm:w-auto">
+            {ar?"الإصدار":"Version"} {v.versionNo} · {statusLabel(v.status)}
           </Button>)}
         </div>
         {versions[0]?.id!==quote.id&&<p className="mt-2 text-xs text-muted-foreground">
@@ -99,22 +105,22 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
         </p>}
       </div>}
       <CommercialQuotationDocument quote={quote} lang={lang}/>
-      {quote.status==="issued"&&versions[0]?.id===quote.id?<div className="space-y-3 rounded-2xl border border-primary/25 bg-background/70 p-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><ShieldCheck className="h-4 w-4 text-primary"/>
+      {quote.status==="issued"&&versions[0]?.id===quote.id?<div className="space-y-4 rounded-2xl border border-amber-300/20 bg-stone-900/65 p-4 sm:p-5">
+        <div className="flex items-center gap-2 text-base font-semibold text-amber-100"><ShieldCheck className="h-4 w-4 text-primary"/>
           {ar?"ردّك على العرض":"Your response"}
         </div>
         <p className="text-xs text-muted-foreground">{ar?"يمكنك قبول العرض، رفضه، أو طلب تعديل. قبول العرض لا ينشئ عملية دفع.":
           "Accept, decline or request a revision. Accepting does not initiate payment."}</p>
         <Textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} maxLength={2000} disabled={working}
           placeholder={ar?"اذكر تفاصيل التعديل المطلوب أو ملاحظاتك…":"Describe requested changes or add optional notes…"}
-          className="bg-background/80"/>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={working} onClick={()=>void respond("accepted")} className="gap-2">
+          className="min-h-24 rounded-xl border-amber-200/15 bg-stone-950/70 text-stone-100 placeholder:text-stone-500"/>
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+          <Button type="button" disabled={working} onClick={()=>void respond("accepted")} className="min-h-11 w-full justify-center gap-2 rounded-xl bg-amber-400 text-stone-950 hover:bg-amber-300 sm:w-auto">
             <CheckCircle2 className="h-4 w-4"/>{ar?"قبول العرض":"Accept quotation"}</Button>
           <Button type="button" variant="outline" disabled={working||note.trim().length<5}
-            onClick={()=>void respond("changes_requested")} className="gap-2">
+            onClick={()=>void respond("changes_requested")} className="min-h-11 w-full justify-center gap-2 rounded-xl border-amber-200/25 text-stone-100 sm:w-auto">
             <ClipboardList className="h-4 w-4"/>{ar?"طلب تعديل":"Request changes"}</Button>
-          <Button type="button" variant="outline" disabled={working} onClick={()=>void respond("declined")} className="gap-2">
+          <Button type="button" variant="outline" disabled={working} onClick={()=>void respond("declined")} className="min-h-11 w-full justify-center gap-2 rounded-xl border-red-500/25 text-red-200 sm:w-auto">
             <XCircle className="h-4 w-4"/>{ar?"رفض العرض":"Decline quotation"}</Button>
         </div>
       </div>:<p role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">

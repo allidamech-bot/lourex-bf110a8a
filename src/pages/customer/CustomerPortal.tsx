@@ -318,28 +318,32 @@ const CustomerPortal = () => {
 
   return (
       <>
-        <PageHelpBox pageKey="customer_portal" role={profile?.role} className="mb-6" />
+        <details className="mb-5 rounded-xl border border-amber-200/15 bg-stone-900/50 sm:hidden">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-amber-200">{lang === "ar" ? "دليل بوابة العميل" : "Customer portal guide"}</summary>
+          <div className="px-3 pb-3"><PageHelpBox pageKey="customer_portal" role={profile?.role} /></div>
+        </details>
+        <div className="hidden sm:block"><PageHelpBox pageKey="customer_portal" role={profile?.role} className="mb-6" /></div>
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 flex w-full max-w-full min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between"
+            className="mb-6 flex w-full max-w-full min-w-0 flex-col gap-5 rounded-[1.7rem] border border-amber-300/15 bg-gradient-to-br from-stone-900 via-stone-950 to-blue-950/30 p-5 shadow-lg shadow-black/20 sm:p-7 md:flex-row md:items-end md:justify-between"
         >
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500/80">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-300">
               {getSafeLabel(
                   t("customerPortal.eyebrow"),
                   locale === "ar" ? "لوحة العميل" : "Customer portal",
               )}
             </p>
 
-            <h1 className="mt-2 break-words font-serif text-2xl font-bold text-stone-100 sm:text-3xl md:text-4xl">
+            <h1 className="mt-3 break-words text-2xl font-bold leading-tight tracking-tight text-stone-50 sm:text-3xl md:text-4xl">
               {getSafeLabel(t("customerPortal.welcome"), locale === "ar" ? "مرحباً" : "Welcome")}{" "}
               <span className="text-amber-500">
               {profile?.fullName || profile?.email || ""}
             </span>
             </h1>
 
-            <p className="mt-3 max-w-3xl break-words text-stone-400">
+            <p className="mt-3 max-w-3xl break-words text-sm leading-7 text-stone-300 sm:text-base">
               {getSafeLabel(
                   t("customerPortal.description"),
                   locale === "ar"
@@ -351,7 +355,7 @@ const CustomerPortal = () => {
 
           <Button
               variant="outline"
-              className="w-full md:w-auto border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10"
+              className="min-h-11 w-full shrink-0 rounded-xl border-amber-200/20 bg-stone-800/70 text-stone-100 hover:bg-stone-800 md:w-auto"
               onClick={() => void loadData("refresh")}
               disabled={loading || refreshing}
           >
@@ -390,7 +394,7 @@ const CustomerPortal = () => {
             </div>
         ) : null}
 
-        <ResponsiveInfoGrid className="mb-6" min="minmax(min(100%,11rem),1fr)">
+        <ResponsiveInfoGrid className="mb-6" min="minmax(min(100%,8rem),1fr)">
           {[
             {
               label: locale === "ar" ? "الطلبات" : "Requests",
@@ -413,11 +417,11 @@ const CustomerPortal = () => {
               icon: ShieldCheck,
             },
           ].map((item) => (
-              <ReadableMetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} />
+              <ReadableMetricCard key={item.label} label={item.label} value={item.value} icon={item.icon} className="!min-w-0 !p-3.5 sm:!p-4" />
           ))}
         </ResponsiveInfoGrid>
 
-        <ResponsiveInfoGrid className="gap-6" min="minmax(min(100%,13rem),1fr)">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {menuItems.map((item, index) => (
               <motion.div
                   key={item.title}
@@ -426,23 +430,23 @@ const CustomerPortal = () => {
                   transition={{ delay: index * 0.1 }}
               >
                 <Link to={item.link} className="block h-full min-w-0">
-                  <BentoCard className="group relative h-full cursor-pointer overflow-hidden transition-all hover:border-amber-200/30">
+                  <BentoCard className="group relative flex h-full min-h-[100px] cursor-pointer items-center gap-4 overflow-hidden border border-white/10 bg-stone-900/70 !p-4 transition-colors hover:border-amber-300/30 hover:bg-stone-800/70">
                     <div
-                        className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${item.bgColor} ${item.color}`}
                     >
                       <item.icon className="h-6 w-6" />
                     </div>
 
-                    <h3 className="break-words font-serif text-xl font-semibold text-stone-100 transition-colors group-hover:text-amber-200">
+                    <div className="min-w-0 flex-1"><h3 className="break-words text-base font-bold text-stone-100 transition-colors group-hover:text-amber-200">
                       {item.title}
                     </h3>
 
-                    <p className="mt-2 break-words text-sm leading-6 text-stone-400">
+                    <p className="mt-1 break-words text-xs leading-5 text-stone-400">
                       {item.description}
-                    </p>
+                    </p></div>
 
                     {item.badge !== null && item.badge > 0 ? (
-                        <div className="absolute end-4 top-4 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-stone-950">
+                        <div className="absolute end-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-stone-950">
                           {formatNumber(item.badge, locale)}
                         </div>
                     ) : null}
@@ -450,12 +454,12 @@ const CustomerPortal = () => {
                 </Link>
               </motion.div>
           ))}
-        </ResponsiveInfoGrid>
+        </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
           <SupportConversationWidget compact />
 
-          <BentoCard className="flex flex-col justify-center p-4 sm:p-8">
+          <BentoCard className="flex min-w-0 flex-col justify-center !p-4 sm:!p-7">
             <div className="mb-6 flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
                 <Wallet className="h-5 w-5 text-amber-500" />
@@ -601,7 +605,7 @@ const CustomerPortal = () => {
                               ) : null}
                             </div>
 
-                            <div className="min-w-0 shrink-0 text-start sm:text-end">
+                            <div className="min-w-0 w-full text-start sm:w-auto sm:shrink-0 sm:text-end">
                         <span className="inline-flex max-w-full break-words rounded-md bg-stone-800 px-2 py-1 text-[10px] uppercase text-stone-400">
                           {statusCopy?.label || request.statusLabel || request.status}
                         </span>
@@ -611,8 +615,8 @@ const CustomerPortal = () => {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-4 border-t border-amber-200/5 pt-3">
-                            <Button variant="link" className="h-auto p-0 text-xs font-bold text-amber-500 hover:text-amber-400" asChild>
+                          <div className="mt-4 flex flex-col gap-3 border-t border-amber-200/10 pt-4 sm:flex-row sm:flex-wrap sm:gap-4">
+                            <Button variant="link" className="h-auto min-h-11 justify-start p-0 text-sm font-bold text-amber-400 hover:text-amber-300" asChild>
                               <Link to={`/customer-portal/request-detail?request=${request.id}`}>
                                 {lang === "ar" ? "العرض الاحترافي" : "Pro View"}
                               </Link>

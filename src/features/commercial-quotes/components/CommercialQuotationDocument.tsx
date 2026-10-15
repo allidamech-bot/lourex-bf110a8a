@@ -23,32 +23,32 @@ export function CommercialQuotationDocument({ quote, lang }: { quote: Quote; lan
   const issuedDate = quote.issuedAt || quote.approvedAt || null;
   return (
     <>
-      <div className="my-3 flex items-center justify-between gap-3 print:hidden">
-        <p className="text-xs text-muted-foreground">
+      <div className="my-4 flex min-w-0 flex-col gap-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-md break-words text-xs leading-5 text-stone-400">
           {label(ar,"مستند رسمي قابل للتنزيل والطباعة.","Official quotation available to download or print.")}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <Button type="button" onClick={() => {
             setPdfError("");
             void downloadCommercialQuotePdf(quote,lang).catch(error =>
               setPdfError(error instanceof Error?error.message:"PDF export failed"));
-          }} className="gap-2">
+          }} className="min-h-11 w-full justify-center gap-2 rounded-xl bg-amber-400 font-semibold text-stone-950 hover:bg-amber-300 sm:w-auto">
             <Download className="h-4 w-4"/>{label(ar,"تنزيل PDF","Download PDF")}
           </Button>
-          <Button type="button" variant="outline" onClick={() => window.print()} className="gap-2">
+          <Button type="button" variant="outline" onClick={() => window.print()} className="min-h-11 w-full justify-center gap-2 rounded-xl border-amber-200/20 bg-stone-900/70 text-stone-100 sm:w-auto">
             <Printer className="h-4 w-4" />{label(ar,"طباعة / حفظ PDF","Print / Save PDF")}
           </Button>
         </div>
       </div>
       {pdfError&&<p role="alert" className="print:hidden text-sm text-destructive">{pdfError}</p>}
-      <section className="quote-document-printable rounded-2xl border border-amber-700/30 bg-white p-6 text-slate-900 shadow-lg sm:p-8" dir={ar ? "rtl" : "ltr"} data-testid="quotation-print-document">
-        <header className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-amber-600 pb-5">
+      <section className="quote-document-printable min-w-0 overflow-hidden rounded-2xl border border-amber-700/25 bg-white p-4 text-slate-900 shadow-lg sm:p-8" dir={ar ? "rtl" : "ltr"} data-testid="quotation-print-document">
+        <header className="flex min-w-0 flex-col gap-5 border-b-2 border-amber-600 pb-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-3xl font-black tracking-widest text-slate-950">LOUREX</p>
             <p className="mt-1 text-xs uppercase tracking-widest text-amber-700">International Trading & Resources</p>
             <h3 className="mt-5 text-xl font-bold">{label(ar,"عرض سعر تجاري","COMMERCIAL QUOTATION")}</h3>
           </div>
-          <div className={ar ? "text-left text-xs leading-6" : "text-right text-xs leading-6"}>
+          <div className="min-w-0 break-words text-start text-xs leading-6 sm:text-end">
             <p className="font-semibold">{quote.number}</p>
             <p>{label(ar,"رقم طلب العميل","Customer RFQ")}: {quote.requestId.slice(0,8)}</p>
             {issuedDate && <p>{label(ar,"تاريخ الإصدار","Issue date")}: {new Date(issuedDate).toLocaleDateString(ar ? "ar" : "en-GB")}</p>}
@@ -58,7 +58,31 @@ export function CommercialQuotationDocument({ quote, lang }: { quote: Quote; lan
             <p>CR: 62800 · Homs, Syria</p>
           </div>
         </header>
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-5 grid gap-3 print:hidden sm:hidden" aria-label={label(ar,"أصناف عرض السعر","Quotation items")}>
+          {quote.items.map(i => (
+            <article key={i.lineNumber} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800">{label(ar,"الصنف","Item")} {i.lineNumber}</p>
+                  <h4 className="mt-1 break-words text-sm font-bold leading-6 text-slate-900">{i.name}</h4>
+                </div>
+                <span className="shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white">{i.quantity} {i.unit}</span>
+              </div>
+              {i.specifications && <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-slate-600">{i.specifications}</p>}
+              <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                <div className="min-w-0">
+                  <dt className="text-[11px] text-slate-500">{label(ar,"سعر الوحدة","Unit price")}</dt>
+                  <dd className="mt-1 break-all text-xs font-semibold tabular-nums text-slate-800">{i.unitPrice === null ? "—" : money(Number(i.unitPrice),quote.currency)}</dd>
+                </div>
+                <div className="min-w-0 text-end">
+                  <dt className="text-[11px] text-slate-500">{label(ar,"إجمالي الصنف","Line total")}</dt>
+                  <dd className="mt-1 break-all text-xs font-bold tabular-nums text-slate-900">{i.unitPrice === null ? "—" : money(i.quantity * Number(i.unitPrice),quote.currency)}</dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+        <div className="mt-6 hidden overflow-x-auto sm:block print:block">
           <table className="w-full border-collapse text-xs sm:text-sm">
             <thead><tr className="bg-slate-900 text-white">
               <th className="px-3 py-3 text-start">#</th>
@@ -80,10 +104,10 @@ export function CommercialQuotationDocument({ quote, lang }: { quote: Quote; lan
             ))}</tbody>
           </table>
         </div>
-        <div className="mt-5 ms-auto max-w-xs space-y-2 border-t border-slate-300 pt-3 text-sm">
+        <div className="mt-5 ms-auto w-full min-w-0 max-w-sm space-y-2 border-t border-slate-300 pt-3 text-sm">
           <p className="flex justify-between"><span>{label(ar,"الشحن","Shipping")}</span><strong>{money(quote.shippingCost,quote.currency)}</strong></p>
           <p className="flex justify-between"><span>{label(ar,"الخصم","Discount")}</span><strong>{money(quote.discountAmount,quote.currency)}</strong></p>
-          <p className="flex justify-between border-t-2 border-amber-600 pt-3 text-lg font-bold">
+          <p className="flex flex-wrap justify-between gap-2 border-t-2 border-amber-600 pt-3 text-base font-bold sm:text-lg">
             <span>{label(ar,"الإجمالي","Total")}</span><strong>{total === null ? "—" : money(total,quote.currency)}</strong>
           </p>
         </div>
