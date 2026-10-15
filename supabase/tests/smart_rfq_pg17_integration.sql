@@ -144,9 +144,7 @@ BEGIN
     RAISE EXCEPTION 'Existing request workflow/canonical email was not preserved';
   END IF;
 
-  IF (SELECT count(*) FROM public.notifications WHERE type='purchase_request_created') <> 1 THEN
-    RAISE EXCEPTION 'Internal staff inbox did not get one notification';
-  END IF;
+  -- Owner-only notification count is validated after RESET ROLE below.
 
   -- Retrying the same signed customer receipt must not create a second RFQ.
   SELECT request_id INTO v_retry_id FROM public.submit_smart_rfq(
