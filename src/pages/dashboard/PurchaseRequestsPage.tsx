@@ -1203,6 +1203,7 @@ export default function PurchaseRequestsPage() {
                                         requestNumber={selectedRow.requestNumber}
                                         lang={lang === "ar" ? "ar" : "en"}
                                         canManage={profile?.role === "owner" || profile?.role === "operations_employee"}
+                                        canApprove={profile?.role === "owner"}
                                       />
                                     </div>
                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
