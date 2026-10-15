@@ -79,7 +79,7 @@ BEGIN
   END IF;
   IF public.get_profile_role('00000000-0000-0000-0000-000000000001')
       IS NOT NULL THEN
-    RAISE EXCEPTION 'Customer can read someone else\'s raw role';
+    RAISE EXCEPTION 'Customer can read someone else''s raw role';
   END IF;
 END $qa$;
 
