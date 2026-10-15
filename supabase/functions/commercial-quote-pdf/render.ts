@@ -1,5 +1,5 @@
 import { PDFDocument, rgb } from "npm:pdf-lib@1.17.1";
-import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
+import fontkit from "npm:fontkit@2.0.4";
 import { drawArabicText } from "npm:naqqash@0.2.0/pdf-lib";
 import { shapeArabicText } from "npm:naqqash@0.2.0";
 
