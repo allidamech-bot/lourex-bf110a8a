@@ -73,7 +73,7 @@ export default function ProductsPage() {
               <p className="lrx-catalog-description">{isArabic ? "استكشف المنتجات المعروضة وحدّد ما تحتاجه تجارتك. أنشئ طلب توريد بالمواصفات والكمية والوجهة المناسبة لك." : "Explore the catalog and define what your business needs. Start a sourcing request with your specifications, quantity and destination."}</p>
               <div className="lrx-catalog-intro-actions">
                 <a href="#catalog-browser" className="lrx-text-link">{isArabic ? "استكشف الكتالوج" : "Explore the catalog"}<ArrowDown size={16} aria-hidden="true" /></a>
-                <Link to="/request" className="lrx-primary">{isArabic ? "لديك منتج محدّد؟" : "Have a specific product in mind?"}<ArrowUpRight size={17} className="rtl:-scale-x-100" aria-hidden="true" /></Link>
+                <Link to="/smart-rfq" className="lrx-primary">{isArabic ? "طلب عرض سعر متعدد المنتجات" : "Multi-product Smart RFQ"}<ArrowUpRight size={17} className="rtl:-scale-x-100" aria-hidden="true" /></Link>
               </div>
             </motion.div>
             <div className="lrx-catalog-brief">
@@ -149,7 +149,7 @@ export default function ProductsPage() {
                           <p className="lrx-catalog-product-summary">{isArabic ? product.shortDescriptionAr : product.shortDescriptionEn}</p>
                           <div className="lrx-catalog-tags">{(isArabic ? product.tagsAr : product.tagsEn).slice(0, 2).map(tag => <span key={tag}>{tag}</span>)}</div>
                           <dl><div><dt>{t("products.listing.origin")}</dt><dd>{product.originCountry}</dd></div>{product.packaging && <div><dt>{isArabic ? "التعبئة" : "Packaging"}</dt><dd>{product.packaging}</dd></div>}</dl>
-                          <div className="lrx-catalog-product-actions"><Link to={`/products/${product.slug}`} className="lrx-catalog-details">{t("products.listing.details")}</Link><Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`} className="lrx-primary">{t("products.listing.createRequest")}<ArrowUpRight size={16} className="rtl:-scale-x-100" aria-hidden="true" /></Link></div>
+                          <div className="lrx-catalog-product-actions"><Link to={`/products/${product.slug}`} className="lrx-catalog-details">{t("products.listing.details")}</Link><Link to={`/request?source=products&product=${encodeURIComponent(product.id)}`} className="lrx-primary">{t("products.listing.createRequest")}<ArrowUpRight size={16} className="rtl:-scale-x-100" aria-hidden="true" /></Link><Link to={`/smart-rfq?add=${encodeURIComponent(product.id)}`} className="lrx-catalog-details">{isArabic ? "أضف إلى طلب متعدد" : "Add to Smart RFQ"}</Link></div>
                         </div>
                       </article>
                     );
