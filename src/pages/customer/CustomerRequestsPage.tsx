@@ -819,7 +819,7 @@ export default function CustomerRequestsPage() {
                           </Button>
                       )}
 
-                      {canEditRequest(selectedRow.status) && !selectedRow.requestNumber.startsWith("RFQ-") && (
+                      {canEditRequest(selectedRow.status) && !selectedRow.requestNumber?.startsWith("RFQ-") && (
                           <Button variant="outline" onClick={() => handleEditRequest(selectedRow)} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                             {t("requests.actions.edit")}
                           </Button>
