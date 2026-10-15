@@ -4,6 +4,7 @@ import { uploadPurchaseRequestImages, updateRequestWithImages } from "@/domain/o
 import { logOperationalError } from "@/lib/monitoring";
 
 export const SMART_RFQ_KEY = "lourex:smart-rfq:catalog-ids:v1";
+const SMART_RFQ_RECEIPT_KEY = "lourex:smart-rfq:submission-id:v1";
 export const MAX_SMART_RFQ_ITEMS = 20;
 export const RFQ_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -55,6 +56,15 @@ const tableClient = supabase as unknown as {
   };
 };
 
+const getOrCreateSubmissionId = (): string => {
+  if (typeof window === "undefined") throw new Error("Request submission requires the browser.");
+  const previous = window.localStorage.getItem(SMART_RFQ_RECEIPT_KEY);
+  if (previous && RFQ_UUID.test(previous)) return previous;
+  const next = crypto.randomUUID();
+  window.localStorage.setItem(SMART_RFQ_RECEIPT_KEY, next);
+  return next;
+};
+
 export const readSmartRfqDraft = (): SmartRfqDraftItem[] => {
   if (typeof window === "undefined") return [];
   try {
@@ -87,6 +97,7 @@ export const clearSmartRfqDraft = (): void => {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(SMART_RFQ_KEY);
+    window.localStorage.removeItem(SMART_RFQ_RECEIPT_KEY);
   } catch {
     // The server-side request has already committed successfully.
   }
@@ -133,6 +144,7 @@ export const submitSmartRfq = async (
     p_shipping_method: shippingMethod.trim(),
     p_delivery_notes: deliveryNotes.trim(),
     p_delivery_address: deliveryAddress.trim(),
+    p_client_submission_id: getOrCreateSubmissionId(),
   });
   if (error) throw new Error(error.message);
   const result = data?.[0];
