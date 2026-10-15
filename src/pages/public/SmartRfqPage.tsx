@@ -193,6 +193,7 @@ export default function SmartRfqPage() {
               <h2 className="mt-5 font-serif text-3xl font-bold">{label("تم استلام طلبك بنجاح", "Your RFQ has been submitted")}</h2>
               <p className="mt-4 text-muted-foreground">{label("تم حفظ جميع الأصناف في طلب واحد. سيُراجع فريق LOUREX التفاصيل.", "All product lines were saved under one request. The LOUREX team will review your brief.")}</p>
               {submission.attachmentWarning && <p className="mx-auto mt-4 max-w-xl rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400" role="alert">{isAr ? "تم حفظ الطلب، لكن بعض الصور لم تُرفق. يرجى إرسال صورك لفريق LOUREX مع رقم الطلب." : submission.attachmentWarning}</p>}
+              {submission.notificationWarning && <p className="mx-auto mt-4 max-w-xl rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400" role="status">{isAr ? "تم حفظ طلبك وظهر لدى فريق LOUREX، لكن لا يمكن تأكيد إرسال البريد الإلكتروني حاليًا." : submission.notificationWarning}</p>}
               <p className="mt-5 font-mono text-xl font-semibold" dir="ltr">{submission.requestNumber}</p>
               <p className="mt-2 text-sm text-muted-foreground" dir="ltr">{submission.trackingCode}</p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
