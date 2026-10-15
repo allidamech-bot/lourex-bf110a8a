@@ -225,7 +225,7 @@ Deno.serve(async req => {
       "Vary":"Origin",
     };
     if(origin)pdfHeaders["Access-Control-Allow-Origin"]=origin;
-    return new Response(bytes,{status:200,headers:pdfHeaders});
+    return new Response(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength) as ArrayBuffer,{status:200,headers:pdfHeaders});
   }catch(e){
     console.error("commercial quote PDF generation failed",e instanceof Error?e.name:"UnknownError");
     return response({error:"Secure quotation PDF is temporarily unavailable"},502,"application/json",origin);
