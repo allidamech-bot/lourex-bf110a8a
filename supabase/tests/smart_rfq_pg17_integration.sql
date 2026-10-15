@@ -80,7 +80,7 @@ GRANT SELECT ON public.lourex_customers TO authenticated;
 
 DO $check$
 BEGIN
-  IF has_function_privilege('anon','public.submit_smart_rfq(jsonb,text,text,text,text)','EXECUTE') THEN
+  IF has_function_privilege('anon','public.submit_smart_rfq(jsonb,text,text,text,text,uuid)','EXECUTE') THEN
     RAISE EXCEPTION 'Anonymous role has access to RFQ creation';
   END IF;
   IF has_table_privilege('authenticated','public.purchase_request_items','INSERT') THEN
@@ -97,13 +97,15 @@ SELECT set_config('request.jwt.claim.role','authenticated',true);
 SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 DO $check$
 DECLARE v_id uuid;
+  v_retry_id uuid;
   v_num text;
   v_track text;
 BEGIN
   SELECT request_id,request_number,tracking_code INTO v_id,v_num,v_track
   FROM public.submit_smart_rfq(
     '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","product_name":"SPOOFED NAME","quantity":100,"unit":"forged","specifications":"Arabic label"},{"catalog_product_id":null,"product_name":"Custom biscuits","quantity":250,"unit":"cartons","specifications":"Private-label box"}]'::jsonb,
-    'Jeddah','sea','CIF destination', 'Saudi Arabia'
+    'Jeddah','sea','CIF destination', 'Saudi Arabia',
+    '00000000-0000-4000-8000-000000000055'::uuid
   );
   IF v_id IS NULL OR v_num NOT LIKE 'RFQ-%' OR v_track NOT LIKE 'TRX-%' THEN
     RAISE EXCEPTION 'Atomic RFQ receipt is missing';
@@ -135,6 +137,16 @@ BEGIN
       AND email='verified@example.test' AND quantity=350 AND status='intake_submitted'
   ) THEN
     RAISE EXCEPTION 'Existing request workflow/canonical email was not preserved';
+  END IF;
+
+  -- Retrying the same signed customer receipt must not create a second RFQ.
+  SELECT request_id INTO v_retry_id FROM public.submit_smart_rfq(
+    '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","quantity":100},{"catalog_product_id":null,"product_name":"Custom biscuits","quantity":250,"unit":"cartons"}]'::jsonb,
+    'Jeddah','sea','CIF destination','Saudi Arabia',
+    '00000000-0000-4000-8000-000000000055'::uuid
+  );
+  IF v_retry_id IS DISTINCT FROM v_id OR (SELECT count(*) FROM public.purchase_requests) <> 1 THEN
+    RAISE EXCEPTION 'Idempotent network retry created a second request';
   END IF;
 
   -- All-or-nothing when a draft product, duplicate, or bad quantity is supplied.
