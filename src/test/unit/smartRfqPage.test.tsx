@@ -75,7 +75,7 @@ describe("Smart RFQ end-user interface", () => {
     ]));
     expect(screen.getByText("Published MOQ: 100 cartons")).toBeInTheDocument();
     expect(screen.getByTestId("contact-gate")).toBeInTheDocument();
-    expect(screen.queryByText(/Public price/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/No public prices: our team prepares a tailored quotation/i)).toBeInTheDocument();
   });
 
   it("collects a custom item with quantities, shipping terms and submits one canonical RFQ", async () => {
