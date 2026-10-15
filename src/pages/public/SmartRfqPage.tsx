@@ -130,7 +130,7 @@ export default function SmartRfqPage() {
       setSubmission(result);
       setItems([]);
       setReferenceFiles([]);
-      clearSmartRfqDraft();
+      clearSmartRfqDraft(user.id);
     } catch (issue) {
       setError(issue instanceof Error ? issue.message : label("تعذر إرسال الطلب.", "Unable to submit the request."));
     } finally {
