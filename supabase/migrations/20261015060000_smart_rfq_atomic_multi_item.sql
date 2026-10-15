@@ -35,6 +35,32 @@ USING (
   OR public.lourex_r1_is_assigned_request(request_id)
 );
 
+-- Send the management inbox alert from the database transaction. Customers
+-- cannot insert notifications for staff (and cannot enumerate staff profiles);
+-- SECURITY DEFINER is limited to a trigger, with no direct RPC access.
+CREATE OR REPLACE FUNCTION public.notify_internal_smart_rfq()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = '' SET row_security = off
+AS $notification$
+BEGIN
+  IF NEW.smart_rfq_submission_id IS NULL THEN RETURN NEW; END IF;
+  INSERT INTO public.notifications (user_id, type, title, message, link)
+  SELECT staff.id, 'purchase_request_created',
+         'New Smart RFQ submitted',
+         'Smart RFQ ' || NEW.request_number || ' was submitted by ' || left(NEW.full_name, 160) || '.',
+         '/dashboard/requests?request=' || NEW.id::text
+  FROM public.profiles staff
+  WHERE staff.role IN ('owner','operations_employee')
+    AND staff.status = 'active';
+  RETURN NEW;
+END;
+$notification$;
+REVOKE ALL ON FUNCTION public.notify_internal_smart_rfq() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS notify_internal_smart_rfq ON public.purchase_requests;
+CREATE TRIGGER notify_internal_smart_rfq
+AFTER INSERT ON public.purchase_requests FOR EACH ROW
+EXECUTE FUNCTION public.notify_internal_smart_rfq();
+
 -- Make the entire request and its line items atomic: no orphaned requests and
 -- no customer-controlled metadata, price, status, customer_id, or item snapshots.
 CREATE OR REPLACE FUNCTION public.submit_smart_rfq(
