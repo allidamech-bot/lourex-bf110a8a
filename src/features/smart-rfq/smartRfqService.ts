@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { runAutomation } from "@/lib/automationEngine";
+import { uploadPurchaseRequestImages, updateRequestWithImages } from "@/domain/operations/service";
 import { logOperationalError } from "@/lib/monitoring";
 
 export const SMART_RFQ_KEY = "lourex:smart-rfq:catalog-ids:v1";
@@ -32,6 +33,7 @@ export type SmartRfqSubmission = {
   requestId: string;
   requestNumber: string;
   trackingCode: string;
+  attachmentWarning?: string;
 };
 
 const rpcClient = supabase as unknown as {
@@ -97,6 +99,7 @@ export const submitSmartRfq = async (
   deliveryNotes: string,
   deliveryAddress: string,
   customer: { id: string; name: string },
+  attachments: File[] = [],
 ): Promise<SmartRfqSubmission> => {
   if (items.length < 1 || items.length > MAX_SMART_RFQ_ITEMS) {
     throw new Error("Choose between 1 and 20 products.");
@@ -137,6 +140,23 @@ export const submitSmartRfq = async (
     throw new Error("RFQ confirmation was not returned by the server.");
   }
 
+  // Files are optional and stored through the existing guarded request-image path.
+  // Since the commercial request has committed, failures must NOT prompt a duplicate RFQ.
+  let attachmentWarning: string | undefined;
+  if (attachments.length > 0) {
+    try {
+      const upload = await uploadPurchaseRequestImages(result.request_id, attachments.map((file, index) => ({
+        id: String(index), file, name: file.name, previewUrl: "", sizeLabel: String(file.size),
+      })));
+      if (upload.error || !upload.data) throw new Error(upload.error?.message || "Image upload failed");
+      const update = await updateRequestWithImages(result.request_id, upload.data);
+      if (update.error || !update.data) throw new Error(update.error?.message || "Image attachment update failed");
+    } catch (attachmentError) {
+      attachmentWarning = "Your RFQ was saved, but some reference images could not be attached. Contact LOUREX with your request number.";
+      logOperationalError("smart_rfq_attachment", attachmentError, { requestId: result.request_id });
+    }
+  }
+
   // Fire only AFTER the atomic database transaction succeeds.
   // Notification failures must never cause a duplicate commercial request.
   try {
@@ -155,6 +175,7 @@ export const submitSmartRfq = async (
     requestId: result.request_id,
     requestNumber: result.request_number,
     trackingCode: result.tracking_code,
+    attachmentWarning,
   };
 };
 
