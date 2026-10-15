@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ClipboardList, Loader2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardList, GitBranch, Loader2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CommercialQuotationDocument } from "@/features/commercial-quotes/components/CommercialQuotationDocument";
 import {
-  fetchCustomerQuotation, respondToCustomerQuotation, type CustomerQuotation,
+  fetchCustomerQuotation, fetchCustomerQuoteVersions, respondToCustomerQuotation, type CustomerQuotation, type CustomerQuoteVersion,
 } from "@/features/commercial-quotes/services/commercialQuoteLifecycleService";
 
 export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lang }: {
@@ -12,6 +12,7 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
 }) {
   const ar=lang==="ar";
   const [quote,setQuote]=useState<CustomerQuotation|null>(null);
+  const [versions,setVersions]=useState<CustomerQuoteVersion[]>([]);
   const [loading,setLoading]=useState(false);
   const [working,setWorking]=useState(false);
   const [note,setNote]=useState("");
@@ -19,20 +20,34 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
   const isSmart=Boolean(requestNumber?.startsWith("RFQ-"));
   const reload=async ()=>{
     setLoading(true);setError("");
-    try {setQuote(await fetchCustomerQuotation(requestId));}
+    try {
+      const [current, history] = await Promise.all([fetchCustomerQuotation(requestId),fetchCustomerQuoteVersions(requestId)]);
+      setQuote(current);setVersions(history);
+    }
     catch(e){setError(e instanceof Error?e.message:"Could not load quotation");}
     finally{setLoading(false);}
   };
   useEffect(()=>{
     let active=true;
-    setQuote(null);setNote("");setError("");
+    setQuote(null);setVersions([]);setNote("");setError("");
     if(!isSmart)return;
     setLoading(true);
-    void fetchCustomerQuotation(requestId).then(result=>{if(active)setQuote(result);})
+    void Promise.all([fetchCustomerQuotation(requestId),fetchCustomerQuoteVersions(requestId)])
+      .then(([result,history])=>{if(active){setQuote(result);setVersions(history);}})
       .catch(err=>{if(active)setError(err instanceof Error?err.message:String(err));})
       .finally(()=>{if(active)setLoading(false);});
     return ()=>{active=false};
   },[requestId,isSmart]);
+  const viewVersion=async(id:string)=>{
+    if(loading||working)return;
+    setLoading(true);setError("");
+    try{
+      const historical=await fetchCustomerQuotation(requestId,id);
+      if(!historical)throw new Error("Quotation version is not available");
+      setQuote(historical);setNote("");
+    }catch(e){setError(e instanceof Error?e.message:String(e));}
+    finally{setLoading(false);}
+  };
   if(!isSmart)return null;
   if(loading&&!quote)return <p className="my-3 text-sm text-muted-foreground">{ar?"التحقق من عروض الأسعار الصادرة…":"Checking issued quotations…"}</p>;
   // No customer-facing hint about unissued/private quotation existence.
@@ -58,7 +73,7 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
       <div>
         <p className="text-xs font-bold text-primary">LOUREX · QUOTATION</p>
         <h3 className="mt-1 text-xl font-semibold">{ar?"عرض السعر التجاري":"Your commercial quotation"}</h3>
-        {quote&&<p className="mt-1 font-mono text-sm text-muted-foreground">{quote.number}</p>}
+        {quote&&<p className="mt-1 font-mono text-sm text-muted-foreground">{quote.number} · {ar?"الإصدار":"Version"} {quote.versionNo}</p>}
       </div>
       {quote&&<span className="rounded-xl border border-primary/20 px-3 py-1 text-xs font-semibold">{quote.status}</span>}
       <Button type="button" variant="outline" size="sm" disabled={loading||working} onClick={()=>void reload()}>
@@ -68,8 +83,23 @@ export function CustomerCommercialQuotationPanel({ requestId, requestNumber, lan
     </header>
     {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     {quote&&<>
+      {versions.length>1&&<div className="rounded-xl border border-border/70 bg-background/70 p-3">
+        <p className="mb-2 flex items-center gap-2 text-sm font-semibold"><GitBranch className="h-4 w-4 text-primary"/>
+          {ar?"تاريخ الإصدارات السابقة":"Previous issued versions"}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {versions.map(v=><Button type="button" key={v.id} size="sm" disabled={loading||working}
+            variant={v.id===quote.id?"default":"outline"} onClick={()=>void viewVersion(v.id)}>
+            {ar?"الإصدار":"Version"} {v.versionNo} · {v.status}
+          </Button>)}
+        </div>
+        {versions[0]?.id!==quote.id&&<p className="mt-2 text-xs text-muted-foreground">
+          {ar?"أنت تستعرض إصدارًا سابقًا محفوظًا. اختر الإصدار الأحدث أعلاه للمتابعة.":
+            "You are viewing a preserved older version. Select the newest version above to continue."}
+        </p>}
+      </div>}
       <CommercialQuotationDocument quote={quote} lang={lang}/>
-      {quote.status==="issued"?<div className="space-y-3 rounded-2xl border border-primary/25 bg-background/70 p-4">
+      {quote.status==="issued"&&versions[0]?.id===quote.id?<div className="space-y-3 rounded-2xl border border-primary/25 bg-background/70 p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><ShieldCheck className="h-4 w-4 text-primary"/>
           {ar?"ردّك على العرض":"Your response"}
         </div>

@@ -65,6 +65,7 @@ VALUES
 \ir ../migrations/20261015113000_commercial_quote_drafts.sql
 \ir ../migrations/20261015143000_commercial_quote_pricing_terms.sql
 \ir ../migrations/20261015160000_commercial_quote_issuance.sql
+\ir ../migrations/20261015180000_commercial_quote_revisions.sql
 
 DO $check$
 BEGIN
@@ -381,4 +382,103 @@ BEGIN
    IF SQLERRM='DUPLICATE RESPONSE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
  END;
 END $customer$;
+
+-- Revision permissions, retry idempotency, immutable old quote, and customer-safe history.
+-- Previous test left one changes_requested quote and a logged-in customer.
+DO $revision_security$
+DECLARE old_quote uuid:=current_setting('quote.fixture.id')::uuid;
+BEGIN
+  BEGIN
+    PERFORM 1 FROM public.create_commercial_quote_revision(old_quote);
+    RAISE EXCEPTION 'CUSTOMER CREATED REVISION';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='CUSTOMER CREATED REVISION' OR SQLSTATE<>'42501' THEN RAISE; END IF;
+  END;
+  IF jsonb_array_length(public.get_customer_commercial_quote_versions('00000000-0000-4000-8000-000000000100'))<>1
+  THEN RAISE EXCEPTION 'Customer history before revision invalid'; END IF;
+  IF public.get_customer_commercial_quote_version('00000000-0000-4000-8000-000000000999'::uuid) IS NOT NULL
+  THEN RAISE EXCEPTION 'Unrelated quote ID revealed'; END IF;
+END;$revision_security$;
+
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+DO $revisions$
+DECLARE
+  original uuid:=current_setting('quote.fixture.id')::uuid;
+  created uuid;
+  retry uuid;
+  current_quote uuid;
+  first_snapshot numeric;
+  second_snapshot numeric;
+  lines jsonb;
+BEGIN
+  SELECT unit_price INTO first_snapshot
+    FROM public.commercial_quote_items WHERE quote_id=original AND line_number=1;
+  SELECT quote_id INTO created FROM public.create_commercial_quote_revision(original);
+  SELECT quote_id INTO retry FROM public.create_commercial_quote_revision(original);
+  IF created IS NULL OR retry<>created OR created=original THEN
+    RAISE EXCEPTION 'Revision retry created duplicate'; END IF;
+  SELECT id INTO current_quote FROM public.commercial_quote_drafts
+    WHERE source_request_id='00000000-0000-4000-8000-000000000100'
+    ORDER BY version_no DESC LIMIT 1;
+  IF current_quote<>created OR
+    (SELECT count(*) FROM public.commercial_quote_drafts)<>2 OR
+    (SELECT count(*) FROM public.commercial_quote_items WHERE quote_id=created)<>2 OR
+    (SELECT version_no FROM public.commercial_quote_drafts WHERE id=created)<>2 OR
+    (SELECT status FROM public.commercial_quote_drafts WHERE id=created)<>'draft' OR
+    (SELECT status FROM public.commercial_quote_drafts WHERE id=original)<>'changes_requested'
+  THEN RAISE EXCEPTION 'Revision chain or immutable previous quote incorrect'; END IF;
+  IF (SELECT unit_price FROM public.commercial_quote_items
+      WHERE quote_id=created AND line_number=1) IS DISTINCT FROM first_snapshot
+  THEN RAISE EXCEPTION 'Prior unit price not inherited for review'; END IF;
+  -- A revision needs fresh pricing confirmation even if prior amounts are copied.
+  BEGIN
+    PERFORM 1 FROM public.approve_commercial_quote(created);
+    RAISE EXCEPTION 'UNPRICED REVISION APPROVED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='UNPRICED REVISION APPROVED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  SELECT jsonb_agg(jsonb_build_object('item_id',id,'unit_price',
+             CASE WHEN line_number=1 THEN 25 ELSE 7 END) ORDER BY line_number)
+    INTO lines FROM public.commercial_quote_items WHERE quote_id=created;
+  PERFORM 1 FROM public.save_commercial_quote_draft(
+    created,'EUR','Prepaid','CIF new destination','CIF','3 weeks',14,20,0,'internal rev note',lines);
+  PERFORM 1 FROM public.approve_commercial_quote(created);
+  PERFORM 1 FROM public.issue_commercial_quote(created);
+  IF (SELECT unit_price FROM public.commercial_quote_items
+      WHERE quote_id=original AND line_number=1) IS DISTINCT FROM first_snapshot
+  THEN RAISE EXCEPTION 'Original quotation was mutated by revision pricing'; END IF;
+  IF (SELECT count(*) FROM public.commercial_quote_events
+      WHERE quote_id=created AND action IN ('revision_created','approved','issued'))<>3
+  THEN RAISE EXCEPTION 'Revision audit incomplete'; END IF;
+  PERFORM set_config('quote.revised.id',created::text,true);
+END;$revisions$;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
+DO $history$
+DECLARE older uuid:=current_setting('quote.fixture.id')::uuid;
+        newer uuid:=current_setting('quote.revised.id')::uuid;
+        latest jsonb;
+        olddoc jsonb;
+        history jsonb;
+BEGIN
+  latest:=public.get_customer_commercial_quote('00000000-0000-4000-8000-000000000100');
+  olddoc:=public.get_customer_commercial_quote_version(older);
+  history:=public.get_customer_commercial_quote_versions('00000000-0000-4000-8000-000000000100');
+  IF latest->>'id'<>newer::text OR (latest->>'versionNo')::integer<>2 OR
+     olddoc->>'id'<>older::text OR (olddoc->>'versionNo')::integer<>1 OR
+     jsonb_array_length(history)<>2
+  THEN RAISE EXCEPTION 'Customer safe version history incorrect'; END IF;
+  IF latest ? 'internalNotes' OR olddoc ? 'internalNotes' OR
+     latest ? 'lastPricedBy' OR olddoc ? 'createdBy'
+  THEN RAISE EXCEPTION 'Internal notes leaked in customer version history'; END IF;
+  BEGIN
+    PERFORM 1 FROM public.respond_commercial_quote(older,'accepted','');
+    RAISE EXCEPTION 'SUPERSEDED QUOTE REPLIED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='SUPERSEDED QUOTE REPLIED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  PERFORM 1 FROM public.respond_commercial_quote(newer,'accepted','');
+  IF (SELECT status FROM public.commercial_quote_drafts WHERE id=newer)<>'accepted'
+  THEN RAISE EXCEPTION 'New version response failed'; END IF;
+END;$history$;
+
 ROLLBACK;

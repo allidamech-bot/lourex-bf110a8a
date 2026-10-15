@@ -9,6 +9,7 @@ import {
 const draft: CommercialQuoteDraft = {
   id: "00000000-0000-4000-8000-000000000100",
   number: "LQ-2026-ABC",
+  versionNo: 1,
   requestId: "00000000-0000-4000-8000-000000000200",
   customerId: "00000000-0000-4000-8000-000000000300",
   currency: "USD", status: "draft", approvedAt: null, issuedAt: null, customerResponseNote: "",

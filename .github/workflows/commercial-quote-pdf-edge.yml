@@ -1,0 +1,26 @@
+name: Commercial Quote PDF Edge Verification
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/commercial-quote-pdf/**'
+      - 'api/lourex-quote-email.ts'
+      - '.github/workflows/commercial-quote-pdf-edge.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pdf-edge:
+    name: Check authenticated PDF generator
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Typecheck pinned PDF dependencies
+        run: deno check --node-modules-dir=auto supabase/functions/commercial-quote-pdf/index.ts
+      - name: Render real bilingual multi-page test PDF
+        run: deno test --node-modules-dir=auto --allow-net=raw.githubusercontent.com supabase/functions/commercial-quote-pdf/render.test.ts
