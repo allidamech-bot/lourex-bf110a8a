@@ -26,6 +26,16 @@ import {
   type SmartRfqSubmission,
 } from "@/features/smart-rfq/smartRfqService";
 
+const catalogQuantity = (product: ProductCatalogItem): string => {
+  const match = /^([0-9]{1,9})\s*(.*)$/.exec((product.moq || "").replace(/,/g, "").trim());
+  if (!match) return "1";
+  const suffix = match[2].toLocaleLowerCase().trim();
+  const unit = (product.unit || "").toLocaleLowerCase().trim();
+  const quantity = Number(match[1]);
+  return (!suffix || (unit && suffix === unit)) && quantity > 0 && quantity <= 100000000
+    ? String(quantity) : "1";
+};
+
 const newCustomItem = (): SmartRfqDraftItem => ({
   key: "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9),
   catalogProductId: null,
@@ -87,7 +97,7 @@ export default function SmartRfqPage() {
               key: product.id,
               catalogProductId: product.id,
               productName: isAr ? product.nameAr : product.nameEn,
-              quantity: "1",
+              quantity: catalogQuantity(product),
               unit: product.unit || "",
               specifications: "",
             }];
@@ -207,6 +217,32 @@ export default function SmartRfqPage() {
                 </div>
 
                 {catalogLoading && <p className="text-sm text-muted-foreground"><Loader2 className="me-2 inline h-4 w-4 animate-spin" />{label("تحميل بيانات المنتجات…", "Loading products…")}</p>}
+                {!catalogLoading && catalog.length > 0 && (
+                  <div className="rounded-2xl border border-[#c6a36f]/25 bg-card/80 p-4 sm:p-5">
+                    <Label htmlFor="smart-rfq-catalog-picker">{label("أضف منتجًا من الكتالوج مباشرة", "Add a catalog product directly")}</Label>
+                    <select id="smart-rfq-catalog-picker" value="" disabled={items.length >= MAX_SMART_RFQ_ITEMS}
+                      className="mt-2 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      onChange={event => {
+                        const product = catalogMap.get(event.target.value);
+                        if (!product) return;
+                        setItems(current => current.length >= MAX_SMART_RFQ_ITEMS || current.some(x => x.catalogProductId === product.id)
+                          ? current
+                          : [...current, {
+                            key: product.id, catalogProductId: product.id,
+                            productName: isAr ? product.nameAr : product.nameEn,
+                            quantity: catalogQuantity(product),
+                            unit: product.unit || "", specifications: "",
+                          }]);
+                      }}>
+                      <option value="">{label("اختر المنتج لإضافته…", "Choose a product to add…")}</option>
+                      {catalog.map(product => <option key={product.id} value={product.id}
+                        disabled={items.some(item => item.catalogProductId === product.id)}>
+                        {(isAr ? product.nameAr : product.nameEn)}{product.moq ? " — MOQ: " + product.moq : ""}
+                      </option>)}
+                    </select>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{label("يمكن تعديل كمية ومواصفات كل منتج بعد إضافته.", "Adjust quantities and specifications for each item after adding it.")}</p>
+                  </div>
+                )}
 
                 {items.length === 0 ? (
                   <div className="rounded-[1.7rem] border border-dashed border-primary/30 bg-card/70 px-6 py-14 text-center">
