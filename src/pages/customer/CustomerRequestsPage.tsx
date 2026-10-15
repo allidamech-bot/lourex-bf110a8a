@@ -1,3 +1,4 @@
+import { SmartRfqItems } from "@/features/smart-rfq/SmartRfqItems";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
@@ -781,6 +782,7 @@ export default function CustomerRequestsPage() {
           <div ref={detailsRef} tabIndex={-1} className="min-w-0 scroll-mt-24 outline-none">
             {selectedRow ? (
                 <BentoCard className="flex max-w-full flex-col gap-6">
+                  <SmartRfqItems requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <div className="min-w-0 max-w-full">
                       <div className="flex min-w-0 items-center gap-2">
@@ -817,7 +819,7 @@ export default function CustomerRequestsPage() {
                           </Button>
                       )}
 
-                      {canEditRequest(selectedRow.status) && (
+                      {canEditRequest(selectedRow.status) && !selectedRow.requestNumber?.startsWith("RFQ-") && (
                           <Button variant="outline" onClick={() => handleEditRequest(selectedRow)} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                             {t("requests.actions.edit")}
                           </Button>

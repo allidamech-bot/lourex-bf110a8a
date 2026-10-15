@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
 import CustomerRequestDetailProView from "@/features/customer/CustomerRequestDetailProView";
+import { SmartRfqItems } from "@/features/smart-rfq/SmartRfqItems";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -147,12 +148,15 @@ const CustomerRequestDetailProPage = () => {
       ) : null}
 
       {selectedRequest ? (
-        <CustomerRequestDetailProView
-          request={selectedRequest}
-          shipment={selectedShipment}
-          paymentSummary={selectedPaymentSummary}
-          locale={locale}
-        />
+        <>
+          <SmartRfqItems requestId={selectedRequest.id} requestNumber={selectedRequest.requestNumber} lang={lang} />
+          <CustomerRequestDetailProView
+            request={selectedRequest}
+            shipment={selectedShipment}
+            paymentSummary={selectedPaymentSummary}
+            locale={locale}
+          />
+        </>
       ) : (
         <EmptyState
           icon={AlertCircle}

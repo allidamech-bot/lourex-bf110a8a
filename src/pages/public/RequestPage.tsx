@@ -155,6 +155,10 @@ export default function RequestPage() {
               <div className="rounded-[2rem] border border-border/70 bg-card p-8 shadow-soft text-sm text-muted-foreground backdrop-blur-xl">
                 {t("common.loading") || "Loading..."}
               </div>
+            ) : editRequestId && editRequest?.requestNumber?.startsWith("RFQ-") ? (
+              <div className="rounded-[2rem] border border-amber-500/20 bg-card p-8 text-sm leading-7 text-muted-foreground">
+                {lang === "ar" ? "لا يمكن تعديل أصناف طلب عرض سعر متعدد من نموذج المنتج الواحد. يرجى التواصل مع فريق LOUREX من صفحة طلبك." : "Multi-product RFQ lines cannot be edited through the single-product form. Please contact the LOUREX team from your request."}
+              </div>
             ) : editRequestId && editRequestError ? (
               <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-sm text-red-400">
                 {editRequestError}

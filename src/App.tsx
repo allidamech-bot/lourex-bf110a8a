@@ -45,6 +45,7 @@ const ProductDetailPage = lazy(
   () => import("@/pages/public/ProductDetailPage"),
 );
 const RequestPage = lazy(() => import("@/pages/public/RequestPage"));
+const SmartRfqPage = lazy(() => import("@/pages/public/SmartRfqPage"));
 const TrackPage = lazy(() => import("@/pages/public/TrackPage"));
 const AboutPage = lazy(() => import("@/pages/public/AboutPage"));
 const AeoPage = lazy(() => import("@/pages/public/AeoPage"));
@@ -197,6 +198,7 @@ const App = () => (
                       path="/request"
                       element={<PageWithAI component={<RequestPage />} />}
                     />
+                    <Route path="/smart-rfq" element={<PageWithAI component={<SmartRfqPage />} />} />
                     <Route
                       path="/track"
                       element={<PageWithAI component={<TrackPage />} />}
@@ -529,6 +531,7 @@ const App = () => (
                     element={<ProductDetailPage />}
                   />
                   <Route path="/request" element={<RequestPage />} />
+                  <Route path="/smart-rfq" element={<SmartRfqPage />} />
                   <Route path="/track" element={<TrackPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/about-lourex" element={<AeoPage kind="about" />} />

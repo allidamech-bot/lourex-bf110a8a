@@ -60,6 +60,9 @@ jobs:
             node scripts/site-visual-qa.mjs
             node scripts/workspace-visual-qa.mjs
           fi
+          if [ "${{ github.head_ref }}" = "feat/smart-rfq-multi-item" ]; then
+            node scripts/smart-rfq-visual-qa.mjs
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -69,6 +72,7 @@ jobs:
             polish-qa/
             mobile-shell-qa/
             products-qa/
+            smart-rfq-qa/
             site-qa/
             workspace-qa/
             interior-qa/

@@ -79,6 +79,8 @@
 .lrx-catalog-product-body dl > div { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; padding-block: 4px; font-size: 11px; line-height: 1.8; }
 .lrx-catalog-product-body dt { color: #928573; }.lrx-catalog-product-body dd { color: #d2c6b4; text-align: end; overflow-wrap: anywhere; }
 .lrx-catalog-product-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding-block-start: 25px; margin-block-start: auto; }
+.lrx-catalog-product-actions > a:nth-child(3) { grid-column: 1 / -1; color: #d6b47e; border-color: rgba(214,180,126,.4); border-radius: 10px; background: linear-gradient(115deg,rgba(196,52,44,.08),rgba(39,78,152,.1)); transition: background .18s ease, border-color .18s ease; }
+.lrx-catalog-product-actions > a:nth-child(3):hover { background: rgba(214,180,126,.13); border-color: #d6b47e; }
 .lrx-catalog-product-actions .lrx-primary { font-size: 11px; min-height: 48px; padding: 12px; gap: 10px; text-align: center; }
 .lrx-catalog-details { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 16px; border: 1px solid #5a4931; font-size: 11px; color: #d6c6ac; text-align: center; }
 .lrx-catalog-state { min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 40px; text-align: center; border: 1px solid #332c23; background: linear-gradient(145deg, #1a1611, #111); color: #cfa66a; }
