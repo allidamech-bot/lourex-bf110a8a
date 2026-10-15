@@ -63,6 +63,8 @@ DECLARE
   v_unit text;
   v_specs text;
   v_quantity integer;
+  v_moq_number text;
+  v_moq_remainder text;
   v_total bigint := 0;
   v_pos integer := 0;
   v_names text[] := ARRAY[]::text[];
@@ -168,8 +170,18 @@ BEGIN
       IF NOT FOUND THEN
         RAISE EXCEPTION 'Catalog product is no longer available at line %',v_pos;
       END IF;
-      v_name := coalesce(nullif(v_catalog.name_en,''),v_catalog.name_ar);
+      v_name := left(coalesce(nullif(v_catalog.name_en,''),v_catalog.name_ar),240);
       v_unit := v_catalog.unit;
+      -- Enforce only unambiguous numeric MOQ expressed in the catalog unit.
+      -- Mixed units, pallets/containers, and negotiated MOQ text remain advisory.
+      v_moq_number := substring(replace(btrim(v_catalog.moq),',','') from '^[0-9]{1,9}');
+      IF v_moq_number IS NOT NULL THEN
+        v_moq_remainder := lower(btrim(substr(replace(btrim(v_catalog.moq),',',''),length(v_moq_number)+1)));
+        IF (v_moq_remainder='' OR v_moq_remainder=lower(btrim(v_unit)))
+           AND v_quantity < v_moq_number::integer THEN
+          RAISE EXCEPTION 'Quantity is below the published minimum at line %',v_pos;
+        END IF;
+      END IF;
     ELSE
       v_name := btrim(coalesce(v_item->>'product_name',''));
       v_unit := btrim(coalesce(v_item->>'unit',''));
