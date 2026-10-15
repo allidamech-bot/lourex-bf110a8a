@@ -23,6 +23,7 @@ import {
   type ProductCatalogAdminInput,
 } from "@/features/products/services/productCatalogService";
 import type { ProductCatalogItem } from "@/features/products/types/productTypes";
+import { AIProductStudio } from "@/features/products/components/AIProductStudio";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
@@ -206,6 +207,7 @@ export default function ProductsManagementPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
+  const [studioResetKey, setStudioResetKey] = useState(0);
 
   const filteredProducts = useMemo(
     () => filterProductList({ products, query: search, statusFilter, featuredFilter, categoryId: "all" }),
@@ -258,6 +260,7 @@ export default function ProductsManagementPage() {
   const resetForm = () => {
     clearProductManagementDraft();
     setSelectedProductId(null);
+    setStudioResetKey(value => value + 1);
     setForm(emptyForm);
     setTagsAr("");
     setTagsEn("");
@@ -554,6 +557,18 @@ if (!canManage) {
                </Button>
             </div>
           </div>
+
+          <AIProductStudio
+            key={`${selectedProductId || "new"}-${studioResetKey}`}
+            form={form}
+            language={lang}
+            disabled={saving || uploading}
+            onApply={setForm}
+            onApplyTags={(arTags, enTags) => {
+              setTagsAr(toCsvTags(arTags));
+              setTagsEn(toCsvTags(enTags));
+            }}
+          />
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
