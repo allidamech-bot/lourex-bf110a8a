@@ -41,7 +41,7 @@ const cleanSuggestion = (raw: unknown) => {
   const source = asObject(raw);
   const fields: Record<string, string | string[]> = {};
   for (const name of FIELDS) fields[name] = truncate(source[name], name.startsWith("description") ? 1600 : name.startsWith("shortDescription") ? 250 : 140);
-  fields.categoryId = CATEGORIES.has(source.categoryId as string) ? source.categoryId as string : "food-fmcg";
+  fields.categoryId = CATEGORIES.has(source.categoryId as string) ? source.categoryId as string : "";
   for (const key of ["tagsAr", "tagsEn"] as const) {
     fields[key] = Array.isArray(source[key])
       ? source[key].filter(v => typeof v === "string").slice(0, 6).map(v => v.trim().slice(0, 60)).filter(Boolean)
