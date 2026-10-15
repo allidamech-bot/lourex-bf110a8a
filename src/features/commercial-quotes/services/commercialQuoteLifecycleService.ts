@@ -3,7 +3,7 @@ import { fetchCommercialQuoteDraft, type CommercialQuoteDraft } from "@/features
 
 export type QuoteStatus = "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
 export type CustomerQuotation = {
-  id: string; number: string; requestId: string; status: QuoteStatus;
+  id: string; number: string; requestId: string; versionNo: number; status: QuoteStatus;
   currency: string; approvedAt: string | null; issuedAt: string | null;
   respondedAt: string | null; responseNote: string;
   paymentTerms: string; deliveryTerms: string; incoterm: string; leadTime: string;
@@ -33,9 +33,12 @@ export const updateQuotationState = async (
   return fresh;
 };
 
-export const fetchCustomerQuotation = async (requestId: string): Promise<CustomerQuotation | null> => {
+export const fetchCustomerQuotation = async (requestId: string, versionId?: string): Promise<CustomerQuotation | null> => {
   if (!UUID.test(requestId)) return null;
-  const { data, error } = await rpc.rpc("get_customer_commercial_quote", { p_request_id: requestId });
+  if (versionId && !UUID.test(versionId)) return null;
+  const { data, error } = versionId
+    ? await rpc.rpc("get_customer_commercial_quote_version", { p_quote_id: versionId })
+    : await rpc.rpc("get_customer_commercial_quote", { p_request_id: requestId });
   if (error) throw new Error(error.message);
   if (!data) return null;
   if (typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid quotation received");
@@ -46,6 +49,7 @@ export const fetchCustomerQuotation = async (requestId: string): Promise<Custome
   }
   return {
     id: String(q.id), number: String(q.number || ""), requestId: String(q.requestId || ""),
+    versionNo: Number(q.versionNo || 1),
     status: q.status as QuoteStatus, currency: String(q.currency || "USD"),
     approvedAt: q.approvedAt ? String(q.approvedAt) : null,
     issuedAt: q.issuedAt ? String(q.issuedAt) : null,
@@ -63,6 +67,21 @@ export const fetchCustomerQuotation = async (requestId: string): Promise<Custome
       unitPrice: Number(i.unitPrice),
     })),
   };
+};
+
+export type CustomerQuoteVersion = {
+  id: string; number: string; versionNo: number; status: QuoteStatus; issuedAt: string | null;
+};
+export const fetchCustomerQuoteVersions = async (requestId: string): Promise<CustomerQuoteVersion[]> => {
+  if (!UUID.test(requestId)) return [];
+  const { data, error } = await rpc.rpc("get_customer_commercial_quote_versions", { p_request_id: requestId });
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) throw new Error("Quotation history could not be verified");
+  return (data as Record<string, unknown>[]).map(x => ({
+    id: String(x.id), number: String(x.number || ""), versionNo: Number(x.versionNo),
+    status: x.status as QuoteStatus, issuedAt: x.issuedAt ? String(x.issuedAt) : null,
+  })).filter(x => UUID.test(x.id) && Number.isInteger(x.versionNo) &&
+    x.versionNo > 0 && ["issued","accepted","changes_requested","declined"].includes(x.status));
 };
 
 export const respondToCustomerQuotation = async (
