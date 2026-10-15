@@ -43,7 +43,6 @@ import { revealActiveSection, setStableSearchParam } from "@/lib/activeNavigatio
 import type { PurchaseRequestStatus } from "@/types/lourex";
 import { SmartPurchaseRequestPanel } from "@/features/purchase-requests/components/SmartPurchaseRequestPanel";
 import { PageHelpBox } from "@/features/help-center/components/PageHelpBox";
-import { SectionHelpBox } from "@/components/readable/ReadableCards";
 import { OfficialOrderConversationBox } from "@/components/OfficialOrderConversationBox";
 import { OrderFollowupTimeline } from "@/components/OrderFollowupTimeline";
 import {
@@ -585,27 +584,38 @@ export default function CustomerRequestsPage() {
   }
 
   return (
-      <div className="space-y-4 pb-12">
-        <PageHelpBox pageKey="purchase_requests" role="customer" />
-        <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[minmax(22rem,0.85fr)_minmax(0,1.15fr)]">
+      <div className="min-w-0 space-y-5 overflow-x-clip pb-16 [overflow-wrap:anywhere]">
+        <details className="group rounded-2xl border border-amber-300/15 bg-stone-900/60 sm:hidden">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-amber-200 marker:text-amber-400">
+            {lang === "ar" ? "دليل استخدام طلباتي" : "How to use My Requests"}
+          </summary>
+          <div className="px-3 pb-3"><PageHelpBox pageKey="purchase_requests" role="customer" /></div>
+        </details>
+        <div className="hidden sm:block"><PageHelpBox pageKey="purchase_requests" role="customer" /></div>
+        <div className="grid w-full max-w-full min-w-0 items-start gap-5 xl:grid-cols-[minmax(20rem,0.85fr)_minmax(0,1.15fr)]">
           <div id="requests" ref={listRef} className="w-full max-w-full min-w-0 scroll-mt-24">
-          <BentoCard className="flex max-w-full flex-col gap-4 overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <BentoCard className="flex min-w-0 max-w-full flex-col gap-5 overflow-hidden rounded-[1.6rem] border border-amber-300/15 bg-stone-950/90 p-4 shadow-xl shadow-black/20 sm:p-6">
+            <div className="flex min-w-0 flex-col gap-4 border-b border-amber-200/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 max-w-full">
-                <p className="whitespace-normal text-[10px] font-semibold text-stone-500 sm:text-xs">
-                  {t("customerPortal.eyebrow")}
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-400 sm:text-xs">
+                  LOUREX / {lang === "ar" ? "بوابة العميل" : "CUSTOMER PORTAL"}
                 </p>
-                <h1 className="mt-1 sm:mt-2 font-serif text-xl sm:text-2xl font-semibold text-stone-100">{t("customerPortal.title")}</h1>
+                <h1 className="mt-2 break-words text-2xl font-bold leading-tight tracking-tight text-stone-50 sm:text-3xl">
+                  {lang === "ar" ? "طلباتي وعروض الأسعار" : "My requests & quotations"}
+                </h1>
+                <p className="mt-2 max-w-md text-sm leading-6 text-stone-400">
+                  {lang === "ar" ? "تابع طلباتك واختر أي طلب للاطلاع على تفاصيله وعرض السعر عند صدوره." : "Track each request, review details and view issued quotations."}
+                </p>
               </div>
 
-              <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
-                <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing} className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
-                  <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin text-amber-500" : "text-amber-500"}`} />
+              <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] gap-2 sm:flex sm:w-auto sm:shrink-0">
+                <Button variant="outline" size="sm" onClick={() => void loadRows("refresh")} disabled={refreshing} aria-label={lang === "ar" ? "تحديث الطلبات" : "Refresh requests"} title={lang === "ar" ? "تحديث الطلبات" : "Refresh requests"} className="h-11 w-11 shrink-0 border-amber-200/20 bg-stone-800/70 p-0 text-amber-200 hover:bg-stone-800">
+                  <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 </Button>
-                <Button asChild size="sm" className="min-w-0 flex-1 sm:flex-none bg-gradient-to-r from-amber-100 via-amber-300 to-amber-700 font-bold text-stone-950 shadow-2xl hover:brightness-110">
+                <Button asChild size="sm" className="h-11 min-w-0 rounded-xl bg-amber-400 px-5 font-bold text-stone-950 shadow-md shadow-amber-500/10 hover:bg-amber-300">
                   <Link to="/request">
-                    <Plus className="me-2 h-4 w-4" />
-                    {t("requests.new")}
+                    <Plus className="me-2 h-4 w-4 shrink-0" />
+                    {lang === "ar" ? "إنشاء طلب جديد" : "Create new request"}
                   </Link>
                 </Button>
               </div>
@@ -618,32 +628,29 @@ export default function CustomerRequestsPage() {
                 </div>
             ) : null}
 
-            <div className="grid shrink-0 grid-cols-1 gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4" aria-label={lang === "ar" ? "ملخص الطلبات" : "Request summary"}>
               {[
-                { label: t("requests.total"), value: requestMetrics.total },
-                { label: t("requests.submitted"), value: requestMetrics.submitted },
-                { label: t("requests.review"), value: requestMetrics.review },
-                { label: t("requests.converted"), value: requestMetrics.converted },
+                { label: lang === "ar" ? "جميع الطلبات" : "All requests", value: requestMetrics.total },
+                { label: lang === "ar" ? "تم الإرسال" : "Submitted", value: requestMetrics.submitted },
+                { label: lang === "ar" ? "قيد المراجعة" : "In review", value: requestMetrics.review },
+                { label: lang === "ar" ? "قيد التنفيذ" : "In progress", value: requestMetrics.converted },
               ].map((item) => (
-                  <div key={item.label} className="min-w-0 rounded-2xl bg-stone-900/50 border border-amber-200/10 p-3 text-center">
-                    <p className="text-lg sm:text-xl font-bold text-stone-100">{item.value}</p>
-                    <p className="mt-1 whitespace-normal text-[11px] leading-tight text-stone-500 sm:text-[10px]">{item.label}</p>
-                  </div>
+                <div key={item.label} className="min-w-0 rounded-2xl border border-amber-200/10 bg-gradient-to-br from-stone-800/85 to-stone-900/70 px-3 py-4 text-start sm:px-4">
+                  <p className="text-2xl font-bold tabular-nums leading-none text-amber-100 sm:text-3xl">{item.value.toLocaleString(lang === "ar" ? "ar" : "en")}</p>
+                  <p className="mt-2 text-xs font-medium leading-5 text-stone-300">{item.label}</p>
+                </div>
               ))}
             </div>
-            <SectionHelpBox
-              title={lang === "ar" ? "كيف أقرأ طلباتي؟" : "How do I read my requests?"}
-              body={
-                lang === "ar"
-                  ? "هذه البطاقات تعرض عدد الطلبات وحالتها حتى تعرف ما يحتاج متابعة أو توضيح أو إثبات دفع."
-                  : "These cards show request counts and status so you know what needs follow-up, clarification, or payment proof."
-              }
-              example={
-                lang === "ar"
-                  ? "إذا ظهر طلب بانتظار توضيح، افتح التفاصيل وأرسل الرد المطلوب قبل إنشاء طلب جديد مشابه."
-                  : "If a request is awaiting clarification, open its details and send the needed reply before creating a similar new request."
-              }
-            />
+            <details className="rounded-xl border border-amber-200/10 bg-amber-500/5">
+              <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-amber-200">
+                {lang === "ar" ? "كيف أتابع حالة طلباتي؟" : "How do I track my requests?"}
+              </summary>
+              <p className="px-4 pb-4 text-sm leading-6 text-stone-300">
+                {lang === "ar"
+                  ? "اختر بطاقة الطلب لعرض الأصناف والمرفقات والحالة الحالية، ثم تابع أي توضيح أو عرض سعر يصدر من فريق LOUREX."
+                  : "Select a request card to review its items, documents and status, then follow up on any clarification or quotation."}
+              </p>
+            </details>
 
             <div className="shrink-0 space-y-3">
               <div className="relative">
@@ -651,8 +658,8 @@ export default function CustomerRequestsPage() {
                 <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder={t("requests.searchPlaceholder")}
-                    className="ps-9 bg-stone-900/70 border-amber-200/10 text-stone-100 focus:ring-amber-500/20"
+                    placeholder={lang === "ar" ? "ابحث برقم الطلب أو اسم المنتج..." : "Search by request number or product..."}
+                    className="h-11 rounded-xl border-amber-200/15 bg-stone-900/80 ps-10 text-sm text-stone-100 placeholder:text-stone-500 focus-visible:ring-amber-400/40"
                 />
               </div>
 
@@ -663,7 +670,7 @@ export default function CustomerRequestsPage() {
                         variant={activeFilter === filter.key ? "default" : "outline"}
                         size="sm"
                         onClick={() => setActiveFilter(filter.key)}
-                        className={`shrink-0 whitespace-nowrap ${
+                        className={`min-h-10 shrink-0 rounded-full px-4 text-xs font-semibold whitespace-nowrap ${
                           activeFilter === filter.key
                           ? "bg-amber-500/10 text-amber-200 border-amber-500/30 hover:bg-amber-500/20"
                           : "border-amber-200/15 bg-stone-50/5 text-stone-400 hover:bg-stone-50/10 hover:text-stone-100"
@@ -675,7 +682,7 @@ export default function CustomerRequestsPage() {
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-3 pe-1">
+            <div className="min-w-0 flex-1 space-y-3">
               {!loading && rows.length > 0 && requestPatterns.length > 0 && (
                 <div className="mb-4">
                   <CustomerSuccessInsights insights={requestPatterns} />
@@ -710,28 +717,28 @@ export default function CustomerRequestsPage() {
                                 setSelectedRequest(row.id);
                               }
                             }}
-                            className={`w-full max-w-full min-w-0 rounded-[1.4rem] border px-3 py-4 text-start transition-colors sm:px-4 ${
+                            className={`group w-full max-w-full min-w-0 cursor-pointer rounded-2xl border p-4 text-start shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 sm:p-5 ${
                                 isSelected
-                                    ? "border-amber-500/35 bg-amber-500/10"
-                                    : "border-amber-200/10 bg-stone-900/50 hover:border-amber-500/25"
+                                    ? "border-amber-400/60 bg-gradient-to-br from-amber-500/15 to-stone-900 shadow-lg shadow-amber-500/5"
+                                    : "border-white/10 bg-stone-900/70 hover:border-amber-500/35 hover:bg-stone-800/70"
                             }`}
                         >
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="whitespace-nowrap text-xs font-semibold text-stone-500">
+                              <p className="break-all text-xs font-bold tracking-wide text-amber-300/90">
                                 {row.requestNumber}
                               </p>
-                              <p className="mt-2 font-medium text-stone-100 sm:truncate">
+                              <p className="mt-2 break-words text-base font-semibold leading-6 text-stone-100">
                                 {row.productName || t("requests.genericRequest")}
                               </p>
                             </div>
 
-                            <span className={`max-w-full self-start truncate rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.tone.replace('bg-secondary', 'bg-stone-800')}`}>
+                            <span className={`max-w-full self-start break-words rounded-full border border-amber-200/10 px-3 py-1.5 text-xs font-semibold ${statusMeta.tone.replace('bg-secondary', 'bg-stone-800')}`}>
                           {t(`statuses.${row.status}`)}
                         </span>
                           </div>
 
-                          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-stone-500">
                               <div className="flex items-center gap-1.5">
                                 <CalendarDays className="h-3.5 w-3.5" />
@@ -748,7 +755,7 @@ export default function CustomerRequestsPage() {
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 rounded-full hover:bg-amber-500/10 hover:text-amber-200"
+                                  className="h-11 w-11 rounded-xl text-amber-200 hover:bg-amber-500/10" aria-label={lang === "ar" ? "تعديل الطلب" : "Edit request"} title={lang === "ar" ? "تعديل الطلب" : "Edit request"}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleEditRequest(row);
@@ -760,7 +767,7 @@ export default function CustomerRequestsPage() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 rounded-full text-red-400 hover:bg-red-500/10"
+                                className="h-11 w-11 rounded-xl text-red-300 hover:bg-red-500/10"
                                 aria-label={removeActionLabel}
                                 title={removeActionLabel}
                                 onClick={(e) => {
@@ -782,9 +789,7 @@ export default function CustomerRequestsPage() {
 
           <div ref={detailsRef} tabIndex={-1} className="min-w-0 scroll-mt-24 outline-none">
             {selectedRow ? (
-                <BentoCard className="flex max-w-full flex-col gap-6">
-                  <SmartRfqItems requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
-                  <CustomerCommercialQuotationPanel requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
+                <BentoCard className="flex min-w-0 max-w-full flex-col gap-5 overflow-hidden rounded-[1.6rem] border border-amber-300/15 bg-stone-950/90 p-4 shadow-xl shadow-black/20 sm:gap-6 sm:p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <div className="min-w-0 max-w-full">
                       <div className="flex min-w-0 items-center gap-2">
@@ -798,7 +803,7 @@ export default function CustomerRequestsPage() {
                       </h2>
                     </div>
 
-                    <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+                    <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:shrink-0">
                       <Button asChild variant="outline" className="border-amber-200/15 bg-stone-50/5 text-stone-100 hover:bg-stone-50/10">
                         <Link to={`/customer-portal/request-detail?request=${selectedRow.id}`}>
                           <Eye className="me-2 h-4 w-4 text-amber-500" />
@@ -859,6 +864,9 @@ export default function CustomerRequestsPage() {
                         <p className="mt-2 break-words text-sm text-stone-400">{selectedStatusCopy.description}</p>
                       </div>
                   )}
+
+                  <SmartRfqItems requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
+                  <CustomerCommercialQuotationPanel requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
 
                   <SmartPurchaseRequestPanel
                     request={selectedRow}
