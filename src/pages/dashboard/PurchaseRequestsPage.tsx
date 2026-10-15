@@ -1194,7 +1194,7 @@ export default function PurchaseRequestsPage() {
                         {selectedRow ? (
                             <div className="space-y-12">
                                 <BentoCard className="p-8 border-primary/20 bg-card">
-                                    <SmartRfqItems requestId={selectedRow.id} lang={lang === "ar" ? "ar" : "en"} />
+                                    <SmartRfqItems requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
                                         <div>
                                             <p className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{selectedRow.requestNumber}</p>
