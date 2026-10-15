@@ -601,7 +601,7 @@ const CustomerPortal = () => {
                               ) : null}
                             </div>
 
-                            <div className="min-w-0 shrink-0 text-start sm:text-end">
+                            <div className="min-w-0 w-full text-start sm:w-auto sm:shrink-0 sm:text-end">
                         <span className="inline-flex max-w-full break-words rounded-md bg-stone-800 px-2 py-1 text-[10px] uppercase text-stone-400">
                           {statusCopy?.label || request.statusLabel || request.status}
                         </span>
@@ -611,8 +611,8 @@ const CustomerPortal = () => {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-4 border-t border-amber-200/5 pt-3">
-                            <Button variant="link" className="h-auto p-0 text-xs font-bold text-amber-500 hover:text-amber-400" asChild>
+                          <div className="mt-4 flex flex-col gap-3 border-t border-amber-200/10 pt-4 sm:flex-row sm:flex-wrap sm:gap-4">
+                            <Button variant="link" className="h-auto min-h-11 justify-start p-0 text-sm font-bold text-amber-400 hover:text-amber-300" asChild>
                               <Link to={`/customer-portal/request-detail?request=${request.id}`}>
                                 {lang === "ar" ? "العرض الاحترافي" : "Pro View"}
                               </Link>
