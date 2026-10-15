@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FileText, Loader2, LockKeyhole, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommercialQuotePricingEditor } from "@/features/commercial-quotes/components/CommercialQuotePricingEditor";
+import { CommercialQuoteActions } from "@/features/commercial-quotes/components/CommercialQuoteActions";
 import {
   createCommercialQuoteDraft,
   fetchCommercialQuoteDraft,
@@ -9,9 +10,9 @@ import {
   type CommercialQuoteDraft,
 } from "@/features/commercial-quotes/services/commercialQuoteDraftService";
 
-type Props = { requestId: string; requestNumber: string; lang: "ar" | "en"; canManage: boolean };
+type Props = { requestId: string; requestNumber: string; lang: "ar" | "en"; canManage: boolean; canApprove: boolean };
 
-export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canManage }: Props) {
+export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canManage, canApprove }: Props) {
   const ar = lang === "ar";
   const [state, setState] = useState<{
     requestId: string;
@@ -97,7 +98,7 @@ export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canM
               <p className="mt-1 text-xs text-muted-foreground">{ar ? "مرتبط بطلب" : "Source request"} {requestNumber} · {view.draft.currency}</p>
             </div>
             <span className="rounded-full border border-amber-600/30 bg-amber-600/10 px-3 py-1 text-xs text-amber-400">
-              {ar ? "مسودة" : "Draft"}
+              {view.draft.status}
             </span>
           </div>
           <div className="space-y-2">
@@ -112,13 +113,19 @@ export function CommercialQuoteDraftPanel({ requestId, requestNumber, lang, canM
               </div>
             ))}
           </div>
-          <CommercialQuotePricingEditor
+          {view.draft.status === "draft" && <CommercialQuotePricingEditor
             key={view.draft.id}
             quote={view.draft}
             lang={lang}
             onSaved={draft => setState({ requestId, draft, loading: false, error: "" })}
+          />}
+          <CommercialQuoteActions
+            quote={view.draft}
+            lang={lang}
+            canApprove={canApprove}
+            onUpdate={draft => setState({ requestId, draft, loading: false, error: "" })}
           />
-          <p className="text-xs text-muted-foreground">{ar ? "هذه الأسعار للاستخدام الداخلي فقط. الاعتماد والإرسال وإصدار PDF خطوات لاحقة." : "Internal pricing only. Approval, customer delivery and PDF are not yet enabled."}</p>
+          <p className="text-xs text-muted-foreground">{ar ? "لا يتم إرسال العرض بالبريد إلا بعد اعتماده وإصداره للعميل." : "Email notification is enabled only after owner approval and issuance."}</p>
         </div>
       ) : (
         <div className="mt-5">
