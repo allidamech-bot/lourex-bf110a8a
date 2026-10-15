@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.purchase_request_items (
 );
 -- Idempotency protects customers against duplicate commercial requests after network retries.
 ALTER TABLE public.purchase_requests ADD COLUMN IF NOT EXISTS smart_rfq_submission_id uuid;
+ALTER TABLE public.purchase_requests ADD COLUMN IF NOT EXISTS smart_rfq_payload_fingerprint text;
 CREATE UNIQUE INDEX IF NOT EXISTS purchase_requests_smart_rfq_submission_uidx
 ON public.purchase_requests(smart_rfq_submission_id) WHERE smart_rfq_submission_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS purchase_request_items_request_idx ON public.purchase_request_items(request_id);
@@ -55,6 +56,7 @@ DECLARE
   v_customer_id uuid;
   v_customer record;
   v_existing record;
+  v_payload_fingerprint text;
   v_items_count integer;
   v_item jsonb;
   v_catalog record;
@@ -103,10 +105,21 @@ BEGIN
       OR length(coalesce(p_delivery_address,'')) > 500 THEN
     RAISE EXCEPTION 'Request notes exceed allowed length';
   END IF;
+  -- Fingerprint the submitted commercial terms. Network replays of the same
+  -- basket return the original receipt; changed terms must never silently
+  -- receive a confirmation for different, previously submitted products.
+  v_payload_fingerprint := md5(jsonb_build_object(
+    'items', p_items,
+    'destination', btrim(p_destination),
+    'shipping_method', btrim(coalesce(p_shipping_method,'')),
+    'delivery_notes', btrim(coalesce(p_delivery_notes,'')),
+    'delivery_address', btrim(coalesce(p_delivery_address,''))
+  )::text);
+
   -- A stable, unguessable client UUID makes network retries idempotent.
   IF p_client_submission_id IS NOT NULL THEN
     PERFORM pg_advisory_xact_lock(hashtextextended(p_client_submission_id::text,0));
-    SELECT pr.id,pr.request_number,pr.tracking_code,c.auth_user_id
+    SELECT pr.id,pr.request_number,pr.tracking_code,pr.smart_rfq_payload_fingerprint,c.auth_user_id
       INTO v_existing
       FROM public.purchase_requests pr
       LEFT JOIN public.lourex_customers c ON c.id=pr.customer_id
@@ -114,6 +127,9 @@ BEGIN
     IF FOUND THEN
       IF v_existing.auth_user_id IS DISTINCT FROM v_user THEN
         RAISE EXCEPTION 'Submission receipt is not owned by this account' USING ERRCODE='42501';
+      END IF;
+      IF v_existing.smart_rfq_payload_fingerprint IS DISTINCT FROM v_payload_fingerprint THEN
+        RAISE EXCEPTION 'RFQ_SUBMISSION_CHANGED: previous request data differs from current basket' USING ERRCODE='22023';
       END IF;
       RETURN QUERY SELECT v_existing.id,v_existing.request_number,v_existing.tracking_code;
       RETURN;
@@ -217,7 +233,7 @@ BEGIN
     id,request_number,customer_id,status,full_name,phone,email,country,city,
     product_name,product_description,quantity,technical_specs,destination,
     preferred_shipping_method,delivery_notes,delivery_address,image_urls,
-    tracking_code,is_full_sourcing,smart_rfq_submission_id
+    tracking_code,is_full_sourcing,smart_rfq_submission_id,smart_rfq_payload_fingerprint
   ) VALUES (
     v_request_id,v_request_number,v_customer_id,'intake_submitted',
     v_customer.full_name,v_customer.phone,v_customer.email,v_customer.country,coalesce(v_customer.city,''),
@@ -226,7 +242,7 @@ BEGIN
     v_total::integer,left(array_to_string(v_lines,E'\n'),8000),v_destination,
     btrim(coalesce(p_shipping_method,'')),btrim(coalesce(p_delivery_notes,'')),
     btrim(coalesce(p_delivery_address,'')),ARRAY[]::text[],
-    v_tracking_code,true,p_client_submission_id
+    v_tracking_code,true,p_client_submission_id,v_payload_fingerprint
   );
   v_pos := 0;
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
