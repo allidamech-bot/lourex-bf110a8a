@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { LooseDomainClient } from "@/lib/operationsDomain";
+const db = supabase as unknown as LooseDomainClient;
 type Event = { id: string; action: string; note: string; created_at: string };
 export function CommercialQuoteEventHistory({ quoteId, status, lang }: {
   quoteId: string; status: string; lang: "ar" | "en";
@@ -13,7 +15,7 @@ export function CommercialQuoteEventHistory({ quoteId, status, lang }: {
     setEntries([]);setError("");
     if(status==="draft")return;
     void (async ()=>{
-      const { data, error }=await supabase.from("commercial_quote_events")
+      const { data, error }=await db.from<Event>("commercial_quote_events")
         .select("id,action,note,created_at").eq("quote_id",quoteId).order("created_at",{ascending:false});
       if(!active)return;
       if(error)setError(ar?"تعذر تحميل سجل الإجراءات.":"Unable to load quotation history.");
