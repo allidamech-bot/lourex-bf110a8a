@@ -21,4 +21,4 @@ jobs:
         with:
           deno-version: v2.x
       - name: Typecheck pinned PDF dependencies
-        run: deno check supabase/functions/commercial-quote-pdf/index.ts
+        run: deno check --node-modules-dir=auto supabase/functions/commercial-quote-pdf/index.ts
