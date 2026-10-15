@@ -79,6 +79,7 @@ INSERT INTO public.product_catalog_products VALUES
  ('00000000-0000-4000-8000-000000000022','draft','غير منشور','Not published','draft-item','cartons','10','12 x 1L','Turkey','');
 
 \ir ../migrations/20261015060000_smart_rfq_atomic_multi_item.sql
+\ir ../migrations/20261015070000_smart_rfq_custom_item_record_fix.sql
 
 GRANT SELECT ON public.purchase_requests TO authenticated;
 GRANT SELECT ON public.lourex_customers TO authenticated;
@@ -103,6 +104,8 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001'
 DO $check$
 DECLARE v_id uuid;
   v_retry_id uuid;
+  v_custom_only_id uuid;
+  v_custom_first_id uuid;
   v_num text;
   v_track text;
 BEGIN
@@ -204,6 +207,46 @@ BEGIN
   IF (SELECT count(*) FROM public.purchase_requests)<>1 THEN
     RAISE EXCEPTION 'Rejected request left an orphan parent';
   END IF;
+
+  -- Regression: custom-only request used to raise "record v_catalog is not assigned yet"
+  -- before any catalog row was read. Custom fields must persist as given.
+  SELECT request_id INTO v_custom_only_id FROM public.submit_smart_rfq(
+    '[{"catalog_product_id":null,"product_name":"Custom machinery part","quantity":7,"unit":"pieces","specifications":"Sample only"}]'::jsonb,
+    'Istanbul', 'air', 'Custom parts quote', 'Istanbul address',
+    '00000000-0000-4000-8000-000000000056'::uuid
+  );
+  IF v_custom_only_id IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.purchase_request_items
+    WHERE request_id=v_custom_only_id AND line_number=1
+      AND catalog_product_id IS NULL AND product_name='Custom machinery part'
+      AND quantity=7 AND unit='pieces' AND specifications='Sample only'
+      AND product_slug='' AND moq_snapshot='' AND origin_snapshot=''
+  ) THEN
+    RAISE EXCEPTION 'Custom-only RFQ failed to persist canonical custom line';
+  END IF;
+
+  -- Regression: first item custom, later item published catalog.
+  SELECT request_id INTO v_custom_first_id FROM public.submit_smart_rfq(
+    '[{"catalog_product_id":null,"product_name":"Custom packaging","quantity":25,"unit":"boxes"},{"catalog_product_id":"00000000-0000-4000-8000-000000000021","quantity":100}]'::jsonb,
+    'Jeddah', 'sea', '', '',
+    '00000000-0000-4000-8000-000000000057'::uuid
+  );
+  IF v_custom_first_id IS NULL OR
+     (SELECT count(*) FROM public.purchase_request_items WHERE request_id=v_custom_first_id)<>2 OR
+     NOT EXISTS (
+       SELECT 1 FROM public.purchase_request_items
+       WHERE request_id=v_custom_first_id AND line_number=1
+         AND product_name='Custom packaging' AND catalog_product_id IS NULL
+         AND moq_snapshot='' AND packaging_snapshot=''
+     ) OR
+     NOT EXISTS (
+       SELECT 1 FROM public.purchase_request_items
+       WHERE request_id=v_custom_first_id AND line_number=2
+         AND product_name='Sunflower oil' AND moq_snapshot='100 cartons'
+     )
+  THEN
+    RAISE EXCEPTION 'Custom-first RFQ did not persist accurate snapshots';
+  END IF;
 END $check$;
 
 -- Another authenticated customer cannot inspect line items from the first.
@@ -234,9 +277,9 @@ RESET ROLE;
 
 DO $check$
 BEGIN
- IF (SELECT count(*) FROM public.purchase_requests)<>1 OR
-    (SELECT count(*) FROM public.purchase_request_items)<>2 OR
-    (SELECT count(*) FROM public.notifications WHERE type='purchase_request_created')<>1 THEN
+ IF (SELECT count(*) FROM public.purchase_requests)<>3 OR
+    (SELECT count(*) FROM public.purchase_request_items)<>5 OR
+    (SELECT count(*) FROM public.notifications WHERE type='purchase_request_created')<>3 THEN
    RAISE EXCEPTION 'Negative cases modified committed request records';
  END IF;
 END $check$;
