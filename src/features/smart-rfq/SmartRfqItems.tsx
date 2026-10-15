@@ -4,20 +4,30 @@ import { PackageCheck } from "lucide-react";
 import { fetchSmartRfqItems, type SmartRfqStoredItem } from "@/features/smart-rfq/smartRfqService";
 
 /** Shows item snapshots attached to the canonical request; old one-line requests render normally. */
-export function SmartRfqItems({ requestId, lang }: { requestId: string; lang: "ar" | "en" }) {
-  const [items, setItems] = useState<SmartRfqStoredItem[]>([]);
-  const [loadError, setLoadError] = useState(false);
+export function SmartRfqItems({ requestId, requestNumber, lang }: { requestId: string; requestNumber?: string; lang: "ar" | "en" }) {
+  const [result, setResult] = useState<{ requestId: string; items: SmartRfqStoredItem[]; error: boolean } | null>(null);
+  const isSmartRfq = Boolean(requestNumber?.startsWith("RFQ-"));
   useEffect(() => {
-    let alive = true;
-    setItems([]);
-    setLoadError(false);
-    fetchSmartRfqItems(requestId)
-      .then(rows => { if (alive) setItems(rows); })
-      .catch(() => { if (alive) setLoadError(true); });
-    return () => { alive = false; };
-  }, [requestId]);
-  if (loadError || items.length === 0) return null;
+    let active = true;
+    setResult(null);
+    if (isSmartRfq) {
+      fetchSmartRfqItems(requestId)
+        .then(items => { if (active) setResult({ requestId, items, error: false }); })
+        .catch(() => { if (active) setResult({ requestId, items: [], error: true }); });
+    }
+    return () => { active = false; };
+  }, [requestId, isSmartRfq]);
+  if (!isSmartRfq) return null;
   const ar = lang === "ar";
+  if (!result || result.requestId !== requestId) {
+    return <p className="rounded-xl border border-border/60 bg-card/80 p-4 text-sm text-muted-foreground">{ar ? "جارٍ تحميل أصناف الطلب…" : "Loading quotation items…"}</p>;
+  }
+  if (result.error || result.items.length === 0) {
+    return <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+      {ar ? "تعذّر تحميل أصناف طلب عرض السعر. الطلب محفوظ، لكن يجب مراجعة تفاصيله مع فريق LOUREX." : "Unable to display RFQ line items. The request is saved; verify its details with LOUREX."}
+    </p>;
+  }
+  const items = result.items;
   return (
     <section className="min-w-0 rounded-[1.4rem] border border-amber-600/25 bg-card/75 p-4 sm:p-6" aria-label={ar ? "بنود طلب عرض السعر" : "Quotation request lines"}>
       <header className="mb-5 flex items-center gap-3">
