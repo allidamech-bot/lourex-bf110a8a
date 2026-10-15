@@ -36,6 +36,7 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
         { to: "/", label: t("nav.home") },
         { to: "/products", label: lang === "ar" ? "المنتجات" : "Products" },
         { to: "/request", label: t("nav.purchaseRequest") },
+        { to: "/smart-rfq", label: lang === "ar" ? "طلب عرض سعر ذكي" : "Smart RFQ" },
         {
           to: usesDashboardWorkspace
               ? "/dashboard/requests"
@@ -171,7 +172,7 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
                 </NavLink>
             ) : null}
 
-            {publicLinks.filter((_, index) => [0, 1, 2, 4, 6].includes(index)).map((link) => (
+            {publicLinks.filter((_, index) => [0, 1, 2, 3, 5, 7].includes(index)).map((link) => (
                 <NavLink
                     key={`${link.to}-${link.label}`}
                     to={link.to}
@@ -192,7 +193,7 @@ export const SiteHeader = ({ overlayOnHome = false }: { overlayOnHome?: boolean 
                 <ChevronRight className={`h-3.5 w-3.5 transition-transform group-open:rotate-90 ${isRtl ? "rotate-180" : ""}`} aria-hidden="true" />
               </summary>
               <div className="absolute end-0 top-[calc(100%+0.5rem)] z-50 min-w-[205px] rounded-2xl border border-border/80 bg-popover p-2 shadow-[0_20px_55px_-30px_rgba(0,0,0,0.4)]">
-                {publicLinks.filter((_, index) => [3, 5].includes(index)).map((link) => (
+                {publicLinks.filter((_, index) => [4, 6].includes(index)).map((link) => (
                   <NavLink
                     key={link.to}
                     to={link.to}
