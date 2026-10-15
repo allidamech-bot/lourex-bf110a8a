@@ -13,6 +13,7 @@ export function CommercialQuoteActions({ quote, lang, canApprove, onUpdate }: {
   const [busy,setBusy]=useState<""|"approve"|"issue"|"email">("");
   const [error,setError]=useState("");
   const [emailSent,setEmailSent]=useState(false);
+  const [emailWarning,setEmailWarning]=useState(false);
   const next=async (action:"approve"|"issue"|"email")=>{
     if(busy)return;
     const prompt=action==="approve"
@@ -21,10 +22,28 @@ export function CommercialQuoteActions({ quote, lang, canApprove, onUpdate }: {
         ? (ar?"سيصبح العرض مرئيًا للعميل ولن يمكن تعديله. هل تريد إصداره؟":"This will publish the quotation to the customer and lock pricing. Continue?")
         : "";
     if(prompt&&!window.confirm(prompt))return;
-    setBusy(action);setError("");
+    setBusy(action);setError("");setEmailWarning(false);
     try{
-      if(action==="email"){await emailIssuedCommercialQuote(quote);setEmailSent(true);}
-      else{const updated=await updateQuotationState(quote,action);onUpdate(updated);}
+      if(action==="email"){
+        await emailIssuedCommercialQuote(quote);
+        setEmailSent(true);
+      }else{
+        const updated=await updateQuotationState(quote,action);
+        // The database commit and customer visibility are authoritative.
+        // A failed email must never cause a duplicate issuance or rollback.
+        onUpdate(updated);
+        if(action==="issue"){
+          try{
+            await emailIssuedCommercialQuote(updated);
+            setEmailSent(true);
+          }catch(e){
+            setEmailWarning(true);
+            setError(ar
+              ? "تم إصدار العرض وظهر في حساب العميل، لكن لم يتم تأكيد البريد الإلكتروني. يمكنك إعادة إرسال الإشعار باستخدام الزر أدناه."
+              : "The quotation was issued and is available in the customer account, but email delivery was not confirmed. Use the email button below to retry.");
+          }
+        }
+      }
     }catch(e){setError(e instanceof Error?e.message:String(e));}
     finally{setBusy("");}
   };
@@ -63,6 +82,9 @@ export function CommercialQuoteActions({ quote, lang, canApprove, onUpdate }: {
         {hasDocument&&<p className="flex items-center gap-1 text-xs text-muted-foreground"><FileText className="h-4 w-4"/>
           {ar?"المستند متاح للعرض والطباعة PDF":"Ready for PDF print/save"}</p>}
       </div>
+      {emailWarning&&<p role="status" className="text-sm text-amber-400">
+        {ar?"تم إصدار العرض داخل حساب العميل. إشعار البريد يحتاج إعادة المحاولة.":"Quotation issued to the customer account. The email notification may need to be retried."}
+      </p>}
       {emailSent&&<p role="status" className="text-sm text-primary">
         {ar?"أكد مزود البريد استلام طلب الإرسال. يبقى وصول الرسالة لصندوق العميل غير مضمون.":"Email provider accepted the send request. Inbox delivery is not guaranteed."}
       </p>}
