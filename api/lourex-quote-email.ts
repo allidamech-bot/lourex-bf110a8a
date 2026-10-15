@@ -92,7 +92,20 @@ export default async function handler(req: Request, res: Response) {
       }),
       signal:AbortSignal.timeout(16000),
     });
-    if(!resp.ok){console.error("quotation email provider status",resp.status);return res.status(502).json({error:"Quotation is visible in customer account but email delivery was not confirmed"});}
+    if(!resp.ok){
+      // Do not log Resend's response body: it could contain customer details or provider metadata.
+      console.error("quotation email provider status",resp.status);
+      if(resp.status===401||resp.status===403){
+        return res.status(503).json({
+          error:"The email provider rejected the configured sending credentials. Contact the LOUREX administrator to check the Resend API key and verified sender; the quotation remains issued.",
+          code:"EMAIL_PROVIDER_AUTH_FAILED",
+        });
+      }
+      return res.status(502).json({
+        error:"Quotation remains visible in the customer account, but the email provider did not accept the send request.",
+        code:"EMAIL_PROVIDER_REJECTED",
+      });
+    }
     const accepted=await resp.json() as {id?:unknown};
     if(!accepted.id)return res.status(502).json({error:"Email service did not confirm receipt"});
     return res.status(200).json({sent:true});
