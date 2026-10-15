@@ -17,6 +17,7 @@ vi.mock("@/features/commercial-quotes/components/CommercialQuotationDocument", (
 const mockQuote: CommercialQuoteDraft = {
   id: "00000000-0000-4000-8000-000000000101",
   number: "LQ-2026-TEST",
+  versionNo: 1,
   requestId: "00000000-0000-4000-8000-000000000301",
   customerId: "00000000-0000-4000-8000-000000000201",
   createdAt: "2026-10-15", currency: "USD",
