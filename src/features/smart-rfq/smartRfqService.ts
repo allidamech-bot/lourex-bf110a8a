@@ -67,6 +67,12 @@ const getOrCreateSubmissionId = (userId: string): string => {
   return next;
 };
 
+export const resetSmartRfqSubmissionId = (userId: string): void => {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.removeItem(SMART_RFQ_RECEIPT_KEY + ":" + userId); }
+  catch { /* Do not delete the customer's draft on storage failure. */ }
+};
+
 export type SmartRfqBrief = { destination: string; shippingMethod: string; deliveryNotes: string; deliveryAddress: string };
 export const readSmartRfqBrief = (): SmartRfqBrief => {
   const empty = { destination: "", shippingMethod: "", deliveryNotes: "", deliveryAddress: "" };
