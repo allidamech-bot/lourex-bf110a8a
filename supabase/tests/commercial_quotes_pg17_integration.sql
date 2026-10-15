@@ -56,6 +56,7 @@ VALUES
  ('00000000-0000-4000-8000-000000000202','00000000-0000-4000-8000-000000000100',2,'Custom biscuits',50,'boxes','Private label','','','');
 
 \ir ../migrations/20261015113000_commercial_quote_drafts.sql
+\ir ../migrations/20261015143000_commercial_quote_pricing_terms.sql
 
 DO $check$
 BEGIN
@@ -128,6 +129,107 @@ BEGIN
  END;
 END $check$;
 
+-- Pricing is all-or-nothing; snapshots and contact associations must not change.
+DO $pricing$
+DECLARE
+  q uuid;
+  l1 uuid;
+  l2 uuid;
+  returned_id uuid;
+  sub numeric;
+  grand numeric;
+  complete boolean;
+BEGIN
+  SELECT id INTO q FROM public.commercial_quote_drafts LIMIT 1;
+  SELECT id INTO l1 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=1;
+  SELECT id INTO l2 FROM public.commercial_quote_items WHERE quote_id=q AND line_number=2;
+  IF has_function_privilege('anon',
+     'public.save_commercial_quote_draft(uuid,text,text,text,text,text,integer,numeric,numeric,text,jsonb)','EXECUTE')
+  THEN RAISE EXCEPTION 'Anonymous quote pricing RPC exposure'; END IF;
+  IF has_table_privilege('authenticated','public.commercial_quote_items','UPDATE')
+     OR has_table_privilege('authenticated','public.commercial_quote_drafts','UPDATE')
+  THEN RAISE EXCEPTION 'Direct pricing write exposure'; END IF;
+
+  SELECT quote_id,subtotal,total,fully_priced INTO returned_id,sub,grand,complete
+  FROM public.save_commercial_quote_draft(q,'EUR','50% advance, 50% before delivery',
+       'CIF customer port','CIF','4-6 weeks',30,50,12.50,'Internal review only',
+       jsonb_build_array(
+         jsonb_build_object('item_id',l1,'unit_price',12.5),
+         jsonb_build_object('item_id',l2,'unit_price',3.25)));
+  IF returned_id IS DISTINCT FROM q OR sub<>1412.50 OR grand<>1450.00 OR complete IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'Commercial quotation totals were not calculated correctly';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.commercial_quote_drafts
+    WHERE id=q AND currency='EUR' AND payment_terms='50% advance, 50% before delivery'
+    AND shipping_cost=50 AND discount_amount=12.50 AND validity_days=30
+    AND last_priced_by='00000000-0000-4000-8000-000000000001'::uuid
+  ) THEN RAISE EXCEPTION 'Commercial terms were not persisted'; END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.commercial_quote_items
+    WHERE id=l1 AND product_name='Sunflower Oil' AND quantity=100
+      AND moq_snapshot='100 cartons' AND unit_price=12.5
+  ) THEN RAISE EXCEPTION 'Original line snapshot modified during pricing'; END IF;
+
+  -- Partial pricing must NOT fabricate a grand total.
+  SELECT quote_id,subtotal,total,fully_priced INTO returned_id,sub,grand,complete
+  FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,0,'',
+       jsonb_build_array(
+         jsonb_build_object('item_id',l1,'unit_price',null),
+         jsonb_build_object('item_id',l2,'unit_price',3)));
+  IF complete IS DISTINCT FROM false OR sub IS NOT NULL OR grand IS NOT NULL THEN
+    RAISE EXCEPTION 'Partial price produced misleading totals';
+  END IF;
+
+  -- Return to complete quote; the following failure cases must preserve it.
+  PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','Net 30','FOB origin',
+     'FOB','1 week',15,0,0,'Reviewed',
+     jsonb_build_array(
+       jsonb_build_object('item_id',l1,'unit_price',10),
+       jsonb_build_object('item_id',l2,'unit_price',2)));
+  BEGIN
+    PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,0,'',
+      jsonb_build_array(
+        jsonb_build_object('item_id',l1,'unit_price',11),
+        jsonb_build_object('item_id',l1,'unit_price',12)));
+    RAISE EXCEPTION 'DUPLICATE LINE ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='DUPLICATE LINE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,0,'',
+      jsonb_build_array(
+        jsonb_build_object('item_id',l1,'unit_price',11),
+        jsonb_build_object('item_id','00000000-0000-4000-8000-000000009999','unit_price',12)));
+    RAISE EXCEPTION 'UNKNOWN LINE ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='UNKNOWN LINE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,0,'',
+      jsonb_build_array(
+        jsonb_build_object('item_id',l1,'unit_price',-4),
+        jsonb_build_object('item_id',l2,'unit_price',2)));
+    RAISE EXCEPTION 'NEGATIVE PRICE ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='NEGATIVE PRICE ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.save_commercial_quote_draft(q,'USD','','','','',30,0,5000,'',
+      jsonb_build_array(
+        jsonb_build_object('item_id',l1,'unit_price',10),
+        jsonb_build_object('item_id',l2,'unit_price',2)));
+    RAISE EXCEPTION 'EXCESS DISCOUNT ACCEPTED';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='EXCESS DISCOUNT ACCEPTED' OR SQLSTATE<>'22023' THEN RAISE; END IF;
+  END;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.commercial_quote_items WHERE id=l1 AND unit_price=10
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.commercial_quote_drafts WHERE id=q AND currency='USD' AND payment_terms='Net 30'
+  ) THEN RAISE EXCEPTION 'Invalid pricing changed saved quote data'; END IF;
+END $pricing$;
+
 -- Customer with known RFQ UUID cannot enumerate or create quote drafts.
 SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
 DO $check$
@@ -137,6 +239,14 @@ BEGIN
    RAISE EXCEPTION 'Quote draft contents leaked to a customer';
  END IF;
  BEGIN
+  BEGIN
+    PERFORM 1 FROM public.save_commercial_quote_draft(
+      (SELECT id FROM public.commercial_quote_drafts LIMIT 1),
+      'USD','','','','',30,0,0,'','[]'::jsonb);
+    RAISE EXCEPTION 'CUSTOMER PRICED QUOTE';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM='CUSTOMER PRICED QUOTE' OR SQLSTATE<>'42501' THEN RAISE; END IF;
+  END;
   PERFORM 1 FROM public.create_commercial_quote_draft('00000000-0000-4000-8000-000000000100');
   RAISE EXCEPTION 'CUSTOMER CREATED INTERNAL QUOTE';
  EXCEPTION WHEN OTHERS THEN
