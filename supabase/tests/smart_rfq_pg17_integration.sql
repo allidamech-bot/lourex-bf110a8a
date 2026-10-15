@@ -31,6 +31,11 @@ CREATE TABLE public.product_catalog_products (
  unit text NOT NULL, moq text NOT NULL, packaging text NOT NULL,
  origin_country text NOT NULL, image_url text NOT NULL
 );
+CREATE TABLE public.notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL,
+  type text NOT NULL, title text NOT NULL, message text NOT NULL,
+  link text NOT NULL
+);
 CREATE TABLE public.purchase_requests (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), request_number text UNIQUE NOT NULL,
  customer_id uuid, status text NOT NULL DEFAULT 'intake_submitted',
@@ -139,6 +144,10 @@ BEGIN
     RAISE EXCEPTION 'Existing request workflow/canonical email was not preserved';
   END IF;
 
+  IF (SELECT count(*) FROM public.notifications WHERE type='purchase_request_created') <> 1 THEN
+    RAISE EXCEPTION 'Internal staff inbox did not get one notification';
+  END IF;
+
   -- Retrying the same signed customer receipt must not create a second RFQ.
   SELECT request_id INTO v_retry_id FROM public.submit_smart_rfq(
     '[{"catalog_product_id":"00000000-0000-4000-8000-000000000021","product_name":"SPOOFED NAME","quantity":100,"unit":"forged","specifications":"Arabic label"},{"catalog_product_id":null,"product_name":"Custom biscuits","quantity":250,"unit":"cartons","specifications":"Private-label box"}]'::jsonb,
@@ -228,7 +237,8 @@ RESET ROLE;
 DO $check$
 BEGIN
  IF (SELECT count(*) FROM public.purchase_requests)<>1 OR
-    (SELECT count(*) FROM public.purchase_request_items)<>2 THEN
+    (SELECT count(*) FROM public.purchase_request_items)<>2 OR
+    (SELECT count(*) FROM public.notifications WHERE type='purchase_request_created')<>1 THEN
    RAISE EXCEPTION 'Negative cases modified committed request records';
  END IF;
 END $check$;
