@@ -169,6 +169,8 @@ function toPdf(canvases:HTMLCanvasElement[]):Blob {
 export async function downloadCommercialQuotePdf(quote:Quote,lang:"ar"|"en"):Promise<void>{
   if (quote.status==="draft") throw new Error("Save pricing before generating the official PDF");
   // Keep the export inside the user's click activation, especially on iOS Safari.
+  if (!quote.items.length || quote.items.some(item => item.unitPrice === null || !Number.isFinite(Number(item.unitPrice)) || !Number.isFinite(item.quantity))) throw new Error("Quotation pricing is incomplete");
+  if (![quote.shippingCost, quote.discountAmount].every(Number.isFinite)) throw new Error("Quotation totals are invalid");
   const ar=lang==="ar";
   const sheets:Sheet[]=[newSheet(quote,ar)];
   let page=sheets[0];
