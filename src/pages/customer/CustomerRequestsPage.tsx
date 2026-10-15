@@ -782,7 +782,7 @@ export default function CustomerRequestsPage() {
           <div ref={detailsRef} tabIndex={-1} className="min-w-0 scroll-mt-24 outline-none">
             {selectedRow ? (
                 <BentoCard className="flex max-w-full flex-col gap-6">
-                  <SmartRfqItems requestId={selectedRow.id} lang={lang === "ar" ? "ar" : "en"} />
+                  <SmartRfqItems requestId={selectedRow.id} requestNumber={selectedRow.requestNumber} lang={lang === "ar" ? "ar" : "en"} />
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <div className="min-w-0 max-w-full">
                       <div className="flex min-w-0 items-center gap-2">
