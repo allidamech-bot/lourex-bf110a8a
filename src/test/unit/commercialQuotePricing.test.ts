@@ -11,7 +11,7 @@ const draft: CommercialQuoteDraft = {
   number: "LQ-2026-ABC",
   requestId: "00000000-0000-4000-8000-000000000200",
   customerId: "00000000-0000-4000-8000-000000000300",
-  currency: "USD", status: "draft",
+  currency: "USD", status: "draft", approvedAt: null, issuedAt: null, customerResponseNote: "",
   paymentTerms: "", deliveryTerms: "", incoterm: "", leadTime: "",
   validityDays: 30, shippingCost: 0, discountAmount: 0, internalNotes: "", createdAt: "",
   items: [

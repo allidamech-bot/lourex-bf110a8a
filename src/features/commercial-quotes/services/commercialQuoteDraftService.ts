@@ -7,7 +7,7 @@ type DraftRow = {
   id: string;
   quote_number: string;
   source_request_id: string;
-  status: "draft";
+  status: "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
   currency: string;
   created_at: string;
   customer_id: string;
@@ -19,6 +19,9 @@ type DraftRow = {
   shipping_cost: number;
   discount_amount: number;
   internal_notes: string;
+  approved_at: string | null;
+  issued_at: string | null;
+  customer_response_note: string;
 };
 type ItemRow = {
   id: string;
@@ -38,7 +41,7 @@ export type CommercialQuoteDraft = {
   id: string;
   number: string;
   requestId: string;
-  status: "draft";
+  status: "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
   currency: string;
   createdAt: string;
   customerId: string;
@@ -50,6 +53,9 @@ export type CommercialQuoteDraft = {
   shippingCost: number;
   discountAmount: number;
   internalNotes: string;
+  approvedAt: string | null;
+  issuedAt: string | null;
+  customerResponseNote: string;
   items: Array<{
     id: string;
     lineNumber: number;
@@ -69,7 +75,7 @@ export const isSmartRfqForCommercialQuote = (requestNumber?: string | null) =>
 
 export const fetchCommercialQuoteDraft = async (requestId: string): Promise<CommercialQuoteDraft | null> => {
   const { data: header, error } = await db.from<DraftRow>("commercial_quote_drafts")
-    .select("id,quote_number,source_request_id,status,currency,created_at,customer_id,payment_terms,delivery_terms,incoterm,lead_time,validity_days,shipping_cost,discount_amount,internal_notes")
+    .select("id,quote_number,source_request_id,status,currency,created_at,customer_id,payment_terms,delivery_terms,incoterm,lead_time,validity_days,shipping_cost,discount_amount,internal_notes,approved_at,issued_at,customer_response_note")
     .eq("source_request_id", requestId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -86,7 +92,7 @@ export const fetchCommercialQuoteDraft = async (requestId: string): Promise<Comm
     id: header.id,
     number: header.quote_number,
     requestId: header.source_request_id,
-    status: "draft",
+    status: header.status,
     currency: header.currency,
     createdAt: header.created_at,
     customerId: header.customer_id,
@@ -98,6 +104,9 @@ export const fetchCommercialQuoteDraft = async (requestId: string): Promise<Comm
     shippingCost: Number(header.shipping_cost),
     discountAmount: Number(header.discount_amount),
     internalNotes: header.internal_notes,
+    approvedAt: header.approved_at,
+    issuedAt: header.issued_at,
+    customerResponseNote: header.customer_response_note,
     items: rows.map(item => ({
       id: item.id,
       lineNumber: item.line_number,
