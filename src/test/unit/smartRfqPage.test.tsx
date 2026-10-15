@@ -71,7 +71,7 @@ describe("Smart RFQ end-user interface", () => {
     mount("/smart-rfq?add=" + productId);
     expect(await screen.findByText("Sunflower oil")).toBeInTheDocument();
     await waitFor(() => expect(readSmartRfqDraft()).toEqual([
-      expect.objectContaining({ catalogProductId: productId, quantity: "1" }),
+      expect.objectContaining({ catalogProductId: productId, quantity: "100" }),
     ]));
     expect(screen.getByText("Published MOQ: 100 cartons")).toBeInTheDocument();
     expect(screen.getByTestId("contact-gate")).toBeInTheDocument();
