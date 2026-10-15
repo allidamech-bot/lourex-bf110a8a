@@ -23,40 +23,52 @@ CREATE TABLE public.commercial_quote_events (
 CREATE INDEX commercial_quote_events_time_idx ON public.commercial_quote_events(quote_id,created_at);
 ALTER TABLE public.commercial_quote_events ENABLE ROW LEVEL SECURITY;
 
--- A customer must never see prices, product lines or events until publication.
--- Access is linked to the authenticated account, not a guessed quote ID or email.
-CREATE POLICY "Customer can read issued quotation headers"
-  ON public.commercial_quote_drafts FOR SELECT TO authenticated
-  USING (
-    status IN ('issued','accepted','changes_requested','declined')
-    AND EXISTS (
-      SELECT 1 FROM public.lourex_customers c
-      WHERE c.id=customer_id AND c.auth_user_id=(SELECT auth.uid())
-    )
-  );
-CREATE POLICY "Customer can read issued quotation lines"
-  ON public.commercial_quote_items FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.commercial_quote_drafts q
-      JOIN public.lourex_customers c ON c.id=q.customer_id
-      WHERE q.id=quote_id AND c.auth_user_id=(SELECT auth.uid())
-        AND q.status IN ('issued','accepted','changes_requested','declined')
-    )
-  );
-CREATE POLICY "Authorized users read quotation timeline"
+-- Keep raw tables INTERNAL. Their columns include internal-only notes and audit identifiers.
+-- Customers receive a minimal, hand-picked projection through a secured RPC.
+CREATE POLICY "Authorized staff read quotation events"
   ON public.commercial_quote_events FOR SELECT TO authenticated
-  USING (
-    public.is_lourex_role((SELECT auth.uid()),ARRAY['owner','operations_employee'])
-    OR EXISTS (
-      SELECT 1 FROM public.commercial_quote_drafts q
-      JOIN public.lourex_customers c ON c.id=q.customer_id
-      WHERE q.id=quote_id AND c.auth_user_id=(SELECT auth.uid())
-        AND q.status IN ('issued','accepted','changes_requested','declined')
-    )
-  );
+  USING (public.is_lourex_role((SELECT auth.uid()),ARRAY['owner','operations_employee']));
 REVOKE ALL ON public.commercial_quote_events FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.commercial_quote_events TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_customer_commercial_quote(p_request_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' SET row_security=off AS $customer_view$
+DECLARE
+  v_actor uuid := (SELECT auth.uid());
+  v_quote public.commercial_quote_drafts%ROWTYPE;
+  v_lines jsonb;
+BEGIN
+  IF v_actor IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE='42501';
+  END IF;
+  SELECT q.* INTO v_quote
+  FROM public.commercial_quote_drafts q
+  JOIN public.lourex_customers c ON c.id=q.customer_id
+  WHERE q.source_request_id=p_request_id AND c.auth_user_id=v_actor
+    AND q.status IN ('issued','accepted','changes_requested','declined');
+  IF NOT FOUND THEN RETURN NULL; END IF;
+  SELECT coalesce(jsonb_agg(jsonb_build_object(
+    'lineNumber',i.line_number,'name',i.product_name,'quantity',i.quantity,
+    'unit',i.unit,'specifications',i.specifications,
+    'moq',i.moq_snapshot,'packaging',i.packaging_snapshot,
+    'origin',i.origin_snapshot,'unitPrice',i.unit_price
+  ) ORDER BY i.line_number),'[]'::jsonb)
+  INTO v_lines
+  FROM public.commercial_quote_items i WHERE i.quote_id=v_quote.id;
+  RETURN jsonb_build_object(
+    'id',v_quote.id,'number',v_quote.quote_number,'requestId',v_quote.source_request_id,
+    'status',v_quote.status,'currency',v_quote.currency,
+    'approvedAt',v_quote.approved_at,'issuedAt',v_quote.issued_at,
+    'respondedAt',v_quote.customer_responded_at,
+    'responseNote',v_quote.customer_response_note,
+    'paymentTerms',v_quote.payment_terms,'deliveryTerms',v_quote.delivery_terms,
+    'incoterm',v_quote.incoterm,'leadTime',v_quote.lead_time,
+    'validityDays',v_quote.validity_days,'shippingCost',v_quote.shipping_cost,
+    'discountAmount',v_quote.discount_amount,
+    'items',v_lines
+  );
+END;$customer_view$;
 
 CREATE OR REPLACE FUNCTION public.approve_commercial_quote(p_quote_id uuid)
 RETURNS TABLE(quote_id uuid, quote_status text)
@@ -173,3 +185,6 @@ GRANT EXECUTE ON FUNCTION public.approve_commercial_quote(uuid),
   TO authenticated;
 
 -- No direct edits or approval/status bypass. All transitions are transactional.
+
+REVOKE ALL ON FUNCTION public.get_customer_commercial_quote(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.get_customer_commercial_quote(uuid) TO authenticated;
