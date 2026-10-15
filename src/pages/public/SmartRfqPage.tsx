@@ -46,6 +46,7 @@ export default function SmartRfqPage() {
   const [shippingMethod, setShippingMethod] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [submission, setSubmission] = useState<SmartRfqSubmission | null>(null);
@@ -122,9 +123,10 @@ export default function SmartRfqPage() {
       const result = await submitSmartRfq(items, destination, shippingMethod, deliveryNotes, deliveryAddress, {
         id: user.id,
         name: profile.fullName || user.email || "",
-      });
+      }, referenceFiles);
       setSubmission(result);
       setItems([]);
+      setReferenceFiles([]);
       clearSmartRfqDraft();
     } catch (issue) {
       setError(issue instanceof Error ? issue.message : label("تعذر إرسال الطلب.", "Unable to submit the request."));
@@ -165,6 +167,7 @@ export default function SmartRfqPage() {
               <CheckCircle2 className="mx-auto h-16 w-16 text-[#c6a36f]" />
               <h2 className="mt-5 font-serif text-3xl font-bold">{label("تم استلام طلبك بنجاح", "Your RFQ has been submitted")}</h2>
               <p className="mt-4 text-muted-foreground">{label("تم حفظ جميع الأصناف في طلب واحد. سيُراجع فريق LOUREX التفاصيل.", "All product lines were saved under one request. The LOUREX team will review your brief.")}</p>
+              {submission.attachmentWarning && <p className="mx-auto mt-4 max-w-xl rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400" role="alert">{isAr ? "تم حفظ الطلب، لكن بعض الصور لم تُرفق. يرجى إرسال صورك لفريق LOUREX مع رقم الطلب." : submission.attachmentWarning}</p>}
               <p className="mt-5 font-mono text-xl font-semibold" dir="ltr">{submission.requestNumber}</p>
               <p className="mt-2 text-sm text-muted-foreground" dir="ltr">{submission.trackingCode}</p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -270,6 +273,28 @@ export default function SmartRfqPage() {
                     <div><Label htmlFor="rfq-notes">{label("ملاحظات عامة للطلب", "General RFQ notes")}</Label>
                       <Textarea id="rfq-notes" value={deliveryNotes} rows={4} maxLength={3000} className="mt-2"
                         onChange={e => setDeliveryNotes(e.target.value)} placeholder={label("شرط التسليم، موعد الطلب، الشهادات المطلوبة…", "Incoterms, lead time, required certificates…")} /></div>
+                  </div>
+                  <div>
+                    <Label htmlFor="rfq-reference-images">{label("صور مرجعية للطلب (اختياري)", "Reference images (optional)")}</Label>
+                    <Input id="rfq-reference-images" className="mt-2 cursor-pointer" type="file" accept="image/*" multiple
+                      onChange={event => {
+                        const next = Array.from(event.target.files || []);
+                        event.currentTarget.value = "";
+                        const valid = next.filter(file => file.type.startsWith("image/") && file.size <= 8 * 1024 * 1024);
+                        if (valid.length !== next.length || referenceFiles.length + valid.length > 5) {
+                          setError(label("أقصى عدد 5 صور، وبحجم 8 ميغابايت للصورة.", "Maximum 5 images, up to 8 MB each."));
+                        } else {
+                          setError("");
+                          setReferenceFiles(current => [...current, ...valid]);
+                        }
+                      }} />
+                    {referenceFiles.length > 0 && <ul className="mt-2 space-y-2 text-xs text-muted-foreground">
+                      {referenceFiles.map((file, index) => <li key={file.name + index} className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate">{file.name}</span>
+                        <button type="button" className="text-destructive underline" onClick={() => setReferenceFiles(current => current.filter((_, i) => i !== index))}>{label("حذف", "Remove")}</button>
+                      </li>)}
+                    </ul>}
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{label("صور المنتجات المنشورة متوفرة مسبقًا؛ يمكنك إضافة صور خاصة بمواصفاتك.", "Published catalog photos are already available; attach only extra references if needed.")}</p>
                   </div>
                   <div className="mt-6 rounded-xl border border-border/70 bg-secondary/40 p-4 text-sm">
                     <div className="flex items-center justify-between"><span>{label("عدد الأصناف", "Product lines")}</span><strong>{items.length}</strong></div>
