@@ -59,15 +59,37 @@ export default async function handler(req: Request, res: Response) {
       <h2>Your commercial quotation is ready</h2>
       <p>Dear ${safe(customer.full_name)},</p>
       <p>Quotation <strong>${safe(quote.quote_number)}</strong> has been issued for your sourcing request.
-      Please sign in to your LOUREX customer account to review the pricing, download/save the PDF,
+      Your signed quotation PDF is attached. Sign in to your LOUREX customer account to review the pricing,
       and accept or request a revision.</p>
       <p><a href="${link}" style="background:#133b66;color:white;padding:12px 18px;border-radius:8px;text-decoration:none">View quotation securely</a></p>
-      <p style="font-size:12px;color:#6c7583">This link requires your LOUREX account. No commercial pricing is included in this email.</p>
+      <p style="font-size:12px;color:#6c7583">This link requires your LOUREX account. Commercial pricing appears only inside the attached PDF. This portal link requires authentication.</p>
       </main></body></html>`;
+    // The server-side Edge Function authenticates this staff JWT again, reads
+    // issued prices itself, and returns bytes only (never a client-provided PDF).
+    // Failure leaves the quotation issued and allows email-only retry.
+    const render=await fetch(`${url.replace(/\\/$/,"")}/functions/v1/commercial-quote-pdf`,{
+      method:"POST",
+      headers:{"Authorization":`Bearer ${match[1]}`,"apikey":publicKey,"Content-Type":"application/json"},
+      body:JSON.stringify({quoteId:quote.id}),
+      signal:AbortSignal.timeout(12000),
+    });
+    if(!render.ok)return res.status(502).json({
+      error:"Quotation is issued and visible in the customer account; PDF attachment could not be generated. Retry email later.",
+    });
+    if(!(render.headers.get("Content-Type")||"").includes("application/pdf"))
+      return res.status(502).json({error:"Invalid PDF attachment response. Quotation remains issued."});
+    const pdfBuffer=Buffer.from(await render.arrayBuffer());
+    if(pdfBuffer.length<400||pdfBuffer.length>7500000||pdfBuffer.subarray(0,5).toString()!=="%PDF-")
+      return res.status(502).json({error:"PDF attachment failed validation. Quotation remains issued."});
+    const attachmentName=quote.quote_number.replace(/[^a-zA-Z0-9_-]/g,"_")+".pdf";
     const resp=await fetch("https://api.resend.com/emails",{
       method:"POST",
       headers:{"Authorization":`Bearer ${emailKey}`,"Content-Type":"application/json","Idempotency-Key":`lourex-quote-${quote.id}`},
-      body:JSON.stringify({from,to:[recipient],subject:`LOUREX quotation ${quote.quote_number} is ready`,html,text:`LOUREX quotation ${quote.quote_number} is ready. Sign in to review it: ${link}`}),
+      body:JSON.stringify({from,to:[recipient],
+        subject:`LOUREX quotation ${quote.quote_number} is ready`,
+        html,text:`LOUREX quotation ${quote.quote_number} is ready. Your official quotation PDF is attached. Sign in to respond: ${link}`,
+        attachments:[{filename:attachmentName,content:pdfBuffer.toString("base64"),content_type:"application/pdf"}],
+      }),
       signal:AbortSignal.timeout(16000),
     });
     if(!resp.ok){console.error("quotation email provider status",resp.status);return res.status(502).json({error:"Quotation is visible in customer account but email delivery was not confirmed"});}
