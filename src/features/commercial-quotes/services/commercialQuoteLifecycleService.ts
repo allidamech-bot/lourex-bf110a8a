@@ -107,7 +107,12 @@ export const emailIssuedCommercialQuote = async (quote: CommercialQuoteDraft) =>
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
     body: JSON.stringify({ quoteId: quote.id }),
   });
-  const result = await response.json().catch(() => ({})) as { sent?: boolean; error?: string };
-  if (!response.ok || !result.sent) throw new Error(result.error || "Quotation email was not confirmed");
+  const result = await response.json().catch(() => ({})) as { sent?: boolean; error?: string; code?: string };
+  if (!response.ok || !result.sent) {
+    const failure = new Error(result.error || "Quotation email was not confirmed");
+    // Keep the server's safe diagnostic code available for localized staff feedback.
+    if (result.code) Object.assign(failure, { code: result.code });
+    throw failure;
+  }
   return result;
 };

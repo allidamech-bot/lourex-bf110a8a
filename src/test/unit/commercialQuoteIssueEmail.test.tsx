@@ -58,12 +58,23 @@ describe("Commercial quotation issue and email lifecycle", () => {
     vi.mocked(emailIssuedCommercialQuote).mockRejectedValueOnce(new Error("Provider unreachable"));
     render(<Screen />);
     fireEvent.click(screen.getByRole("button", { name: /Issue to customer/ }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/quotation was issued/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/quotation is visible to the customer, but email sending failed/i);
     expect(screen.getByRole("button", { name: /Email quotation notification/ })).toBeInTheDocument();
     expect(updateQuotationState).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: /Email quotation notification/ }));
     await waitFor(() => expect(emailIssuedCommercialQuote).toHaveBeenCalledTimes(2));
     expect(updateQuotationState).toHaveBeenCalledTimes(1);
+  });
+
+  it("explains provider credential rejection without leaking secrets or reissuing a quote", async () => {
+    const authError = Object.assign(new Error("Resend authentication failed"), { code: "EMAIL_PROVIDER_AUTH_FAILED" });
+    vi.mocked(emailIssuedCommercialQuote).mockRejectedValueOnce(authError);
+    render(<Screen />);
+    fireEvent.click(screen.getByRole("button", { name: /Issue to customer/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Resend rejected the configured sending credentials/i);
+    expect(screen.getByRole("alert")).toHaveTextContent("RESEND_API_KEY");
+    expect(updateQuotationState).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /Email quotation notification/ })).toBeInTheDocument();
   });
 
   it("never emails a quote that failed its server-side issuance", async () => {

@@ -55,23 +55,23 @@ export const CustomerLayout = () => {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_5%_3%,rgba(170,54,36,0.055),transparent_40%)] dark:bg-[radial-gradient(ellipse_at_5%_3%,rgba(214,173,108,0.04),transparent_40%)]" />
       <SiteHeader />
       <main className="relative w-full max-w-full overflow-x-hidden pb-24 pt-8">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 rounded-[1.75rem] border border-border/70 bg-card/90 p-6 shadow-soft backdrop-blur-xl sm:p-8">
-            <div className={`flex flex-col gap-4 ${isRtl ? "text-right" : "text-left"}`}>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80">LOUREX PORTAL</span>
-                <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-heading sm:text-[2rem]">
+        <div className="mx-auto w-full min-w-0 max-w-7xl px-3 sm:px-6 lg:px-8">
+          <div className="mb-6 min-w-0 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card/90 p-4 shadow-soft backdrop-blur-xl sm:mb-8 sm:rounded-[1.75rem] sm:p-8">
+            <div className={`flex min-w-0 flex-col gap-4 ${isRtl ? "text-right" : "text-left"}`}>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">LOUREX PORTAL</span>
+                <h1 className="mt-2 break-words text-2xl font-extrabold tracking-tight text-heading sm:text-[2rem]">
                   {isRtl ? "بوابة العميل" : "Customer Portal"}
                 </h1>
               </div>
-              <nav className="flex max-w-full gap-2 overflow-x-auto pb-2 scroll-smooth" aria-label={isRtl ? "تنقل بوابة العميل" : "Customer portal navigation"}>
+              <nav className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label={isRtl ? "تنقل بوابة العميل" : "Customer portal navigation"}>
                 {links.map((link) => (
                   <NavLink
                     key={link.to}
                     to={link.to}
                     end={link.end}
                     className={({ isActive }) =>
-                      `flex min-h-11 min-w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                      `inline-flex min-h-11 min-w-max flex-none shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-[13px] font-semibold leading-none transition-colors sm:px-4 sm:text-sm ${
                         isActive
                           ? "bg-primary-soft text-primary ring-1 ring-primary/20"
                           : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
@@ -79,7 +79,7 @@ export const CustomerLayout = () => {
                     }
                   >
                     <link.icon className="h-4 w-4 shrink-0" />
-                    <span>{link.label}</span>
+                    <span className="block shrink-0 whitespace-nowrap break-normal" style={{ whiteSpace: "nowrap", wordBreak: "keep-all" }}>{link.label}</span>
                   </NavLink>
                 ))}
               </nav>

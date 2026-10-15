@@ -10,6 +10,17 @@ export function CommercialQuoteActions({ quote, lang, canApprove, onUpdate }: {
   onUpdate: (quote: CommercialQuoteDraft) => void;
 }) {
   const ar=lang==="ar";
+  const emailFailureCopy = (cause: unknown) => {
+    const code = cause && typeof cause === "object" && "code" in cause ? (cause as { code?: string }).code : "";
+    if (code === "EMAIL_PROVIDER_AUTH_FAILED") {
+      return ar
+        ? "خدمة البريد رفضت مفتاح الإرسال في إعدادات Resend. عرض السعر محفوظ لدى العميل، لكن الرسالة لم تُرسل. يجب تصحيح مفتاح RESEND_API_KEY والتحقق من عنوان المرسل في Vercel قبل إعادة المحاولة."
+        : "Resend rejected the configured sending credentials. The quotation is saved and visible to the customer, but no email was sent. Fix RESEND_API_KEY and the verified sender in Vercel before retrying.";
+    }
+    return ar
+      ? "عرض السعر محفوظ في حساب العميل، لكن إرسال البريد لم ينجح. تحقق من إعداد خدمة البريد قبل إعادة المحاولة."
+      : "The quotation is visible to the customer, but email sending failed. Check the email service configuration before retrying.";
+  };
   const [busy,setBusy]=useState<""|"approve"|"issue"|"email">("");
   const [error,setError]=useState("");
   const [emailSent,setEmailSent]=useState(false);
@@ -38,13 +49,11 @@ export function CommercialQuoteActions({ quote, lang, canApprove, onUpdate }: {
             setEmailSent(true);
           }catch(e){
             setEmailWarning(true);
-            setError(ar
-              ? "تم إصدار العرض وظهر في حساب العميل، لكن لم يتم تأكيد البريد الإلكتروني. يمكنك إعادة إرسال الإشعار باستخدام الزر أدناه."
-              : "The quotation was issued and is available in the customer account, but email delivery was not confirmed. Use the email button below to retry.");
+            setError(emailFailureCopy(e));
           }
         }
       }
-    }catch(e){setError(e instanceof Error?e.message:String(e));}
+    }catch(e){setError(action==="email"?emailFailureCopy(e):(e instanceof Error?e.message:String(e)));}
     finally{setBusy("");}
   };
   const canApproveDraft=quote.status==="draft"&&canApprove;
