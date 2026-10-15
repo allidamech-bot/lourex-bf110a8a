@@ -62,7 +62,7 @@ BEGIN
   SELECT v_draft_id,i.id,i.line_number,i.product_name,i.quantity,i.unit,
          i.specifications,i.moq_snapshot,i.packaging_snapshot,i.origin_snapshot
     FROM public.purchase_request_items i WHERE i.request_id=p_request_id ORDER BY i.line_number;
-  IF (SELECT count(*) FROM public.commercial_quote_items WHERE quote_id=v_draft_id)<>v_count THEN
+  IF (SELECT count(*) FROM public.commercial_quote_items i WHERE i.quote_id=v_draft_id)<>v_count THEN
     RAISE EXCEPTION 'Incomplete quotation snapshot';
   END IF;
   RETURN QUERY SELECT v_draft_id,v_number;
@@ -116,9 +116,9 @@ BEGIN
   SELECT v_new_id,i.source_request_item_id,i.line_number,i.product_name,i.quantity,
          i.unit,i.specifications,i.moq_snapshot,i.packaging_snapshot,i.origin_snapshot,i.unit_price
   FROM public.commercial_quote_items i WHERE i.quote_id=p_previous_quote_id;
-  SELECT count(*) INTO v_count FROM public.commercial_quote_items WHERE quote_id=v_new_id;
+  SELECT count(*) INTO v_count FROM public.commercial_quote_items i WHERE i.quote_id=v_new_id;
   IF v_count NOT BETWEEN 1 AND 20 OR v_count<>(
-     SELECT count(*) FROM public.commercial_quote_items WHERE quote_id=p_previous_quote_id
+     SELECT count(*) FROM public.commercial_quote_items i WHERE i.quote_id=p_previous_quote_id
   ) THEN RAISE EXCEPTION 'Revision snapshot incomplete'; END IF;
   -- Repricing and reapproval are required even when prices are inherited for convenience.
   INSERT INTO public.commercial_quote_events(quote_id,actor_id,action,note)
