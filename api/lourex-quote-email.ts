@@ -44,9 +44,14 @@ export default async function handler(req: Request, res: Response) {
     if(profileError||!profile||profile.status!=="active"||
       !["owner","operations_employee"].includes(profile.role))return res.status(403).json({error:"Staff access required"});
     const {data:quote,error:quoteError}=await client.from("commercial_quote_drafts")
-      .select("id,quote_number,source_request_id,customer_id,status")
+      .select("id,quote_number,source_request_id,customer_id,status,currency,payment_terms,delivery_terms,incoterm,lead_time,validity_days,shipping_cost,discount_amount")
       .eq("id",quoteId).maybeSingle();
     if(quoteError||!quote||quote.status!=="issued")return res.status(409).json({error:"Only issued quotations can be sent by email"});
+    const {data:items,error:itemsError}=await client.from("commercial_quote_items")
+      .select("line_number,product_name,quantity,unit,unit_price,specifications")
+      .eq("quote_id",quote.id).order("line_number",{ascending:true});
+    if(itemsError||!items?.length||items.some(i=>i.unit_price===null))
+      return res.status(409).json({error:"Issued quotation pricing could not be verified"});
     const {data:customer,error:customerError}=await client.from("lourex_customers")
       .select("email,full_name").eq("id",quote.customer_id).maybeSingle();
     const recipient=customer?.email?.trim();
@@ -64,10 +69,50 @@ export default async function handler(req: Request, res: Response) {
       <p><a href="${link}" style="background:#133b66;color:white;padding:12px 18px;border-radius:8px;text-decoration:none">View quotation securely</a></p>
       <p style="font-size:12px;color:#6c7583">This link requires your LOUREX account. No commercial pricing is included in this email.</p>
       </main></body></html>`;
+    // Generate the attachment from the server-authorized issued snapshot only.
+    // Never accept PDF bytes or recipient addresses from the client.
+    const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+    const pdf=await PDFDocument.create();
+    const font=await pdf.embedFont(StandardFonts.Helvetica);
+    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+    const clean=(v:unknown)=>String(v??"").normalize("NFKD")
+      .replace(/[^\\x20-\\x7E]/g,"?").slice(0,180);
+    let sheet=pdf.addPage([595.28,841.89]), y=790;
+    const line=(value:string,weight=false,size=10)=>{
+      if(y<70){sheet=pdf.addPage([595.28,841.89]);y=790;}
+      sheet.drawText(clean(value),{x:48,y,size,font:weight?bold:font,color:rgb(.09,.19,.32),maxWidth:500});
+      y-=size+13;
+    };
+    line("LOUREX  |  INTERNATIONAL TRADING & RESOURCES",true,17);
+    line("COMMERCIAL QUOTATION",true,14);
+    line("Quotation: "+quote.quote_number,true);
+    line("www.lou-rex.com | lourrex@proton.me | +90 539 241 1642");
+    line("CR 62800 | Homs, Syria");
+    line("Currency: "+quote.currency+" | Validity: "+quote.validity_days+" days");
+    line("-----------------------------------------------------------");
+    let subtotal=0;
+    for(const item of items){
+      const amount=Number(item.quantity)*Number(item.unit_price);
+      if(!Number.isFinite(amount))return res.status(409).json({error:"Invalid issued pricing"});
+      subtotal+=amount;
+      line("#"+item.line_number+"  "+item.product_name,true);
+      line("Qty: "+item.quantity+" "+item.unit+"  |  Unit price: "+item.unit_price+"  |  Amount: "+amount.toFixed(2)+" "+quote.currency);
+      if(item.specifications)line("Specifications: "+item.specifications);
+    }
+    const total=subtotal+Number(quote.shipping_cost)-Number(quote.discount_amount);
+    line("-----------------------------------------------------------");
+    line("Shipping: "+quote.shipping_cost+" | Discount: "+quote.discount_amount);
+    line("TOTAL: "+total.toFixed(2)+" "+quote.currency,true,15);
+    line("Payment terms: "+quote.payment_terms);
+    line("Delivery terms: "+quote.delivery_terms);
+    line("Incoterm: "+(quote.incoterm||"-")+" | Lead time: "+(quote.lead_time||"-"));
+    line("Acceptance of this quotation is not proof of payment.");
+    const pdfBytes=await pdf.save();
+    const attachment=Buffer.from(pdfBytes).toString("base64");
     const resp=await fetch("https://api.resend.com/emails",{
       method:"POST",
       headers:{"Authorization":`Bearer ${emailKey}`,"Content-Type":"application/json","Idempotency-Key":`lourex-quote-${quote.id}`},
-      body:JSON.stringify({from,to:[recipient],subject:`LOUREX quotation ${quote.quote_number} is ready`,html,text:`LOUREX quotation ${quote.quote_number} is ready. Sign in to review it: ${link}`}),
+      body:JSON.stringify({from,to:[recipient],subject:`LOUREX quotation ${quote.quote_number} is ready`,html,text:`LOUREX quotation ${quote.quote_number} is ready. Sign in to review it: ${link}`,attachments:[{filename:quote.quote_number.replace(/[^A-Za-z0-9_-]/g,"_")+".pdf",content:attachment}]}),
       signal:AbortSignal.timeout(16000),
     });
     if(!resp.ok){console.error("quotation email provider status",resp.status);return res.status(502).json({error:"Quotation is visible in customer account but email delivery was not confirmed"});}
