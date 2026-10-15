@@ -20,6 +20,7 @@ CREATE TABLE public.notifications (
  type text NOT NULL, title text NOT NULL, message text NOT NULL,
  is_read boolean NOT NULL DEFAULT false, link text, created_at timestamptz NOT NULL DEFAULT now()
 );
+GRANT SELECT ON public.notifications TO authenticated;
 CREATE TABLE public.purchase_requests (
  id uuid PRIMARY KEY,
  request_number text NOT NULL,
