@@ -56,7 +56,7 @@ async function renderPdf(q: Quote, lines: Line[]): Promise<Uint8Array> {
   const prepared = (txt: string) => arabic.test(txt) ? shapeArabicText(txt) : txt;
   const lineWidth = (txt: string, size: number) => face.widthOfTextAtSize(prepared(txt),size);
   const draw = (txt: string, x: number, row: number, size=10, opts?:{bold?:boolean; right?:boolean; color?:typeof ink}) => {
-    const value = String(txt ?? "").replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,"").slice(0,2100);
+    const value = String(txt ?? "").split("").filter(character => character.charCodeAt(0) >= 32).join("").slice(0,2100);
     const color = opts?.color || ink;
     if (!value) return;
     if (arabic.test(value)) {
