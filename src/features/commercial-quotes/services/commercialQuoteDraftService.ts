@@ -41,7 +41,7 @@ export type CommercialQuoteDraft = {
   id: string;
   number: string;
   requestId: string;
-  status: "draft";
+  status: "draft" | "approved" | "issued" | "accepted" | "changes_requested" | "declined";
   currency: string;
   createdAt: string;
   customerId: string;
