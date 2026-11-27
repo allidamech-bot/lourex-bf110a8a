@@ -13,6 +13,7 @@ let installed=false;
 function command(..._args:unknown[]) {
   const w=win();
   // Google tag expects the gtag arguments object, not arbitrary arrays.
+  // eslint-disable-next-line prefer-rest-params -- gtag uses the arguments object as its command record.
   (w.lourexSearchLayer??=[]).push(arguments);
 }
 function disable(disabled:boolean) {
