@@ -47,3 +47,10 @@ test("missing and invalid products return 404; backend outage returns retryable 
  const ok=await catalogResponse({mode:"detail",slug:row.slug,reader:{product:async()=>row},readTemplate:async()=>template});assert.equal(ok.status,200);
  const empty=await catalogResponse({mode:"sitemap",reader:{products:async()=>[]}});assert.equal(empty.status,200);assert.ok(!empty.body.includes("<loc>"));
 });
+
+test("an active row with missing search metadata returns retryable 503 rather than permanently missing",async()=>{
+ const reader=createPublicCatalogReader({...config,fetchImpl:async()=>new Response(JSON.stringify([{...row,short_description_en:""}]))});
+ const result=await catalogResponse({mode:"detail",slug:row.slug,reader});
+ assert.equal(result.status,503);assert.equal(result.headers["Retry-After"],"60");
+ assert.deepEqual(await reader.products(),[]);
+});

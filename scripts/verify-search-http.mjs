@@ -14,6 +14,9 @@ for(const agent of agents){
  for(const item of urls)await test(agent+" "+item.path,async()=>{const r=await get(item.path,agent);assert.equal(r.status,200);assert.ok(r.body.includes(esc(item.heading)),"Missing rendered heading");assert.ok(r.body.includes('rel="canonical" href="https://www.lou-rex.com'+item.path+'"'),"Wrong canonical");if(item.lang)assert.equal((r.body.match(/hreflang=/g)||[]).length,4);});
  await test(agent+" robots",async()=>{const r=await get("/robots.txt",agent);assert.equal(r.status,200);assert.match(r.body,/User-agent: OAI-SearchBot/i);assert.match(r.body,/Sitemap: https:\/\/www\.lou-rex\.com\/sitemap\.xml/i);});
  await test(agent+" sitemap",async()=>{const r=await get("/sitemap.xml",agent);assert.equal(r.status,200);for(const item of urls)assert.ok(r.body.includes("https://www.lou-rex.com"+item.path+"</loc>"),"Missing "+item.path);});
+ await test(agent+" product sitemap",async()=>{const r=await get("/sitemap-products.xml",agent);assert.equal(r.status,200);assert.match(r.headers.get("content-type")||"",/xml/);assert.match(r.body,/<urlset\b/);assert.ok(!r.body.includes("turkish-cleaning-liquid-sample"));});
+ await test(agent+" missing product",async()=>{const r=await get("/products/lourex-acceptance-nonexistent-404",agent);assert.equal(r.status,404);assert.match(r.headers.get("x-robots-tag")||"",/noindex/i);});
+ await test(agent+" legacy catalog redirect",async()=>{const r=await get("/catalog",agent);assert.ok([301,308].includes(r.status));assert.equal(new URL(r.headers.get("location"),base).pathname,"/products");});
  await test(agent+" unknown route",async()=>{const r=await get("/search-acceptance-nonexistent-404",agent);assert.equal(r.status,404);});
  await test(agent+" private noindex",async()=>{const r=await get("/auth",agent);assert.match(r.headers.get("x-robots-tag")||"",/noindex/i);});
 }

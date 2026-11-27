@@ -12,6 +12,12 @@ for(const [engine,launcher] of [["chromium",chromium],["webkit",webkit]]){
   for(const javascriptEnabled of [false,true]){
    const context=await browser.newContext({javaScriptEnabled:javascriptEnabled,viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:"reduce"});
    try{
+    const response=await context.request.get("http://127.0.0.1:4173/search-acceptance-nonexistent-404");
+    assert.equal(response.status(),404);
+    const privateResponse=await context.request.get("http://127.0.0.1:4173/auth");
+    assert.match(privateResponse.headers()["x-robots-tag"]||"",/noindex/i);
+    const legacy=await context.request.get("http://127.0.0.1:4173/catalog",{maxRedirects:0});
+    assert.equal(legacy.status(),308);
     for(const item of cases){
      const page=await context.newPage();
      const errors=[];

@@ -7,12 +7,13 @@ const id=String(import.meta.env.VITE_GA4_MEASUREMENT_ID||"").trim();
 const configured=/^G-[A-Z0-9]{6,20}$/.test(id)&&import.meta.env.VITE_SEARCH_ANALYTICS_ENABLED==="true";
 const consentKey="lourex-search-analytics-v1";
 type Choice="accepted"|"rejected"|null;
-type AnalyticsWindow=Window & {lourexSearchLayer?: unknown[][]};
+type AnalyticsWindow=Window & {lourexSearchLayer?: IArguments[]};
 const win=()=>window as AnalyticsWindow;
 let installed=false;
-function command(...args:unknown[]) {
+function command(..._args:unknown[]) {
   const w=win();
-  (w.lourexSearchLayer??=[]).push(args);
+  // Google tag expects the gtag arguments object, not arbitrary arrays.
+  (w.lourexSearchLayer??=[]).push(arguments);
 }
 function disable(disabled:boolean) {
   (window as unknown as Record<string,unknown>)["ga-disable-"+id]=disabled;
@@ -23,7 +24,7 @@ function install(pageLocation:string) {
   command("consent","default",{analytics_storage:"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
   command("consent","update",{analytics_storage:"granted"});
   command("js",new Date());
-  command("config",id,{send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false,page_location:pageLocation,page_referrer:""});
+  command("config",id,{send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false,allow_ad_user_data:false,allow_ad_personalization:false,page_location:pageLocation,page_referrer:""});
   const script=document.createElement("script");
   script.async=true;
   script.src="https://www.googletagmanager.com/gtag/js?id="+encodeURIComponent(id)+"&l=lourexSearchLayer";

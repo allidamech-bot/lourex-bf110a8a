@@ -30,3 +30,10 @@ Weekly: Search Console impressions, clicks, CTR and position by country/query/pa
 Sources: https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap ; https://www.indexnow.org/documentation ; https://developers.google.com/tag-platform/security/concepts/consent-mode ; https://help.openai.com/en/articles/12627856-publishers-and-developers-faq
 
 Current account access/verified data: Google Search Console, Bing and GA4 ownership and metrics are unverified. No external submissions were made. No paid services enabled.
+
+## Final engineering audit notes
+- Production domain alias remains on dpl_CB9beCyz9Vdr3mwRRXy4sWrE7GEj. No deployment record exists for feat/global-search-discovery-batch-1 at audit time. Automatic Git deployments are disabled in versioned Vercel configuration. Exact-commit authorized preview is a hard gate; do not infer Vercel function bundling from local preview.
+- Active catalog rows lacking public metadata are excluded from sitemap and produce retryable 503 rather than erroneous 404. The public search function never uses privileged credentials. Verify actual function response against the empty catalog and a synthetic nonproduction product before publishing.
+- Combined duplicate font stylesheets into the existing HTML request, retaining all original families and weights. Field performance remains unmeasured.
+- Google tag queue uses documented arguments-object semantics; measurement remains off. Real tag/network validation, including withdrawal, is required before activation.
+- robots.txt is crawl control, not confidentiality or guaranteed removal. Private content remains protected by authentication/RLS; server noindex is an additional defense. Do not weaken access control for indexing.

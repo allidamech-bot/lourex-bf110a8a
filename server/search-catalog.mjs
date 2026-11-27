@@ -6,7 +6,8 @@ const validSlug = s => typeof s === "string" && s.length <= 90 && slugPattern.te
 const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const urlFor = slug => ORIGIN + "/products/" + encodeURIComponent(slug);
 const columns = "id,slug,name_en,short_description_en,description_en,origin_country,brand,packaging,unit,status,updated_at";
-const eligible = row => row && row.status === "active" && validSlug(row.slug) && typeof row.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(row.id) && typeof row.name_en === "string" && Boolean(row.name_en.trim()) && typeof row.short_description_en === "string" && Boolean(row.short_description_en.trim());
+const identityValid = row => row && row.status === "active" && validSlug(row.slug) && typeof row.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(row.id);
+const eligible = row => identityValid(row) && typeof row.name_en === "string" && Boolean(row.name_en.trim()) && typeof row.short_description_en === "string" && Boolean(row.short_description_en.trim());
 export function createPublicCatalogReader({url,key,fetchImpl=fetch}={}){
   if(url?.replace(/\/$/,"") !== SUPABASE || typeof key !== "string" || !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) throw new Error("Public catalog configuration unavailable");
   async function read(params){
@@ -23,14 +24,18 @@ export function createPublicCatalogReader({url,key,fetchImpl=fetch}={}){
       if(!validSlug(slug))return null;
       const rows=await read({slug:"eq."+slug,limit:"2"});
       if(rows.length>1)throw new Error("Ambiguous catalog slug");
-      return rows.find(row=>eligible(row)&&row.slug===slug)??null;
+      const row=rows.find(row=>row?.status==="active"&&row.slug===slug);
+      if(row&&!eligible(row))throw new Error("Active product has incomplete public metadata");
+      return row??null;
     },
     async products(){
       const all=[],seen=new Set();
       const size=500;
+      const deadline=Date.now()+8000;
       // Keyset pagination, bounded under the sitemap protocol's 50,000 URL limit.
       let cursor;
       for(let page=0;page<100;page++){
+        if(Date.now()>deadline)throw new Error("Catalog sitemap time budget exceeded");
         const rows=await read({order:"id.asc",limit:String(size),...(cursor?{id:"gt."+cursor}:{})});
         for(const row of rows){
           if(!eligible(row))continue;
@@ -39,7 +44,7 @@ export function createPublicCatalogReader({url,key,fetchImpl=fetch}={}){
         }
         if(rows.length<size)return all;
         const next=rows.at(-1)?.id;
-        if(typeof next!=="string"||next===cursor)throw new Error("Invalid catalog cursor");
+        if(typeof next!=="string"||!identityValid({...rows.at(-1),slug:"cursor",status:"active"})||(cursor&&next<=cursor))throw new Error("Invalid catalog cursor");
         cursor=next;
       }
       throw new Error("Catalog exceeds bounded sitemap capacity; partition required");
