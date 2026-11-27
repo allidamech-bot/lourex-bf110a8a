@@ -11,7 +11,7 @@ const config = JSON.parse(await readFile("vercel.json", "utf8"));
 const sitemap = await readFile("public/sitemap.xml", "utf8");
 
 test("all sourcing pages share source data, canonical, metadata and direct crawlable links", () => {
-  assert.equal(Object.keys(source.pages).length, 10);
+  assert.equal(Object.keys(source.pages).length, 12);
   for (const [kind, page] of Object.entries(source.pages)) {
     const html = renderAeoHtml(template, kind, source);
     assert.equal((html.match(/<h1\b/g) || []).length, 1);
@@ -63,3 +63,5 @@ test("fails closed for a changed template or unsafe route", () => {
  test("private routes have server-side noindex and product detail remains a dynamic route", () => { const privateRule=config.routes.find(r=>r.headers?.["X-Robots-Tag"] && new RegExp("^"+r.src+"$").test("/auth")); assert.ok(privateRule); for(const path of ["/auth","/track","/dashboard/orders","/customer-portal/requests","/profile","/admin"]) assert.ok(new RegExp("^"+privateRule.src+"$").test(path)); assert.ok(config.routes.some(r=>r.src==="/products/([^/]+)/?"&&r.dest==="/api/search-catalog?mode=detail&slug=$1")); });
 
  test("all Arabic and Turkish AEO URLs have unique canonicals, reciprocal hreflang, and matching route configuration",()=>{for(const [kind,page] of Object.entries(source.pages)){for(const lang of ["en","ar","tr"]){const path=lang==="en"?page.path:"/"+lang+page.path;const html=renderAeoHtml(template,kind,source,lang);assert.ok(html.includes(`lang="${lang}"`));assert.ok(html.includes(`rel="canonical" href="https://www.lou-rex.com${path}"`));assert.equal((html.match(/hreflang=/g)||[]).length,4);for(const other of ["en","ar","tr"])assert.ok(html.includes(`hreflang="${other}" href="https://www.lou-rex.com${other==="en"?"":"/"+other}${page.path}"`));assert.ok(config.routes.some(route=>route.src===path+"/?"&&route.dest===path+"/index.html"));assert.ok(sitemap.includes("https://www.lou-rex.com"+path+"</loc>"));}}});
+
+test("buyer guides provide matching localized substantive sections in raw HTML",()=>{for(const [kind,sections] of Object.entries(source.guides)){for(const lang of ["en","ar","tr"]){const html=renderAeoHtml(template,kind,source,lang);assert.equal(sections.length,4);for(const section of sections){const escape=s=>s.replace(/[&<>"\']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\'":"&#39;"})[c]);assert.ok(html.includes(escape(section[lang][0])));assert.ok(html.includes(escape(section[lang][1])));}}}});

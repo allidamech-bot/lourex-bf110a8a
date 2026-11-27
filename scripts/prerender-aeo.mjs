@@ -36,8 +36,9 @@ export function renderAeoHtml(template,kind,content,lang="en"){
   const localPaths=new Set(Object.values(content.pages).map(p=>p.path));
   const links=content.relatedLinks.map(link=>({to:localPaths.has(link.to)?localizedPath(link.to,lang):link.to,label:link[lang]}));
   const localeLinks=alternatives.map((x,i)=>({to:x.path,label:["English","العربية","Türkçe"][i]}));
+  const guide=(content.guides?.[kind]??[]).map(section=>"<section><h2>"+escapeHtml(section[lang][0])+"</h2><p>"+escapeHtml(section[lang][1])+"</p></section>").join("");
   const html=metadata(template,{path,title,description:intro,lang,alternates:[...alternatives,{lang:"x-default",path:page.path}]});
-  return replaceOnce(html,bodyMarker,frame(list(localeLinks)+heading(h1)+"<p>"+escapeHtml(intro)+"</p>"+(kind==="about"?"":"<p>"+escapeHtml(content[lang+"Definition"])+"</p>")+"<section><h2>"+labels[0]+"</h2><p>"+escapeHtml(focus)+"</p></section><section><h2>"+labels[1]+"</h2><p>"+escapeHtml(content[lang+"Focus"])+"</p></section>"+list(links)));
+  return replaceOnce(html,bodyMarker,frame(list(localeLinks)+heading(h1)+"<p>"+escapeHtml(intro)+"</p>"+(kind==="about"?"":"<p>"+escapeHtml(content[lang+"Definition"])+"</p>")+"<section><h2>"+labels[0]+"</h2><p>"+escapeHtml(focus)+"</p></section><section><h2>"+labels[1]+"</h2><p>"+escapeHtml(content[lang+"Focus"])+"</p></section>"+guide+list(links)));
 }
 export function renderPublicHtml(template,page,path,categories=[]){
   const html=metadata(template,{path,title:page.titleEn,description:page.introEn});

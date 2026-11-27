@@ -188,6 +188,12 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" />} />
+                    <Route path="/ar/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="ar" />} />
+                    <Route path="/tr/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="tr" />} />
+                    <Route path="/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" />} />
+                    <Route path="/ar/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="ar" />} />
+                    <Route path="/tr/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="tr" />} />
                     <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
                     <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
                     <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />
@@ -551,6 +557,12 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" />} />
+                    <Route path="/ar/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="ar" />} />
+                    <Route path="/tr/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="tr" />} />
+                    <Route path="/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" />} />
+                    <Route path="/ar/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="ar" />} />
+                    <Route path="/tr/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="tr" />} />
                     <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
                     <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
                     <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />

@@ -8,11 +8,11 @@ const faqs = [
   {
     en: {
       q: "What is LOUREX?",
-      a: "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
+      a: "LOUREX TRADING AND SOURCING coordinates international sourcing for importers, wholesalers and distributors, including food, FMCG and other commercial products. Business buyers can submit purchase requirements, coordinate supplier discussions and follow agreed orders.",
     },
     ar: {
       q: "ما هي لوريكس؟",
-      a: "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.",
+      a: "تنسّق لوريكس LOUREX التوريد الدولي للمستوردين وتجار الجملة والموزعين، بما يشمل الأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى. يستطيع المشترون تقديم متطلبات الشراء وتنسيق التواصل مع الموردين ومتابعة الطلبات المتفق عليها.",
     },
   },
   {
@@ -28,11 +28,11 @@ const faqs = [
   {
     en: {
       q: "What products does LOUREX focus on?",
-      a: "LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products.",
+      a: "LOUREX coordinates inquiries across food, confectionery, FMCG, cleaning, personal care and packaging categories, subject to availability and applicable requirements.",
     },
     ar: {
       q: "ما المنتجات التي تركز عليها لوريكس؟",
-      a: "تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية.",
+      a: "تنسّق لوريكس استفسارات الأغذية والحلويات والسلع الاستهلاكية والمنظفات والعناية الشخصية والتغليف وفق التوفر والمتطلبات المعمول بها.",
     },
   },
   {

@@ -51,6 +51,16 @@
         "to": "/fmcg-wholesale-sourcing",
         "en": "FMCG wholesale sourcing",
         "ar": "توريد السلع الاستهلاكية بالجملة"
+      },
+      {
+        "to": "/turkiye-sourcing-guide",
+        "en": "Buyer guide: sourcing products from Türkiye",
+        "ar": "دليل المشتري للتوريد من تركيا"
+      },
+      {
+        "to": "/wholesale-rfq-checklist",
+        "en": "Wholesale RFQ checklist for importers and distributors",
+        "ar": "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين"
       }
     ]
   },

@@ -149,6 +149,30 @@
       "dest": "/api/search-catalog?mode=sitemap"
     },
     {
+      "src": "/turkiye-sourcing-guide/?",
+      "dest": "/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/ar/turkiye-sourcing-guide/?",
+      "dest": "/ar/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/tr/turkiye-sourcing-guide/?",
+      "dest": "/tr/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/wholesale-rfq-checklist/?",
+      "dest": "/wholesale-rfq-checklist/index.html"
+    },
+    {
+      "src": "/ar/wholesale-rfq-checklist/?",
+      "dest": "/ar/wholesale-rfq-checklist/index.html"
+    },
+    {
+      "src": "/tr/wholesale-rfq-checklist/?",
+      "dest": "/tr/wholesale-rfq-checklist/index.html"
+    },
+    {
       "src": "/products/?",
       "dest": "/products/index.html"
     },

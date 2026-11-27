@@ -51,6 +51,8 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
     { label: ar ? "توريد منتجات العناية الشخصية والتجميل" : "Personal Care and Cosmetics Sourcing", href: ar ? "/ar/personal-care-sourcing" : "/personal-care-sourcing" },
     { label: ar ? "توريد مواد التغليف والمستلزمات التجارية" : "Packaging and Commercial Supplies Sourcing", href: ar ? "/ar/packaging-supplies-sourcing" : "/packaging-supplies-sourcing" },
     { label: ar ? "توريد السلع الاستهلاكية بالجملة من تركيا" : "FMCG Wholesale Sourcing from Türkiye", href: ar ? "/ar/fmcg-wholesale-sourcing" : "/fmcg-wholesale-sourcing" },
+    { label: ar ? "دليل المشتري للتوريد من تركيا" : "Buyer guide: sourcing products from Türkiye", href: ar ? "/ar/turkiye-sourcing-guide" : "/turkiye-sourcing-guide" },
+    { label: ar ? "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين" : "Wholesale RFQ checklist for importers and distributors", href: ar ? "/ar/wholesale-rfq-checklist" : "/wholesale-rfq-checklist" },
     { label: t("nav.whyLourex"), href: "/why-lourex" },
     { label: ar ? "الأسئلة الشائعة" : "FAQ", href: "/faq" },
     { label: t("nav.contact"), href: "/contact" },

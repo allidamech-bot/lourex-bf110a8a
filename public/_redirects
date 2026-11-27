@@ -1,5 +1,11 @@
 # Public and authenticated React Router paths; static pages are served by the filesystem.
 /catalog /products 301
+/turkiye-sourcing-guide /turkiye-sourcing-guide/index.html 200
+/ar/turkiye-sourcing-guide /ar/turkiye-sourcing-guide/index.html 200
+/tr/turkiye-sourcing-guide /tr/turkiye-sourcing-guide/index.html 200
+/wholesale-rfq-checklist /wholesale-rfq-checklist/index.html 200
+/ar/wholesale-rfq-checklist /ar/wholesale-rfq-checklist/index.html 200
+/tr/wholesale-rfq-checklist /tr/wholesale-rfq-checklist/index.html 200
 /cleaning-household-sourcing /cleaning-household-sourcing/index.html 200
 /ar/cleaning-household-sourcing /ar/cleaning-household-sourcing/index.html 200
 /tr/cleaning-household-sourcing /tr/cleaning-household-sourcing/index.html 200

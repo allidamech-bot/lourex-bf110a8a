@@ -119,6 +119,30 @@
       "focusEn": "Share a product list, brand or specification preferences, carton or pallet quantities, target market and delivery expectations. LOUREX coordinates the inquiry; supplier selection, minimum quantities, prices, documentation and delivery terms are confirmed through the commercial process.",
       "focusAr": "أرسل قائمة المنتجات وتفضيلات العلامة أو المواصفات وكميات الكراتين أو الطبالي والسوق المستهدف وتوقعات التسليم. تنسّق لوريكس الاستفسار، وتُؤكّد خيارات المورد والحد الأدنى والكلفة والوثائق وشروط التسليم خلال العملية التجارية.",
       "focusTr": "Ürün listesi, marka veya özellik tercihleri, koli ya da palet miktarları, hedef pazar ve teslimat beklentilerini iletin. LOUREX talebi koordine eder; tedarikçi seçimi, minimum miktar, fiyat, belgeler ve teslimat şartları ticari süreçte doğrulanır."
+    },
+    "buyerGuide": {
+      "path": "/turkiye-sourcing-guide",
+      "h1En": "Buyer guide: sourcing products from Türkiye",
+      "h1Ar": "دليل المشتري للتوريد من تركيا",
+      "h1Tr": "Alıcı rehberi: Türkiye'den ürün tedariki",
+      "introEn": "A practical sourcing guide for importers and distributors preparing a commercial inquiry in Türkiye. Compare supplier offers on the same specifications, quantity, delivery scope and destination requirements before committing to an order.",
+      "introAr": "دليل عملي للمستوردين والموزعين لإعداد استفسار توريد تجاري من تركيا. قارن عروض الموردين وفق المواصفات والكمية ونطاق التسليم ومتطلبات الوجهة نفسها قبل الالتزام بالطلب.",
+      "introTr": "Türkiye'den ticari tedarik talebi hazırlayan ithalatçılar ve distribütörler için pratik rehber. Sipariş vermeden önce teklifleri aynı ürün özellikleri, miktar, teslimat kapsamı ve hedef pazar şartları üzerinden karşılaştırın.",
+      "focusEn": "Begin with a product brief and request written supplier offers. Confirm the legal counterparty, applicable documentation, payment terms and responsibilities before agreeing to the transaction.",
+      "focusAr": "ابدأ بملف مواصفات المنتج واطلب عروضًا مكتوبة. تحقق من الطرف القانوني والوثائق اللازمة وشروط الدفع والمسؤوليات قبل الاتفاق.",
+      "focusTr": "Ürün ihtiyaç belgesiyle başlayın ve yazılı teklifler isteyin. İşlem üzerinde anlaşmadan önce hukuki muhatabı, gerekli belgeleri, ödeme şartlarını ve sorumlulukları doğrulayın."
+    },
+    "rfqGuide": {
+      "path": "/wholesale-rfq-checklist",
+      "h1En": "Wholesale RFQ checklist for importers and distributors",
+      "h1Ar": "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين",
+      "h1Tr": "İthalatçı ve distribütörler için toptan teklif talebi kontrol listesi",
+      "introEn": "A complete request for quotation (RFQ) gives suppliers a consistent basis to assess your requirements. Use this checklist to reduce repeated questions and make commercial offers easier to compare.",
+      "introAr": "يمنح طلب عرض السعر المتكامل الموردين أساسًا موحدًا لدراسة احتياجاتك. استخدم هذه القائمة لتقليل الأسئلة المتكررة وتسهيل مقارنة العروض التجارية.",
+      "introTr": "Eksiksiz bir teklif talebi (RFQ), tedarikçilerin ihtiyaçlarınızı aynı esaslara göre değerlendirmesini sağlar. Bu kontrol listesi tekrar eden soruları azaltmaya ve teklifleri karşılaştırmaya yardımcı olur.",
+      "focusEn": "Provide one line per product, clearly distinguish required specifications from preferences, and identify the delivery destination and expected timing. An inquiry is not a binding supplier offer.",
+      "focusAr": "خصص بندًا لكل منتج، وميّز المواصفات الإلزامية عن التفضيلات، وحدد الوجهة والتوقيت المتوقع. الاستفسار ليس عرضًا ملزمًا من المورد.",
+      "focusTr": "Her ürün için ayrı satır açın, zorunlu özelliklerle tercihleri ayırın, teslimat yerini ve beklenen zamanı belirtin. Talep, bağlayıcı bir tedarikçi teklifi değildir."
     }
   },
   "relatedLinks": [
@@ -205,6 +229,24 @@
       "en": "FMCG Wholesale Sourcing from Türkiye",
       "ar": "توريد السلع الاستهلاكية بالجملة من تركيا",
       "tr": "Türkiye'den toptan hızlı tüketim ürünleri tedariki"
+    },
+    {
+      "to": "/turkiye-sourcing-guide",
+      "en": "Buyer guide: sourcing products from Türkiye",
+      "ar": "دليل المشتري للتوريد من تركيا",
+      "tr": "Alıcı rehberi: Türkiye'den ürün tedariki"
+    },
+    {
+      "to": "/wholesale-rfq-checklist",
+      "en": "Wholesale RFQ checklist for importers and distributors",
+      "ar": "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين",
+      "tr": "İthalatçı ve distribütörler için toptan teklif talebi kontrol listesi"
+    },
+    {
+      "to": "/smart-rfq",
+      "en": "Multi-product RFQ",
+      "ar": "طلب عرض سعر متعدد المنتجات",
+      "tr": "Çok ürünlü teklif talebi"
     }
   ],
   "enDefinition": "LOUREX coordinates international sourcing and supplier discussions for business buyers, with purchase request management and order follow-up.",
@@ -212,5 +254,123 @@
   "arDefinition": "تنسّق لوريكس LOUREX التوريد الدولي والتواصل مع الموردين للمشترين التجاريين، مع إدارة طلبات الشراء ومتابعة الطلبات.",
   "arFocus": "استكشف كتالوج المنتجات أو قدّم طلب توريد بالمواصفات والكمية والوجهة. يُؤكّد توفر الموردين والشروط التجارية لكل استفسار.",
   "trDefinition": "LOUREX, ticari alıcılar için uluslararası tedarik, tedarikçi görüşmeleri ve sipariş takibini koordine eder.",
-  "trFocus": "Ürün kataloğunu inceleyin veya ürün özellikleri, miktar ve varış yeri ile tedarik talebi oluşturun. Tedarikçi uygunluğu ve ticari şartlar her talep için ayrıca doğrulanır."
+  "trFocus": "Ürün kataloğunu inceleyin veya ürün özellikleri, miktar ve varış yeri ile tedarik talebi oluşturun. Tedarikçi uygunluğu ve ticari şartlar her talep için ayrıca doğrulanır.",
+  "guides": {
+    "buyerGuide": [
+      {
+        "en": [
+          "1. Define the commercial brief",
+          "State the product, specifications, acceptable substitutions, quantities and unit. For branded goods, distinguish a specific brand requirement from a comparable alternative. Confirm the destination country before requesting a quotation."
+        ],
+        "ar": [
+          "١. تحديد ملف الاحتياج التجاري",
+          "حدد المنتج والمواصفات والبدائل المقبولة والكمية والوحدة. للمنتجات ذات العلامات التجارية، ميّز بين العلامة المطلوبة والبديل المقبول. حدد بلد الوجهة قبل طلب السعر."
+        ],
+        "tr": [
+          "1. Ticari ihtiyacı tanımlayın",
+          "Ürünü, özellikleri, kabul edilebilir alternatifleri, miktarı ve birimi belirtin. Markalı ürünlerde belirli marka şartını muadil ürün tercihinden ayırın. Teklif istemeden önce hedef ülkeyi belirleyin."
+        ]
+      },
+      {
+        "en": [
+          "2. Review supplier and product evidence",
+          "Ask for the legal company name, relevant product documentation and evidence supporting the quoted specifications. Where relevant, assess sample availability, batch details, shelf life, labeling and required certificates. Do not treat a directory listing as a verification guarantee."
+        ],
+        "ar": [
+          "٢. مراجعة أدلة المورد والمنتج",
+          "اطلب الاسم القانوني للشركة والوثائق المتعلقة بالمنتج والأدلة التي تدعم المواصفات المعروضة. عند الحاجة راجع العينات وبيانات التشغيلات والصلاحية والملصقات والشهادات المطلوبة. وجود المورد في دليل تجاري ليس ضمانًا للتحقق."
+        ],
+        "tr": [
+          "2. Tedarikçi ve ürün belgelerini inceleyin",
+          "Şirketin hukuki unvanını, ilgili ürün belgelerini ve teklif edilen özellikleri destekleyen kanıtları isteyin. Gerektiğinde numune, parti bilgisi, raf ömrü, etiket ve belgeleri değerlendirin. Rehber kaydı doğrulama garantisi değildir."
+        ]
+      },
+      {
+        "en": [
+          "3. Compare offers on the same basis",
+          "Request currency, quotation validity, unit and carton quantities, minimum order, lead time and delivery scope. Separate transport, taxes and other charges where applicable; compare the same destination and scope rather than the lowest quoted unit price alone."
+        ],
+        "ar": [
+          "٣. مقارنة العروض على أساس واحد",
+          "اطلب العملة وصلاحية العرض وعدد الوحدات والكراتين والحد الأدنى والمهلة ونطاق التسليم. افصل تكاليف النقل والضرائب والرسوم عند انطباقها، وقارن الوجهة والنطاق نفسيهما بدل الاعتماد على أقل سعر وحدة فقط."
+        ],
+        "tr": [
+          "3. Teklifleri aynı temelde karşılaştırın",
+          "Para birimini, teklif geçerliliğini, birim ve koli miktarlarını, minimum siparişi, hazırlık süresini ve teslimat kapsamını isteyin. Gerektiğinde taşıma, vergi ve diğer giderleri ayırın; yalnızca en düşük birim fiyatı karşılaştırmayın."
+        ]
+      },
+      {
+        "en": [
+          "4. Confirm before committing",
+          "Agree on the counterparty, written specifications, payment schedule, delivery responsibilities and inspection or dispute terms. Check the destination's applicable import requirements with qualified local advisers. LOUREX coordinates inquiries and follow-up; outcomes depend on the agreed transaction."
+        ],
+        "ar": [
+          "٤. التحقق قبل الالتزام",
+          "اتفق على الطرف المتعاقد والمواصفات المكتوبة وجدول الدفع ومسؤوليات التسليم وشروط الفحص أو النزاع. راجع متطلبات الاستيراد في الوجهة مع مختصين محليين. تنسّق لوريكس الاستفسارات والمتابعة وفق الصفقة المتفق عليها."
+        ],
+        "tr": [
+          "4. Taahhütten önce doğrulayın",
+          "Muhatabı, yazılı özellikleri, ödeme takvimini, teslimat sorumluluklarını ve kontrol veya uyuşmazlık şartlarını netleştirin. Hedef ülkenin ithalat şartlarını yerel uzmanlarla kontrol edin. LOUREX talepleri ve takibi mutabık kalınan işlem kapsamında koordine eder."
+        ]
+      }
+    ],
+    "rfqGuide": [
+      {
+        "en": [
+          "Product and quantity",
+          "List product name, brand requirement, variant, net content, unit, carton count and desired total quantity. Specify whether alternatives are acceptable and whether quantities are estimates or firm requirements."
+        ],
+        "ar": [
+          "المنتج والكمية",
+          "اذكر اسم المنتج والعلامة المطلوبة والصنف والوزن أو الحجم الصافي والوحدة وعدد الكراتين والكمية الإجمالية. حدد قبول البدائل وما إذا كانت الكميات تقديرية أم مؤكدة."
+        ],
+        "tr": [
+          "Ürün ve miktar",
+          "Ürün adı, marka şartı, çeşit, net içerik, birim, koli sayısı ve toplam miktarı yazın. Alternatiflerin kabul edilip edilmediğini ve miktarın tahmini mi kesin mi olduğunu belirtin."
+        ]
+      },
+      {
+        "en": [
+          "Packaging and market requirements",
+          "State packaging format, label language, barcode, shelf-life expectation and relevant safety or product documentation. For custom packaging, attach dimensions and artwork when available. Ask the supplier to confirm feasibility."
+        ],
+        "ar": [
+          "التعبئة ومتطلبات السوق",
+          "حدد نوع العبوة ولغة الملصق والباركود والصلاحية المطلوبة ووثائق السلامة أو المنتج المناسبة. للتغليف المخصص أرفق الأبعاد والتصميم عند توفرهما، واطلب تأكيد إمكانية التنفيذ."
+        ],
+        "tr": [
+          "Ambalaj ve pazar şartları",
+          "Ambalaj türü, etiket dili, barkod, raf ömrü beklentisi ve ilgili güvenlik veya ürün belgelerini belirtin. Özel ambalaj için varsa ölçü ve tasarımı ekleyin; uygulanabilirliği tedarikçiye doğrulatın."
+        ]
+      },
+      {
+        "en": [
+          "Delivery and quotation terms",
+          "Include country and city of destination, required timing, requested delivery basis, preferred currency and quotation validity. Ask for minimum quantities and separately stated charges where appropriate."
+        ],
+        "ar": [
+          "التسليم وشروط عرض السعر",
+          "حدد بلد ومدينة الوجهة والتوقيت المطلوب وأساس التسليم المطلوب والعملة المفضلة وصلاحية العرض. اطلب الحد الأدنى والكلفة المفصلة عند الحاجة."
+        ],
+        "tr": [
+          "Teslimat ve teklif şartları",
+          "Varış ülkesi ve şehri, beklenen zaman, teslimat kapsamı, tercih edilen para birimi ve teklif geçerliliğini belirtin. Minimum miktarı ve gerektiğinde ayrı gider kalemlerini sorun."
+        ]
+      },
+      {
+        "en": [
+          "How to submit",
+          "Use the LOUREX purchase request for a single requirement or Smart RFQ for multiple product lines. Keep commercial and technical attachments relevant to the request. Review the resulting offer and confirm all terms before ordering."
+        ],
+        "ar": [
+          "طريقة الإرسال",
+          "استخدم طلب الشراء في لوريكس لاحتياج واحد أو طلب عرض السعر الذكي لعدة بنود. أرفق فقط المستندات التجارية والفنية المتعلقة بالطلب. راجع العرض الناتج وأكد الشروط قبل الطلب."
+        ],
+        "tr": [
+          "Talep nasıl iletilir?",
+          "Tek ihtiyaç için LOUREX satın alma talebini, birden fazla ürün satırı için Smart RFQ'yu kullanın. Yalnızca ilgili ticari ve teknik ekleri paylaşın. Siparişten önce teklifi ve tüm şartları inceleyip doğrulayın."
+        ]
+      }
+    ]
+  }
 }

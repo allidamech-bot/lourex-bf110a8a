@@ -27,6 +27,8 @@ export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:Searc
   const title = content[`h1${suffix}`];
   const description = content[`intro${suffix}`];
   const l = labels[lang];
+  const guides: Record<string, {en:string[];ar:string[];tr:string[]}[]> = aeoContent.guides;
+  const sections = guides[kind] ?? [];
   const alternates = [...languages.map(language=>({lang:language,href:"https://www.lou-rex.com"+localizedPath(content.path,language)})),{lang:"x-default",href:"https://www.lou-rex.com"+content.path}];
   useEffect(()=>{
     const html=document.documentElement;
@@ -51,6 +53,7 @@ export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:Searc
           <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.works}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{content[`focus${suffix}`]}</p></div>
           <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.focus}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{aeoContent[`${lang}Focus`]}</p></div>
         </section>
+        {sections.length>0 && <div className="mt-10 grid gap-4">{sections.map(section=><article key={section[lang][0]} className="rounded-[1.5rem] border border-border bg-card p-6"><h2 className="font-serif text-2xl font-semibold">{section[lang][0]}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{section[lang][1]}</p></article>)}</div>}
         <section className="mt-10 rounded-[1.5rem] border border-border/70 bg-secondary/65 p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.related}</h2><div className="mt-5 flex flex-wrap gap-2">{aeoContent.relatedLinks.map(link=><Link key={link.to} to={localPaths.has(link.to)?localizedPath(link.to,lang):link.to} className="rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-sm text-foreground transition hover:text-primary">{link[lang]}</Link>)}</div></section>
       </main>
       {lang!=="tr"?<Footer/>:<footer className="container mx-auto border-t border-border px-4 py-8"><Link to="/contact">LOUREX · {l.contact}</Link></footer>}
