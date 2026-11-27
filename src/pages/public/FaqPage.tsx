@@ -58,11 +58,11 @@ const faqs = [
   {
     en: {
       q: "Does LOUREX work only in one country?",
-      a: "No. LOUREX is positioned for global business buyers and focuses on structured sourcing coordination for food and sweets products.",
+      a: "LOUREX accepts inquiries from international business buyers; feasibility depends on the product, supplier availability, destination requirements and agreed commercial terms.",
     },
     ar: {
       q: "هل تعمل لوريكس في دولة واحدة فقط؟",
-      a: "لا. لوريكس موجهة للمشترين التجاريين حول العالم وتركز على تنسيق توريد المواد الغذائية والحلويات بشكل منظم.",
+      a: "تستقبل لوريكس استفسارات المشترين التجاريين الدوليين؛ وتعتمد إمكانية التنفيذ على المنتج وتوفر المورد ومتطلبات الوجهة والشروط المتفق عليها.",
     },
   },
 ];

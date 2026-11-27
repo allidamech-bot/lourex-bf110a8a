@@ -20,12 +20,12 @@ export default function AboutPage() {
     ? [
         "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع.",
         "تنسّق لوريكس التوريد الدولي للأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى.",
-        "تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية بصياغة تجارية منظمة وآمنة.",
+        "تنسّق لوريكس استفسارات الأغذية والحلويات والسلع الاستهلاكية والمنظفات والعناية الشخصية والتغليف وفق التوفر والمتطلبات المعمول بها.",
       ]
     : [
         "LOUREX is not primarily a marketplace, supplier listing website, manufacturer, or factory marketplace.",
         "LOUREX coordinates international trade sourcing inquiries for food, FMCG and other commercial products.",
-        "LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products with structured, compliance-aware coordination.",
+        "LOUREX coordinates inquiries across food, confectionery, FMCG, cleaning, personal care and packaging, subject to availability and applicable requirements.",
       ];
 
   const links = [
