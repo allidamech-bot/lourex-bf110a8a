@@ -42,6 +42,54 @@
       "dest": "/syrian-products/index.html"
     },
     {
+      "src": "/ar/about-lourex/?",
+      "dest": "/ar/about-lourex/index.html"
+    },
+    {
+      "src": "/tr/about-lourex/?",
+      "dest": "/tr/about-lourex/index.html"
+    },
+    {
+      "src": "/ar/chocolate-sourcing/?",
+      "dest": "/ar/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/tr/chocolate-sourcing/?",
+      "dest": "/tr/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/ar/biscuits-sourcing/?",
+      "dest": "/ar/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/tr/biscuits-sourcing/?",
+      "dest": "/tr/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/ar/food-products-sourcing/?",
+      "dest": "/ar/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/tr/food-products-sourcing/?",
+      "dest": "/tr/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/ar/turkish-products/?",
+      "dest": "/ar/turkish-products/index.html"
+    },
+    {
+      "src": "/tr/turkish-products/?",
+      "dest": "/tr/turkish-products/index.html"
+    },
+    {
+      "src": "/ar/syrian-products/?",
+      "dest": "/ar/syrian-products/index.html"
+    },
+    {
+      "src": "/tr/syrian-products/?",
+      "dest": "/tr/syrian-products/index.html"
+    },
+    {
       "src": "/products/?",
       "dest": "/products/index.html"
     },

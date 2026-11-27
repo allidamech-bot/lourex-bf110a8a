@@ -7,7 +7,10 @@
       "introEn": "LOUREX TRADING AND SOURCING coordinates international sourcing for importers, wholesalers and distributors, including food, FMCG and other commercial products. Business buyers can submit purchase requirements, coordinate supplier discussions and follow agreed orders.",
       "introAr": "تنسّق لوريكس LOUREX التوريد الدولي للمستوردين وتجار الجملة والموزعين، بما يشمل الأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى. يستطيع المشترون تقديم متطلبات الشراء وتنسيق التواصل مع الموردين ومتابعة الطلبات المتفق عليها.",
       "focusEn": "The company is not primarily a marketplace, supplier listing website, manufacturer, or factory marketplace. Its role is structured coordination between business buyers and suppliers.",
-      "focusAr": "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع. دورها هو التنسيق المنظم بين المشترين التجاريين والموردين."
+      "focusAr": "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع. دورها هو التنسيق المنظم بين المشترين التجاريين والموردين.",
+      "h1Tr": "LOUREX hakkında",
+      "introTr": "LOUREX TRADING AND SOURCING, ithalatçılar, toptancılar ve distribütörler için gıda, hızlı tüketim ürünleri ve diğer ticari ürünlerin uluslararası tedarik koordinasyonunu yürütür. Alıcılar satın alma ihtiyaçlarını iletebilir, tedarikçi görüşmelerini ve mutabık kalınan siparişlerin takibini koordine edebilir.",
+      "focusTr": "LOUREX bir üretici veya tedarikçi listeleme sitesi değildir. Ticari alıcılar ile tedarikçiler arasındaki sürecin koordinasyonuna odaklanır."
     },
     "chocolate": {
       "path": "/chocolate-sourcing",
@@ -16,7 +19,10 @@
       "introEn": "LOUREX helps business buyers coordinate chocolate sourcing through supplier coordination, purchase request management, deal follow-up, and delivery tracking.",
       "introAr": "تساعد لوريكس المشترين التجاريين في تنسيق توريد الشوكولاتة من خلال إدارة طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
       "focusEn": "Chocolate requests can include product type, packaging, quantity, destination, labeling needs, and delivery expectations for supplier review.",
-      "focusAr": "يمكن أن تشمل طلبات الشوكولاتة نوع المنتج، التعبئة، الكمية، الوجهة، متطلبات الملصقات، وتوقعات التسليم لمراجعة الموردين."
+      "focusAr": "يمكن أن تشمل طلبات الشوكولاتة نوع المنتج، التعبئة، الكمية، الوجهة، متطلبات الملصقات، وتوقعات التسليم لمراجعة الموردين.",
+      "h1Tr": "Çikolata tedariki",
+      "introTr": "LOUREX, ticari alıcıların çikolata tedarik taleplerini, tedarikçi görüşmelerini ve sipariş takibini koordine eder.",
+      "focusTr": "Talebinizde ürün türü, ambalaj, miktar, varış ülkesi, etiketleme koşulları ve teslimat beklentilerini belirtin."
     },
     "biscuits": {
       "path": "/biscuits-sourcing",
@@ -25,7 +31,10 @@
       "introEn": "LOUREX coordinates biscuit sourcing for business buyers by organizing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
       "introAr": "تنسق لوريكس توريد البسكويت للمشترين التجاريين عبر تنظيم طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
       "focusEn": "Biscuit sourcing requests can cover flavors, carton counts, private-label needs, shelf-life requirements, and destination information.",
-      "focusAr": "يمكن أن تغطي طلبات توريد البسكويت النكهات، عدد الكراتين، متطلبات العلامة الخاصة، مدة الصلاحية، ومعلومات الوجهة."
+      "focusAr": "يمكن أن تغطي طلبات توريد البسكويت النكهات، عدد الكراتين، متطلبات العلامة الخاصة، مدة الصلاحية، ومعلومات الوجهة.",
+      "h1Tr": "Bisküvi tedariki",
+      "introTr": "LOUREX, ticari alıcılar için bisküvi satın alma taleplerinin ve tedarikçi görüşmelerinin koordinasyonuna yardımcı olur.",
+      "focusTr": "Aroma, koli adedi, özel marka talebi, raf ömrü ve varış ülkesi gibi ayrıntılar tedarikçi değerlendirmesine sunulabilir."
     },
     "food": {
       "path": "/food-products-sourcing",
@@ -34,7 +43,10 @@
       "introEn": "LOUREX provides sourcing coordination for food products by connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
       "introAr": "توفر لوريكس تنسيق توريد المواد الغذائية من خلال ربط المشترين التجاريين بالموردين وإدارة طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
       "focusEn": "Food product coordination may include sweets, packaged food, FMCG items, Turkish products, and Syrian products, subject to supplier availability and applicable rules.",
-      "focusAr": "قد يشمل تنسيق المواد الغذائية الحلويات، الأغذية المعبأة، السلع الاستهلاكية، المنتجات التركية، والمنتجات السورية، حسب توفر الموردين والأنظمة المعمول بها."
+      "focusAr": "قد يشمل تنسيق المواد الغذائية الحلويات، الأغذية المعبأة، السلع الاستهلاكية، المنتجات التركية، والمنتجات السورية، حسب توفر الموردين والأنظمة المعمول بها.",
+      "h1Tr": "Gıda ürünleri tedariki",
+      "introTr": "LOUREX, ticari alıcıların gıda ürünleri taleplerini ve tedarikçi görüşmelerini koordine eder.",
+      "focusTr": "Paketli gıda, şekerleme ve hızlı tüketim ürünleri için talepler; ürün bulunabilirliği, hedef pazarın şartları ve ticari koşullar doğrultusunda değerlendirilir."
     },
     "turkish": {
       "path": "/turkish-products",
@@ -43,7 +55,10 @@
       "introEn": "LOUREX coordinates Turkish products sourcing for business buyers that need structured purchase request management, supplier coordination, deal follow-up, and delivery tracking.",
       "introAr": "تنسق لوريكس توريد المنتجات التركية للمشترين التجاريين الذين يحتاجون إلى إدارة منظمة لطلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
       "focusEn": "Requests can cover packaged food, confectionery and other commercial categories shown in the catalog, subject to supplier availability, specifications, destination requirements and agreed commercial terms.",
-      "focusAr": "يمكن أن تشمل الطلبات الأغذية المعبأة والحلويات والفئات التجارية الأخرى المعروضة في الكتالوج، وفق توافر الموردين والمواصفات ومتطلبات الوجهة والشروط التجارية المتفق عليها."
+      "focusAr": "يمكن أن تشمل الطلبات الأغذية المعبأة والحلويات والفئات التجارية الأخرى المعروضة في الكتالوج، وفق توافر الموردين والمواصفات ومتطلبات الوجهة والشروط التجارية المتفق عليها.",
+      "h1Tr": "Türkiye'den ürün tedariki",
+      "introTr": "LOUREX, Türkiye menşeli ürünler arayan uluslararası ticari alıcılar için satın alma taleplerini, tedarikçi görüşmelerini ve sipariş takibini koordine eder.",
+      "focusTr": "Paketli gıda, şekerleme ve katalogdaki diğer ticari kategoriler için ürün özellikleri, miktar, varış yeri ve tedarikçi uygunluğu değerlendirilir."
     },
     "syrian": {
       "path": "/syrian-products",
@@ -52,61 +67,78 @@
       "introEn": "Business buyers interested in Syrian-origin products may submit product specifications, quantity and destination to LOUREX for a case-by-case sourcing review. Availability and lawful trade feasibility must be confirmed before proceeding.",
       "introAr": "يمكن للمشترين التجاريين المهتمين بالمنتجات ذات المنشأ السوري تقديم المواصفات والكمية والوجهة إلى لوريكس لدراسة كل طلب على حدة. يجب التأكد من التوفر وإمكانية التجارة وفق الأنظمة قبل المتابعة.",
       "focusEn": "LOUREX does not make unrestricted trade claims for Syrian products. Requests are reviewed with attention to product details, supplier availability, and applicable requirements.",
-      "focusAr": "لا تقدم لوريكس ادعاءات تجارية غير مقيدة للمنتجات السورية. تتم مراجعة الطلبات مع الانتباه إلى تفاصيل المنتج، توفر الموردين، والمتطلبات المعمول بها."
+      "focusAr": "لا تقدم لوريكس ادعاءات تجارية غير مقيدة للمنتجات السورية. تتم مراجعة الطلبات مع الانتباه إلى تفاصيل المنتج، توفر الموردين، والمتطلبات المعمول بها.",
+      "h1Tr": "Suriye menşeli ürünler için tedarik değerlendirmesi",
+      "introTr": "Suriye menşeli ürünlerle ilgilenen ticari alıcılar ürün özelliklerini, miktarını ve varış yerini LOUREX'e iletebilir. Her talep ayrı değerlendirilir.",
+      "focusTr": "İşleme devam etmeden önce ürün bulunabilirliği, tedarikçi uygunluğu ve geçerli yasal şartlar doğrulanmalıdır."
     }
   },
   "relatedLinks": [
     {
       "to": "/about-lourex",
       "en": "About LOUREX",
-      "ar": "من هي لوريكس؟"
+      "ar": "من هي لوريكس؟",
+      "tr": "LOUREX hakkında"
     },
     {
       "to": "/chocolate-sourcing",
       "en": "Chocolate Sourcing",
-      "ar": "توريد الشوكولاتة"
+      "ar": "توريد الشوكولاتة",
+      "tr": "Çikolata tedariki"
     },
     {
       "to": "/biscuits-sourcing",
       "en": "Biscuits Sourcing",
-      "ar": "توريد البسكويت"
+      "ar": "توريد البسكويت",
+      "tr": "Bisküvi tedariki"
     },
     {
       "to": "/food-products-sourcing",
       "en": "Food Products Sourcing",
-      "ar": "توريد المواد الغذائية"
+      "ar": "توريد المواد الغذائية",
+      "tr": "Gıda ürünleri"
     },
     {
       "to": "/turkish-products",
       "en": "Turkish Products",
-      "ar": "المنتجات التركية"
+      "ar": "المنتجات التركية",
+      "tr": "Türkiye menşeli ürünler"
     },
     {
       "to": "/syrian-products",
       "en": "Syrian Products",
-      "ar": "المنتجات السورية"
+      "ar": "المنتجات السورية",
+      "tr": "Suriye menşeli ürünler"
     },
     {
       "to": "/faq",
       "en": "FAQ",
-      "ar": "الأسئلة الشائعة"
+      "ar": "الأسئلة الشائعة",
+      "tr": "Sık sorulan sorular"
     },
     {
       "to": "/products",
       "en": "Product catalog",
-      "ar": "كتالوج المنتجات"
+      "ar": "كتالوج المنتجات",
+      "tr": "Ürün kataloğu"
     },
     {
       "to": "/request",
       "en": "Start a sourcing request",
-      "ar": "ابدأ طلب توريد"
+      "ar": "ابدأ طلب توريد",
+      "tr": "Tedarik talebi oluştur"
     },
     {
       "to": "/contact",
       "en": "Contact LOUREX",
-      "ar": "تواصل مع لوريكس"
+      "ar": "تواصل مع لوريكس",
+      "tr": "LOUREX ile iletişim"
     }
   ],
   "enDefinition": "LOUREX coordinates international sourcing and supplier discussions for business buyers, with purchase request management and order follow-up.",
-  "enFocus": "Explore the product catalog or submit a sourcing request with specifications, quantities and destination. Supplier availability and commercial terms are confirmed for each inquiry."
+  "enFocus": "Explore the product catalog or submit a sourcing request with specifications, quantities and destination. Supplier availability and commercial terms are confirmed for each inquiry.",
+  "arDefinition": "تنسّق لوريكس LOUREX التوريد الدولي والتواصل مع الموردين للمشترين التجاريين، مع إدارة طلبات الشراء ومتابعة الطلبات.",
+  "arFocus": "استكشف كتالوج المنتجات أو قدّم طلب توريد بالمواصفات والكمية والوجهة. يُؤكّد توفر الموردين والشروط التجارية لكل استفسار.",
+  "trDefinition": "LOUREX, ticari alıcılar için uluslararası tedarik, tedarikçi görüşmeleri ve sipariş takibini koordine eder.",
+  "trFocus": "Ürün kataloğunu inceleyin veya ürün özellikleri, miktar ve varış yeri ile tedarik talebi oluşturun. Tedarikçi uygunluğu ve ticari şartlar her talep için ayrıca doğrulanır."
 }

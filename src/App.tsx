@@ -186,6 +186,18 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
+                    <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
+                    <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />
+                    <Route path="/tr/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="tr" />} />
+                    <Route path="/ar/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="ar" />} />
+                    <Route path="/tr/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="tr" />} />
+                    <Route path="/ar/food-products-sourcing" element={<AeoPage kind="food" locale="ar" />} />
+                    <Route path="/tr/food-products-sourcing" element={<AeoPage kind="food" locale="tr" />} />
+                    <Route path="/ar/turkish-products" element={<AeoPage kind="turkish" locale="ar" />} />
+                    <Route path="/tr/turkish-products" element={<AeoPage kind="turkish" locale="tr" />} />
+                    <Route path="/ar/syrian-products" element={<AeoPage kind="syrian" locale="ar" />} />
+                    <Route path="/tr/syrian-products" element={<AeoPage kind="syrian" locale="tr" />} />
                     <Route
                       path="/products"
                       element={<PageWithAI component={<ProductsPage />} />}
@@ -525,6 +537,18 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
+                    <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
+                    <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />
+                    <Route path="/tr/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="tr" />} />
+                    <Route path="/ar/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="ar" />} />
+                    <Route path="/tr/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="tr" />} />
+                    <Route path="/ar/food-products-sourcing" element={<AeoPage kind="food" locale="ar" />} />
+                    <Route path="/tr/food-products-sourcing" element={<AeoPage kind="food" locale="tr" />} />
+                    <Route path="/ar/turkish-products" element={<AeoPage kind="turkish" locale="ar" />} />
+                    <Route path="/tr/turkish-products" element={<AeoPage kind="turkish" locale="tr" />} />
+                    <Route path="/ar/syrian-products" element={<AeoPage kind="syrian" locale="ar" />} />
+                    <Route path="/tr/syrian-products" element={<AeoPage kind="syrian" locale="tr" />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route
                     path="/products/:slug"

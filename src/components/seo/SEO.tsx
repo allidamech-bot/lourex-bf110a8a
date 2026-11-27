@@ -8,6 +8,7 @@ interface SEOProps {
   url?: string;
   type?: string;
   noindex?: boolean;
+  alternates?: {lang:string;href:string}[];
 }
 
 export function SEO({ 
@@ -16,7 +17,8 @@ export function SEO({
   image = "/lourex-official.jpeg", 
   url = window.location.href, 
   type = "website",
-  noindex = false 
+  noindex = false,
+  alternates = [] 
 }: SEOProps) {
   const { t } = useI18n();
   const canonicalUrl = new URL(url, "https://www.lou-rex.com/");
@@ -33,6 +35,7 @@ export function SEO({
     t("common.appDescription") ||
     "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
   const finalDesc = description || defaultDesc;
+  const alternateKey = JSON.stringify(alternates);
 
   useEffect(() => {
     // Update document title
@@ -56,6 +59,8 @@ export function SEO({
       document.head.appendChild(canonical);
     }
     canonical.setAttribute("href", canonicalHref);
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link=>link.remove());
+    for (const alternate of JSON.parse(alternateKey) as {lang:string;href:string}[]) { const link=document.createElement("link");link.rel="alternate";link.hreflang=alternate.lang;link.href=alternate.href;document.head.appendChild(link); }
 
     const preventIndex = noindex || ["/track", "/auth"].includes(canonicalPath);
     const robots = document.querySelector('meta[name="robots"]');
@@ -71,7 +76,7 @@ export function SEO({
     updateMeta("twitter:title", fullTitle);
     updateMeta("twitter:description", finalDesc);
     updateMeta("twitter:image", imageHref);
-  }, [fullTitle, finalDesc, imageHref, canonicalHref, canonicalPath, type, noindex]);
+  }, [fullTitle, finalDesc, imageHref, canonicalHref, canonicalPath, type, noindex, alternateKey]);
 
   return null;
 }
