@@ -46,6 +46,11 @@
         "to": "/contact",
         "en": "Talk to our team",
         "ar": "تواصل معنا"
+      },
+      {
+        "to": "/fmcg-wholesale-sourcing",
+        "en": "FMCG wholesale sourcing",
+        "ar": "توريد السلع الاستهلاكية بالجملة"
       }
     ]
   },
@@ -71,6 +76,26 @@
         "to": "/contact",
         "en": "Talk to our team",
         "ar": "تواصل معنا"
+      },
+      {
+        "to": "/cleaning-household-sourcing",
+        "en": "Cleaning and Household Products Sourcing",
+        "ar": "توريد المنظفات والمنتجات المنزلية"
+      },
+      {
+        "to": "/personal-care-sourcing",
+        "en": "Personal Care and Cosmetics Sourcing",
+        "ar": "توريد منتجات العناية الشخصية والتجميل"
+      },
+      {
+        "to": "/packaging-supplies-sourcing",
+        "en": "Packaging and Commercial Supplies Sourcing",
+        "ar": "توريد مواد التغليف والمستلزمات التجارية"
+      },
+      {
+        "to": "/fmcg-wholesale-sourcing",
+        "en": "FMCG Wholesale Sourcing from Türkiye",
+        "ar": "توريد السلع الاستهلاكية بالجملة من تركيا"
       }
     ]
   }

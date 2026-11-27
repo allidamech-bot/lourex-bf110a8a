@@ -97,6 +97,54 @@
       "dest": "/tr/syrian-products/index.html"
     },
     {
+      "src": "/cleaning-household-sourcing/?",
+      "dest": "/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/ar/cleaning-household-sourcing/?",
+      "dest": "/ar/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/tr/cleaning-household-sourcing/?",
+      "dest": "/tr/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/personal-care-sourcing/?",
+      "dest": "/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/ar/personal-care-sourcing/?",
+      "dest": "/ar/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/tr/personal-care-sourcing/?",
+      "dest": "/tr/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/packaging-supplies-sourcing/?",
+      "dest": "/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/ar/packaging-supplies-sourcing/?",
+      "dest": "/ar/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/tr/packaging-supplies-sourcing/?",
+      "dest": "/tr/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/fmcg-wholesale-sourcing/?",
+      "dest": "/fmcg-wholesale-sourcing/index.html"
+    },
+    {
+      "src": "/ar/fmcg-wholesale-sourcing/?",
+      "dest": "/ar/fmcg-wholesale-sourcing/index.html"
+    },
+    {
+      "src": "/tr/fmcg-wholesale-sourcing/?",
+      "dest": "/tr/fmcg-wholesale-sourcing/index.html"
+    },
+    {
       "src": "/products/?",
       "dest": "/products/index.html"
     },

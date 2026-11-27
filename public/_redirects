@@ -1,5 +1,17 @@
 # Public and authenticated React Router paths; static pages are served by the filesystem.
 /catalog /products 301
+/cleaning-household-sourcing /cleaning-household-sourcing/index.html 200
+/ar/cleaning-household-sourcing /ar/cleaning-household-sourcing/index.html 200
+/tr/cleaning-household-sourcing /tr/cleaning-household-sourcing/index.html 200
+/personal-care-sourcing /personal-care-sourcing/index.html 200
+/ar/personal-care-sourcing /ar/personal-care-sourcing/index.html 200
+/tr/personal-care-sourcing /tr/personal-care-sourcing/index.html 200
+/packaging-supplies-sourcing /packaging-supplies-sourcing/index.html 200
+/ar/packaging-supplies-sourcing /ar/packaging-supplies-sourcing/index.html 200
+/tr/packaging-supplies-sourcing /tr/packaging-supplies-sourcing/index.html 200
+/fmcg-wholesale-sourcing /fmcg-wholesale-sourcing/index.html 200
+/ar/fmcg-wholesale-sourcing /ar/fmcg-wholesale-sourcing/index.html 200
+/tr/fmcg-wholesale-sourcing /tr/fmcg-wholesale-sourcing/index.html 200
 /about-lourex /about-lourex/index.html 200
 /chocolate-sourcing /chocolate-sourcing/index.html 200
 /biscuits-sourcing /biscuits-sourcing/index.html 200

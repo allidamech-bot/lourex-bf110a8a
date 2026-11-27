@@ -186,6 +186,18 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
+                    <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
+                    <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />
+                    <Route path="/personal-care-sourcing" element={<AeoPage kind="care" />} />
+                    <Route path="/ar/personal-care-sourcing" element={<AeoPage kind="care" locale="ar" />} />
+                    <Route path="/tr/personal-care-sourcing" element={<AeoPage kind="care" locale="tr" />} />
+                    <Route path="/packaging-supplies-sourcing" element={<AeoPage kind="packaging" />} />
+                    <Route path="/ar/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="ar" />} />
+                    <Route path="/tr/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="tr" />} />
+                    <Route path="/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" />} />
+                    <Route path="/ar/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="ar" />} />
+                    <Route path="/tr/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="tr" />} />
                     <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
                     <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
                     <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />
@@ -537,6 +549,18 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
+                    <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
+                    <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />
+                    <Route path="/personal-care-sourcing" element={<AeoPage kind="care" />} />
+                    <Route path="/ar/personal-care-sourcing" element={<AeoPage kind="care" locale="ar" />} />
+                    <Route path="/tr/personal-care-sourcing" element={<AeoPage kind="care" locale="tr" />} />
+                    <Route path="/packaging-supplies-sourcing" element={<AeoPage kind="packaging" />} />
+                    <Route path="/ar/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="ar" />} />
+                    <Route path="/tr/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="tr" />} />
+                    <Route path="/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" />} />
+                    <Route path="/ar/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="ar" />} />
+                    <Route path="/tr/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="tr" />} />
                     <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
                     <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
                     <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />

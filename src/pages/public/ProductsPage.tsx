@@ -162,6 +162,7 @@ export default function ProductsPage() {
             </div>
           </div>
         </section>
+        <section className="lrx-catalog-shell py-8"><h2 className="text-2xl font-bold mb-4">{isArabic ? "قطاعات التوريد التجاري" : "Commercial sourcing sectors"}</h2><nav className="flex flex-wrap gap-3" aria-label={isArabic ? "قطاعات التوريد" : "Sourcing sectors"}>{searchCopy.catalog.links.filter(link=>link.to.endsWith("-sourcing")).map(link=><Link key={link.to} to={isArabic?"/ar"+link.to:link.to} className="rounded-xl border border-border px-4 py-3 text-sm">{isArabic?link.ar:link.en}</Link>)}</nav></section>
         <section className="lrx-catalog-closing"><div className="lrx-catalog-shell"><div><p className="lrx-kicker">YOUR NEXT CONNECTION</p><h2>{isArabic ? "طلبك يبدأ من التفاصيل." : "Your brief starts with the details."}</h2><p>{isArabic ? "المنتج، المواصفات، الكمية والوجهة. اجمعها في طلب واحد." : "Product, specifications, quantity and destination. Bring them together in one request."}</p></div><Link to="/request" className="lrx-primary">{isArabic ? "أنشئ طلب توريد" : "Create a sourcing request"}<ArrowUpRight size={18} className="rtl:-scale-x-100" aria-hidden="true" /></Link></div></section>
       </main>
       <Footer />

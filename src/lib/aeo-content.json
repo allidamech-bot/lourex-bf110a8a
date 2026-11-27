@@ -71,6 +71,54 @@
       "h1Tr": "Suriye menşeli ürünler için tedarik değerlendirmesi",
       "introTr": "Suriye menşeli ürünlerle ilgilenen ticari alıcılar ürün özelliklerini, miktarını ve varış yerini LOUREX'e iletebilir. Her talep ayrı değerlendirilir.",
       "focusTr": "İşleme devam etmeden önce ürün bulunabilirliği, tedarikçi uygunluğu ve geçerli yasal şartlar doğrulanmalıdır."
+    },
+    "cleaning": {
+      "path": "/cleaning-household-sourcing",
+      "h1En": "Cleaning and Household Products Sourcing",
+      "h1Ar": "توريد المنظفات والمنتجات المنزلية",
+      "h1Tr": "Temizlik ve ev bakım ürünleri tedariki",
+      "introEn": "LOUREX coordinates B2B sourcing inquiries for cleaning and household products from Türkiye. Importers and distributors can specify product types, quantities, packaging and destination for supplier review.",
+      "introAr": "تنسّق لوريكس استفسارات التوريد التجاري للمنظفات والمنتجات المنزلية من تركيا. يمكن للمستوردين والموزعين تحديد أنواع المنتجات والكميات والتعبئة والوجهة لمراجعتها مع الموردين.",
+      "introTr": "LOUREX, Türkiye'den temizlik ve ev bakım ürünlerine yönelik B2B tedarik taleplerini koordine eder. İthalatçılar ve distribütörler ürün türünü, miktarını, ambalajını ve varış yerini belirtebilir.",
+      "focusEn": "For detergents and household-care inquiries, include intended use, formulation or safety information where applicable, pack size, carton configuration and required destination labeling. Availability, applicable compliance and delivery terms are assessed per request.",
+      "focusAr": "في استفسارات المنظفات والعناية المنزلية، حدّد الاستخدام والتركيبة أو معلومات السلامة عند انطباقها وحجم العبوة وترتيب الكراتين ومتطلبات الملصقات في الوجهة. يُدرس التوفر والامتثال وشروط التسليم لكل طلب.",
+      "focusTr": "Deterjan ve ev bakım ürünleri için kullanım amacı, gerektiğinde formül veya güvenlik bilgileri, ambalaj boyutu, koli düzeni ve hedef pazarın etiketleme şartlarını belirtin. Bulunabilirlik, mevzuata uygunluk ve teslimat şartları talep bazında değerlendirilir."
+    },
+    "care": {
+      "path": "/personal-care-sourcing",
+      "h1En": "Personal Care and Cosmetics Sourcing",
+      "h1Ar": "توريد منتجات العناية الشخصية والتجميل",
+      "h1Tr": "Kişisel bakım ve kozmetik ürünleri tedariki",
+      "introEn": "LOUREX coordinates sourcing inquiries for personal care and cosmetics within its commercial product categories. Business buyers can describe their required products, quantities, specifications and destination market.",
+      "introAr": "تنسّق لوريكس استفسارات توريد منتجات العناية الشخصية والتجميل ضمن فئاتها التجارية. يستطيع المشترون تحديد المنتجات والكميات والمواصفات والسوق المستهدف.",
+      "introTr": "LOUREX, ticari ürün kategorileri kapsamında kişisel bakım ve kozmetik tedarik taleplerini koordine eder. Alıcılar ürün, miktar, özellik ve hedef pazar bilgilerini iletebilir.",
+      "focusEn": "Include product format, ingredient or formulation requirements, package size, labeling and destination-specific documentation needs. Supplier availability and regulatory feasibility must be confirmed before any order is agreed.",
+      "focusAr": "أدرج نوع المنتج ومتطلبات المكونات أو التركيبة وحجم العبوة والملصقات والوثائق المطلوبة في بلد الوجهة. يجب تأكيد توفر المورد وإمكانية الامتثال قبل الاتفاق على الطلب.",
+      "focusTr": "Ürün formatı, içerik veya formül şartları, ambalaj boyutu, etiketleme ve hedef pazara özgü belge ihtiyaçlarını belirtin. Sipariş anlaşmasından önce tedarikçi uygunluğu ve mevzuat şartları doğrulanmalıdır."
+    },
+    "packaging": {
+      "path": "/packaging-supplies-sourcing",
+      "h1En": "Packaging and Commercial Supplies Sourcing",
+      "h1Ar": "توريد مواد التغليف والمستلزمات التجارية",
+      "h1Tr": "Ambalaj ve ticari malzeme tedariki",
+      "introEn": "LOUREX coordinates commercial sourcing inquiries for packaging and operational supplies. Buyers can request a review of materials, dimensions, quantities, print requirements and delivery destination.",
+      "introAr": "تنسّق لوريكس استفسارات التوريد التجاري لمواد التغليف والمستلزمات التشغيلية. يستطيع المشترون طلب دراسة الخامات والأبعاد والكميات ومتطلبات الطباعة ووجهة التسليم.",
+      "introTr": "LOUREX, ambalaj ve işletme malzemeleri için ticari tedarik taleplerini koordine eder. Alıcılar malzeme, ölçü, miktar, baskı ve teslimat yeri şartlarının değerlendirilmesini isteyebilir.",
+      "focusEn": "For packaging requests, specify the product being packed, dimensions, material, expected strength or barrier properties, artwork requirements and shipment quantities. Customization and supplier capabilities are confirmed case by case.",
+      "focusAr": "لطلبات التغليف، حدّد المنتج المراد تعبئته والأبعاد والخامة والمتانة أو خصائص الحماية المطلوبة والتصميم وكميات الشحن. تُؤكّد إمكانية التخصيص وقدرات المورد لكل طلب.",
+      "focusTr": "Ambalaj taleplerinde paketlenecek ürünü, ölçüleri, malzemeyi, dayanım veya bariyer özelliklerini, tasarım şartlarını ve sevkiyat miktarını belirtin. Özelleştirme ve tedarikçi kapasitesi her talep için doğrulanır."
+    },
+    "wholesale": {
+      "path": "/fmcg-wholesale-sourcing",
+      "h1En": "FMCG Wholesale Sourcing from Türkiye",
+      "h1Ar": "توريد السلع الاستهلاكية بالجملة من تركيا",
+      "h1Tr": "Türkiye'den toptan hızlı tüketim ürünleri tedariki",
+      "introEn": "LOUREX coordinates wholesale sourcing inquiries from Türkiye for importers, distributors and business buyers. Requests can cover food, confectionery and other commercial FMCG categories, subject to availability and agreed terms.",
+      "introAr": "تنسّق لوريكس استفسارات التوريد بالجملة من تركيا للمستوردين والموزعين والمشترين التجاريين. يمكن أن تشمل الطلبات الأغذية والحلويات وفئات السلع الاستهلاكية التجارية الأخرى وفق التوفر والشروط المتفق عليها.",
+      "introTr": "LOUREX, ithalatçılar, distribütörler ve ticari alıcılar için Türkiye'den toptan tedarik taleplerini koordine eder. Talepler, bulunabilirlik ve mutabık kalınan şartlara bağlı olarak gıda, şekerleme ve diğer hızlı tüketim kategorilerini kapsayabilir.",
+      "focusEn": "Share a product list, brand or specification preferences, carton or pallet quantities, target market and delivery expectations. LOUREX coordinates the inquiry; supplier selection, minimum quantities, prices, documentation and delivery terms are confirmed through the commercial process.",
+      "focusAr": "أرسل قائمة المنتجات وتفضيلات العلامة أو المواصفات وكميات الكراتين أو الطبالي والسوق المستهدف وتوقعات التسليم. تنسّق لوريكس الاستفسار، وتُؤكّد خيارات المورد والحد الأدنى والكلفة والوثائق وشروط التسليم خلال العملية التجارية.",
+      "focusTr": "Ürün listesi, marka veya özellik tercihleri, koli ya da palet miktarları, hedef pazar ve teslimat beklentilerini iletin. LOUREX talebi koordine eder; tedarikçi seçimi, minimum miktar, fiyat, belgeler ve teslimat şartları ticari süreçte doğrulanır."
     }
   },
   "relatedLinks": [
@@ -133,6 +181,30 @@
       "en": "Contact LOUREX",
       "ar": "تواصل مع لوريكس",
       "tr": "LOUREX ile iletişim"
+    },
+    {
+      "to": "/cleaning-household-sourcing",
+      "en": "Cleaning and Household Products Sourcing",
+      "ar": "توريد المنظفات والمنتجات المنزلية",
+      "tr": "Temizlik ve ev bakım ürünleri tedariki"
+    },
+    {
+      "to": "/personal-care-sourcing",
+      "en": "Personal Care and Cosmetics Sourcing",
+      "ar": "توريد منتجات العناية الشخصية والتجميل",
+      "tr": "Kişisel bakım ve kozmetik ürünleri tedariki"
+    },
+    {
+      "to": "/packaging-supplies-sourcing",
+      "en": "Packaging and Commercial Supplies Sourcing",
+      "ar": "توريد مواد التغليف والمستلزمات التجارية",
+      "tr": "Ambalaj ve ticari malzeme tedariki"
+    },
+    {
+      "to": "/fmcg-wholesale-sourcing",
+      "en": "FMCG Wholesale Sourcing from Türkiye",
+      "ar": "توريد السلع الاستهلاكية بالجملة من تركيا",
+      "tr": "Türkiye'den toptan hızlı tüketim ürünleri tedariki"
     }
   ],
   "enDefinition": "LOUREX coordinates international sourcing and supplier discussions for business buyers, with purchase request management and order follow-up.",

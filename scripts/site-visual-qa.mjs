@@ -16,7 +16,7 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    await context.addInitScript(({lang,theme})=>{localStorage.setItem('lourex-lang',lang);localStorage.setItem('theme',theme);},{lang,theme});
    const page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
-   const localized=lang==="ar"&&["/about-lourex","/chocolate-sourcing","/biscuits-sourcing","/food-products-sourcing","/turkish-products","/syrian-products"].includes(route)?"/ar"+route:route;
+   const localized=lang==="ar"&&["/about-lourex","/chocolate-sourcing","/biscuits-sourcing","/food-products-sourcing","/turkish-products","/syrian-products","/cleaning-household-sourcing","/personal-care-sourcing","/packaging-supplies-sourcing","/fmcg-wholesale-sourcing"].includes(route)?"/ar"+route:route;
    await page.goto(`http://127.0.0.1:4173${localized}`,{waitUntil:'domcontentloaded'});
    await page.locator('[data-lourex-prerender]').waitFor({state:'detached'});
    await page.locator('h1').first().waitFor();

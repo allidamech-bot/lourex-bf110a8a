@@ -19,7 +19,7 @@ function publicSearchPreview(): Plugin {
         for (const route of routing.routes) {
           if (route.handle === "filesystem") {
             // Generated extensionless HTML is served by its explicit route below.
-            if (pathname === "/" || (/\\.[a-z0-9]+$/i.test(pathname) && !pathname.includes("..") && existsSync(path.join(output, pathname)))) return next();
+            if (pathname === "/" || (Boolean(path.extname(pathname)) && !pathname.includes("..") && existsSync(path.join(output, pathname)))) return next();
             continue;
           }
           if (!route.src || !new RegExp("^" + route.src + "$").test(pathname)) continue;

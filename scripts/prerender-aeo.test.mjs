@@ -10,8 +10,8 @@ const source = JSON.parse(await readFile("src/lib/aeo-content.json", "utf8"));
 const config = JSON.parse(await readFile("vercel.json", "utf8"));
 const sitemap = await readFile("public/sitemap.xml", "utf8");
 
-test("all six pages share source data, canonical, metadata and direct crawlable links", () => {
-  assert.equal(Object.keys(source.pages).length, 6);
+test("all sourcing pages share source data, canonical, metadata and direct crawlable links", () => {
+  assert.equal(Object.keys(source.pages).length, 10);
   for (const [kind, page] of Object.entries(source.pages)) {
     const html = renderAeoHtml(template, kind, source);
     assert.equal((html.match(/<h1\b/g) || []).length, 1);
