@@ -38,7 +38,10 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    const id=await card.getAttribute('data-product-id');
    const href=await card.locator('.lrx-catalog-product-actions .lrx-primary').getAttribute('href');
    if(href!==`/request?source=products&product=${encodeURIComponent(id)}`)errors.push(`Wrong request target for ${id}`);
-   if(!await card.locator('.lrx-catalog-details').getAttribute('href'))errors.push('Missing details link');
+   const details=card.locator('.lrx-catalog-product-actions .lrx-catalog-details[href^="/products/"]');
+   if(await details.count()!==1||!await details.getAttribute('href'))errors.push('Missing or ambiguous details link');
+   const multi=card.locator('.lrx-catalog-product-actions .lrx-catalog-details[href^="/smart-rfq?"]');
+   if(await multi.count()!==1||await multi.getAttribute('href')!==`/smart-rfq?add=${encodeURIComponent(id)}`)errors.push(`Wrong Smart RFQ target for ${id}`);
   }
   await page.evaluate(async()=>{for(const section of document.querySelectorAll('main section')){section.scrollIntoView();await new Promise(r=>setTimeout(r,100));}});
   await page.waitForTimeout(300);
