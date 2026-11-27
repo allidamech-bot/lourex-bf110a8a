@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/verify-deployment-source.mjs && vite build && node scripts/prerender-aeo.mjs && npm run test:seo",
+    "build": "node scripts/verify-deployment-source.mjs && vite build && node scripts/prerender-aeo.mjs && npm run test:seo && node scripts/indexnow.mjs --write-key dist",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -16,7 +16,8 @@
     "test:smoke": "npm run build",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:seo": "node --test scripts/prerender-aeo.test.mjs scripts/search-catalog.test.mjs"
+    "test:seo": "node --test scripts/prerender-aeo.test.mjs scripts/search-catalog.test.mjs scripts/indexnow.test.mjs",
+    "search:indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
