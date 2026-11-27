@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/verify-deployment-source.mjs && vite build && node scripts/prerender-aeo.mjs",
+    "build": "node scripts/verify-deployment-source.mjs && vite build && node scripts/prerender-aeo.mjs && npm run test:seo",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
