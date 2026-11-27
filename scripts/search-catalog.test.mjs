@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createPublicCatalogReader,renderProductSitemap,renderProductDocument,catalogResponse } from "../server/search-catalog.mjs";
+import { createPublicCatalogReader,renderProductSitemap,renderProductDocument,renderCatalogDocument,catalogResponse } from "../server/search-catalog.mjs";
 const template=await readFile("index.html","utf8");
 const row={id:"123e4567-e89b-42d3-a456-426614174000",slug:"test-product",name_en:"Example <script>",short_description_en:"Quote & specifications",description_en:"Test only",status:"active",updated_at:"2026-11-27T00:00:00Z"};
 const config={url:"https://gxmqchznfolerliorpkz.supabase.co",key:"sb_publishable_test"};
@@ -53,4 +53,16 @@ test("an active row with missing search metadata returns retryable 503 rather th
  const result=await catalogResponse({mode:"detail",slug:row.slug,reader});
  assert.equal(result.status,503);assert.equal(result.headers["Retry-After"],"60");
  assert.deepEqual(await reader.products(),[]);
+});
+
+test("catalog contains active product links and ItemList, excludes drafts",async()=>{
+ const html=renderCatalogDocument(template,[row,{...row,slug:"draft",status:"draft"}]);
+ assert.ok(html.includes('href="https://www.lou-rex.com/products/test-product"'));
+ assert.ok(html.includes('"@type":"ItemList"'));assert.ok(!html.includes("/products/draft"));
+ const result=await catalogResponse({mode:"catalog",reader:{products:async()=>[row]},readTemplate:async()=>template});assert.equal(result.status,200);
+});
+test("product includes safe image, breadcrumbs and sourcing links without fictitious offers",()=>{
+ const html=renderProductDocument(template,{...row,image_url:"https://images.openfoodfacts.org/images/test.jpg",weight:"50 g"});
+ assert.ok(html.includes('<img src="https://images.openfoodfacts.org/images/test.jpg"'));assert.ok(html.includes('"@type":"BreadcrumbList"'));assert.ok(html.includes("Reference pack size"));assert.ok(html.includes('href="/fmcg-wholesale-sourcing"'));assert.ok(!html.includes('"@type":"Offer"'));
+ const bad=renderProductDocument(template,{...row,image_url:"javascript:alert(1)"});assert.ok(!bad.includes("javascript:alert(1)"));
 });
