@@ -15,15 +15,6 @@ export const publicContactInfo = {
     instagram: "https://www.instagram.com/lourex___/",
     tiktok: "https://www.tiktok.com/@lourex49",
   },
-  location: {
-    en: "Homs, Syria",
-    ar: "حمص، سوريا",
-  },
-  commercialRegistration: {
-    number: "62800",
-    en: "Commercial Registration No. 62800",
-    ar: "السجل التجاري رقم 62800",
-  },
   operationsDesk: {
     en: "Operations Desk",
     ar: "مكتب العمليات",

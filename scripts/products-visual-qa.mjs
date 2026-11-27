@@ -38,15 +38,35 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
    const id=await card.getAttribute('data-product-id');
    const href=await card.locator('.lrx-catalog-product-actions .lrx-primary').getAttribute('href');
    if(href!==`/request?source=products&product=${encodeURIComponent(id)}`)errors.push(`Wrong request target for ${id}`);
-   if(!await card.locator('.lrx-catalog-details').getAttribute('href'))errors.push('Missing details link');
+   const details=card.locator('.lrx-catalog-product-actions .lrx-catalog-details[href^="/products/"]');
+   if(await details.count()!==1||!await details.getAttribute('href'))errors.push('Missing or ambiguous details link');
+   const multi=card.locator('.lrx-catalog-product-actions .lrx-catalog-details[href^="/smart-rfq?"]');
+   if(await multi.count()!==1||await multi.getAttribute('href')!==`/smart-rfq?add=${encodeURIComponent(id)}`)errors.push(`Wrong Smart RFQ target for ${id}`);
   }
   await page.evaluate(async()=>{for(const section of document.querySelectorAll('main section')){section.scrollIntoView();await new Promise(r=>setTimeout(r,100));}});
   await page.waitForTimeout(300);
   if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))errors.push('Horizontal page overflow');
   if(await page.locator('#catalog-title').evaluate(e=>e.scrollWidth>e.clientWidth+2))errors.push('Headline overflow');
   await page.evaluate(()=>scrollTo(0,0));
-  await page.screenshot({path:`${output}/${engine}-${lang}-${width}.png`,fullPage:true});
-  await page.locator('#catalog-browser').screenshot({path:`${output}/${engine}-${lang}-${width}-catalog.png`});
+  const capturePath=`${output}/${engine}-${lang}-${width}`;
+  const height=await page.evaluate(()=>document.documentElement.scrollHeight);
+  const catalog=page.locator('#catalog-browser');
+  const bounds=await catalog.boundingBox();
+  if(height<=16000&&bounds&&bounds.height<=16000){
+   await page.screenshot({path:capturePath+'.png',fullPage:true});
+   await catalog.screenshot({path:capturePath+'-catalog.png'});
+  }else{
+   // WebKit limits a single screenshot to 32767 pixels. Capture the full
+   // long catalog as viewport-sized sections rather than dropping coverage.
+   let last=-1;
+   for(let top=0,index=0;top<height;top+=Math.floor(context.pages()[0].viewportSize().height*0.85),index++){
+    const actual=await page.evaluate(y=>{window.scrollTo(0,y);return window.scrollY;},top);
+    if(actual===last)break;
+    last=actual;
+    await page.screenshot({path:capturePath+'-segment-'+String(index).padStart(3,'0')+'.png'});
+   }
+   await page.evaluate(()=>scrollTo(0,0));
+  }
   results.push({engine,lang,width,productCount:initialCount,errors});
   console.log(JSON.stringify(results.at(-1)));
   await context.close();
