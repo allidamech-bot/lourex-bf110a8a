@@ -37,16 +37,22 @@ const Footer = forwardRef<HTMLElement>((_props, ref) => {
   ];
 
   const sourcingLinks: FooterNavLink[] = [
-    { label: ar ? "توريد الشوكولاتة" : "Chocolate sourcing", href: "/chocolate-sourcing" },
-    { label: ar ? "توريد البسكويت" : "Biscuit sourcing", href: "/biscuits-sourcing" },
-    { label: ar ? "توريد المواد الغذائية" : "Food products", href: "/food-products-sourcing" },
-    { label: ar ? "المنتجات التركية" : "Turkish products", href: "/turkish-products" },
-    { label: ar ? "المنتجات السورية" : "Syrian products", href: "/syrian-products" },
+    { label: ar ? "توريد الشوكولاتة" : "Chocolate sourcing", href: ar ? "/ar/chocolate-sourcing" : "/chocolate-sourcing" },
+    { label: ar ? "توريد البسكويت" : "Biscuit sourcing", href: ar ? "/ar/biscuits-sourcing" : "/biscuits-sourcing" },
+    { label: ar ? "توريد المواد الغذائية" : "Food products", href: ar ? "/ar/food-products-sourcing" : "/food-products-sourcing" },
+    { label: ar ? "المنتجات التركية" : "Turkish products", href: ar ? "/ar/turkish-products" : "/turkish-products" },
+    { label: ar ? "المنتجات السورية" : "Syrian products", href: ar ? "/ar/syrian-products" : "/syrian-products" },
   ];
 
   const companyLinks: FooterNavLink[] = [
     { label: t("nav.about"), href: "/about" },
-    { label: ar ? "من هي لوريكس؟" : "About LOUREX", href: "/about-lourex" },
+    { label: ar ? "من هي لوريكس؟" : "About LOUREX", href: ar ? "/ar/about-lourex" : "/about-lourex" },
+    { label: ar ? "توريد المنظفات والمنتجات المنزلية" : "Cleaning and Household Products Sourcing", href: ar ? "/ar/cleaning-household-sourcing" : "/cleaning-household-sourcing" },
+    { label: ar ? "توريد منتجات العناية الشخصية والتجميل" : "Personal Care and Cosmetics Sourcing", href: ar ? "/ar/personal-care-sourcing" : "/personal-care-sourcing" },
+    { label: ar ? "توريد مواد التغليف والمستلزمات التجارية" : "Packaging and Commercial Supplies Sourcing", href: ar ? "/ar/packaging-supplies-sourcing" : "/packaging-supplies-sourcing" },
+    { label: ar ? "توريد السلع الاستهلاكية بالجملة من تركيا" : "FMCG Wholesale Sourcing from Türkiye", href: ar ? "/ar/fmcg-wholesale-sourcing" : "/fmcg-wholesale-sourcing" },
+    { label: ar ? "دليل المشتري للتوريد من تركيا" : "Buyer guide: sourcing products from Türkiye", href: ar ? "/ar/turkiye-sourcing-guide" : "/turkiye-sourcing-guide" },
+    { label: ar ? "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين" : "Wholesale RFQ checklist for importers and distributors", href: ar ? "/ar/wholesale-rfq-checklist" : "/wholesale-rfq-checklist" },
     { label: t("nav.whyLourex"), href: "/why-lourex" },
     { label: ar ? "الأسئلة الشائعة" : "FAQ", href: "/faq" },
     { label: t("nav.contact"), href: "/contact" },

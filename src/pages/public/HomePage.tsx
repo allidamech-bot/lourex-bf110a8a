@@ -1,3 +1,4 @@
+import searchCopy from "@/lib/public-search-copy.json";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
@@ -22,10 +23,6 @@ import SourcingIllustration from "@/components/home/SourcingIllustration";
 import { useI18n } from "@/lib/i18n";
 import "./lourex-home.css";
 
-const EN_DESCRIPTION =
-  "LOUREX is an international trading and sourcing coordination company connecting buyers with sourcing opportunities across commercial products and managing purchase requests, supplier coordination, and delivery follow-up.";
-const AR_DESCRIPTION =
-  "لوريكس شركة تجارة دولية وتنسيق مصادر توريد، تربط المشترين بمصادر المنتجات، وتنسّق متطلبات الشراء والتواصل مع الموردين ومتابعة الطلبات حتى التسليم.";
 
 export default function HomePage() {
   const { lang } = useI18n();
@@ -95,20 +92,20 @@ export default function HomePage() {
 
   const categories = [
     {
-      code: "01", to: "/chocolate-sourcing",
+      code: "01", to: ar ? "/ar/chocolate-sourcing" : "/chocolate-sourcing",
       name: ar ? "الشوكولاتة والحلويات" : "Confectionery & sweets",
       note: ar ? "تنسيق توريد العلامات التجارية والمنتجات المعبأة" : "Commercial sourcing for confectionery products",
       kind: "confectionery" as const,
     },
     {
-      code: "02", to: "/biscuits-sourcing",
+      code: "02", to: ar ? "/ar/biscuits-sourcing" : "/biscuits-sourcing",
       name: ar ? "البسكويت والوجبات الخفيفة" : "Biscuits & snacks",
       note: ar ? "التعبئة والكميات وطلبات التوريد" : "Packaging, quantities and purchase inquiries",
       kind: "snacks" as const,
       icon: Boxes,
     },
     {
-      code: "03", to: "/food-products-sourcing",
+      code: "03", to: ar ? "/ar/food-products-sourcing" : "/food-products-sourcing",
       name: ar ? "المواد والمنتجات الغذائية" : "Food & FMCG",
       note: ar ? "احتياجات متنوعة للتجار والموزعين" : "Sourcing needs for trade and distribution",
       kind: "food" as const,
@@ -132,7 +129,7 @@ export default function HomePage() {
 
   return (
     <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#090909] text-white" data-lourex-home>
-      <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX | International Trading & Resources"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
+      <SEO title={ar ? searchCopy.home.titleAr : searchCopy.home.titleEn} description={ar ? searchCopy.home.introAr : searchCopy.home.introEn} url="https://www.lou-rex.com/" />
       <SiteHeader overlayOnHome />
       <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#A93024] via-[#345777] to-[#D6A653]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
       <main>

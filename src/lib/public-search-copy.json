@@ -1,0 +1,112 @@
+{
+  "home": {
+    "titleEn": "LOUREX TRADING AND SOURCING | Food & FMCG Sourcing from Türkiye",
+    "titleAr": "لوريكس | تجارة دولية ومصادر توريد",
+    "h1En": "Trade. Connected by possibility.",
+    "h1Ar": "تجارتك، متصلة بالعالم.",
+    "introEn": "LOUREX coordinates international sourcing from Türkiye for business buyers, including food, FMCG and other commercial products. Share your product, specifications, quantities and destination to start a sourcing request.",
+    "introAr": "تنسّق لوريكس التوريد الدولي من تركيا للمشترين التجاريين، بما يشمل الأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى. حدّد المنتج والمواصفات والكمية والوجهة لبدء طلب توريد.",
+    "links": [
+      {
+        "to": "/request",
+        "en": "Start a sourcing request",
+        "ar": "ابدأ طلب توريد"
+      },
+      {
+        "to": "/products",
+        "en": "Explore products",
+        "ar": "اكتشف المنتجات"
+      },
+      {
+        "to": "/chocolate-sourcing",
+        "en": "Confectionery & sweets",
+        "ar": "الشوكولاتة والحلويات"
+      },
+      {
+        "to": "/biscuits-sourcing",
+        "en": "Biscuits & snacks",
+        "ar": "البسكويت والوجبات الخفيفة"
+      },
+      {
+        "to": "/food-products-sourcing",
+        "en": "Food & FMCG",
+        "ar": "المواد والمنتجات الغذائية"
+      },
+      {
+        "to": "/turkish-products",
+        "en": "Turkish products",
+        "ar": "المنتجات التركية"
+      },
+      {
+        "to": "/about-lourex",
+        "en": "About LOUREX",
+        "ar": "من هي لوريكس؟"
+      },
+      {
+        "to": "/contact",
+        "en": "Talk to our team",
+        "ar": "تواصل معنا"
+      },
+      {
+        "to": "/fmcg-wholesale-sourcing",
+        "en": "FMCG wholesale sourcing",
+        "ar": "توريد السلع الاستهلاكية بالجملة"
+      },
+      {
+        "to": "/turkiye-sourcing-guide",
+        "en": "Buyer guide: sourcing products from Türkiye",
+        "ar": "دليل المشتري للتوريد من تركيا"
+      },
+      {
+        "to": "/wholesale-rfq-checklist",
+        "en": "Wholesale RFQ checklist for importers and distributors",
+        "ar": "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين"
+      }
+    ]
+  },
+  "catalog": {
+    "titleEn": "Wholesale Product Catalog & B2B Sourcing | LOUREX",
+    "titleAr": "كتالوج المنتجات والتوريد التجاري | لوريكس LOUREX",
+    "h1En": "Your next product. Your next possibility.",
+    "h1Ar": "منتجك القادم. فرصتك التالية.",
+    "introEn": "Explore the LOUREX catalog and request commercial sourcing for food, FMCG, cleaning, household, personal care and packaging products. Specify the product, quantity and destination; availability and commercial terms are confirmed per request.",
+    "introAr": "استكشف كتالوج لوريكس واطلب توريد الأغذية والسلع الاستهلاكية والمنظفات والمنتجات المنزلية والعناية الشخصية والتغليف. حدّد المنتج والكمية والوجهة، ويُؤكّد التوفر والشروط التجارية لكل طلب.",
+    "links": [
+      {
+        "to": "/request",
+        "en": "Create a sourcing request",
+        "ar": "أنشئ طلب توريد"
+      },
+      {
+        "to": "/smart-rfq",
+        "en": "Multi-product Smart RFQ",
+        "ar": "طلب عرض سعر متعدد المنتجات"
+      },
+      {
+        "to": "/contact",
+        "en": "Talk to our team",
+        "ar": "تواصل معنا"
+      },
+      {
+        "to": "/cleaning-household-sourcing",
+        "en": "Cleaning and Household Products Sourcing",
+        "ar": "توريد المنظفات والمنتجات المنزلية"
+      },
+      {
+        "to": "/personal-care-sourcing",
+        "en": "Personal Care and Cosmetics Sourcing",
+        "ar": "توريد منتجات العناية الشخصية والتجميل"
+      },
+      {
+        "to": "/packaging-supplies-sourcing",
+        "en": "Packaging and Commercial Supplies Sourcing",
+        "ar": "توريد مواد التغليف والمستلزمات التجارية"
+      },
+      {
+        "to": "/fmcg-wholesale-sourcing",
+        "en": "FMCG Wholesale Sourcing from Türkiye",
+        "ar": "توريد السلع الاستهلاكية بالجملة من تركيا"
+      }
+    ]
+  }
+}

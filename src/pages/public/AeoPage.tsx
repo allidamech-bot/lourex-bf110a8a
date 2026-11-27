@@ -1,201 +1,62 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/seo/SEO";
 import Footer from "@/components/Footer";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { useI18n } from "@/lib/i18n";
+import aeoContent from "@/lib/aeo-content.json";
 
-type AeoPageKind =
-  | "about"
-  | "chocolate"
-  | "biscuits"
-  | "food"
-  | "turkish"
-  | "syrian";
-
-interface AeoPageProps {
-  kind: AeoPageKind;
-}
-
-const EN_DEFINITION =
-  "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
-
-const AR_DEFINITION =
-  "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.";
-
-const pageContent: Record<
-  AeoPageKind,
-  {
-    path: string;
-    h1En: string;
-    h1Ar: string;
-    introEn: string;
-    introAr: string;
-    focusEn: string;
-    focusAr: string;
-  }
-> = {
-  about: {
-    path: "/about-lourex",
-    h1En: "About LOUREX",
-    h1Ar: "من هي لوريكس؟",
-    introEn:
-      "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products. LOUREX connects business buyers with suppliers and manages purchase requests, supplier coordination, deal follow-up, and delivery tracking. LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products.",
-    introAr:
-      "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات. تربط لوريكس المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم. تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية.",
-    focusEn:
-      "The company is not primarily a marketplace, supplier listing website, manufacturer, or factory marketplace. Its role is structured coordination between business buyers and suppliers.",
-    focusAr:
-      "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع. دورها هو التنسيق المنظم بين المشترين التجاريين والموردين.",
-  },
-  chocolate: {
-    path: "/chocolate-sourcing",
-    h1En: "Chocolate Sourcing Coordination",
-    h1Ar: "تنسيق توريد الشوكولاتة",
-    introEn:
-      "LOUREX helps business buyers coordinate chocolate sourcing through supplier coordination, purchase request management, deal follow-up, and delivery tracking.",
-    introAr:
-      "تساعد لوريكس المشترين التجاريين في تنسيق توريد الشوكولاتة من خلال إدارة طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
-    focusEn:
-      "Chocolate requests can include product type, packaging, quantity, destination, labeling needs, and delivery expectations for supplier review.",
-    focusAr:
-      "يمكن أن تشمل طلبات الشوكولاتة نوع المنتج، التعبئة، الكمية، الوجهة، متطلبات الملصقات، وتوقعات التسليم لمراجعة الموردين.",
-  },
-  biscuits: {
-    path: "/biscuits-sourcing",
-    h1En: "Biscuits Sourcing Coordination",
-    h1Ar: "تنسيق توريد البسكويت",
-    introEn:
-      "LOUREX coordinates biscuit sourcing for business buyers by organizing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
-    introAr:
-      "تنسق لوريكس توريد البسكويت للمشترين التجاريين عبر تنظيم طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
-    focusEn:
-      "Biscuit sourcing requests can cover flavors, carton counts, private-label needs, shelf-life requirements, and destination information.",
-    focusAr:
-      "يمكن أن تغطي طلبات توريد البسكويت النكهات، عدد الكراتين، متطلبات العلامة الخاصة، مدة الصلاحية، ومعلومات الوجهة.",
-  },
-  food: {
-    path: "/food-products-sourcing",
-    h1En: "Food Products Sourcing Coordination",
-    h1Ar: "تنسيق توريد المواد الغذائية",
-    introEn:
-      "LOUREX provides sourcing coordination for food products by connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
-    introAr:
-      "توفر لوريكس تنسيق توريد المواد الغذائية من خلال ربط المشترين التجاريين بالموردين وإدارة طلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
-    focusEn:
-      "Food product coordination may include sweets, packaged food, FMCG items, Turkish products, and Syrian products, subject to supplier availability and applicable rules.",
-    focusAr:
-      "قد يشمل تنسيق المواد الغذائية الحلويات، الأغذية المعبأة، السلع الاستهلاكية، المنتجات التركية، والمنتجات السورية، حسب توفر الموردين والأنظمة المعمول بها.",
-  },
-  turkish: {
-    path: "/turkish-products",
-    h1En: "Turkish Products Sourcing Coordination",
-    h1Ar: "تنسيق توريد المنتجات التركية",
-    introEn:
-      "LOUREX coordinates Turkish products sourcing for business buyers that need structured purchase request management, supplier coordination, deal follow-up, and delivery tracking.",
-    introAr:
-      "تنسق لوريكس توريد المنتجات التركية للمشترين التجاريين الذين يحتاجون إلى إدارة منظمة لطلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
-    focusEn:
-      "The focus includes food and sweets products such as chocolate, biscuits, and other packaged food products.",
-    focusAr:
-      "يشمل التركيز المواد الغذائية والحلويات مثل الشوكولاتة، البسكويت، ومنتجات غذائية معبأة أخرى.",
-  },
-  syrian: {
-    path: "/syrian-products",
-    h1En: "Syrian Products Sourcing Coordination",
-    h1Ar: "تنسيق توريد المنتجات السورية",
-    introEn:
-      "LOUREX uses compliance-safe sourcing coordination wording for Syrian products and helps business buyers structure requests, supplier coordination, deal follow-up, and delivery tracking where available and appropriate.",
-    introAr:
-      "تستخدم لوريكس صياغة آمنة ومتوافقة عند ذكر المنتجات السورية، وتساعد المشترين التجاريين على تنظيم الطلبات، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم عندما يكون ذلك متاحا ومناسبا.",
-    focusEn:
-      "LOUREX does not make unrestricted trade claims for Syrian products. Requests are reviewed with attention to product details, supplier availability, and applicable requirements.",
-    focusAr:
-      "لا تقدم لوريكس ادعاءات تجارية غير مقيدة للمنتجات السورية. تتم مراجعة الطلبات مع الانتباه إلى تفاصيل المنتج، توفر الموردين، والمتطلبات المعمول بها.",
-  },
+type AeoPageKind = keyof typeof aeoContent.pages;
+type SearchLanguage = "en" | "ar" | "tr";
+const languages = ["en","ar","tr"] as const;
+const localizedPath = (path:string, language:SearchLanguage) => language === "en" ? path : "/" + language + path;
+const languageLabels = { en:"English", ar:"العربية", tr:"Türkçe" };
+const labels = {
+  en:{ brand:"LOUREX / TRADE & RESOURCES",works:"How LOUREX works",focus:"Sourcing focus",related:"Related public pages",home:"Home",catalog:"Catalog",contact:"Contact"},
+  ar:{ brand:"لوريكس / التجارة والمصادر",works:"كيف تعمل لوريكس",focus:"نطاق التركيز",related:"صفحات مرتبطة",home:"الرئيسية",catalog:"الكتالوج",contact:"التواصل"},
+  tr:{ brand:"LOUREX / TİCARET VE TEDARİK",works:"LOUREX nasıl çalışır",focus:"Tedarik kapsamı",related:"İlgili sayfalar",home:"Ana sayfa",catalog:"Katalog",contact:"İletişim"}
 };
+const localPaths = new Set(Object.values(aeoContent.pages).map(page => page.path));
 
-const relatedLinks = [
-  { to: "/about-lourex", en: "About LOUREX", ar: "من هي لوريكس؟" },
-  { to: "/chocolate-sourcing", en: "Chocolate Sourcing", ar: "توريد الشوكولاتة" },
-  { to: "/biscuits-sourcing", en: "Biscuits Sourcing", ar: "توريد البسكويت" },
-  { to: "/food-products-sourcing", en: "Food Products Sourcing", ar: "توريد المواد الغذائية" },
-  { to: "/turkish-products", en: "Turkish Products", ar: "المنتجات التركية" },
-  { to: "/syrian-products", en: "Syrian Products", ar: "المنتجات السورية" },
-  { to: "/faq", en: "FAQ", ar: "الأسئلة الشائعة" },
-];
-
-export default function AeoPage({ kind }: AeoPageProps) {
-  const { lang } = useI18n();
-  const isArabic = lang === "ar";
-  const content = pageContent[kind];
-  const title = isArabic ? content.h1Ar : content.h1En;
-  const description = isArabic ? content.introAr : content.introEn;
-
+export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:SearchLanguage}) {
+  const {lang:preferred,setLang} = useI18n();
+  // Existing English URLs are the default; localized routes are deterministic.
+  const lang = locale ?? "en";
+  const content = aeoContent.pages[kind];
+  const suffix = lang === "en" ? "En" : lang === "ar" ? "Ar" : "Tr";
+  const title = content[`h1${suffix}`];
+  const description = content[`intro${suffix}`];
+  const l = labels[lang];
+  const guides: Record<string, {en:string[];ar:string[];tr:string[]}[]> = aeoContent.guides;
+  const sections = guides[kind] ?? [];
+  const alternates = [...languages.map(language=>({lang:language,href:"https://www.lou-rex.com"+localizedPath(content.path,language)})),{lang:"x-default",href:"https://www.lou-rex.com"+content.path}];
+  useEffect(()=>{
+    const html=document.documentElement;
+    if(lang!=="tr" && preferred!==lang) setLang(lang);
+    html.lang=lang; html.dir=lang==="ar"?"rtl":"ltr";
+    html.style.fontFamily=lang==="ar"?"'Tajawal', sans-serif":"";
+    return ()=>{html.lang=preferred;html.dir=preferred==="ar"?"rtl":"ltr";html.style.fontFamily=preferred==="ar"?"'Tajawal', sans-serif":"";};
+  },[lang,preferred,setLang]);
   return (
-    <div className="lourex-public lourex-aeo min-h-screen bg-background text-foreground">
-      <SEO
-        title={title}
-        description={description}
-        url={`https://www.lou-rex.com${content.path}`}
-      />
-      <SiteHeader />
+    <div className="lourex-public lourex-aeo min-h-screen bg-background text-foreground" lang={lang} dir={lang==="ar"?"rtl":"ltr"}>
+      <SEO title={title} description={description} url={"https://www.lou-rex.com"+localizedPath(content.path,lang)} alternates={alternates} />
+      {lang !== "tr" ? <SiteHeader /> : <header className="container mx-auto flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-4"><Link to="/" className="flex items-center gap-3"><img src="/lourex-official.jpeg" alt="LOUREX" width="48" height="48" /><span>LOUREX</span></Link><nav className="flex flex-wrap gap-4 text-sm"><Link to="/">{l.home}</Link><Link to="/products">{l.catalog}</Link><Link to="/contact">{l.contact}</Link></nav></header>}
       <main className="container mx-auto px-4 py-14 md:px-8 md:py-20">
+        <nav aria-label="Language" className="mb-8 flex flex-wrap gap-3">{languages.map(language=><a key={language} href={localizedPath(content.path,language)} hrefLang={language} lang={language} aria-current={lang===language?"page":undefined} className="rounded-full border border-border px-4 py-2 text-sm">{languageLabels[language]}</a>)}</nav>
         <div className="max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/90">
-            {isArabic ? "التجارة والمصادر" : "LOUREX / TRADE & RESOURCES"}
-          </p>
-          <h1 className="mt-5 font-serif text-4xl font-bold text-foreground md:text-6xl">
-            {title}
-          </h1>
-          <p className="mt-6 text-lg leading-9 text-foreground">
-            {description}
-          </p>
-          {kind !== "about" ? (
-            <p className="mt-5 text-base leading-8 text-muted-foreground">
-              {isArabic ? AR_DEFINITION : EN_DEFINITION}
-            </p>
-          ) : null}
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/90">{l.brand}</p>
+          <h1 className="mt-5 font-serif text-4xl font-bold text-foreground md:text-6xl">{title}</h1>
+          <p className="mt-6 text-lg leading-9 text-foreground">{description}</p>
+          {kind!=="about" && <p className="mt-5 text-base leading-8 text-muted-foreground">{aeoContent[`${lang}Definition`]}</p>}
         </div>
-
         <section className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6">
-            <h2 className="font-serif text-2xl font-semibold text-foreground">
-              {isArabic ? "كيف تعمل لوريكس" : "How LOUREX works"}
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              {isArabic ? content.focusAr : content.focusEn}
-            </p>
-          </div>
-          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6">
-            <h2 className="font-serif text-2xl font-semibold text-foreground">
-              {isArabic ? "نطاق التركيز" : "Sourcing focus"}
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              {isArabic
-                ? "تشمل مجالات التركيز: وسيط توريد، تنسيق الموردين، إدارة طلبات الشراء، متابعة الصفقات، متابعة الشحن والتسليم، الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية."
-                : "Our sourcing focus includes trade intermediary, sourcing coordination, supplier coordination, purchase request management, deal follow-up, delivery tracking, chocolate, biscuits, food products, Turkish products, and Syrian products."}
-            </p>
-          </div>
+          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.works}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{content[`focus${suffix}`]}</p></div>
+          <div className="rounded-[1.5rem] border border-primary/20 bg-card p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.focus}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{aeoContent[`${lang}Focus`]}</p></div>
         </section>
-
-        <section className="mt-10 rounded-[1.5rem] border border-border/70 bg-secondary/65 p-6">
-          <h2 className="font-serif text-2xl font-semibold text-foreground">
-            {isArabic ? "صفحات مرتبطة" : "Related public pages"}
-          </h2>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {relatedLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-sm text-foreground transition hover:border-primary/20 hover:text-primary"
-              >
-                {isArabic ? link.ar : link.en}
-              </Link>
-            ))}
-          </div>
-        </section>
+        {sections.length>0 && <div className="mt-10 grid gap-4">{sections.map(section=><article key={section[lang][0]} className="rounded-[1.5rem] border border-border bg-card p-6"><h2 className="font-serif text-2xl font-semibold">{section[lang][0]}</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">{section[lang][1]}</p></article>)}</div>}
+        <section className="mt-10 rounded-[1.5rem] border border-border/70 bg-secondary/65 p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.related}</h2><div className="mt-5 flex flex-wrap gap-2">{aeoContent.relatedLinks.map(link=><Link key={link.to} to={localPaths.has(link.to)?localizedPath(link.to,lang):link.to} className="rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-sm text-foreground transition hover:text-primary">{link[lang]}</Link>)}</div></section>
       </main>
-      <Footer />
+      {lang!=="tr"?<Footer/>:<footer className="container mx-auto border-t border-border px-4 py-8"><Link to="/contact">LOUREX · {l.contact}</Link></footer>}
     </div>
   );
 }

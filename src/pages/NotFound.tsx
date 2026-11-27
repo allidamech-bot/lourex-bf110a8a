@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
+import { SEO } from "@/components/seo/SEO";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const NotFound = () => {
 
   return (
     <div className="lourex-auth flex min-h-screen items-center justify-center bg-background text-foreground px-5">
+      <SEO title="404 | LOUREX" noindex />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.02),transparent_50%)] pointer-events-none" />
       <div className="text-center relative z-10">
         <img src="/lourex-official.jpeg" width="96" height="96" alt="LOUREX" className="mx-auto mb-6 h-24 w-24 object-contain" />

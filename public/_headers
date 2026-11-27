@@ -1,0 +1,26 @@
+/auth
+  X-Robots-Tag: noindex, nofollow
+/auth/*
+  X-Robots-Tag: noindex, nofollow
+/track
+  X-Robots-Tag: noindex, nofollow
+/track/*
+  X-Robots-Tag: noindex, nofollow
+/profile
+  X-Robots-Tag: noindex, nofollow
+/profile/*
+  X-Robots-Tag: noindex, nofollow
+/admin
+  X-Robots-Tag: noindex, nofollow
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+/dashboard/*
+  X-Robots-Tag: noindex, nofollow
+/customer-portal
+  X-Robots-Tag: noindex, nofollow
+/customer-portal/*
+  X-Robots-Tag: noindex, nofollow
+/spa.html
+  X-Robots-Tag: noindex, nofollow

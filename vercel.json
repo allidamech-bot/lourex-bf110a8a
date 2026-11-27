@@ -1,14 +1,206 @@
 {
   "routes": [
     {
+      "src": "/spa\\.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(auth|track|profile|admin|dashboard|customer-portal)(/.*)?",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "/catalog/?",
+      "headers": {
+        "Location": "/products"
+      },
+      "status": 308
+    },
+    {
       "handle": "filesystem"
     },
     {
+      "src": "/about-lourex/?",
+      "dest": "/about-lourex/index.html"
+    },
+    {
+      "src": "/chocolate-sourcing/?",
+      "dest": "/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/biscuits-sourcing/?",
+      "dest": "/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/food-products-sourcing/?",
+      "dest": "/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/turkish-products/?",
+      "dest": "/turkish-products/index.html"
+    },
+    {
+      "src": "/syrian-products/?",
+      "dest": "/syrian-products/index.html"
+    },
+    {
+      "src": "/ar/about-lourex/?",
+      "dest": "/ar/about-lourex/index.html"
+    },
+    {
+      "src": "/tr/about-lourex/?",
+      "dest": "/tr/about-lourex/index.html"
+    },
+    {
+      "src": "/ar/chocolate-sourcing/?",
+      "dest": "/ar/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/tr/chocolate-sourcing/?",
+      "dest": "/tr/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/ar/biscuits-sourcing/?",
+      "dest": "/ar/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/tr/biscuits-sourcing/?",
+      "dest": "/tr/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/ar/food-products-sourcing/?",
+      "dest": "/ar/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/tr/food-products-sourcing/?",
+      "dest": "/tr/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/ar/turkish-products/?",
+      "dest": "/ar/turkish-products/index.html"
+    },
+    {
+      "src": "/tr/turkish-products/?",
+      "dest": "/tr/turkish-products/index.html"
+    },
+    {
+      "src": "/ar/syrian-products/?",
+      "dest": "/ar/syrian-products/index.html"
+    },
+    {
+      "src": "/tr/syrian-products/?",
+      "dest": "/tr/syrian-products/index.html"
+    },
+    {
+      "src": "/cleaning-household-sourcing/?",
+      "dest": "/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/ar/cleaning-household-sourcing/?",
+      "dest": "/ar/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/tr/cleaning-household-sourcing/?",
+      "dest": "/tr/cleaning-household-sourcing/index.html"
+    },
+    {
+      "src": "/personal-care-sourcing/?",
+      "dest": "/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/ar/personal-care-sourcing/?",
+      "dest": "/ar/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/tr/personal-care-sourcing/?",
+      "dest": "/tr/personal-care-sourcing/index.html"
+    },
+    {
+      "src": "/packaging-supplies-sourcing/?",
+      "dest": "/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/ar/packaging-supplies-sourcing/?",
+      "dest": "/ar/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/tr/packaging-supplies-sourcing/?",
+      "dest": "/tr/packaging-supplies-sourcing/index.html"
+    },
+    {
+      "src": "/fmcg-wholesale-sourcing/?",
+      "dest": "/fmcg-wholesale-sourcing/index.html"
+    },
+    {
+      "src": "/ar/fmcg-wholesale-sourcing/?",
+      "dest": "/ar/fmcg-wholesale-sourcing/index.html"
+    },
+    {
+      "src": "/tr/fmcg-wholesale-sourcing/?",
+      "dest": "/tr/fmcg-wholesale-sourcing/index.html"
+    },
+    {
+      "src": "/sitemap-products\\.xml",
+      "dest": "/api/search-catalog?mode=sitemap"
+    },
+    {
+      "src": "/turkiye-sourcing-guide/?",
+      "dest": "/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/ar/turkiye-sourcing-guide/?",
+      "dest": "/ar/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/tr/turkiye-sourcing-guide/?",
+      "dest": "/tr/turkiye-sourcing-guide/index.html"
+    },
+    {
+      "src": "/wholesale-rfq-checklist/?",
+      "dest": "/wholesale-rfq-checklist/index.html"
+    },
+    {
+      "src": "/ar/wholesale-rfq-checklist/?",
+      "dest": "/ar/wholesale-rfq-checklist/index.html"
+    },
+    {
+      "src": "/tr/wholesale-rfq-checklist/?",
+      "dest": "/tr/wholesale-rfq-checklist/index.html"
+    },
+    {
+      "src": "/products/?",
+      "dest": "/products/index.html"
+    },
+    {
+      "src": "/(about|faq|privacy|terms|guidelines|why-lourex|contact|request|smart-rfq|track|auth|profile|admin)/?",
+      "dest": "/spa.html"
+    },
+    {
+      "src": "/products/([^/]+)/?",
+      "dest": "/api/search-catalog?mode=detail&slug=$1"
+    },
+    {
+      "src": "/(dashboard|customer-portal)(/.*)?",
+      "dest": "/spa.html"
+    },
+    {
       "src": "/.*",
-      "dest": "/index.html"
+      "dest": "/404.html",
+      "status": 404
     }
   ],
   "git": {
     "deploymentEnabled": false
-  }
+  },
+  "functions": {
+    "api/search-catalog.mjs": {
+      "includeFiles": "dist/spa.html"
+    }
+  },
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ] && [ \"$VERCEL_GIT_COMMIT_REF\" = \"feat/global-search-discovery-batch-1\" ]; then exit 1; else exit 0; fi"
 }

@@ -950,8 +950,6 @@ export const PurchaseRequestForm = ({
       trackEvent("purchase_request_submitted", {
         flow: "purchase_request",
         authenticated: Boolean(profile),
-        requestNumber,
-        trackingId: trackingCode,
         images: uploads.length,
         isFullSourcing: form.isFullSourcing,
       });

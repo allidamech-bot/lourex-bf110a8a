@@ -1,3 +1,4 @@
+import searchCopy from "@/lib/public-search-copy.json";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
@@ -59,7 +60,7 @@ export default function ProductsPage() {
 
   return (
     <div className="dark lourex-home lourex-catalog min-h-screen bg-background text-foreground" data-lourex-catalog>
-      <SEO title={t("products.listing.seoTitle")} description={t("products.listing.seoDescription")} url="https://www.lou-rex.com/products" />
+      <SEO title={isArabic ? searchCopy.catalog.titleAr : searchCopy.catalog.titleEn} description={isArabic ? searchCopy.catalog.introAr : searchCopy.catalog.introEn} url="https://www.lou-rex.com/products" />
       <SiteHeader />
       <main>
         <section className="lrx-catalog-intro" aria-labelledby="catalog-title">
@@ -70,7 +71,7 @@ export default function ProductsPage() {
               </nav>
               <p className="lrx-kicker">THE LIVING TRADE / CATALOG</p>
               <h1 id="catalog-title">{isArabic ? <>منتجك القادم.<br /><span>فرصتك التالية.</span></> : <>Your next product.<br /><span>Your next possibility.</span></>}</h1>
-              <p className="lrx-catalog-description">{isArabic ? "استكشف المنتجات المعروضة وحدّد ما تحتاجه تجارتك. أنشئ طلب توريد بالمواصفات والكمية والوجهة المناسبة لك." : "Explore the catalog and define what your business needs. Start a sourcing request with your specifications, quantity and destination."}</p>
+              <p className="lrx-catalog-description">{isArabic ? searchCopy.catalog.introAr : searchCopy.catalog.introEn}</p>
               <div className="lrx-catalog-intro-actions">
                 <a href="#catalog-browser" className="lrx-text-link">{isArabic ? "استكشف الكتالوج" : "Explore the catalog"}<ArrowDown size={16} aria-hidden="true" /></a>
                 <Link to="/smart-rfq" className="lrx-primary">{isArabic ? "طلب عرض سعر متعدد المنتجات" : "Multi-product Smart RFQ"}<ArrowUpRight size={17} className="rtl:-scale-x-100" aria-hidden="true" /></Link>
@@ -161,6 +162,7 @@ export default function ProductsPage() {
             </div>
           </div>
         </section>
+        <section className="lrx-catalog-shell py-8"><h2 className="text-2xl font-bold mb-4">{isArabic ? "قطاعات التوريد التجاري" : "Commercial sourcing sectors"}</h2><nav className="flex flex-wrap gap-3" aria-label={isArabic ? "قطاعات التوريد" : "Sourcing sectors"}>{searchCopy.catalog.links.filter(link=>link.to.endsWith("-sourcing")).map(link=><Link key={link.to} to={isArabic?"/ar"+link.to:link.to} className="rounded-xl border border-border px-4 py-3 text-sm">{isArabic?link.ar:link.en}</Link>)}</nav></section>
         <section className="lrx-catalog-closing"><div className="lrx-catalog-shell"><div><p className="lrx-kicker">YOUR NEXT CONNECTION</p><h2>{isArabic ? "طلبك يبدأ من التفاصيل." : "Your brief starts with the details."}</h2><p>{isArabic ? "المنتج، المواصفات، الكمية والوجهة. اجمعها في طلب واحد." : "Product, specifications, quantity and destination. Bring them together in one request."}</p></div><Link to="/request" className="lrx-primary">{isArabic ? "أنشئ طلب توريد" : "Create a sourcing request"}<ArrowUpRight size={18} className="rtl:-scale-x-100" aria-hidden="true" /></Link></div></section>
       </main>
       <Footer />

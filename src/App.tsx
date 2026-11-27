@@ -1,6 +1,7 @@
 import { FLOATING_AI_ENABLED } from "@/lib/siteExperience";
 import { lazy, Suspense } from "react";
 import { BrowserTheme } from "@/components/BrowserTheme";
+import SearchMeasurement from "@/components/seo/SearchMeasurement";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -180,12 +181,43 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <BrowserTheme />
+            <SearchMeasurement />
             {isSupabaseConfigured ? (
               <AuthSessionProvider>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" />} />
+                    <Route path="/ar/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="ar" />} />
+                    <Route path="/tr/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="tr" />} />
+                    <Route path="/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" />} />
+                    <Route path="/ar/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="ar" />} />
+                    <Route path="/tr/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="tr" />} />
+                    <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
+                    <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
+                    <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />
+                    <Route path="/personal-care-sourcing" element={<AeoPage kind="care" />} />
+                    <Route path="/ar/personal-care-sourcing" element={<AeoPage kind="care" locale="ar" />} />
+                    <Route path="/tr/personal-care-sourcing" element={<AeoPage kind="care" locale="tr" />} />
+                    <Route path="/packaging-supplies-sourcing" element={<AeoPage kind="packaging" />} />
+                    <Route path="/ar/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="ar" />} />
+                    <Route path="/tr/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="tr" />} />
+                    <Route path="/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" />} />
+                    <Route path="/ar/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="ar" />} />
+                    <Route path="/tr/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="tr" />} />
+                    <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
+                    <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
+                    <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />
+                    <Route path="/tr/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="tr" />} />
+                    <Route path="/ar/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="ar" />} />
+                    <Route path="/tr/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="tr" />} />
+                    <Route path="/ar/food-products-sourcing" element={<AeoPage kind="food" locale="ar" />} />
+                    <Route path="/tr/food-products-sourcing" element={<AeoPage kind="food" locale="tr" />} />
+                    <Route path="/ar/turkish-products" element={<AeoPage kind="turkish" locale="ar" />} />
+                    <Route path="/tr/turkish-products" element={<AeoPage kind="turkish" locale="tr" />} />
+                    <Route path="/ar/syrian-products" element={<AeoPage kind="syrian" locale="ar" />} />
+                    <Route path="/tr/syrian-products" element={<AeoPage kind="syrian" locale="tr" />} />
                     <Route
                       path="/products"
                       element={<PageWithAI component={<ProductsPage />} />}
@@ -525,6 +557,36 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
+                    <Route path="/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" />} />
+                    <Route path="/ar/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="ar" />} />
+                    <Route path="/tr/turkiye-sourcing-guide" element={<AeoPage kind="buyerGuide" locale="tr" />} />
+                    <Route path="/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" />} />
+                    <Route path="/ar/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="ar" />} />
+                    <Route path="/tr/wholesale-rfq-checklist" element={<AeoPage kind="rfqGuide" locale="tr" />} />
+                    <Route path="/cleaning-household-sourcing" element={<AeoPage kind="cleaning" />} />
+                    <Route path="/ar/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="ar" />} />
+                    <Route path="/tr/cleaning-household-sourcing" element={<AeoPage kind="cleaning" locale="tr" />} />
+                    <Route path="/personal-care-sourcing" element={<AeoPage kind="care" />} />
+                    <Route path="/ar/personal-care-sourcing" element={<AeoPage kind="care" locale="ar" />} />
+                    <Route path="/tr/personal-care-sourcing" element={<AeoPage kind="care" locale="tr" />} />
+                    <Route path="/packaging-supplies-sourcing" element={<AeoPage kind="packaging" />} />
+                    <Route path="/ar/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="ar" />} />
+                    <Route path="/tr/packaging-supplies-sourcing" element={<AeoPage kind="packaging" locale="tr" />} />
+                    <Route path="/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" />} />
+                    <Route path="/ar/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="ar" />} />
+                    <Route path="/tr/fmcg-wholesale-sourcing" element={<AeoPage kind="wholesale" locale="tr" />} />
+                    <Route path="/ar/about-lourex" element={<AeoPage kind="about" locale="ar" />} />
+                    <Route path="/tr/about-lourex" element={<AeoPage kind="about" locale="tr" />} />
+                    <Route path="/ar/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="ar" />} />
+                    <Route path="/tr/chocolate-sourcing" element={<AeoPage kind="chocolate" locale="tr" />} />
+                    <Route path="/ar/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="ar" />} />
+                    <Route path="/tr/biscuits-sourcing" element={<AeoPage kind="biscuits" locale="tr" />} />
+                    <Route path="/ar/food-products-sourcing" element={<AeoPage kind="food" locale="ar" />} />
+                    <Route path="/tr/food-products-sourcing" element={<AeoPage kind="food" locale="tr" />} />
+                    <Route path="/ar/turkish-products" element={<AeoPage kind="turkish" locale="ar" />} />
+                    <Route path="/tr/turkish-products" element={<AeoPage kind="turkish" locale="tr" />} />
+                    <Route path="/ar/syrian-products" element={<AeoPage kind="syrian" locale="ar" />} />
+                    <Route path="/tr/syrian-products" element={<AeoPage kind="syrian" locale="tr" />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route
                     path="/products/:slug"

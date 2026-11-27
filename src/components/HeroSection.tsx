@@ -1,3 +1,4 @@
+import searchCopy from "@/lib/public-search-copy.json";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Pause, Play } from "lucide-react";
@@ -30,7 +31,7 @@ export default function HeroSection() {
           <p className="lrx-living-eyebrow">INTERNATIONAL TRADING & RESOURCES</p>
           <h1 id="lourex-hero-title">{ar ? <>تجارتك،<br/><span>متصلة<br className="lrx-mobile-break"/> بالعالم.</span></> : <>Trade.<br/><span>Connected<br/>by possibility.</span></>}</h1>
           <p className="lrx-living-lead">{ar ? "كل التفاصيل، في اتصال واحد." : "Every detail. One connection."}</p>
-          <p className="lrx-living-description">{ar ? "من المنتج الذي تحتاجه، إلى مصادره ومواصفاته وتفاصيله التجارية. هنا تبدأ رحلة توريدك مع LOUREX." : "From the product you need to its sources, specifications and commercial details. Your sourcing journey starts with LOUREX."}</p>
+          <p className="lrx-living-description">{ar ? searchCopy.home.introAr : searchCopy.home.introEn}</p>
           <div className="lrx-living-actions">
             <Link to="/request" className="lrx-primary">{ar ? "ابدأ طلب توريد" : "Start a sourcing request"}<ArrowUpRight size={18} aria-hidden="true" className="rtl:-scale-x-100"/></Link>
             <Link to="/products" className="lrx-text-link">{ar ? "اكتشف المنتجات" : "Explore products"}<ArrowUpRight size={17} aria-hidden="true" className="rtl:-scale-x-100"/></Link>

@@ -7,10 +7,10 @@ import { TradeEmblem } from "@/components/shared/TradeEmblem";
 import { useI18n } from "@/lib/i18n";
 
 const EN_DESCRIPTION =
-  "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.";
+  "LOUREX TRADING AND SOURCING coordinates international sourcing for importers, wholesalers and distributors, including food, FMCG and other commercial products. Business buyers can submit purchase requirements, coordinate supplier discussions and follow agreed orders.";
 
 const AR_DESCRIPTION =
-  "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.";
+  "تنسّق لوريكس LOUREX التوريد الدولي للمستوردين وتجار الجملة والموزعين، بما يشمل الأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى. يستطيع المشترون تقديم متطلبات الشراء وتنسيق التواصل مع الموردين ومتابعة الطلبات المتفق عليها.";
 
 export default function AboutPage() {
   const { lang } = useI18n();
@@ -19,13 +19,13 @@ export default function AboutPage() {
   const items = isArabic
     ? [
         "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع.",
-        "لوريكس تعمل كوسيط توريد وشركة تنسيق توريد وتصدير للمواد الغذائية والحلويات.",
-        "تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية بصياغة تجارية منظمة وآمنة.",
+        "تنسّق لوريكس التوريد الدولي للأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى.",
+        "تنسّق لوريكس استفسارات الأغذية والحلويات والسلع الاستهلاكية والمنظفات والعناية الشخصية والتغليف وفق التوفر والمتطلبات المعمول بها.",
       ]
     : [
         "LOUREX is not primarily a marketplace, supplier listing website, manufacturer, or factory marketplace.",
-        "LOUREX works as a trade intermediary and sourcing coordination company for food and sweets products.",
-        "LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products with structured, compliance-aware coordination.",
+        "LOUREX coordinates international trade sourcing inquiries for food, FMCG and other commercial products.",
+        "LOUREX coordinates inquiries across food, confectionery, FMCG, cleaning, personal care and packaging, subject to availability and applicable requirements.",
       ];
 
   const links = [
@@ -35,6 +35,8 @@ export default function AboutPage() {
     ["/food-products-sourcing", isArabic ? "توريد المواد الغذائية" : "Food Products Sourcing"],
     ["/turkish-products", isArabic ? "المنتجات التركية" : "Turkish Products"],
     ["/syrian-products", isArabic ? "المنتجات السورية" : "Syrian Products"],
+    [isArabic ? "/ar/turkiye-sourcing-guide" : "/turkiye-sourcing-guide", isArabic ? "دليل المشتري للتوريد من تركيا" : "Buyer guide: sourcing products from Türkiye"],
+    [isArabic ? "/ar/wholesale-rfq-checklist" : "/wholesale-rfq-checklist", isArabic ? "قائمة تجهيز طلب عرض سعر بالجملة للمستوردين والموزعين" : "Wholesale RFQ checklist for importers and distributors"],
     ["/faq", isArabic ? "الأسئلة الشائعة" : "FAQ"],
   ];
 
