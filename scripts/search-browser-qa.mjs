@@ -26,6 +26,7 @@ for(const [engine,launcher] of [["chromium",chromium],["webkit",webkit]]){
       await h1.waitFor();
       assert.equal(await h1.count(),1);
       assert.equal(normalize(await h1.innerText()),item.h1);
+      if(javascriptEnabled) await page.waitForFunction(({path,description,lang,localized})=>document.querySelector('link[rel="canonical"]')?.getAttribute("href")==="https://www.lou-rex.com"+path && document.querySelector('meta[name="description"]')?.getAttribute("content")===description && (!localized || document.documentElement.lang===lang),item);
       assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"),"https://www.lou-rex.com"+item.path);
       assert.equal(await page.locator('meta[name="description"]').getAttribute("content"),item.description);
       if(item.localized){assert.equal(await page.locator("html").getAttribute("lang"),item.lang);assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(),4);}
