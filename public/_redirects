@@ -1,5 +1,23 @@
 # Public and authenticated React Router paths; static pages are served by the filesystem.
 /catalog /products 301
+/about-lourex /about-lourex/index.html 200
+/chocolate-sourcing /chocolate-sourcing/index.html 200
+/biscuits-sourcing /biscuits-sourcing/index.html 200
+/food-products-sourcing /food-products-sourcing/index.html 200
+/turkish-products /turkish-products/index.html 200
+/syrian-products /syrian-products/index.html 200
+/ar/about-lourex /ar/about-lourex/index.html 200
+/ar/chocolate-sourcing /ar/chocolate-sourcing/index.html 200
+/ar/biscuits-sourcing /ar/biscuits-sourcing/index.html 200
+/ar/food-products-sourcing /ar/food-products-sourcing/index.html 200
+/ar/turkish-products /ar/turkish-products/index.html 200
+/ar/syrian-products /ar/syrian-products/index.html 200
+/tr/about-lourex /tr/about-lourex/index.html 200
+/tr/chocolate-sourcing /tr/chocolate-sourcing/index.html 200
+/tr/biscuits-sourcing /tr/biscuits-sourcing/index.html 200
+/tr/food-products-sourcing /tr/food-products-sourcing/index.html 200
+/tr/turkish-products /tr/turkish-products/index.html 200
+/tr/syrian-products /tr/syrian-products/index.html 200
 /about /spa.html 200
 /faq /spa.html 200
 /privacy /spa.html 200

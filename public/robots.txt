@@ -14,6 +14,7 @@ Allow: /privacy
 Allow: /terms
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
@@ -36,6 +37,7 @@ Allow: /privacy
 Allow: /terms
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
@@ -58,6 +60,7 @@ Allow: /privacy
 Allow: /terms
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
@@ -80,6 +83,7 @@ Allow: /privacy
 Allow: /terms
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
@@ -90,6 +94,7 @@ User-agent: Twitterbot
 Allow: /
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /customer-portal
 Disallow: /profile
@@ -98,6 +103,7 @@ User-agent: facebookexternalhit
 Allow: /
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /customer-portal
 Disallow: /profile
@@ -118,6 +124,7 @@ Allow: /privacy
 Allow: /terms
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /api/
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages

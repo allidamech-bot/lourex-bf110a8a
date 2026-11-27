@@ -1,6 +1,13 @@
 {
   "routes": [
     {
+      "src": "/spa\\.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
       "src": "/(auth|track|profile|admin|dashboard|customer-portal)(/.*)?",
       "headers": {
         "X-Robots-Tag": "noindex, nofollow"

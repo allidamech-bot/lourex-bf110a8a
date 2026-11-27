@@ -21,7 +21,7 @@ function metadata(template,{path,title,description,lang="en",alternates=[]}){
   return html;
 }
 const bodyMarker = /<div id="root"><div class="lrx-boot"[^>]*>[\s\S]*?<\/div><\/div>/;
-const frame = (content) => '<div id="root"><header style="max-width:70rem;margin:auto;padding:1.5rem"><a href="/"><img src="/lourex-official.jpeg" alt="LOUREX" width="72" height="72"></a></header><main style="max-width:70rem;margin:auto;padding:2rem 1.5rem;line-height:1.7">'+content+"</main></div>";
+const frame = (content) => '<div id="root"><header data-lourex-prerender style="max-width:70rem;margin:auto;padding:1.5rem"><a href="/"><img src="/lourex-official.jpeg" alt="LOUREX" width="72" height="72"></a></header><main style="max-width:70rem;margin:auto;padding:2rem 1.5rem;line-height:1.7">'+content+"</main></div>";
 const heading = text => '<h1 style="font-size:clamp(2rem,5vw,4rem);line-height:1.2">'+escapeHtml(text)+"</h1>";
 const list = links => '<nav><ul>'+links.map(link=>{if(!safePath(link.to))throw new Error("Unsafe link");return '<li><a href="'+link.to+'">'+escapeHtml(link.label)+"</a></li>"}).join("")+"</ul></nav>";
 export function renderAeoHtml(template,kind,content,lang="en"){

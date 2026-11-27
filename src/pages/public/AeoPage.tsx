@@ -19,7 +19,7 @@ const labels = {
 const localPaths = new Set(Object.values(aeoContent.pages).map(page => page.path));
 
 export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:SearchLanguage}) {
-  const {lang:preferred} = useI18n();
+  const {lang:preferred,setLang} = useI18n();
   // Existing English URLs are the default; localized routes are deterministic.
   const lang = locale ?? "en";
   const content = aeoContent.pages[kind];
@@ -30,13 +30,15 @@ export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:Searc
   const alternates = [...languages.map(language=>({lang:language,href:"https://www.lou-rex.com"+localizedPath(content.path,language)})),{lang:"x-default",href:"https://www.lou-rex.com"+content.path}];
   useEffect(()=>{
     const html=document.documentElement;
+    if(lang!=="tr" && preferred!==lang) setLang(lang);
     html.lang=lang; html.dir=lang==="ar"?"rtl":"ltr";
-    return ()=>{html.lang=preferred;html.dir=preferred==="ar"?"rtl":"ltr";};
-  },[lang,preferred]);
+    html.style.fontFamily=lang==="ar"?"\'Tajawal\', sans-serif":"";
+    return ()=>{html.lang=preferred;html.dir=preferred==="ar"?"rtl":"ltr";html.style.fontFamily=preferred==="ar"?"\'Tajawal\', sans-serif":"";};
+  },[lang,preferred,setLang]);
   return (
     <div className="lourex-public lourex-aeo min-h-screen bg-background text-foreground" lang={lang} dir={lang==="ar"?"rtl":"ltr"}>
       <SEO title={title} description={description} url={"https://www.lou-rex.com"+localizedPath(content.path,lang)} alternates={alternates} />
-      {lang === "en" ? <SiteHeader /> : <header className="container mx-auto flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-4"><Link to="/" className="flex items-center gap-3"><img src="/lourex-official.jpeg" alt="LOUREX" width="48" height="48" /><span>LOUREX</span></Link><nav className="flex flex-wrap gap-4 text-sm"><Link to="/">{l.home}</Link><Link to="/products">{l.catalog}</Link><Link to="/contact">{l.contact}</Link></nav></header>}
+      {lang !== "tr" ? <SiteHeader /> : <header className="container mx-auto flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-4"><Link to="/" className="flex items-center gap-3"><img src="/lourex-official.jpeg" alt="LOUREX" width="48" height="48" /><span>LOUREX</span></Link><nav className="flex flex-wrap gap-4 text-sm"><Link to="/">{l.home}</Link><Link to="/products">{l.catalog}</Link><Link to="/contact">{l.contact}</Link></nav></header>}
       <main className="container mx-auto px-4 py-14 md:px-8 md:py-20">
         <nav aria-label="Language" className="mb-8 flex flex-wrap gap-3">{languages.map(language=><a key={language} href={localizedPath(content.path,language)} hrefLang={language} lang={language} aria-current={lang===language?"page":undefined} className="rounded-full border border-border px-4 py-2 text-sm">{languageLabels[language]}</a>)}</nav>
         <div className="max-w-4xl">
@@ -51,7 +53,7 @@ export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:Searc
         </section>
         <section className="mt-10 rounded-[1.5rem] border border-border/70 bg-secondary/65 p-6"><h2 className="font-serif text-2xl font-semibold text-foreground">{l.related}</h2><div className="mt-5 flex flex-wrap gap-2">{aeoContent.relatedLinks.map(link=><Link key={link.to} to={localPaths.has(link.to)?localizedPath(link.to,lang):link.to} className="rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-sm text-foreground transition hover:text-primary">{link[lang]}</Link>)}</div></section>
       </main>
-      {lang==="en"?<Footer/>:<footer className="container mx-auto border-t border-border px-4 py-8"><Link to="/contact">LOUREX · {l.contact}</Link></footer>}
+      {lang!=="tr"?<Footer/>:<footer className="container mx-auto border-t border-border px-4 py-8"><Link to="/contact">LOUREX · {l.contact}</Link></footer>}
     </div>
   );
 }

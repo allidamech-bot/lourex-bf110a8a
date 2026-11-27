@@ -92,20 +92,20 @@ export default function HomePage() {
 
   const categories = [
     {
-      code: "01", to: "/chocolate-sourcing",
+      code: "01", to: ar ? "/ar/chocolate-sourcing" : "/chocolate-sourcing",
       name: ar ? "الشوكولاتة والحلويات" : "Confectionery & sweets",
       note: ar ? "تنسيق توريد العلامات التجارية والمنتجات المعبأة" : "Commercial sourcing for confectionery products",
       kind: "confectionery" as const,
     },
     {
-      code: "02", to: "/biscuits-sourcing",
+      code: "02", to: ar ? "/ar/biscuits-sourcing" : "/biscuits-sourcing",
       name: ar ? "البسكويت والوجبات الخفيفة" : "Biscuits & snacks",
       note: ar ? "التعبئة والكميات وطلبات التوريد" : "Packaging, quantities and purchase inquiries",
       kind: "snacks" as const,
       icon: Boxes,
     },
     {
-      code: "03", to: "/food-products-sourcing",
+      code: "03", to: ar ? "/ar/food-products-sourcing" : "/food-products-sourcing",
       name: ar ? "المواد والمنتجات الغذائية" : "Food & FMCG",
       note: ar ? "احتياجات متنوعة للتجار والموزعين" : "Sourcing needs for trade and distribution",
       kind: "food" as const,

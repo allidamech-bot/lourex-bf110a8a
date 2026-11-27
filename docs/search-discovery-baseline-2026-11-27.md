@@ -34,3 +34,10 @@ References:
 - https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites
 - https://developers.openai.com/api/docs/bots
 - https://help.openai.com/en/articles/12627856-publishers-and-developers-faq
+
+## Re-audit and second implementation pass
+- Extended raw HTML to homepage, catalog and six sourcing topics in English, Arabic and Turkish (20 generated pages). No demo or private products published.
+- Deterministic locale routes with self-canonicals and reciprocal hreflang; Arabic entry links on homepage/footer. Turkish is restricted to six landing pages; transactional application remains EN/AR.
+- SPA fallback canonical removed; explicit private noindex headers and unknown top-level 404 routing. Unknown dynamic product slugs still need server-backed HTTP 404 verification.
+- Direct generator execution: 20/20 rendered page assertions passed before browser acceptance. Browser acceptance covers Chromium/WebKit with JS enabled/disabled; release requires CI plus HTTP checks against actual hosting.
+- Search Console ownership, Bing Webmaster, analytics, actual product sitemap, ranking and field CWV remain unverified. No paid service, database changes, merge or production release authorized.
