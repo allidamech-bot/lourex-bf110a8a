@@ -27,7 +27,7 @@ test("all six pages share source data, canonical, metadata and direct crawlable 
   }
 });
 
-test("generated files exist and SPA entry is unchanged", async () => {
+test("generated files exist, home and catalog are crawlable, SPA fallback is canonical-free", async () => {
   const temp = await mkdtemp(join(tmpdir(), "lourex-seo-"));
   try {
     await writeFile(join(temp, "index.html"), template);
@@ -36,7 +36,20 @@ test("generated files exist and SPA entry is unchanged", async () => {
       const html = await readFile(join(temp, page.path.slice(1), "index.html"), "utf8");
       assert.ok(html.includes(page.h1En));
     }
-    assert.equal(await readFile(join(temp, "index.html"), "utf8"), template);
+    const home = await readFile(join(temp, "index.html"), "utf8");
+    const catalog = await readFile(join(temp, "products", "index.html"), "utf8");
+    const fallback = await readFile(join(temp, "spa.html"), "utf8");
+    const missing = await readFile(join(temp, "404.html"), "utf8");
+    assert.match(home, /Trade\. Connected by possibility\./);
+    assert.match(home, /href="https:\/\/www\.lou-rex\.com\/"/);
+    assert.match(catalog, /Cleaning &amp; Household/);
+    assert.match(catalog, /href="https:\/\/www\.lou-rex\.com\/products"/);
+    assert.ok(!catalog.includes("turkish-cleaning-liquid-sample"));
+    assert.equal((home.match(/<h1\b/g)||[]).length,1);
+    assert.equal((catalog.match(/<h1\b/g)||[]).length,1);
+    assert.ok(!fallback.includes('rel="canonical"'));
+    assert.match(missing,/noindex,follow/);
+    assert.equal(config.routes.at(-1).status,404);
   } finally { await rm(temp, { recursive: true, force: true }); }
 });
 
@@ -46,3 +59,5 @@ test("fails closed for a changed template or unsafe route", () => {
   malformed.pages.about.path = "/../private";
   assert.throws(() => renderAeoHtml(template, "about", malformed));
 });
+
+ test("private routes have server-side noindex and product detail remains a dynamic route", () => { const privateRule=config.routes.find(r=>r.headers?.["X-Robots-Tag"]); assert.ok(privateRule); for(const path of ["/auth","/track","/dashboard/orders","/customer-portal/requests","/profile","/admin"]) assert.ok(new RegExp("^"+privateRule.src+"$").test(path)); assert.ok(config.routes.some(r=>r.src==="/products/[^/]+/?"&&r.dest==="/spa.html")); });

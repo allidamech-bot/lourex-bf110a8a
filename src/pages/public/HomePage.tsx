@@ -1,3 +1,4 @@
+import searchCopy from "@/lib/public-search-copy.json";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
@@ -22,10 +23,6 @@ import SourcingIllustration from "@/components/home/SourcingIllustration";
 import { useI18n } from "@/lib/i18n";
 import "./lourex-home.css";
 
-const EN_DESCRIPTION =
-  "LOUREX is an international trading and sourcing coordination company connecting buyers with sourcing opportunities across commercial products and managing purchase requests, supplier coordination, and delivery follow-up.";
-const AR_DESCRIPTION =
-  "لوريكس شركة تجارة دولية وتنسيق مصادر توريد، تربط المشترين بمصادر المنتجات، وتنسّق متطلبات الشراء والتواصل مع الموردين ومتابعة الطلبات حتى التسليم.";
 
 export default function HomePage() {
   const { lang } = useI18n();
@@ -132,7 +129,7 @@ export default function HomePage() {
 
   return (
     <div className="dark lourex-home min-h-screen overflow-x-clip bg-[#090909] text-white" data-lourex-home>
-      <SEO title={ar ? "لوريكس | تجارة دولية ومصادر توريد" : "LOUREX TRADING AND SOURCING | Food & FMCG Sourcing from Türkiye"} description={ar ? AR_DESCRIPTION : EN_DESCRIPTION} url="https://www.lou-rex.com/" />
+      <SEO title={ar ? searchCopy.home.titleAr : searchCopy.home.titleEn} description={ar ? searchCopy.home.introAr : searchCopy.home.introEn} url="https://www.lou-rex.com/" />
       <SiteHeader overlayOnHome />
       <motion.div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[1100] h-[3px] bg-gradient-to-r from-[#A93024] via-[#345777] to-[#D6A653]" style={{ scaleX: progress, transformOrigin: ar ? "right center" : "left center" }} />
       <main>

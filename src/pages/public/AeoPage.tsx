@@ -20,7 +20,7 @@ interface AeoPageProps {
 const EN_DEFINITION = aeoContent.enDefinition;
 
 const AR_DEFINITION =
-  "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات، تربط المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم.";
+  "تنسّق لوريكس LOUREX التوريد الدولي والتواصل مع الموردين للمشترين التجاريين، مع إدارة طلبات الشراء ومتابعة الطلبات.";
 
 const pageContent = aeoContent.pages;
 const relatedLinks = aeoContent.relatedLinks;
@@ -73,7 +73,7 @@ export default function AeoPage({ kind }: AeoPageProps) {
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
               {isArabic
-                ? "تشمل مجالات التركيز: وسيط توريد، تنسيق الموردين، إدارة طلبات الشراء، متابعة الصفقات، متابعة الشحن والتسليم، الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية."
+                ? "استكشف كتالوج المنتجات أو قدّم طلب توريد بالمواصفات والكمية والوجهة. يُؤكّد توفر الموردين والشروط التجارية لكل استفسار."
                 : aeoContent.enFocus}
             </p>
           </div>

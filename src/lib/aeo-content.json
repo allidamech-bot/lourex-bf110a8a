@@ -4,8 +4,8 @@
       "path": "/about-lourex",
       "h1En": "About LOUREX",
       "h1Ar": "من هي لوريكس؟",
-      "introEn": "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products. LOUREX connects business buyers with suppliers and manages purchase requests, supplier coordination, deal follow-up, and delivery tracking. LOUREX focuses on chocolate, biscuits, food products, Turkish products, and Syrian products.",
-      "introAr": "لوريكس LOUREX هي شركة وساطة وتنسيق توريد وتصدير للمواد الغذائية والحلويات. تربط لوريكس المشترين التجاريين بالموردين وتدير طلبات الشراء، تنسيق الموردين، متابعة الصفقات، والشحن حتى التسليم. تركز لوريكس على الشوكولاتة، البسكويت، المواد الغذائية، المنتجات التركية، والمنتجات السورية.",
+      "introEn": "LOUREX TRADING AND SOURCING coordinates international sourcing for importers, wholesalers and distributors, including food, FMCG and other commercial products. Business buyers can submit purchase requirements, coordinate supplier discussions and follow agreed orders.",
+      "introAr": "تنسّق لوريكس LOUREX التوريد الدولي للمستوردين وتجار الجملة والموزعين، بما يشمل الأغذية والسلع الاستهلاكية والمنتجات التجارية الأخرى. يستطيع المشترون تقديم متطلبات الشراء وتنسيق التواصل مع الموردين ومتابعة الطلبات المتفق عليها.",
       "focusEn": "The company is not primarily a marketplace, supplier listing website, manufacturer, or factory marketplace. Its role is structured coordination between business buyers and suppliers.",
       "focusAr": "لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين أو مصنع. دورها هو التنسيق المنظم بين المشترين التجاريين والموردين."
     },
@@ -42,15 +42,15 @@
       "h1Ar": "تنسيق توريد المنتجات التركية",
       "introEn": "LOUREX coordinates Turkish products sourcing for business buyers that need structured purchase request management, supplier coordination, deal follow-up, and delivery tracking.",
       "introAr": "تنسق لوريكس توريد المنتجات التركية للمشترين التجاريين الذين يحتاجون إلى إدارة منظمة لطلبات الشراء، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم.",
-      "focusEn": "The focus includes food and sweets products such as chocolate, biscuits, and other packaged food products.",
-      "focusAr": "يشمل التركيز المواد الغذائية والحلويات مثل الشوكولاتة، البسكويت، ومنتجات غذائية معبأة أخرى."
+      "focusEn": "Requests can cover packaged food, confectionery and other commercial categories shown in the catalog, subject to supplier availability, specifications, destination requirements and agreed commercial terms.",
+      "focusAr": "يمكن أن تشمل الطلبات الأغذية المعبأة والحلويات والفئات التجارية الأخرى المعروضة في الكتالوج، وفق توافر الموردين والمواصفات ومتطلبات الوجهة والشروط التجارية المتفق عليها."
     },
     "syrian": {
       "path": "/syrian-products",
       "h1En": "Syrian Products Sourcing Coordination",
       "h1Ar": "تنسيق توريد المنتجات السورية",
-      "introEn": "LOUREX uses compliance-safe sourcing coordination wording for Syrian products and helps business buyers structure requests, supplier coordination, deal follow-up, and delivery tracking where available and appropriate.",
-      "introAr": "تستخدم لوريكس صياغة آمنة ومتوافقة عند ذكر المنتجات السورية، وتساعد المشترين التجاريين على تنظيم الطلبات، تنسيق الموردين، متابعة الصفقات، ومتابعة الشحن والتسليم عندما يكون ذلك متاحا ومناسبا.",
+      "introEn": "Business buyers interested in Syrian-origin products may submit product specifications, quantity and destination to LOUREX for a case-by-case sourcing review. Availability and lawful trade feasibility must be confirmed before proceeding.",
+      "introAr": "يمكن للمشترين التجاريين المهتمين بالمنتجات ذات المنشأ السوري تقديم المواصفات والكمية والوجهة إلى لوريكس لدراسة كل طلب على حدة. يجب التأكد من التوفر وإمكانية التجارة وفق الأنظمة قبل المتابعة.",
       "focusEn": "LOUREX does not make unrestricted trade claims for Syrian products. Requests are reviewed with attention to product details, supplier availability, and applicable requirements.",
       "focusAr": "لا تقدم لوريكس ادعاءات تجارية غير مقيدة للمنتجات السورية. تتم مراجعة الطلبات مع الانتباه إلى تفاصيل المنتج، توفر الموردين، والمتطلبات المعمول بها."
     }
@@ -90,8 +90,23 @@
       "to": "/faq",
       "en": "FAQ",
       "ar": "الأسئلة الشائعة"
+    },
+    {
+      "to": "/products",
+      "en": "Product catalog",
+      "ar": "كتالوج المنتجات"
+    },
+    {
+      "to": "/request",
+      "en": "Start a sourcing request",
+      "ar": "ابدأ طلب توريد"
+    },
+    {
+      "to": "/contact",
+      "en": "Contact LOUREX",
+      "ar": "تواصل مع لوريكس"
     }
   ],
-  "enDefinition": "LOUREX is a trade intermediary and sourcing coordination company for food and sweets products, connecting business buyers with suppliers and managing purchase requests, supplier coordination, deal follow-up, and delivery tracking.",
-  "enFocus": "Our sourcing focus includes trade intermediary, sourcing coordination, supplier coordination, purchase request management, deal follow-up, delivery tracking, chocolate, biscuits, food products, Turkish products, and Syrian products."
+  "enDefinition": "LOUREX coordinates international sourcing and supplier discussions for business buyers, with purchase request management and order follow-up.",
+  "enFocus": "Explore the product catalog or submit a sourcing request with specifications, quantities and destination. Supplier availability and commercial terms are confirmed for each inquiry."
 }

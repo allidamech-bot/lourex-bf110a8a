@@ -1,6 +1,20 @@
 {
   "routes": [
     {
+      "src": "/(auth|track|profile|admin|dashboard|customer-portal)(/.*)?",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "/catalog/?",
+      "headers": {
+        "Location": "/products"
+      },
+      "status": 308
+    },
+    {
       "handle": "filesystem"
     },
     {
@@ -28,8 +42,25 @@
       "dest": "/syrian-products/index.html"
     },
     {
+      "src": "/products/?",
+      "dest": "/products/index.html"
+    },
+    {
+      "src": "/(about|faq|privacy|terms|guidelines|why-lourex|contact|request|smart-rfq|track|auth|profile|admin)/?",
+      "dest": "/spa.html"
+    },
+    {
+      "src": "/products/[^/]+/?",
+      "dest": "/spa.html"
+    },
+    {
+      "src": "/(dashboard|customer-portal)(/.*)?",
+      "dest": "/spa.html"
+    },
+    {
       "src": "/.*",
-      "dest": "/index.html"
+      "dest": "/404.html",
+      "status": 404
     }
   ],
   "git": {

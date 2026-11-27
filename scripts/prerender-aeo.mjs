@@ -47,6 +47,16 @@ export function renderAeoHtml(template, kind, content) {
   return replaceOnce(html, /<div id="root"><div class="lrx-boot"[^>]*>[\s\S]*?<\/div><\/div>/, body);
 }
 
+export function renderPublicHtml(template, page, path, categories = []) {
+  const html = renderAeoHtml(template, "public", {pages:{public:{path: path === "/" ? "/home" : path,h1En:page.h1En,introEn:page.introEn,focusEn:page.introEn}},relatedLinks:page.links,enDefinition:"",enFocus:""});
+  const url = origin + path;
+  const title = escapeHtml(page.titleEn);
+  const categoryHtml = categories.length ? '<section><h2>Product categories</h2><ul>' + categories.map(category => "<li>"+escapeHtml(category.labelEn)+"</li>").join("") + "</ul></section>" : "";
+  const links = page.links.map(link => '<li><a href="'+link.to+'">'+escapeHtml(link.en)+"</a></li>").join("");
+  const body = '<div id="root"><header style="max-width:70rem;margin:auto;padding:1.5rem"><a href="/"><img src="/lourex-official.jpeg" alt="LOUREX" width="72" height="72"></a></header><main style="max-width:70rem;margin:auto;padding:2rem 1.5rem;line-height:1.7"><h1 style="font-size:clamp(2rem,5vw,4rem);line-height:1.2">'+escapeHtml(page.h1En)+"</h1><p>"+escapeHtml(page.introEn)+"</p>"+categoryHtml+'<nav aria-label="Related pages"><ul>'+links+"</ul></nav></main></div>";
+  return html.replace(/<title>[\\s\\S]*?<\\/title>/,()=>"<title>"+title+"</title>").replace(/(property="og:title"|name="twitter:title") content="[^"]*"/g,(_,attr)=>attr+' content="'+title+'"').replaceAll(origin+(path === "/" ? "/home" : path),url).replace(/<div id="root">[\\s\\S]*?<\\/main><\\/div><\\/div>/,()=>body);
+}
+
 export async function generateAeoPages(dist = "dist", source = "src/lib/aeo-content.json") {
   const template = await readFile(join(dist, "index.html"), "utf8");
   const content = JSON.parse(await readFile(source, "utf8"));
@@ -59,7 +69,15 @@ export async function generateAeoPages(dist = "dist", source = "src/lib/aeo-cont
     await mkdir(folder, { recursive: true });
     await writeFile(join(folder, "index.html"), rendered);
   }
-  console.log("Generated " + routes.size + " static public AEO pages from shared content");
+  const copy = JSON.parse(await readFile("src/lib/public-search-copy.json", "utf8"));
+  const categories = JSON.parse(await readFile("src/features/products/data/productCatalogCategories.json", "utf8"));
+  await mkdir(join(dist, "products"), { recursive: true });
+  await writeFile(join(dist, "products", "index.html"), renderPublicHtml(template, copy.catalog, "/products", categories));
+  await writeFile(join(dist, "index.html"), renderPublicHtml(template, copy.home, "/"));
+  // Keep the generic SPA document free of a misleading homepage canonical.
+  await writeFile(join(dist, "spa.html"), template.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/, ""));
+  await writeFile(join(dist, "404.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="robots" content="noindex,follow"><title>Page not found | LOUREX</title></head><body><main><h1>Page not found</h1><p>The requested page does not exist.</p><a href="/">LOUREX home</a> · <a href="/products">Product catalog</a></main></body></html>');
+  console.log("Generated " + (routes.size + 2) + " static public pages, SPA fallback and 404 document");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

@@ -1,3 +1,4 @@
+import searchCopy from "@/lib/public-search-copy.json";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
@@ -59,7 +60,7 @@ export default function ProductsPage() {
 
   return (
     <div className="dark lourex-home lourex-catalog min-h-screen bg-background text-foreground" data-lourex-catalog>
-      <SEO title={t("products.listing.seoTitle")} description={t("products.listing.seoDescription")} url="https://www.lou-rex.com/products" />
+      <SEO title={isArabic ? searchCopy.catalog.titleAr : searchCopy.catalog.titleEn} description={isArabic ? searchCopy.catalog.introAr : searchCopy.catalog.introEn} url="https://www.lou-rex.com/products" />
       <SiteHeader />
       <main>
         <section className="lrx-catalog-intro" aria-labelledby="catalog-title">
@@ -70,7 +71,7 @@ export default function ProductsPage() {
               </nav>
               <p className="lrx-kicker">THE LIVING TRADE / CATALOG</p>
               <h1 id="catalog-title">{isArabic ? <>منتجك القادم.<br /><span>فرصتك التالية.</span></> : <>Your next product.<br /><span>Your next possibility.</span></>}</h1>
-              <p className="lrx-catalog-description">{isArabic ? "استكشف المنتجات المعروضة وحدّد ما تحتاجه تجارتك. أنشئ طلب توريد بالمواصفات والكمية والوجهة المناسبة لك." : "Explore the catalog and define what your business needs. Start a sourcing request with your specifications, quantity and destination."}</p>
+              <p className="lrx-catalog-description">{isArabic ? searchCopy.catalog.introAr : searchCopy.catalog.introEn}</p>
               <div className="lrx-catalog-intro-actions">
                 <a href="#catalog-browser" className="lrx-text-link">{isArabic ? "استكشف الكتالوج" : "Explore the catalog"}<ArrowDown size={16} aria-hidden="true" /></a>
                 <Link to="/smart-rfq" className="lrx-primary">{isArabic ? "طلب عرض سعر متعدد المنتجات" : "Multi-product Smart RFQ"}<ArrowUpRight size={17} className="rtl:-scale-x-100" aria-hidden="true" /></Link>

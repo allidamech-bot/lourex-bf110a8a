@@ -1,2 +1,21 @@
-# Netlify SPA fallback for React Router public and authenticated paths
-/*    /index.html   200
+# Public and authenticated React Router paths; static pages are served by the filesystem.
+/catalog /products 301
+/about /spa.html 200
+/faq /spa.html 200
+/privacy /spa.html 200
+/terms /spa.html 200
+/guidelines /spa.html 200
+/why-lourex /spa.html 200
+/contact /spa.html 200
+/request /spa.html 200
+/smart-rfq /spa.html 200
+/track /spa.html 200
+/auth /spa.html 200
+/profile /spa.html 200
+/admin /spa.html 200
+/products/:slug /spa.html 200
+/dashboard /spa.html 200
+/dashboard/* /spa.html 200
+/customer-portal /spa.html 200
+/customer-portal/* /spa.html 200
+/* /404.html 404

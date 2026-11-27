@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, PackageSearch, Sparkles } from "lucide-react";
 import { SEO } from "@/components/seo/SEO";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -18,6 +18,7 @@ export default function ProductDetailPage() {
   const isArabic = lang === "ar";
   const [product, setProduct] = useState<ProductCatalogItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
@@ -30,6 +31,8 @@ export default function ProductDetailPage() {
     }
 
     setLoading(true);
+    setLoadError(false);
+    setProduct(null);
     setActiveImageIndex(0);
     fetchCatalogProductBySlug(slug, true)
       .then((nextProduct) => {
@@ -37,6 +40,7 @@ export default function ProductDetailPage() {
           setProduct(nextProduct);
         }
       })
+      .catch(() => { if (!cancelled) setLoadError(true); })
       .finally(() => {
         if (!cancelled) {
           setLoading(false);
@@ -63,7 +67,7 @@ export default function ProductDetailPage() {
   }
 
   if (!product) {
-    return <Navigate to="/products" replace />;
+    return <div className="lourex-public min-h-screen bg-background text-foreground"><SEO title={loadError ? "Product temporarily unavailable" : "Product not found"} noindex={!loadError} /><SiteHeader /><main className="container mx-auto py-16 px-4"><h1 className="text-3xl font-bold">{loadError ? (isArabic ? "تعذر تحميل المنتج" : "Product temporarily unavailable") : (isArabic ? "المنتج غير موجود" : "Product not found")}</h1><Link to="/products" className="mt-6 inline-block underline">{t("products.detail.backToProducts")}</Link>{loadError && <button className="ms-4 underline" onClick={() => window.location.reload()}>{t("common.refresh")}</button>}</main><Footer /></div>;
   }
 
   const category = getCategoryById(product.categoryId);
@@ -86,7 +90,8 @@ export default function ProductDetailPage() {
       <SEO
         title={isArabic ? product.nameAr : product.nameEn}
         description={isArabic ? product.shortDescriptionAr : product.shortDescriptionEn}
-        url={`https://www.lou-rex.com/products/${product.slug}`}
+        url={`https://www.lou-rex.com/products/${encodeURIComponent(product.slug)}`}
+        image={hasProductImage ? image?.url : undefined}
       />
       <SiteHeader />
 
