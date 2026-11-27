@@ -7,8 +7,6 @@ import {
   Clock3,
   Globe,
   Mail,
-  MapPin,
-  MessageSquareText,
   Phone,
   SendHorizonal,
 } from "lucide-react";
@@ -92,16 +90,6 @@ export default function ContactPage() {
       { icon: Mail, label: t("contact.labels.email"), value: publicContactInfo.email },
       { icon: Phone, label: t("contact.labels.phone"), value: publicContactInfo.phone },
       { icon: Globe, label: t("contact.labels.website"), value: publicContactInfo.website },
-      {
-        icon: MapPin,
-        label: t("contact.labels.location"),
-        value: dir === "rtl" ? publicContactInfo.location.ar : publicContactInfo.location.en,
-      },
-      {
-        icon: MessageSquareText,
-        label: dir === "rtl" ? "السجل التجاري" : "Commercial Registration",
-        value: dir === "rtl" ? publicContactInfo.commercialRegistration.ar : publicContactInfo.commercialRegistration.en,
-      },
       {
         icon: Clock3,
         label: t("contact.labels.businessHours"),
@@ -206,8 +194,8 @@ export default function ContactPage() {
         title={t("nav.contact")}
         description={
           dir === "rtl"
-            ? "تواصل مع Lourex للاستفسارات المتعلقة بالتوريد الدولي والخدمات اللوجستية والعمليات التجارية."
-            : "Contact Lourex for inquiries about international sourcing, logistics, and trade operations."
+            ? "تواصل مع Lourex للاستفسارات المتعلقة باستفسارات التوريد الدولي وتنسيق الموردين."
+            : "Contact Lourex for inquiries about international sourcing inquiries and supplier coordination."
         }
         url="https://www.lou-rex.com/contact"
       />

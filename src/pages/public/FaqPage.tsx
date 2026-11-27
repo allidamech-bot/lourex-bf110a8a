@@ -18,11 +18,11 @@ const faqs = [
   {
     en: {
       q: "Is LOUREX a marketplace?",
-      a: "No. LOUREX is not primarily a marketplace or supplier listing website. LOUREX works as a trade intermediary and sourcing coordination company.",
+      a: "No. LOUREX is not primarily a marketplace or supplier listing website. LOUREX is an online sourcing coordination platform. The legal contracting party and applicable terms must be confirmed for each inquiry.",
     },
     ar: {
       q: "هل لوريكس منصة بيع أو سوق إلكتروني؟",
-      a: "لا. لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين. لوريكس تعمل كوسيط تجاري وشركة تنسيق توريد وتصدير.",
+      a: "لا. لوريكس ليست مجرد سوق إلكتروني أو قائمة موردين. لوريكس منصة إلكترونية لتنسيق التوريد. يجب تأكيد الطرف القانوني المتعاقد والشروط المعمول بها لكل استفسار.",
     },
   },
   {
