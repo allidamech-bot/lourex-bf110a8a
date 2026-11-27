@@ -48,8 +48,25 @@ for(const [engine,launcher] of [['chromium',chromium],['webkit',webkit]]){
   if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))errors.push('Horizontal page overflow');
   if(await page.locator('#catalog-title').evaluate(e=>e.scrollWidth>e.clientWidth+2))errors.push('Headline overflow');
   await page.evaluate(()=>scrollTo(0,0));
-  await page.screenshot({path:`${output}/${engine}-${lang}-${width}.png`,fullPage:true});
-  await page.locator('#catalog-browser').screenshot({path:`${output}/${engine}-${lang}-${width}-catalog.png`});
+  const capturePath=`${output}/${engine}-${lang}-${width}`;
+  const height=await page.evaluate(()=>document.documentElement.scrollHeight);
+  const catalog=page.locator('#catalog-browser');
+  const bounds=await catalog.boundingBox();
+  if(height<=16000&&bounds&&bounds.height<=16000){
+   await page.screenshot({path:capturePath+'.png',fullPage:true});
+   await catalog.screenshot({path:capturePath+'-catalog.png'});
+  }else{
+   // WebKit limits a single screenshot to 32767 pixels. Capture the full
+   // long catalog as viewport-sized sections rather than dropping coverage.
+   let last=-1;
+   for(let top=0,index=0;top<height;top+=Math.floor(context.pages()[0].viewportSize().height*0.85),index++){
+    const actual=await page.evaluate(y=>{window.scrollTo(0,y);return window.scrollY;},top);
+    if(actual===last)break;
+    last=actual;
+    await page.screenshot({path:capturePath+'-segment-'+String(index).padStart(3,'0')+'.png'});
+   }
+   await page.evaluate(()=>scrollTo(0,0));
+  }
   results.push({engine,lang,width,productCount:initialCount,errors});
   console.log(JSON.stringify(results.at(-1)));
   await context.close();
