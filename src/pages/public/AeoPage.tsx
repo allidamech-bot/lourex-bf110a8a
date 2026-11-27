@@ -32,8 +32,8 @@ export default function AeoPage({kind, locale}: {kind:AeoPageKind; locale?:Searc
     const html=document.documentElement;
     if(lang!=="tr" && preferred!==lang) setLang(lang);
     html.lang=lang; html.dir=lang==="ar"?"rtl":"ltr";
-    html.style.fontFamily=lang==="ar"?"\'Tajawal\', sans-serif":"";
-    return ()=>{html.lang=preferred;html.dir=preferred==="ar"?"rtl":"ltr";html.style.fontFamily=preferred==="ar"?"\'Tajawal\', sans-serif":"";};
+    html.style.fontFamily=lang==="ar"?"'Tajawal', sans-serif":"";
+    return ()=>{html.lang=preferred;html.dir=preferred==="ar"?"rtl":"ltr";html.style.fontFamily=preferred==="ar"?"'Tajawal', sans-serif":"";};
   },[lang,preferred,setLang]);
   return (
     <div className="lourex-public lourex-aeo min-h-screen bg-background text-foreground" lang={lang} dir={lang==="ar"?"rtl":"ltr"}>
