@@ -37,3 +37,6 @@ Current account access/verified data: Google Search Console, Bing and GA4 owners
 - Combined duplicate font stylesheets into the existing HTML request, retaining all original families and weights. Field performance remains unmeasured.
 - Google tag queue uses documented arguments-object semantics; measurement remains off. Real tag/network validation, including withdrawal, is required before activation.
 - robots.txt is crawl control, not confidentiality or guaranteed removal. Private content remains protected by authentication/RLS; server noindex is an additional defense. Do not weaken access control for indexing.
+
+### Isolated preview build exception
+The first manual preview was canceled by the existing ignored-build command `exit 0` before compilation. A versioned `ignoreCommand` permits building only when VERCEL_ENV=preview and the exact search-discovery branch is selected; other Git builds retain the existing ignore behavior. No project-wide setting, production domain alias or automatic production deployment was changed. Remove this branch-specific exception before final merge if no longer required.
