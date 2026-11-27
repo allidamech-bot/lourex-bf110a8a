@@ -4,6 +4,30 @@
       "handle": "filesystem"
     },
     {
+      "src": "/about-lourex/?",
+      "dest": "/about-lourex/index.html"
+    },
+    {
+      "src": "/chocolate-sourcing/?",
+      "dest": "/chocolate-sourcing/index.html"
+    },
+    {
+      "src": "/biscuits-sourcing/?",
+      "dest": "/biscuits-sourcing/index.html"
+    },
+    {
+      "src": "/food-products-sourcing/?",
+      "dest": "/food-products-sourcing/index.html"
+    },
+    {
+      "src": "/turkish-products/?",
+      "dest": "/turkish-products/index.html"
+    },
+    {
+      "src": "/syrian-products/?",
+      "dest": "/syrian-products/index.html"
+    },
+    {
       "src": "/.*",
       "dest": "/index.html"
     }

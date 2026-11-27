@@ -17,6 +17,8 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: Bingbot
 Allow: /
@@ -37,6 +39,8 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: OAI-SearchBot
 Allow: /
@@ -57,6 +61,8 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: ChatGPT-User
 Allow: /
@@ -77,12 +83,24 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: Twitterbot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /customer-portal
+Disallow: /profile
 
 User-agent: *
 Allow: /
@@ -103,5 +121,7 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /orders
 Disallow: /messages
+Disallow: /customer-portal
+Disallow: /profile
 
 Sitemap: https://www.lou-rex.com/sitemap.xml

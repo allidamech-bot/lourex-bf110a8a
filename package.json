@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/verify-deployment-source.mjs && vite build",
+    "build": "node scripts/verify-deployment-source.mjs && vite build && node scripts/prerender-aeo.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "test:smoke": "npm run build",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:seo": "node --test scripts/prerender-aeo.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

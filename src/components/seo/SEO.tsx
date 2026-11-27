@@ -7,6 +7,7 @@ interface SEOProps {
   image?: string;
   url?: string;
   type?: string;
+  noindex?: boolean;
 }
 
 export function SEO({ 
@@ -14,9 +15,14 @@ export function SEO({
   description, 
   image = "/lourex-official.jpeg", 
   url = window.location.href, 
-  type = "website" 
+  type = "website",
+  noindex = false 
 }: SEOProps) {
   const { t } = useI18n();
+  const canonicalUrl = new URL(url, "https://www.lou-rex.com/");
+  const canonicalPath = canonicalUrl.pathname.replace(/\/+$/, "") || "/";
+  const canonicalHref = `https://www.lou-rex.com${canonicalPath}`;
+  const imageHref = new URL(image, "https://www.lou-rex.com/").href;
   const siteName = "LOUREX";
   const fullTitle = title
     ? title.toLowerCase().includes(siteName.toLowerCase())
@@ -49,18 +55,23 @@ export function SEO({
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", url);
+    canonical.setAttribute("href", canonicalHref);
+
+    const preventIndex = noindex || ["/track", "/auth"].includes(canonicalPath);
+    const robots = document.querySelector('meta[name="robots"]');
+    if (preventIndex) updateMeta("robots", "noindex, follow");
+    else if (robots?.getAttribute("content") === "noindex, follow") robots.remove();
 
     updateMeta("description", finalDesc);
     updateMeta("og:title", fullTitle, "property");
     updateMeta("og:description", finalDesc, "property");
-    updateMeta("og:image", image, "property");
-    updateMeta("og:url", url, "property");
+    updateMeta("og:image", imageHref, "property");
+    updateMeta("og:url", canonicalHref, "property");
     updateMeta("og:type", type, "property");
     updateMeta("twitter:title", fullTitle);
     updateMeta("twitter:description", finalDesc);
-    updateMeta("twitter:image", image);
-  }, [fullTitle, finalDesc, image, url, type]);
+    updateMeta("twitter:image", imageHref);
+  }, [fullTitle, finalDesc, imageHref, canonicalHref, canonicalPath, type, noindex]);
 
   return null;
 }
