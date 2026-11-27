@@ -1,6 +1,7 @@
 import { FLOATING_AI_ENABLED } from "@/lib/siteExperience";
 import { lazy, Suspense } from "react";
 import { BrowserTheme } from "@/components/BrowserTheme";
+import SearchMeasurement from "@/components/seo/SearchMeasurement";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -180,6 +181,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <BrowserTheme />
+            <SearchMeasurement />
             {isSupabaseConfigured ? (
               <AuthSessionProvider>
                 <Suspense fallback={<PageLoader />}>

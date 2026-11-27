@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/features/auth/AuthSessionProvider";
 import { RequestContactGate } from "@/features/purchase-requests/components/RequestContactGate";
 import { useI18n } from "@/lib/i18n";
+import { trackEvent } from "@/lib/monitoring";
 import { fetchCatalogProductById, fetchCatalogProducts } from "@/features/products/services/productCatalogService";
 import type { ProductCatalogItem } from "@/features/products/types/productTypes";
 import {
@@ -141,6 +142,7 @@ export default function SmartRfqPage() {
         name: profile.fullName || user.email || "",
       }, referenceFiles);
       setSubmission(result);
+      trackEvent("smart_rfq_submitted");
       setItems([]);
       setReferenceFiles([]);
       clearSmartRfqDraft(user.id);
