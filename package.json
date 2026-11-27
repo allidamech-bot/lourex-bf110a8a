@@ -16,7 +16,7 @@
     "test:smoke": "npm run build",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:seo": "node --test scripts/prerender-aeo.test.mjs"
+    "test:seo": "node --test scripts/prerender-aeo.test.mjs scripts/search-catalog.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

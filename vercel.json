@@ -145,6 +145,10 @@
       "dest": "/tr/fmcg-wholesale-sourcing/index.html"
     },
     {
+      "src": "/sitemap-products\\.xml",
+      "dest": "/api/search-catalog?mode=sitemap"
+    },
+    {
       "src": "/products/?",
       "dest": "/products/index.html"
     },
@@ -153,8 +157,8 @@
       "dest": "/spa.html"
     },
     {
-      "src": "/products/[^/]+/?",
-      "dest": "/spa.html"
+      "src": "/products/([^/]+)/?",
+      "dest": "/api/search-catalog?mode=detail&slug=$1"
     },
     {
       "src": "/(dashboard|customer-portal)(/.*)?",
@@ -168,5 +172,10 @@
   ],
   "git": {
     "deploymentEnabled": false
+  },
+  "functions": {
+    "api/search-catalog.mjs": {
+      "includeFiles": "dist/spa.html"
+    }
   }
 }

@@ -132,3 +132,4 @@ Disallow: /customer-portal
 Disallow: /profile
 
 Sitemap: https://www.lou-rex.com/sitemap.xml
+Sitemap: https://www.lou-rex.com/sitemap-products.xml

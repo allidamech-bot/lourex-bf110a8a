@@ -26,6 +26,11 @@ function publicSearchPreview(): Plugin {
           for (const [key,value] of Object.entries(route.headers || {})) res.setHeader(key,value);
           if (route.continue) continue;
           if (route.status && route.status >= 300 && route.status < 400) { res.statusCode = route.status; return res.end(); }
+          if (route.dest?.startsWith("/api/search-catalog?")) {
+            // Browser preview uses the SPA detail view; runtime catalog HTTP is tested separately.
+            if (pathname.startsWith("/products/")) { res.setHeader("Content-Type", "text/html; charset=utf-8"); return res.end(readFileSync(path.join(output, "spa.html"))); }
+            return next();
+          }
           if (route.dest) {
             const file = path.resolve(output, "." + route.dest);
             if (!file.startsWith(output + path.sep) || !existsSync(file)) return next();
